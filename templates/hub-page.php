@@ -1526,7 +1526,129 @@ get_header();
             }
             $category_spotlight = array();
             $category_winner_rows = array();
-            $is_best_picture_dossier = (strtoupper(trim((string) $canonical)) === 'BEST PICTURE');
+            $category_key = strtoupper(trim((string) $canonical));
+            $premium_category_profiles = array(
+                'BEST PICTURE' => array(
+                    'class' => 'aat-best-picture-dossier',
+                    'kicker' => __('Oscar Ledger Dossier', 'academy-awards-table'),
+                    'title' => __('Best Picture Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The Academy Awards top category, built as a living historical file: every winner, every ceremony trail, and the films that keep pulling readers deeper into the ledger.', 'academy-awards-table'),
+                    'summary_label' => __('Best Picture ledger summary', 'academy-awards-table'),
+                    'history_kicker' => __('Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Best Picture Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Best Picture run.', 'academy-awards-table'),
+                ),
+                'DIRECTING' => array(
+                    'class' => 'aat-directing-dossier',
+                    'title' => __('Best Director Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The director file: winners, nominated films, and the authorship trails that shaped Oscar history from studio craft to modern auteur campaigns.', 'academy-awards-table'),
+                ),
+                'ACTOR IN A LEADING ROLE' => array(
+                    'class' => 'aat-acting-dossier aat-actor-dossier',
+                    'title' => __('Best Actor Dossier', 'academy-awards-table'),
+                    'subtitle' => __('A performance ledger for leading men: every winning turn, every ceremony trail, and the films that made the race feel larger than a list of names.', 'academy-awards-table'),
+                ),
+                'ACTRESS IN A LEADING ROLE' => array(
+                    'class' => 'aat-acting-dossier aat-actress-dossier',
+                    'title' => __('Best Actress Dossier', 'academy-awards-table'),
+                    'subtitle' => __('A performance ledger for leading women: the winning turns, career pivots, star-making races, and ceremony trails that carry the category.', 'academy-awards-table'),
+                ),
+                'ACTOR IN A SUPPORTING ROLE' => array(
+                    'class' => 'aat-acting-dossier aat-supporting-actor-dossier',
+                    'title' => __('Best Supporting Actor Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The supporting actor file: character turns, scene-stealing campaigns, and every Oscar trail behind the category.', 'academy-awards-table'),
+                ),
+                'ACTRESS IN A SUPPORTING ROLE' => array(
+                    'class' => 'aat-acting-dossier aat-supporting-actress-dossier',
+                    'title' => __('Best Supporting Actress Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The supporting actress file: breakthrough performances, veteran coronations, and the ceremony trails that give the category its shape.', 'academy-awards-table'),
+                ),
+                'WRITING (ORIGINAL SCREENPLAY)' => array(
+                    'class' => 'aat-writing-dossier',
+                    'title' => __('Original Screenplay Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The original writing ledger: Academy-winning ideas, scripts, and narrative turns tracked through every ceremony trail.', 'academy-awards-table'),
+                ),
+                'WRITING (ADAPTED SCREENPLAY)' => array(
+                    'class' => 'aat-writing-dossier',
+                    'title' => __('Adapted Screenplay Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The adaptation file: books, plays, articles, lives, sequels, and source material transformed into Oscar-winning screen stories.', 'academy-awards-table'),
+                ),
+                'CINEMATOGRAPHY' => array(
+                    'class' => 'aat-craft-dossier aat-cinematography-dossier',
+                    'title' => __('Cinematography Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The image-making ledger: winning visual languages, photographed worlds, and the films that defined how Oscar saw the movies.', 'academy-awards-table'),
+                ),
+                'FILM EDITING' => array(
+                    'class' => 'aat-craft-dossier aat-editing-dossier',
+                    'title' => __('Film Editing Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The cutting-room file: pacing, structure, momentum, and the invisible craft behind the Academy winning edits.', 'academy-awards-table'),
+                ),
+                'COSTUME DESIGN' => array(
+                    'class' => 'aat-craft-dossier aat-costume-dossier',
+                    'title' => __('Costume Design Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The costume file: period worlds, character silhouettes, and the design campaigns that turned fabric into Oscar history.', 'academy-awards-table'),
+                ),
+                'VISUAL EFFECTS' => array(
+                    'class' => 'aat-craft-dossier aat-effects-dossier',
+                    'title' => __('Visual Effects Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The effects ledger: spectacle, invention, technical leaps, and the films that expanded what Academy voters could see on screen.', 'academy-awards-table'),
+                ),
+                'MUSIC (ORIGINAL SCORE)' => array(
+                    'class' => 'aat-music-dossier',
+                    'title' => __('Original Score Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The score file: composers, musical signatures, and the Academy-winning sounds that gave films their emotional architecture.', 'academy-awards-table'),
+                ),
+                'MUSIC (ORIGINAL SONG)' => array(
+                    'class' => 'aat-music-dossier',
+                    'title' => __('Original Song Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The song ledger: movie music as campaign engine, cultural memory, and Oscar-night signature.', 'academy-awards-table'),
+                ),
+                'INTERNATIONAL FEATURE FILM' => array(
+                    'class' => 'aat-feature-dossier aat-international-dossier',
+                    'title' => __('International Feature Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The international feature file: countries, auteurs, breakthrough films, and the Academy trails that widened Oscar history beyond Hollywood.', 'academy-awards-table'),
+                ),
+                'ANIMATED FEATURE FILM' => array(
+                    'class' => 'aat-feature-dossier aat-animation-dossier',
+                    'title' => __('Animated Feature Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The animation file: studio eras, hand-drawn legacies, digital dominance, and every Oscar trail behind the feature race.', 'academy-awards-table'),
+                ),
+                'DOCUMENTARY (FEATURE)' => array(
+                    'class' => 'aat-feature-dossier aat-documentary-dossier',
+                    'title' => __('Documentary Feature Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The documentary feature file: nonfiction filmmaking, public memory, and the Oscar races that turned reportage into cinema history.', 'academy-awards-table'),
+                ),
+            );
+            $premium_category_profile = isset($premium_category_profiles[$category_key]) ? $premium_category_profiles[$category_key] : array();
+            $is_premium_category_dossier = !empty($premium_category_profile);
+            if ($is_premium_category_dossier) {
+                $premium_category_profile = array_merge(array(
+                    'class' => '',
+                    'kicker' => __('Oscar Ledger Dossier', 'academy-awards-table'),
+                    'title' => sprintf(
+                        /* translators: %s: Oscar category display label. */
+                        __('%s Dossier', 'academy-awards-table'),
+                        $label
+                    ),
+                    'subtitle' => sprintf(
+                        /* translators: %s: Oscar category display label. */
+                        __('A premium category file for %s: every winner, every ceremony trail, and the routes that keep the ledger explorable.', 'academy-awards-table'),
+                        $label
+                    ),
+                    'summary_label' => sprintf(
+                        /* translators: %s: Oscar category display label. */
+                        __('%s ledger summary', 'academy-awards-table'),
+                        $label
+                    ),
+                    'history_kicker' => __('Era Browser', 'academy-awards-table'),
+                    'history_title' => sprintf(
+                        /* translators: %s: Oscar category display label. */
+                        __('%s Through the Eras', 'academy-awards-table'),
+                        $label
+                    ),
+                    'era_copy' => __('A visual entry point into the %1$s %2$s run.', 'academy-awards-table'),
+                ), $premium_category_profile);
+            }
             $category_span_label = ($first_year && $last_year) ? ($first_year . '-' . $last_year) : '';
             $latest_ceremony_url = $last_cer ? $aat->get_ceremony_url($last_cer) : '';
             $latest_winner_label = '';
@@ -1534,33 +1656,34 @@ get_header();
                 $latest_winner_label = !empty($latest_winner['primary_label']) ? (string) $latest_winner['primary_label'] : (!empty($latest_winner['film']) ? (string) $latest_winner['film'] : (string) ($latest_winner['name'] ?? ''));
             }
     ?>
-        <div class="aat-category-dossier<?php echo $is_best_picture_dossier ? ' aat-best-picture-dossier' : ''; ?>">
-        <?php if ($is_best_picture_dossier) : ?>
+        <div class="aat-category-dossier<?php echo $is_premium_category_dossier ? ' aat-premium-category-dossier ' . esc_attr((string) $premium_category_profile['class']) : ''; ?>">
+        <?php if ($is_premium_category_dossier) : ?>
             <style>
-                body .aat-container .aat-best-picture-dossier{min-width:0!important;max-width:100%!important;overflow:hidden!important}
-                body .aat-container .aat-best-picture-dossier .aat-dossier-hero{display:grid!important;grid-template-columns:minmax(0,1.22fr) minmax(280px,.78fr)!important;gap:clamp(18px,3vw,34px)!important;align-items:stretch!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
-                body .aat-container .aat-best-picture-dossier .aat-dossier-hero .aat-hub-title{color:var(--aat-white)!important;font-size:clamp(2.55rem,5.4vw,5.25rem)!important;line-height:.98!important;max-width:9.4ch!important;text-align:left!important;text-transform:none!important}
-                body .aat-container .aat-best-picture-dossier .aat-dossier-hero-copy,body .aat-container .aat-best-picture-dossier .aat-hub-subtitle{min-width:0!important;max-width:100%!important}
-                body .aat-container .aat-best-picture-dossier .aat-dossier-command-band{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;align-self:center!important;min-width:0!important}
-                body .aat-container .aat-best-picture-dossier .aat-dossier-command-card{display:grid!important;align-content:end!important;gap:8px!important;min-height:118px!important;padding:18px!important;border:1px solid rgba(201,169,97,.2)!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.018)),rgba(6,15,26,.7)!important}
-                body .aat-container .aat-best-picture-dossier .aat-dossier-command-card.is-latest{grid-column:1/-1!important;min-height:148px!important}
-                body .aat-container .aat-best-picture-dossier .aat-era-chapter-visual{display:grid!important;grid-template-columns:minmax(96px,148px) minmax(0,1fr)!important;gap:18px!important;margin:0 0 18px!important;padding:14px!important}
-                body .aat-container .aat-best-picture-dossier .aat-era-chapter-media{display:block!important;min-height:188px!important;max-width:148px!important;aspect-ratio:2/3!important}
-                body .aat-container .aat-best-picture-dossier .aat-ledger-card{display:grid!important;grid-template-columns:minmax(136px,.26fr) minmax(0,1fr)!important;gap:16px!important}
-                body .aat-container .aat-best-picture-dossier .aat-ledger-card .aat-category-history-actions{display:flex!important;flex-wrap:wrap!important;gap:6px!important;margin-top:8px!important;padding-top:8px!important}
-                body .aat-container .aat-best-picture-dossier .aat-ledger-card .aat-winner-circle-action{width:auto!important;min-height:30px!important;padding:6px 10px!important;flex:0 1 auto!important}
-                @media(max-width:900px){body .aat-container .aat-best-picture-dossier .aat-dossier-hero{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-best-picture-dossier .aat-ledger-card{grid-template-columns:minmax(110px,.3fr) minmax(0,1fr)!important}}
-                @media(max-width:620px){body .aat-container .aat-category-dossier.aat-best-picture-dossier{width:min(100%,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;margin-left:auto!important;margin-right:auto!important;overflow-x:hidden!important}body .aat-container .aat-best-picture-dossier .aat-dossier-command-band,body .aat-container .aat-best-picture-dossier .aat-era-chapter-visual,body .aat-container .aat-best-picture-dossier .aat-ledger-card{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-best-picture-dossier .aat-dossier-hero{width:100%!important;padding:16px!important}body .aat-container .aat-best-picture-dossier .aat-dossier-hero .aat-hub-subtitle{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-best-picture-dossier .aat-dossier-command-card,body .aat-container .aat-best-picture-dossier .aat-dossier-command-card.is-latest{min-height:0!important;padding:15px!important}body .aat-container .aat-best-picture-dossier .aat-dossier-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;max-width:100%!important}body .aat-container .aat-best-picture-dossier .aat-dossier-actions .aat-btn{width:100%!important;min-width:0!important;max-width:100%!important;justify-content:center!important}body .aat-container .aat-best-picture-dossier .aat-era-chapter-media{min-height:0!important;max-width:158px!important;aspect-ratio:2/3!important}body .aat-container .aat-best-picture-dossier .aat-era-chapter-copy h4,body .aat-container .aat-best-picture-dossier .aat-era-chapter-copy p{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-best-picture-dossier .aat-ledger-card{padding:12px!important;gap:10px!important}body .aat-container .aat-best-picture-dossier .aat-ledger-card .aat-category-ceremony-meta{display:grid!important;justify-content:start!important;gap:4px!important}body .aat-container .aat-best-picture-dossier .aat-ledger-card .aat-category-history-title,body .aat-container .aat-best-picture-dossier .aat-ledger-card .aat-category-history-meta,body .aat-container .aat-best-picture-dossier .aat-ledger-card .aat-category-history-detail{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-best-picture-dossier .aat-ledger-card .aat-winner-circle-action{min-height:28px!important;padding:5px 9px!important;font-size:.63rem!important}}
+                body .aat-container .aat-premium-category-dossier{min-width:0!important;max-width:100%!important;overflow:hidden!important}
+                body .aat-container .aat-premium-category-dossier .aat-dossier-hero{display:grid!important;grid-template-columns:minmax(0,1.22fr) minmax(280px,.78fr)!important;gap:clamp(18px,3vw,34px)!important;align-items:stretch!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
+                body .aat-container .aat-premium-category-dossier .aat-dossier-hero .aat-hub-title{color:var(--aat-white)!important;font-size:clamp(2.55rem,5.4vw,5.25rem)!important;line-height:.98!important;max-width:9.4ch!important;text-align:left!important;text-transform:none!important}
+                body .aat-container .aat-premium-category-dossier .aat-dossier-hero-copy,body .aat-container .aat-premium-category-dossier .aat-hub-subtitle{min-width:0!important;max-width:100%!important}
+                body .aat-container .aat-premium-category-dossier .aat-dossier-command-band{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;align-self:center!important;min-width:0!important}
+                body .aat-container .aat-premium-category-dossier .aat-dossier-command-card{display:grid!important;align-content:end!important;gap:8px!important;min-height:118px!important;padding:18px!important;border:1px solid rgba(201,169,97,.2)!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.018)),rgba(6,15,26,.7)!important}
+                body .aat-container .aat-premium-category-dossier .aat-dossier-command-card.is-latest{grid-column:1/-1!important;min-height:148px!important}
+                body .aat-container .aat-premium-category-dossier .aat-era-chapter-visual{display:grid!important;grid-template-columns:minmax(96px,148px) minmax(0,1fr)!important;gap:18px!important;margin:0 0 18px!important;padding:14px!important}
+                body .aat-container .aat-premium-category-dossier .aat-era-chapter-media{display:block!important;min-height:188px!important;max-width:148px!important;aspect-ratio:2/3!important}
+                body .aat-container .aat-premium-category-dossier .aat-ledger-card{display:grid!important;grid-template-columns:minmax(136px,.26fr) minmax(0,1fr)!important;gap:16px!important}
+                body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-history-actions{display:flex!important;flex-wrap:wrap!important;gap:6px!important;margin-top:8px!important;padding-top:8px!important}
+                body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-winner-circle-action{width:auto!important;min-height:30px!important;padding:6px 10px!important;flex:0 1 auto!important}
+                @media(max-width:900px){body .aat-container .aat-premium-category-dossier .aat-dossier-hero{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card{grid-template-columns:minmax(110px,.3fr) minmax(0,1fr)!important}}
+                @media(max-width:620px){body .aat-container .aat-category-dossier.aat-premium-category-dossier{width:min(100%,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;margin-left:auto!important;margin-right:auto!important;overflow-x:hidden!important}body .aat-container .aat-premium-category-dossier .aat-dossier-command-band,body .aat-container .aat-premium-category-dossier .aat-era-chapter-visual,body .aat-container .aat-premium-category-dossier .aat-ledger-card{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-premium-category-dossier .aat-dossier-hero{width:100%!important;padding:16px!important}body .aat-container .aat-premium-category-dossier .aat-dossier-hero .aat-hub-subtitle{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-dossier-command-card,body .aat-container .aat-premium-category-dossier .aat-dossier-command-card.is-latest{min-height:0!important;padding:15px!important}body .aat-container .aat-premium-category-dossier .aat-dossier-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;max-width:100%!important}body .aat-container .aat-premium-category-dossier .aat-dossier-actions .aat-btn{width:100%!important;min-width:0!important;max-width:100%!important;justify-content:center!important}body .aat-container .aat-premium-category-dossier .aat-era-chapter-media{min-height:0!important;max-width:158px!important;aspect-ratio:2/3!important}body .aat-container .aat-premium-category-dossier .aat-era-chapter-copy h4,body .aat-container .aat-premium-category-dossier .aat-era-chapter-copy p{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card{padding:12px!important;gap:10px!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-ceremony-meta{display:grid!important;justify-content:start!important;gap:4px!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-history-title,body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-history-meta,body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-history-detail{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-winner-circle-action{min-height:28px!important;padding:5px 9px!important;font-size:.63rem!important}}
+                @media(max-width:620px){body .aat-container .aat-premium-category-dossier .aat-section-title{max-width:100%!important;font-size:clamp(1.46rem,8vw,1.92rem)!important;line-height:1.12!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-card{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;max-width:100%!important;min-height:0!important;padding:12px!important;gap:12px!important}body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-media-link,body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-media{display:block!important;width:min(100%,148px)!important;max-width:148px!important;min-height:0!important;aspect-ratio:2/3!important}body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-body,body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-title,body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-meta,body .aat-container .aat-premium-category-dossier .aat-hub-chip-stack,body .aat-container .aat-premium-category-dossier .aat-hub-chip{min-width:0!important;max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-hub-chip,body .aat-container .aat-premium-category-dossier .aat-winner-circle-action{justify-content:center!important;text-align:center!important;white-space:normal!important}}
             </style>
         <?php endif; ?>
-        <?php if ($is_best_picture_dossier) : ?>
+        <?php if ($is_premium_category_dossier) : ?>
             <section class="aat-dossier-hero">
                 <div class="aat-dossier-hero-copy">
-                    <p class="aat-hub-kicker"><?php echo esc_html__('Oscar Ledger Dossier', 'academy-awards-table'); ?></p>
-                    <h1 class="aat-hub-title"><?php echo esc_html__('Best Picture Dossier', 'academy-awards-table'); ?></h1>
-                    <p class="aat-hub-subtitle"><?php echo esc_html__('The Academy Awards top category, built as a living historical file: every winner, every ceremony trail, and the films that keep pulling readers deeper into the ledger.', 'academy-awards-table'); ?></p>
+                    <p class="aat-hub-kicker"><?php echo esc_html((string) $premium_category_profile['kicker']); ?></p>
+                    <h1 class="aat-hub-title"><?php echo esc_html((string) $premium_category_profile['title']); ?></h1>
+                    <p class="aat-hub-subtitle"><?php echo esc_html((string) $premium_category_profile['subtitle']); ?></p>
                 </div>
-                <div class="aat-dossier-command-band" aria-label="<?php esc_attr_e('Best Picture ledger summary', 'academy-awards-table'); ?>">
+                <div class="aat-dossier-command-band" aria-label="<?php echo esc_attr((string) $premium_category_profile['summary_label']); ?>">
                     <div class="aat-dossier-command-card is-latest">
                         <span><?php echo esc_html__('Latest Winner', 'academy-awards-table'); ?></span>
                         <strong><?php echo esc_html($latest_winner_label !== '' ? $latest_winner_label : __('Pending', 'academy-awards-table')); ?></strong>
@@ -1711,10 +1834,10 @@ get_header();
         $category_history_fast_url = remove_query_arg('history');
         ?>
         <?php if (!empty($category_decade_buckets)) : ?>
-            <div class="aat-hub-section aat-category-history<?php echo $is_best_picture_dossier ? ' aat-era-browser' : ''; ?>">
+            <div class="aat-hub-section aat-category-history<?php echo $is_premium_category_dossier ? ' aat-era-browser' : ''; ?>">
                 <div class="aat-section-head">
-                    <p class="aat-hub-kicker"><?php echo esc_html($is_best_picture_dossier ? __('Era Browser', 'academy-awards-table') : __('Category Ledger', 'academy-awards-table')); ?></p>
-                    <h2 class="aat-section-title"><?php echo esc_html($is_best_picture_dossier ? __('Best Picture Through the Eras', 'academy-awards-table') : __('Category History', 'academy-awards-table')); ?></h2>
+                    <p class="aat-hub-kicker"><?php echo esc_html($is_premium_category_dossier ? (string) $premium_category_profile['history_kicker'] : __('Category Ledger', 'academy-awards-table')); ?></p>
+                    <h2 class="aat-section-title"><?php echo esc_html($is_premium_category_dossier ? (string) $premium_category_profile['history_title'] : __('Category History', 'academy-awards-table')); ?></h2>
                     <p class="aat-section-description"><?php echo esc_html(sprintf(
                         /* translators: 1: ceremony count, 2: winner count, 3: nominee count */
                         $category_history_full_requested
@@ -1746,12 +1869,12 @@ get_header();
 
                 <div class="aat-decade-groups">
                     <?php foreach ($category_decade_buckets as $decade_key => $decade_bucket) : ?>
-                        <section class="aat-decade-group<?php echo $is_best_picture_dossier ? ' aat-era-chapter' : ''; ?>" id="aat-decade-<?php echo esc_attr($decade_key); ?>">
+                        <section class="aat-decade-group<?php echo $is_premium_category_dossier ? ' aat-era-chapter' : ''; ?>" id="aat-decade-<?php echo esc_attr($decade_key); ?>">
                             <h3 class="aat-decade-heading"><?php echo esc_html($decade_bucket['label']); ?></h3>
 
                             <?php
                             $era_spotlight = array();
-                            if ($is_best_picture_dossier && !empty($decade_bucket['ceremonies']) && is_array($decade_bucket['ceremonies'])) {
+                            if ($is_premium_category_dossier && !empty($decade_bucket['ceremonies']) && is_array($decade_bucket['ceremonies'])) {
                                 foreach ($decade_bucket['ceremonies'] as $era_ceremony_data) {
                                     $era_winners = !empty($era_ceremony_data['winner_rows']) && is_array($era_ceremony_data['winner_rows']) ? $era_ceremony_data['winner_rows'] : array();
                                     foreach ($era_winners as $era_winner) {
@@ -1790,7 +1913,7 @@ get_header();
                                     <div class="aat-era-chapter-copy">
                                         <span class="aat-winner-badge"><?php echo esc_html__('Era Marker', 'academy-awards-table'); ?></span>
                                         <h4><?php echo $aat_render_hub_text_link($era_film_label, $era_film_url, 'aat-hub-inline-link aat-hub-inline-link-title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></h4>
-                                        <p><?php echo esc_html(sprintf(__('A visual entry point into the %s Best Picture run.', 'academy-awards-table'), $decade_bucket['label'])); ?></p>
+                                        <p><?php echo esc_html(sprintf((string) $premium_category_profile['era_copy'], $decade_bucket['label'], $label)); ?></p>
                                     </div>
                                 </article>
                             <?php endif; ?>
@@ -1806,7 +1929,7 @@ get_header();
                                     $render_full_nominee_trail = $category_history_full_requested || $category_history_rendered_ceremonies <= $category_history_recent_trail_limit;
                                     $render_compact_actions = !$category_history_full_requested && !$render_full_nominee_trail;
                                 ?>
-                                    <article class="aat-category-ceremony-row<?php echo $is_best_picture_dossier ? ' aat-ledger-card' : ''; ?>">
+                                    <article class="aat-category-ceremony-row<?php echo $is_premium_category_dossier ? ' aat-ledger-card' : ''; ?>">
                                         <header class="aat-category-ceremony-meta">
                                             <?php if ($cer_url !== '' && $cer > 0) : ?>
                                                 <a class="aat-entity-link aat-timeline-link" href="<?php echo esc_url($cer_url); ?>"><?php echo esc_html($aat->ordinal($cer)); ?> <?php esc_html_e('Ceremony', 'academy-awards-table'); ?></a>
@@ -2136,6 +2259,16 @@ get_header();
 .aat-hub-inline-link-title{border-bottom:none}
 .aat-winner-circle-meta a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(212,175,55,.35)}
 .aat-winner-circle-meta a:hover,.aat-winner-circle-meta a:focus{color:#f2d47a;border-bottom-color:rgba(242,212,122,.82)}
+@media(max-width:620px){
+body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-spotlight-card{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;max-width:100%!important;min-height:0!important;padding:12px!important;gap:12px!important}
+body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-spotlight-media-link,body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-spotlight-media{display:block!important;width:min(100%,148px)!important;max-width:148px!important;min-width:0!important;min-height:0!important;aspect-ratio:2/3!important}
+body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-spotlight-body,body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-spotlight-title,body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-spotlight-meta,body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-chip-stack,body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-chip{min-width:0!important;max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}
+body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-section-title{max-width:100%!important;font-size:clamp(1.46rem,8vw,1.92rem)!important;line-height:1.12!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}
+body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-chip,body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-winner-circle-action{justify-content:center!important;text-align:center!important;white-space:normal!important}
+body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-chip{display:grid!important;justify-items:center!important;gap:2px!important;line-height:1.18!important}
+body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-chip strong,body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-hub-chip span{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important;white-space:normal!important}
+body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-category-latest-winner .aat-winner-circle-action,body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-category-history-actions .aat-winner-circle-action,body .aat-container .aat-category-dossier.aat-premium-category-dossier .aat-nominee-trail-actions .aat-winner-circle-action{width:100%!important;max-width:100%!important;flex:1 1 100%!important;min-width:0!important;padding-left:10px!important;padding-right:10px!important;font-size:.56rem!important;letter-spacing:.055em!important;line-height:1.18!important;overflow-wrap:anywhere!important}
+}
 </style>
 
 <?php
