@@ -1,0 +1,110 @@
+=== Lunara Film — Academy Awards Database ===
+Contributors: lunarafilm
+Tags: oscars, academy awards, datatable, film, movies
+Requires at least: 6.0
+Tested up to: 6.4
+Stable tag: 2.7.8
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+A premium, searchable, filterable table for browsing every Academy Award nominee and winner (1st ceremony through 2024).
+
+== Description ==
+
+This plugin adds a shortcode that renders an interactive, fully searchable table of Academy Awards nominations and winners.
+
+Highlights:
+
+* Instant search across nominees, films, and categories
+* Dropdown filters for Category, Class, Year, and Ceremony
+* "Winners only" toggle
+* Clickable film/person profiles (internal pages) with IMDb reference links
+* Cinematic theme tuned to:
+  * #0a1520 (deep blue-black background)
+  * #c9a961 (primary gold accents)
+
+The plugin includes a bundled `oscars.csv` dataset and a one-click importer (chunked to avoid timeouts).
+
+== Installation ==
+
+1. Upload the plugin ZIP in WordPress:
+   * WP Admin -> Plugins -> Add New -> Upload Plugin
+2. Activate "Academy Awards Interactive Table".
+3. Go to "Academy Awards" in the WP Admin menu.
+4. Click "Import Bundled oscars.csv" (recommended). This replaces any existing awards data in the plugin table.
+5. Add the table to any page or post using the shortcode:
+
+`[academy_awards]`
+
+== Shortcode ==
+
+Basic:
+
+`[academy_awards]`
+
+Optional filters:
+
+* `category` (canonical category, e.g. `BEST PICTURE`)
+* `class` (e.g. `Acting`, `Directing`)
+* `year` (e.g. `2024`, `1927/28`)
+* `ceremony` (e.g. `97`)
+* `winners_only` (`true` or `false`)
+
+Examples:
+
+* `[academy_awards category="BEST PICTURE"]`
+* `[academy_awards year="2024"]`
+* `[academy_awards category="DIRECTING" winners_only="true"]`
+
+== Notes ==
+
+* This plugin stores imported data in a custom database table named `{prefix}academy_awards`.
+* DataTables assets are loaded from the official DataTables CDN.
+
+== Changelog ==
+
+= 2.7.8 =
+* Tightened default category fast-view output by trimming redundant older-history action buttons and reducing default category highlights to a curated 9 cards. Full nominee/history mode remains available with `?history=full`.
+
+= 1.7.3 =
+* Added ceremony="latest" and year="latest" shortcode support for auto-updating pages (useful for an Awards Tracker page).
+
+= 1.7.2 =
+* Branding + footer copy updates (Lunara Film / Dalton Johnson credit).
+* Hub index pages now support custom slugs (e.g. /oscars/categories-page/) by auto-detecting your created pages and adding rewrite aliases.
+* Footer + hub navigation links now follow your detected hub page permalinks for consistent menus.
+
+
+= 1.7.1 =
+* Auto-detects the site’s main database page (the page containing the [academy_awards] shortcode) for "Open Full Database" links.
+* If you created WordPress pages for /oscars/ceremonies/, /oscars/categories/, and /oscars/about/, the plugin now pulls in their editor content as hub intro copy.
+
+= 1.5.1 =
+* Theme alignment: table typography inherits the active theme font (better match with Blocksy/Lunara)
+* Footer copy updated to more clearly credit Lunara Film for the structured dataset
+* CSS variables now optionally read Lunara theme tokens (with fallbacks), keeping the plugin portable
+
+= 1.5.0 =
+* Removed public export buttons (Copy / CSV / Print) to keep the database as an on-site destination
+* Mobile refinements: better responsive row control and less column hiding
+
+= 1.4.1 =
+* Fixed a PHP fatal error introduced in 1.4.0 (broken nonce block in read-only AJAX handlers)
+* Keeps best-effort nonce behavior (public read-only endpoints work even if a cached page embeds an older nonce)
+
+= 1.4.0 =
+* Made the front-end AJAX nonce best-effort for public read-only endpoints to avoid cached-page nonce expiry breakage
+
+= 1.3.0 =
+* Switched the front-end table to DataTables server-side pagination + search for fast mobile performance
+* Reduced server load with search delay + capped page size per request
+
+= 1.2.0 =
+* Added IMDb links for films and nominees (uses FilmId / NomineeIds from the dataset)
+* Improved mobile UX: tap-to-expand details control column, stacked controls on small screens, smaller default page size
+
+= 1.1.0 =
+* Updated cinematic palette to #0a1520 / #c9a961
+* Added bundled CSV importer with chunked processing
+* Ensured DataTables Print button works by enqueueing the required script
+* Smaller front-end JSON payload for faster loads

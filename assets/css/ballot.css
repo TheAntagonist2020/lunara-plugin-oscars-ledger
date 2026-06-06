@@ -1,0 +1,122 @@
+.aat-ballot {
+    color: var(--lunara-text, #f4efe3);
+}
+
+.aat-ballot__header {
+    margin-bottom: 28px;
+}
+
+.aat-ballot__kicker {
+    color: var(--lunara-gold-light, #edd296);
+    font-size: 12px;
+    letter-spacing: 0;
+    margin: 0 0 8px;
+    text-transform: uppercase;
+}
+
+.aat-ballot__header h2 {
+    margin: 0 0 10px;
+}
+
+.aat-ballot__selector {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.aat-ballot__categories {
+    display: grid;
+    gap: 22px;
+}
+
+.aat-ballot__category {
+    border: 1px solid var(--lunara-border, rgba(211, 170, 87, .24));
+    background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012));
+    padding: 18px;
+}
+
+.aat-ballot__category h3 {
+    margin: 0 0 14px;
+    color: var(--lunara-gold-light, #edd296);
+}
+
+.aat-ballot__choices {
+    display: grid;
+    gap: 10px;
+}
+
+.aat-ballot__choice {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,.08);
+    padding-top: 10px;
+}
+
+.aat-ballot__choice-copy strong,
+.aat-ballot__choice-copy span,
+.aat-ballot__choice-copy em {
+    display: block;
+}
+
+.aat-ballot__choice-copy span {
+    color: var(--lunara-text-muted, #b8b0a2);
+    font-size: 13px;
+}
+
+.aat-ballot__choice-copy em {
+    color: var(--lunara-gold-light, #edd296);
+    font-size: 12px;
+    font-style: normal;
+    text-transform: uppercase;
+}
+
+.aat-ballot__choice-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.aat-ballot__choice-actions label {
+    white-space: nowrap;
+}
+
+.aat-ballot__footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 22px;
+}
+
+.aat-ballot__button {
+    border: 1px solid var(--lunara-gold, #d3aa57);
+    background: var(--lunara-gold, #d3aa57);
+    color: var(--lunara-bg-deep, #040b14);
+    cursor: pointer;
+    padding: 9px 14px;
+}
+
+.aat-ballot__button--ghost {
+    background: transparent;
+    color: var(--lunara-gold-light, #edd296);
+}
+
+.aat-ballot__status,
+.aat-ballot__empty {
+    color: var(--lunara-text-muted, #b8b0a2);
+}
+
+@media (max-width: 700px) {
+    .aat-ballot__choice {
+        grid-template-columns: 1fr;
+    }
+
+    .aat-ballot__choice-actions {
+        justify-content: flex-start;
+    }
+}
