@@ -845,16 +845,83 @@ get_header();
             $ceremony_ballot_full_url = add_query_arg('ledger', 'full');
             $ceremony_ballot_fast_url = remove_query_arg('ledger');
             $ceremony_spotlight = array();
+            $best_picture = !empty($ceremony_rollup['best_picture']) ? $ceremony_rollup['best_picture'] : array();
+            $best_picture_nominees = !empty($ceremony_rollup['best_picture_nominees']) ? $ceremony_rollup['best_picture_nominees'] : array();
+            $most_wins = !empty($ceremony_rollup['most_wins']) ? $ceremony_rollup['most_wins'] : array();
+            $most_nominated = !empty($ceremony_rollup['most_nominated']) ? $ceremony_rollup['most_nominated'] : array();
+            $ceremony_title_label = sprintf(
+                /* translators: %s: ceremony ordinal */
+                __('%s Academy Awards', 'academy-awards-table'),
+                $aat->ordinal($ceremony)
+            );
+            $ceremony_dossier_label = sprintf(
+                /* translators: %s: ceremony ordinal */
+                __('%s Dossier', 'academy-awards-table'),
+                $aat->ordinal($ceremony)
+            );
+            $best_picture_label = !empty($best_picture['film']) ? (string) $best_picture['film'] : __('Pending', 'academy-awards-table');
+            $most_wins_label = !empty($most_wins['film']) ? $aat_pipe_display((string) $most_wins['film']) : __('Pending', 'academy-awards-table');
+            $winner_record_label = sprintf(
+                /* translators: 1: winners, 2: categories */
+                __('%1$s/%2$s', 'academy-awards-table'),
+                number_format_i18n($wins),
+                number_format_i18n($cats_count)
+            );
     ?>
-        <div class="aat-hub-header">
-            <h1 class="aat-hub-title"><?php echo esc_html($aat->ordinal($ceremony)); ?> <?php echo esc_html__('Academy Awards', 'academy-awards-table'); ?></h1>
-            <p class="aat-hub-subtitle"><?php echo esc_html($year_label); ?></p>
-
-            <div class="aat-hub-actions">
-                <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($aat->get_ceremonies_index_url()); ?>"><?php echo esc_html__('All Ceremonies', 'academy-awards-table'); ?></a>
-                <a class="aat-btn aat-btn-primary" href="<?php echo esc_url($db_url); ?>"><?php echo esc_html__('Open Full Ledger', 'academy-awards-table'); ?></a>
-            </div>
-        </div>
+        <div class="aat-ceremony-dossier">
+            <style>
+                body .aat-container .aat-ceremony-dossier{display:grid!important;gap:clamp(20px,3vw,34px)!important;min-width:0!important;max-width:100%!important}
+                body .aat-container .aat-ceremony-dossier .aat-stats-bar.aat-entity-stats{display:none!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero{display:grid!important;grid-template-columns:minmax(0,1.08fr) minmax(300px,.92fr)!important;gap:clamp(18px,3vw,32px)!important;align-items:stretch!important;padding:clamp(22px,4vw,42px)!important;border:1px solid rgba(201,169,97,.24)!important;border-radius:18px!important;background:radial-gradient(circle at 88% 14%,rgba(201,169,97,.18),transparent 30%),linear-gradient(135deg,rgba(255,255,255,.065),rgba(255,255,255,.018)),rgba(8,18,29,.94)!important;overflow:hidden!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-title{color:var(--aat-white)!important;font-size:clamp(2.45rem,5vw,5.15rem)!important;line-height:.98!important;max-width:9.5ch!important;text-align:left!important;text-transform:none!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-subtitle{margin:0!important;max-width:58ch!important;color:rgba(244,239,227,.84)!important;line-height:1.72!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-command-band{display:grid!important;grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr)!important;gap:12px!important;align-self:center!important;min-width:0!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card{display:grid!important;align-content:end!important;gap:8px!important;min-width:0!important;min-height:124px!important;padding:17px!important;border:1px solid rgba(201,169,97,.2)!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.018)),rgba(6,15,26,.72)!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card.is-primary{grid-row:span 2!important;min-height:218px!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card span{color:var(--aat-gold-light)!important;font-size:.7rem!important;letter-spacing:.14em!important;text-transform:uppercase!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card strong{color:var(--aat-white)!important;max-width:100%!important;font-size:clamp(1.12rem,1.65vw,1.72rem)!important;line-height:1.06!important;overflow-wrap:anywhere!important;white-space:normal!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card.is-primary strong{color:var(--aat-gold)!important;font-size:clamp(2.25rem,3.2vw,2.95rem)!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-actions{grid-column:1/-1!important;justify-content:start!important;margin-top:4px!important}
+                @media(max-width:980px){body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero{grid-template-columns:minmax(0,1fr)!important}}
+                @media(max-width:640px){body .aat-container .aat-ceremony-dossier{width:min(100%,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;margin-left:auto!important;margin-right:auto!important;overflow-x:hidden!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero{grid-template-columns:minmax(0,1fr)!important;padding:16px!important;border-radius:12px!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-title{font-size:clamp(2.15rem,14vw,3.05rem)!important;max-width:10ch!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-subtitle,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-nav,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-nav *,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-card,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-card strong,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-index,body .aat-container .aat-ceremony-dossier .aat-ceremony-marquee .aat-hub-copy,body .aat-container .aat-ceremony-dossier .aat-ceremony-marquee .aat-hub-copy *{max-width:29ch!important;overflow-wrap:anywhere!important;text-wrap:auto!important;white-space:normal!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-nav{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-slot,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-index{width:100%!important;min-width:0!important;justify-self:stretch!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-command-band{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card,body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card.is-primary{grid-row:auto!important;min-height:0!important;padding:15px!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-actions .aat-btn{width:100%!important;justify-content:center!important}}
+            </style>
+            <section class="aat-ceremony-dossier-hero">
+                <div class="aat-ceremony-dossier-copy">
+                    <p class="aat-hub-kicker"><?php echo esc_html__('Oscar Ledger Year Dossier', 'academy-awards-table'); ?></p>
+                    <h1 class="aat-hub-title"><?php echo esc_html($ceremony_dossier_label); ?></h1>
+                    <p class="aat-hub-subtitle">
+                        <?php echo esc_html(sprintf(
+                            /* translators: 1: ceremony year, 2: ceremony title */
+                            __('The %1$s file for %2$s: winners first, ballot trails on demand, and the films that shaped the ceremony.', 'academy-awards-table'),
+                            (string) $year_label,
+                            $ceremony_title_label
+                        )); ?>
+                    </p>
+                </div>
+                <div class="aat-ceremony-command-band" aria-label="<?php esc_attr_e('Ceremony ledger summary', 'academy-awards-table'); ?>">
+                    <div class="aat-ceremony-command-card is-primary">
+                        <span><?php echo esc_html__('Year', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html($year_label !== '' ? $year_label : '-'); ?></strong>
+                    </div>
+                    <div class="aat-ceremony-command-card">
+                        <span><?php echo esc_html__('Best Picture', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html($best_picture_label); ?></strong>
+                    </div>
+                    <div class="aat-ceremony-command-card">
+                        <span><?php echo esc_html__('Winner Record', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html($winner_record_label); ?></strong>
+                    </div>
+                    <div class="aat-ceremony-command-card">
+                        <span><?php echo esc_html__('Top Winner', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html($most_wins_label); ?></strong>
+                    </div>
+                </div>
+                <div class="aat-hub-actions aat-ceremony-dossier-actions">
+                    <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($aat->get_ceremonies_index_url()); ?>"><?php echo esc_html__('All Ceremonies', 'academy-awards-table'); ?></a>
+                    <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($ceremony_ballot_full_url); ?>"><?php echo esc_html__('Full Ballot', 'academy-awards-table'); ?></a>
+                    <a class="aat-btn aat-btn-primary" href="<?php echo esc_url($db_url); ?>"><?php echo esc_html__('Open Full Ledger', 'academy-awards-table'); ?></a>
+                </div>
+            </section>
 
         <?php if ($newer_ceremony > 0 || $older_ceremony > 0) : ?>
             <nav class="aat-ceremony-neighbor-nav" aria-label="<?php echo esc_attr__('Ceremony navigation', 'academy-awards-table'); ?>">
@@ -884,10 +951,6 @@ get_header();
         <?php endif; ?>
 
         <?php if (!empty($ceremony_rollup)) :
-            $best_picture = !empty($ceremony_rollup['best_picture']) ? $ceremony_rollup['best_picture'] : array();
-            $best_picture_nominees = !empty($ceremony_rollup['best_picture_nominees']) ? $ceremony_rollup['best_picture_nominees'] : array();
-            $most_wins = !empty($ceremony_rollup['most_wins']) ? $ceremony_rollup['most_wins'] : array();
-            $most_nominated = !empty($ceremony_rollup['most_nominated']) ? $ceremony_rollup['most_nominated'] : array();
             $spotlight_film_id = '';
             $spotlight_film_label = '';
             $spotlight_meta = array();
@@ -1438,6 +1501,7 @@ get_header();
                 ?>
             </div>
         <?php endif; ?>
+        </div>
 
     <?php
         // CATEGORY PAGE

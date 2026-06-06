@@ -5929,3 +5929,295 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
         width: auto !important;
     }
 }
+
+/* Ceremony year dossiers: second Oscars route-family surface. */
+.aat-ceremony-dossier {
+    display: grid;
+    gap: clamp(20px, 3vw, 34px);
+    min-width: 0;
+    max-width: 100%;
+}
+
+.aat-ceremony-dossier .aat-stats-bar.aat-entity-stats {
+    display: none;
+}
+
+.aat-ceremony-dossier-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(300px, .92fr);
+    gap: clamp(18px, 3vw, 32px);
+    align-items: stretch;
+    padding: clamp(22px, 4vw, 42px);
+    border: 1px solid rgba(201,169,97,.24);
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 88% 14%, rgba(201,169,97,.18), transparent 30%),
+        linear-gradient(135deg, rgba(255,255,255,.065), rgba(255,255,255,.018)),
+        rgba(8,18,29,.94);
+    overflow: hidden;
+}
+
+.aat-ceremony-dossier-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, rgba(201,169,97,.13), transparent 1px),
+        linear-gradient(0deg, rgba(201,169,97,.09), transparent 1px);
+    background-size: 72px 72px;
+    opacity: .16;
+}
+
+.aat-ceremony-dossier-hero > * {
+    position: relative;
+    z-index: 1;
+}
+
+.aat-ceremony-dossier-copy {
+    display: grid;
+    align-content: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-title {
+    color: var(--aat-white);
+    font-size: clamp(2.45rem, 5vw, 5.15rem);
+    line-height: .98;
+    max-width: 9.5ch;
+    text-align: left;
+    text-transform: none;
+}
+
+.aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-subtitle {
+    margin: 0;
+    max-width: 58ch;
+    color: rgba(244,239,227,.84);
+    line-height: 1.72;
+}
+
+.aat-ceremony-command-band {
+    display: grid;
+    grid-template-columns: minmax(0, .94fr) minmax(0, 1.06fr);
+    gap: 12px;
+    align-self: center;
+    min-width: 0;
+}
+
+.aat-ceremony-command-card {
+    display: grid;
+    align-content: end;
+    gap: 8px;
+    min-width: 0;
+    min-height: 124px;
+    padding: 17px;
+    border: 1px solid rgba(201,169,97,.2);
+    border-radius: 12px;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.052), rgba(255,255,255,.018)),
+        rgba(6,15,26,.72);
+}
+
+.aat-ceremony-command-card.is-primary {
+    grid-row: span 2;
+    min-height: 218px;
+}
+
+.aat-ceremony-command-card span {
+    color: var(--aat-gold-light);
+    font-size: .7rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+.aat-ceremony-command-card strong {
+    color: var(--aat-white);
+    max-width: 100%;
+    font-size: clamp(1.12rem, 1.65vw, 1.72rem);
+    line-height: 1.06;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.aat-ceremony-command-card.is-primary strong {
+    color: var(--aat-gold);
+    font-size: clamp(2.25rem, 3.2vw, 2.95rem);
+}
+
+.aat-ceremony-dossier-actions {
+    grid-column: 1 / -1;
+    justify-content: start;
+    margin-top: 4px;
+}
+
+.aat-ceremony-dossier .aat-ceremony-neighbor-nav {
+    margin: 0;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.aat-ceremony-dossier .aat-ceremony-marquee,
+.aat-ceremony-dossier .aat-ceremony-ballot-ledger,
+.aat-ceremony-dossier .aat-ceremony-gallery-section,
+.aat-ceremony-dossier .aat-winner-circle-section,
+.aat-ceremony-dossier .aat-explorer-callout {
+    margin-top: 0;
+}
+
+.aat-ceremony-dossier .aat-hub-metric-grid {
+    margin: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.aat-ceremony-dossier .aat-ceremony-ballot-ledger .aat-section-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+}
+
+.aat-ceremony-dossier .aat-ceremony-ballot-summary {
+    justify-content: flex-start;
+}
+
+.aat-ceremony-dossier .aat-ceremony-ballot-group {
+    border-radius: 14px;
+}
+
+.aat-ceremony-dossier .aat-ceremony-ballot-row {
+    grid-template-columns: minmax(74px, .16fr) minmax(0, 1fr) minmax(160px, .28fr);
+    gap: 14px;
+    align-items: start;
+}
+
+.aat-ceremony-dossier .aat-ceremony-ballot-actions {
+    justify-content: flex-start;
+}
+
+.aat-ceremony-dossier .aat-ceremony-ballot-actions .aat-winner-circle-action,
+.aat-ceremony-dossier .aat-ceremony-nominee-summary .aat-winner-circle-action {
+    width: auto;
+    min-height: 30px;
+    padding: 6px 10px;
+    flex: 0 1 auto;
+    font-size: .64rem;
+    letter-spacing: .1em;
+}
+
+@media (max-width: 980px) {
+    .aat-ceremony-dossier-hero,
+    .aat-ceremony-dossier .aat-ceremony-ballot-ledger .aat-section-head {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .aat-ceremony-dossier .aat-hub-metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .aat-ceremony-dossier .aat-ceremony-ballot-row {
+        grid-template-columns: minmax(72px, .2fr) minmax(0, 1fr);
+    }
+
+    .aat-ceremony-dossier .aat-ceremony-ballot-actions {
+        grid-column: 2;
+    }
+}
+
+@media (max-width: 640px) {
+    body .aat-container .aat-ceremony-dossier {
+        width: min(100%, calc(100vw - 24px));
+        max-width: calc(100vw - 24px);
+        margin-left: auto;
+        margin-right: auto;
+        overflow-x: hidden;
+    }
+
+    .aat-ceremony-dossier,
+    .aat-ceremony-dossier *,
+    .aat-ceremony-dossier-hero,
+    .aat-ceremony-command-band,
+    .aat-ceremony-command-card,
+    .aat-ceremony-dossier .aat-ceremony-ballot-row,
+    .aat-ceremony-dossier .aat-ceremony-ballot-copy {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .aat-ceremony-dossier-hero {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-title {
+        font-size: clamp(2.15rem, 14vw, 3.05rem);
+        max-width: 10ch;
+    }
+
+    .aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-subtitle,
+    .aat-ceremony-dossier .aat-ceremony-neighbor-nav,
+    .aat-ceremony-dossier .aat-ceremony-neighbor-nav *,
+    .aat-ceremony-dossier .aat-ceremony-neighbor-card,
+    .aat-ceremony-dossier .aat-ceremony-neighbor-card strong,
+    .aat-ceremony-dossier .aat-ceremony-neighbor-index,
+    .aat-ceremony-dossier .aat-ceremony-marquee .aat-hub-copy,
+    .aat-ceremony-dossier .aat-ceremony-marquee .aat-hub-copy *,
+    .aat-ceremony-dossier .aat-ceremony-ballot-copy h4,
+    .aat-ceremony-dossier .aat-ballot-credit,
+    .aat-ceremony-dossier .aat-ballot-detail,
+    .aat-ceremony-dossier .aat-ballot-note {
+        max-width: 29ch;
+        overflow-wrap: anywhere;
+        text-wrap: auto;
+        white-space: normal;
+    }
+
+    .aat-ceremony-dossier .aat-ceremony-neighbor-nav {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .aat-ceremony-dossier .aat-ceremony-neighbor-slot,
+    .aat-ceremony-dossier .aat-ceremony-neighbor-index {
+        width: 100%;
+        min-width: 0;
+        justify-self: stretch;
+    }
+
+    .aat-ceremony-command-band,
+    .aat-ceremony-dossier .aat-hub-metric-grid,
+    .aat-ceremony-dossier .aat-ceremony-ballot-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .aat-ceremony-command-card,
+    .aat-ceremony-command-card.is-primary {
+        grid-row: auto;
+        min-height: 0;
+        padding: 15px;
+    }
+
+    .aat-ceremony-dossier-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
+    }
+
+    .aat-ceremony-dossier-actions .aat-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .aat-ceremony-dossier .aat-ceremony-ballot-actions {
+        grid-column: auto;
+    }
+
+    .aat-ceremony-dossier .aat-ceremony-ballot-actions .aat-winner-circle-action,
+    .aat-ceremony-dossier .aat-ceremony-nominee-summary .aat-winner-circle-action {
+        width: auto;
+        min-height: 28px;
+        padding: 5px 9px;
+        font-size: .63rem;
+    }
+}
