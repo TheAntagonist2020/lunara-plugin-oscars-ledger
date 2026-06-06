@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.11
+Stable tag: 2.7.12
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.12 =
+* Introduced the first title/person Oscar Profile File pass with a dossier-style hero, command-band stats, internal section rail, and mobile wrapping guardrails for entity routes.
 
 = 2.7.11 =
 * Introduced the ceremony Year Dossier surface with a dedicated hero, command-band summary, compact ballot rhythm, and mobile wrapping guardrails for ceremony routes.

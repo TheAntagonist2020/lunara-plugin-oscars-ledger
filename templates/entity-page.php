@@ -459,6 +459,9 @@ $imdb_url = $build_imdb_url($id);
 $search_url = home_url('/?s=' . rawurlencode($label ? $label : $id));
 $database_url = home_url('/oscars/');
 $type_label = $entity === 'title' ? 'Film' : ($entity === 'company' ? 'Company' : 'Person');
+$profile_file_label = $entity === 'title' ? __('Title Profile File', 'academy-awards-table') : ($entity === 'company' ? __('Company Profile File', 'academy-awards-table') : __('Person Profile File', 'academy-awards-table'));
+$profile_file_class = $entity === 'title' ? 'is-title-file' : ($entity === 'company' ? 'is-company-file' : 'is-person-file');
+$profile_subject_label = $label ? $label : strtoupper($id);
 $summary = '';
 $visual = array();
 $entity_anchor_title = '';
@@ -608,7 +611,23 @@ if ($entity !== 'title' && !empty($distinct_films)) {
 
 get_header();
 ?>
-<div class="aat-container aat-entity-page">
+<div class="aat-container aat-entity-page aat-profile-file <?php echo esc_attr($profile_file_class); ?>">
+    <style>
+        body .aat-container.aat-profile-file{display:grid!important;gap:clamp(22px,3vw,36px)!important;min-width:0!important;max-width:100%!important}
+        body .aat-container.aat-profile-file .aat-entity-hero{display:grid!important;grid-template-columns:minmax(220px,320px) minmax(0,1fr)!important;gap:clamp(20px,3vw,38px)!important;align-items:stretch!important;margin:0!important;padding:clamp(20px,4vw,42px)!important;border:1px solid rgba(201,169,97,.24)!important;border-radius:18px!important;background-color:rgba(8,18,29,.95)!important}
+        body .aat-container.aat-profile-file .aat-entity-hero-copy{display:grid!important;align-content:center!important;gap:14px!important;min-width:0!important}
+        body .aat-container.aat-profile-file .aat-entity-title{color:var(--aat-white)!important;font-size:clamp(2.25rem,5vw,5.05rem)!important;line-height:.98!important;letter-spacing:0!important;text-transform:none!important;text-align:left!important;max-width:12ch!important}
+        body .aat-container.aat-profile-file .aat-entity-summary,body .aat-container.aat-profile-file .aat-entity-overview{max-width:64ch!important}
+        body .aat-container.aat-profile-file .aat-profile-command-band{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;margin:4px 0 2px!important;min-width:0!important}
+        body .aat-container.aat-profile-file .aat-profile-command-card{display:grid!important;gap:7px!important;align-content:end!important;min-width:0!important;min-height:104px!important;padding:14px!important;border:1px solid rgba(201,169,97,.19)!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.016)),rgba(6,15,26,.72)!important}
+        body .aat-container.aat-profile-file .aat-profile-command-card span{color:var(--aat-gold-light)!important;font-size:.68rem!important;letter-spacing:.13em!important;text-transform:uppercase!important}
+        body .aat-container.aat-profile-file .aat-profile-command-card strong{color:var(--aat-white)!important;font-size:clamp(1.15rem,2vw,1.85rem)!important;line-height:1.05!important;overflow-wrap:anywhere!important}
+        body .aat-container.aat-profile-file .aat-entity-actions{display:flex!important;flex-wrap:wrap!important;gap:10px!important;margin-top:4px!important}
+        body .aat-container.aat-profile-file .aat-stats-bar.aat-entity-stats{display:none!important}
+        body .aat-container.aat-profile-file .aat-entity-section,body .aat-container.aat-profile-file .aat-lunara-review-module{margin-top:0!important}
+        @media(max-width:900px){body .aat-container.aat-profile-file .aat-entity-hero{grid-template-columns:minmax(0,1fr)!important}body .aat-container.aat-profile-file .aat-entity-poster-wrap{max-width:230px!important}body .aat-container.aat-profile-file .aat-profile-command-band{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+        @media(max-width:620px){body .aat-container.aat-profile-file{width:min(100%,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;margin-left:auto!important;margin-right:auto!important;overflow-x:hidden!important}body .aat-container.aat-profile-file .aat-entity-hero{padding:16px!important;border-radius:12px!important}body .aat-container.aat-profile-file .aat-entity-poster-wrap,body .aat-container.aat-profile-file .aat-entity-poster-wrap.is-person,body .aat-container.aat-profile-file .aat-entity-poster-wrap.is-company{width:min(230px,100%)!important;max-width:min(230px,100%)!important;justify-self:start!important}body .aat-container.aat-profile-file .aat-entity-poster-wrap img,body .aat-container.aat-profile-file .aat-entity-poster,body .aat-container.aat-profile-file .aat-entity-portrait{width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}body .aat-container.aat-profile-file .aat-entity-title{font-size:clamp(2rem,12vw,3rem)!important;max-width:10ch!important}body .aat-container.aat-profile-file .aat-profile-command-band{grid-template-columns:minmax(0,1fr)!important}body .aat-container.aat-profile-file .aat-profile-command-card{min-height:0!important;padding:13px!important}body .aat-container.aat-profile-file .aat-entity-summary,body .aat-container.aat-profile-file .aat-entity-overview,body .aat-container.aat-profile-file .aat-section-description,body .aat-container.aat-profile-file .aat-history-line{max-width:29ch!important;overflow-wrap:anywhere!important;text-wrap:auto!important;white-space:normal!important}body .aat-container.aat-profile-file .aat-entity-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important}body .aat-container.aat-profile-file .aat-entity-actions .aat-btn{width:100%!important;justify-content:center!important}}
+    </style>
     <nav class="aat-breadcrumbs" aria-label="Breadcrumb">
         <a href="<?php echo esc_url(home_url('/')); ?>">Home</a>
         <span class="aat-sep">/</span>
@@ -641,9 +660,9 @@ get_header();
         <?php endif; ?>
 
         <div class="aat-entity-hero-copy">
-            <div class="aat-entity-kicker"><?php echo esc_html($type_label); ?> Profile</div>
-            <h1 class="aat-entity-title"><?php echo esc_html($label ? $label : strtoupper($id)); ?></h1>
-            <p class="aat-entity-subtitle"><?php echo esc_html__('The Lunara Oscar Ledger', 'academy-awards-table'); ?></p>
+            <div class="aat-entity-kicker"><?php echo esc_html($profile_file_label); ?></div>
+            <h1 class="aat-entity-title"><?php echo esc_html($profile_subject_label); ?></h1>
+            <p class="aat-entity-subtitle"><?php echo esc_html__('Lunara Oscar Ledger profile file', 'academy-awards-table'); ?></p>
             <?php if ($summary) : ?>
                 <p class="aat-entity-summary"><?php echo esc_html($summary); ?></p>
             <?php endif; ?>
@@ -686,11 +705,36 @@ get_header();
                 <?php endif; ?>
             <?php endif; ?>
 
+            <div class="aat-profile-command-band" aria-label="<?php esc_attr_e('Oscar profile summary', 'academy-awards-table'); ?>">
+                <div class="aat-profile-command-card">
+                    <span><?php echo esc_html__('Nominations', 'academy-awards-table'); ?></span>
+                    <strong><?php echo esc_html(number_format_i18n($total_nominations)); ?></strong>
+                </div>
+                <div class="aat-profile-command-card">
+                    <span><?php echo esc_html__('Wins', 'academy-awards-table'); ?></span>
+                    <strong><?php echo esc_html(number_format_i18n($total_wins)); ?></strong>
+                </div>
+                <div class="aat-profile-command-card">
+                    <span><?php echo esc_html__('Span', 'academy-awards-table'); ?></span>
+                    <strong><?php echo $span ? wp_kses_post($span) : esc_html__('Pending', 'academy-awards-table'); ?></strong>
+                </div>
+                <div class="aat-profile-command-card">
+                    <span><?php echo esc_html($entity === 'title' ? __('Categories', 'academy-awards-table') : __('Films', 'academy-awards-table')); ?></span>
+                    <strong><?php echo esc_html(number_format_i18n($entity === 'title' ? $total_categories : count($distinct_films))); ?></strong>
+                </div>
+            </div>
+
             <div class="aat-entity-actions">
-                <?php if (!empty($imdb_url)) : ?>
-                    <a class="aat-btn aat-btn-primary" href="<?php echo esc_url($imdb_url); ?>" target="_blank" rel="noopener noreferrer">IMDb Reference</a>
+                <a class="aat-btn aat-btn-primary" href="#oscar-history"><?php echo esc_html__('Oscar History', 'academy-awards-table'); ?></a>
+                <?php if (!empty($category_rollups) || !empty($ceremony_rollups) || !empty($aat_editorial_refs)) : ?>
+                    <a class="aat-btn aat-btn-secondary" href="#ledger-crossroads"><?php echo esc_html__('Ledger Crossroads', 'academy-awards-table'); ?></a>
                 <?php endif; ?>
-                <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($search_url); ?>"><?php echo esc_html__('Search Lunara', 'academy-awards-table'); ?></a>
+                <?php if ($entity !== 'title' && !empty($distinct_films)) : ?>
+                    <a class="aat-btn aat-btn-secondary" href="#nominated-films"><?php echo esc_html__('Nominated Films', 'academy-awards-table'); ?></a>
+                <?php endif; ?>
+                <?php if (!empty($imdb_url)) : ?>
+                    <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($imdb_url); ?>" target="_blank" rel="noopener noreferrer">IMDb Reference</a>
+                <?php endif; ?>
                 <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($database_url); ?>"><?php echo esc_html__('Return to Ledger', 'academy-awards-table'); ?></a>
             </div>
         </div>
