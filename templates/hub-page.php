@@ -1462,16 +1462,74 @@ get_header();
             }
             $category_spotlight = array();
             $category_winner_rows = array();
+            $is_best_picture_dossier = (strtoupper(trim((string) $canonical)) === 'BEST PICTURE');
+            $category_span_label = ($first_year && $last_year) ? ($first_year . '-' . $last_year) : '';
+            $latest_ceremony_url = $last_cer ? $aat->get_ceremony_url($last_cer) : '';
+            $latest_winner_label = '';
+            if (!empty($latest_winner)) {
+                $latest_winner_label = !empty($latest_winner['primary_label']) ? (string) $latest_winner['primary_label'] : (!empty($latest_winner['film']) ? (string) $latest_winner['film'] : (string) ($latest_winner['name'] ?? ''));
+            }
     ?>
-        <div class="aat-hub-header">
-            <h1 class="aat-hub-title"><?php echo esc_html($label); ?></h1>
-            <p class="aat-hub-subtitle"><?php echo esc_html($canonical); ?></p>
+        <div class="aat-category-dossier<?php echo $is_best_picture_dossier ? ' aat-best-picture-dossier' : ''; ?>">
+        <?php if ($is_best_picture_dossier) : ?>
+            <style>
+                body .aat-container .aat-best-picture-dossier .aat-dossier-hero{display:grid!important;grid-template-columns:minmax(0,1.22fr) minmax(280px,.78fr)!important;gap:clamp(18px,3vw,34px)!important;align-items:stretch!important}
+                body .aat-container .aat-best-picture-dossier .aat-dossier-hero .aat-hub-title{color:var(--aat-white)!important;font-size:clamp(2.55rem,5.4vw,5.25rem)!important;line-height:.98!important;max-width:9.4ch!important;text-align:left!important;text-transform:none!important}
+                body .aat-container .aat-best-picture-dossier .aat-dossier-command-band{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;align-self:center!important;min-width:0!important}
+                body .aat-container .aat-best-picture-dossier .aat-dossier-command-card{display:grid!important;align-content:end!important;gap:8px!important;min-height:118px!important;padding:18px!important;border:1px solid rgba(201,169,97,.2)!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.018)),rgba(6,15,26,.7)!important}
+                body .aat-container .aat-best-picture-dossier .aat-dossier-command-card.is-latest{grid-column:1/-1!important;min-height:148px!important}
+                body .aat-container .aat-best-picture-dossier .aat-era-chapter-visual{display:grid!important;grid-template-columns:minmax(96px,148px) minmax(0,1fr)!important;gap:18px!important;margin:0 0 18px!important;padding:14px!important}
+                body .aat-container .aat-best-picture-dossier .aat-era-chapter-media{display:block!important;min-height:188px!important;max-width:148px!important;aspect-ratio:2/3!important}
+                body .aat-container .aat-best-picture-dossier .aat-ledger-card{display:grid!important;grid-template-columns:minmax(136px,.26fr) minmax(0,1fr)!important;gap:16px!important}
+                @media(max-width:900px){body .aat-container .aat-best-picture-dossier .aat-dossier-hero{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-best-picture-dossier .aat-ledger-card{grid-template-columns:minmax(110px,.3fr) minmax(0,1fr)!important}}
+                @media(max-width:620px){body .aat-container .aat-best-picture-dossier .aat-dossier-command-band,body .aat-container .aat-best-picture-dossier .aat-era-chapter-visual,body .aat-container .aat-best-picture-dossier .aat-ledger-card{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-best-picture-dossier .aat-dossier-command-card,body .aat-container .aat-best-picture-dossier .aat-dossier-command-card.is-latest{min-height:0!important;padding:15px!important}body .aat-container .aat-best-picture-dossier .aat-era-chapter-media{min-height:0!important;max-width:158px!important;aspect-ratio:2/3!important}}
+            </style>
+        <?php endif; ?>
+        <?php if ($is_best_picture_dossier) : ?>
+            <section class="aat-dossier-hero">
+                <div class="aat-dossier-hero-copy">
+                    <p class="aat-hub-kicker"><?php echo esc_html__('Oscar Ledger Dossier', 'academy-awards-table'); ?></p>
+                    <h1 class="aat-hub-title"><?php echo esc_html__('Best Picture Dossier', 'academy-awards-table'); ?></h1>
+                    <p class="aat-hub-subtitle"><?php echo esc_html__('The Academy Awards top category, built as a living historical file: every winner, every ceremony trail, and the films that keep pulling readers deeper into the ledger.', 'academy-awards-table'); ?></p>
+                </div>
+                <div class="aat-dossier-command-band" aria-label="<?php esc_attr_e('Best Picture ledger summary', 'academy-awards-table'); ?>">
+                    <div class="aat-dossier-command-card is-latest">
+                        <span><?php echo esc_html__('Latest Winner', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html($latest_winner_label !== '' ? $latest_winner_label : __('Pending', 'academy-awards-table')); ?></strong>
+                    </div>
+                    <div class="aat-dossier-command-card">
+                        <span><?php echo esc_html__('Span', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html($category_span_label !== '' ? $category_span_label : '-'); ?></strong>
+                    </div>
+                    <div class="aat-dossier-command-card">
+                        <span><?php echo esc_html__('Ceremonies', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html(number_format_i18n($cers)); ?></strong>
+                    </div>
+                    <div class="aat-dossier-command-card">
+                        <span><?php echo esc_html__('Winners', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html(number_format_i18n($wins)); ?></strong>
+                    </div>
+                </div>
+                <div class="aat-hub-actions aat-dossier-actions">
+                    <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($aat->get_categories_index_url()); ?>"><?php echo esc_html__('All Categories', 'academy-awards-table'); ?></a>
+                    <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($aat->get_ceremonies_index_url()); ?>"><?php echo esc_html__('Ceremonies', 'academy-awards-table'); ?></a>
+                    <?php if ($latest_ceremony_url !== '') : ?>
+                        <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($latest_ceremony_url); ?>"><?php echo esc_html__('Latest Ceremony', 'academy-awards-table'); ?></a>
+                    <?php endif; ?>
+                    <a class="aat-btn aat-btn-primary" href="<?php echo esc_url($db_url); ?>"><?php echo esc_html__('Open Full Ledger', 'academy-awards-table'); ?></a>
+                </div>
+            </section>
+        <?php else : ?>
+            <div class="aat-hub-header">
+                <h1 class="aat-hub-title"><?php echo esc_html($label); ?></h1>
+                <p class="aat-hub-subtitle"><?php echo esc_html($canonical); ?></p>
 
-            <div class="aat-hub-actions">
-                <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($aat->get_categories_index_url()); ?>"><?php echo esc_html__('All Categories', 'academy-awards-table'); ?></a>
-                <a class="aat-btn aat-btn-primary" href="<?php echo esc_url($db_url); ?>"><?php echo esc_html__('Open Full Ledger', 'academy-awards-table'); ?></a>
+                <div class="aat-hub-actions">
+                    <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($aat->get_categories_index_url()); ?>"><?php echo esc_html__('All Categories', 'academy-awards-table'); ?></a>
+                    <a class="aat-btn aat-btn-primary" href="<?php echo esc_url($db_url); ?>"><?php echo esc_html__('Open Full Ledger', 'academy-awards-table'); ?></a>
+                </div>
             </div>
-        </div>
+        <?php endif; ?>
 
         <?php if (!empty($latest_winner)) : ?>
             <?php
@@ -1585,9 +1643,10 @@ get_header();
         $category_history_fast_url = remove_query_arg('history');
         ?>
         <?php if (!empty($category_decade_buckets)) : ?>
-            <div class="aat-hub-section aat-category-history">
+            <div class="aat-hub-section aat-category-history<?php echo $is_best_picture_dossier ? ' aat-era-browser' : ''; ?>">
                 <div class="aat-section-head">
-                    <h2 class="aat-section-title"><?php echo esc_html__('Category History', 'academy-awards-table'); ?></h2>
+                    <p class="aat-hub-kicker"><?php echo esc_html($is_best_picture_dossier ? __('Era Browser', 'academy-awards-table') : __('Category Ledger', 'academy-awards-table')); ?></p>
+                    <h2 class="aat-section-title"><?php echo esc_html($is_best_picture_dossier ? __('Best Picture Through the Eras', 'academy-awards-table') : __('Category History', 'academy-awards-table')); ?></h2>
                     <p class="aat-section-description"><?php echo esc_html(sprintf(
                         /* translators: 1: ceremony count, 2: winner count, 3: nominee count */
                         $category_history_full_requested
@@ -1619,8 +1678,54 @@ get_header();
 
                 <div class="aat-decade-groups">
                     <?php foreach ($category_decade_buckets as $decade_key => $decade_bucket) : ?>
-                        <section class="aat-decade-group" id="aat-decade-<?php echo esc_attr($decade_key); ?>">
+                        <section class="aat-decade-group<?php echo $is_best_picture_dossier ? ' aat-era-chapter' : ''; ?>" id="aat-decade-<?php echo esc_attr($decade_key); ?>">
                             <h3 class="aat-decade-heading"><?php echo esc_html($decade_bucket['label']); ?></h3>
+
+                            <?php
+                            $era_spotlight = array();
+                            if ($is_best_picture_dossier && !empty($decade_bucket['ceremonies']) && is_array($decade_bucket['ceremonies'])) {
+                                foreach ($decade_bucket['ceremonies'] as $era_ceremony_data) {
+                                    $era_winners = !empty($era_ceremony_data['winner_rows']) && is_array($era_ceremony_data['winner_rows']) ? $era_ceremony_data['winner_rows'] : array();
+                                    foreach ($era_winners as $era_winner) {
+                                        $era_film_id = strtolower(trim((string) ($era_winner['film_id'] ?? '')));
+                                        if ($era_film_id === '') {
+                                            continue;
+                                        }
+                                        $era_visual = method_exists($aat, 'get_title_visual_package') ? $aat->get_title_visual_package($era_film_id, 'medium') : array();
+                                        if (empty($era_visual['poster_html']) && empty($era_visual['poster_url']) && empty($era_visual['backdrop_url'])) {
+                                            continue;
+                                        }
+                                        $era_spotlight = array(
+                                            'entry'  => $aat_enrich_winner_entry_links($era_winner),
+                                            'visual' => $era_visual,
+                                        );
+                                        break 2;
+                                    }
+                                }
+                            }
+                            ?>
+                            <?php if (!empty($era_spotlight)) :
+                                $era_entry = $era_spotlight['entry'];
+                                $era_visual = $era_spotlight['visual'];
+                                $era_film_label = !empty($era_entry['film']) ? (string) $era_entry['film'] : (string) ($era_entry['primary_label'] ?? '');
+                                $era_film_url = !empty($era_entry['film_url']) ? (string) $era_entry['film_url'] : (!empty($era_entry['primary_url']) ? (string) $era_entry['primary_url'] : '');
+                                $era_backdrop_style = $aat_get_card_backdrop_style($era_visual['poster_url'] ?? '', $era_visual['backdrop_url'] ?? '');
+                            ?>
+                                <article class="aat-era-chapter-visual<?php echo $era_backdrop_style !== '' ? ' aat-card-has-backdrop' : ''; ?>"<?php if ($era_backdrop_style !== '') : ?> style="<?php echo esc_attr($era_backdrop_style); ?>"<?php endif; ?>>
+                                    <a class="aat-era-chapter-media" href="<?php echo esc_url($era_film_url !== '' ? $era_film_url : $db_url); ?>">
+                                        <?php if (!empty($era_visual['poster_html'])) : ?>
+                                            <?php echo $era_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                        <?php elseif (!empty($era_visual['poster_url'])) : ?>
+                                            <img src="<?php echo esc_url($era_visual['poster_url']); ?>" alt="<?php echo esc_attr($era_film_label); ?> poster" loading="lazy" decoding="async" />
+                                        <?php endif; ?>
+                                    </a>
+                                    <div class="aat-era-chapter-copy">
+                                        <span class="aat-winner-badge"><?php echo esc_html__('Era Marker', 'academy-awards-table'); ?></span>
+                                        <h4><?php echo $aat_render_hub_text_link($era_film_label, $era_film_url, 'aat-hub-inline-link aat-hub-inline-link-title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></h4>
+                                        <p><?php echo esc_html(sprintf(__('A visual entry point into the %s Best Picture run.', 'academy-awards-table'), $decade_bucket['label'])); ?></p>
+                                    </div>
+                                </article>
+                            <?php endif; ?>
 
                             <div class="aat-decade-ceremonies">
                                 <?php foreach ($decade_bucket['ceremonies'] as $ceremony_data) :
@@ -1633,7 +1738,7 @@ get_header();
                                     $render_full_nominee_trail = $category_history_full_requested || $category_history_rendered_ceremonies <= $category_history_recent_trail_limit;
                                     $render_compact_actions = !$category_history_full_requested && !$render_full_nominee_trail;
                                 ?>
-                                    <article class="aat-category-ceremony-row">
+                                    <article class="aat-category-ceremony-row<?php echo $is_best_picture_dossier ? ' aat-ledger-card' : ''; ?>">
                                         <header class="aat-category-ceremony-meta">
                                             <?php if ($cer_url !== '' && $cer > 0) : ?>
                                                 <a class="aat-entity-link aat-timeline-link" href="<?php echo esc_url($cer_url); ?>"><?php echo esc_html($aat->ordinal($cer)); ?> <?php esc_html_e('Ceremony', 'academy-awards-table'); ?></a>
@@ -1931,6 +2036,7 @@ get_header();
                 ?>
             </div>
         <?php endif; ?>
+        </div>
 
     <?php
         // Unknown hub

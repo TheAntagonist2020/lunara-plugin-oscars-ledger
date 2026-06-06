@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.8
+Stable tag: 2.7.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.9 =
+* Created the first route-family visual-system proof of concept for the Best Picture category page, adding a Best Picture Dossier header, command band, era browser styling, visual era markers, and denser ledger-card rhythm while preserving category URLs, fast view, and `?history=full`.
 
 = 2.7.8 =
 * Tightened default category fast-view output by trimming redundant older-history action buttons and reducing default category highlights to a curated 9 cards. Full nominee/history mode remains available with `?history=full`.
