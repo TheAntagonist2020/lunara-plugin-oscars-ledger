@@ -602,6 +602,9 @@ body.aat-shell-page aside[data-type="type-2"] {
 body .aat-container .aat-best-picture-dossier {
     display: grid !important;
     gap: clamp(22px, 3vw, 34px) !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
 }
 
 .aat-dossier-hero {
@@ -625,6 +628,15 @@ body .aat-container .aat-best-picture-dossier .aat-dossier-hero {
     grid-template-columns: minmax(0, 1.38fr) minmax(300px, .82fr) !important;
     gap: clamp(18px, 3vw, 34px) !important;
     align-items: stretch !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+body .aat-container .aat-best-picture-dossier .aat-dossier-hero-copy,
+body .aat-container .aat-best-picture-dossier .aat-hub-subtitle {
+    min-width: 0 !important;
+    max-width: 100% !important;
 }
 
 .aat-dossier-hero::before {
@@ -944,6 +956,44 @@ body .aat-container .aat-best-picture-dossier .aat-ledger-card {
     line-height: 1.14;
 }
 
+.aat-best-picture-dossier .aat-ledger-card .aat-category-history-meta {
+    max-width: 64ch;
+}
+
+.aat-best-picture-dossier .aat-ledger-card .aat-category-history-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    margin-top: 8px !important;
+    padding-top: 8px !important;
+    border-top-style: solid;
+}
+
+.aat-best-picture-dossier .aat-ledger-card .aat-category-history-actions .aat-winner-circle-action,
+.aat-best-picture-dossier .aat-ledger-card .aat-nominee-trail-compact .aat-winner-circle-action {
+    width: auto !important;
+    min-height: 30px !important;
+    padding: 6px 10px !important;
+    flex: 0 1 auto !important;
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+}
+
+.aat-best-picture-dossier .aat-ledger-card .aat-nominee-trail-compact {
+    padding-top: 2px;
+}
+
+.aat-best-picture-dossier .aat-ledger-card .aat-nominee-trail-compact .aat-nominee-trail-summary {
+    min-height: 28px;
+    padding: 4px 11px;
+    border: 1px solid rgba(201,169,97,.18);
+    border-radius: 999px;
+    background: rgba(4,13,22,.26);
+    color: rgba(244,239,227,.84);
+    display: inline-flex;
+    align-items: center;
+}
+
 .aat-ledger-card .aat-nominee-trail {
     grid-column: 2;
 }
@@ -1028,10 +1078,14 @@ body .aat-container .aat-best-picture-dossier .aat-ledger-card {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
         width: 100%;
+        max-width: 100%;
     }
 
     .aat-dossier-actions .aat-btn {
         width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        justify-content: center;
     }
 
     .aat-era-browser {
@@ -1066,6 +1120,38 @@ body .aat-container .aat-best-picture-dossier .aat-ledger-card {
 
     .aat-ledger-card .aat-nominee-trail {
         grid-column: auto;
+    }
+
+    .aat-best-picture-dossier .aat-ledger-card {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .aat-best-picture-dossier .aat-ledger-card .aat-category-ceremony-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .aat-best-picture-dossier .aat-ledger-card .aat-category-history-winner {
+        display: grid;
+        gap: 8px;
+    }
+
+    .aat-best-picture-dossier .aat-ledger-card .aat-category-history-actions {
+        gap: 5px !important;
+        margin-top: 4px !important;
+        padding-top: 6px !important;
+    }
+
+    .aat-best-picture-dossier .aat-ledger-card .aat-category-history-actions .aat-winner-circle-action,
+    .aat-best-picture-dossier .aat-ledger-card .aat-nominee-trail-compact .aat-winner-circle-action {
+        width: auto !important;
+        min-height: 28px !important;
+        padding: 5px 9px !important;
+        flex: 0 1 auto !important;
+        font-size: 0.63rem;
     }
 }
 .aat-hub-kicker {
@@ -5760,5 +5846,86 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     .aat-entity-page .aat-entity-poster-wrap.is-person,
     .aat-entity-page .aat-entity-poster-wrap.is-company {
         max-width: 132px;
+    }
+}
+
+/* Best Picture dossier final mobile guard: keep the proof page readable after global route rules. */
+@media (max-width: 640px) {
+    .aat-container .aat-best-picture-dossier,
+    .aat-container .aat-best-picture-dossier *,
+    .aat-container .aat-best-picture-dossier .aat-dossier-hero,
+    .aat-container .aat-best-picture-dossier .aat-dossier-hero-copy,
+    .aat-container .aat-best-picture-dossier .aat-hub-subtitle,
+    .aat-container .aat-best-picture-dossier .aat-dossier-command-band,
+    .aat-container .aat-best-picture-dossier .aat-dossier-command-card,
+    .aat-container .aat-best-picture-dossier .aat-dossier-actions,
+    .aat-container .aat-best-picture-dossier .aat-era-browser,
+    .aat-container .aat-best-picture-dossier .aat-era-chapter,
+    .aat-container .aat-best-picture-dossier .aat-ledger-card {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    body .aat-container .aat-category-dossier.aat-best-picture-dossier {
+        width: min(100%, calc(100vw - 24px)) !important;
+        max-width: calc(100vw - 24px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    body .aat-container .aat-best-picture-dossier .aat-dossier-hero {
+        width: 100% !important;
+        padding: 16px !important;
+    }
+
+    .aat-container .aat-best-picture-dossier .aat-hub-title,
+    .aat-container .aat-best-picture-dossier .aat-hub-subtitle,
+    .aat-container .aat-best-picture-dossier .aat-category-history-title,
+    .aat-container .aat-best-picture-dossier .aat-category-history-meta,
+    .aat-container .aat-best-picture-dossier .aat-category-history-detail {
+        overflow-wrap: anywhere !important;
+        text-wrap: auto !important;
+        white-space: normal !important;
+    }
+
+    body .aat-container .aat-best-picture-dossier .aat-dossier-hero .aat-hub-subtitle {
+        max-width: 29ch !important;
+    }
+
+    .aat-container .aat-best-picture-dossier .aat-era-chapter-copy h4,
+    .aat-container .aat-best-picture-dossier .aat-era-chapter-copy p {
+        max-width: 29ch !important;
+        overflow-wrap: anywhere !important;
+        text-wrap: auto !important;
+        white-space: normal !important;
+    }
+
+    .aat-container .aat-best-picture-dossier .aat-dossier-actions {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        width: 100% !important;
+    }
+
+    .aat-container .aat-best-picture-dossier .aat-dossier-actions .aat-btn {
+        justify-content: center !important;
+        width: 100% !important;
+    }
+
+    .aat-container .aat-best-picture-dossier .aat-ledger-card .aat-category-ceremony-meta {
+        display: grid !important;
+        justify-content: start !important;
+        gap: 4px !important;
+    }
+
+    .aat-container .aat-best-picture-dossier .aat-ledger-card .aat-category-history-title,
+    .aat-container .aat-best-picture-dossier .aat-ledger-card .aat-category-history-meta,
+    .aat-container .aat-best-picture-dossier .aat-ledger-card .aat-category-history-detail {
+        max-width: 29ch !important;
+    }
+
+    .aat-hub-page .aat-best-picture-dossier .aat-ledger-card .aat-winner-circle-action {
+        width: auto !important;
     }
 }
