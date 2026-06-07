@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.13
+Stable tag: 2.7.14
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.14 =
+* Added a read-only OMDb Integrity Audit admin screen for IMDb-title-ID, title/year, and poster identity checks. OMDb keys are read from `AAT_OMDB_API_KEY` or a saved WordPress option, not committed to the plugin repository.
 
 = 2.7.13 =
 * Extended the premium category dossier system beyond Best Picture to marquee Oscar categories, adding category-specific dossier headers, shared command-band rhythm, era-browser treatment, visual interruption hooks, and ledger-card history layout while preserving existing category URLs and fast/full history behavior.

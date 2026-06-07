@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.13
+ * Version: 2.7.14
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.13');
+define('AAT_VERSION', '2.7.14');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -4262,7 +4262,7 @@ class Academy_Awards_Table {
          * Safer: gate by the `page` query var (our menu slugs) instead.
          */
         $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
-        $allowed_pages = array('academy-awards-table', 'academy-awards-tracker', 'academy-awards-posters');
+        $allowed_pages = array('academy-awards-table', 'academy-awards-tracker', 'academy-awards-posters', 'academy-awards-omdb-audit');
 
         if (!in_array($page, $allowed_pages, true)) {
             return;
@@ -4328,6 +4328,15 @@ class Academy_Awards_Table {
             'manage_options',
             'academy-awards-posters',
             array($this, 'render_poster_admin_page')
+        );
+
+        add_submenu_page(
+            'academy-awards-table',
+            __('OMDb Integrity Audit', 'academy-awards-table'),
+            __('OMDb Audit', 'academy-awards-table'),
+            'manage_options',
+            'academy-awards-omdb-audit',
+            array($this, 'render_omdb_audit_admin_page')
         );
     }
 
@@ -4396,6 +4405,48 @@ class Academy_Awards_Table {
         if (!is_array($rows)) $rows = array();
 
         include AAT_PLUGIN_DIR . 'templates/poster-admin.php';
+    }
+
+    /**
+     * Render the read-only OMDb integrity audit page.
+     */
+    public function render_omdb_audit_admin_page() {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to access this page.', 'academy-awards-table'));
+        }
+
+        $message = '';
+        $message_type = 'success';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_omdb_settings_nonce'])) {
+            check_admin_referer('aat_omdb_settings', 'aat_omdb_settings_nonce');
+
+            if (!empty($_POST['aat_omdb_clear_key'])) {
+                delete_option('aat_omdb_api_key');
+                $message = __('OMDb API key removed from WordPress options.', 'academy-awards-table');
+            } elseif (isset($_POST['aat_omdb_api_key']) && trim((string) wp_unslash($_POST['aat_omdb_api_key'])) !== '') {
+                $key = sanitize_text_field(wp_unslash($_POST['aat_omdb_api_key']));
+                update_option('aat_omdb_api_key', $key, false);
+                $message = __('OMDb API key saved. It is stored in WordPress options, not committed to the plugin repository.', 'academy-awards-table');
+            } else {
+                $message = __('No key change was made.', 'academy-awards-table');
+                $message_type = 'warning';
+            }
+        }
+
+        $limit = isset($_GET['limit']) ? absint($_GET['limit']) : 25;
+        if ($limit <= 0) {
+            $limit = 25;
+        }
+        $limit = min(100, $limit);
+
+        $offset = isset($_GET['offset']) ? absint($_GET['offset']) : 0;
+        $force_refresh = isset($_GET['refresh']) && current_user_can('manage_options');
+
+        $omdb_key_configured = $this->get_omdb_api_key() !== '';
+        $audit = $this->build_omdb_integrity_audit($limit, $offset, $force_refresh);
+
+        include AAT_PLUGIN_DIR . 'templates/omdb-audit-admin.php';
     }
 
 
@@ -4828,6 +4879,259 @@ class Academy_Awards_Table {
             return (string) AAT_TMDB_API_KEY;
         }
         return '';
+    }
+
+    /**
+     * Retrieve the OMDb API key without committing secrets to the repository.
+     */
+    public function get_omdb_api_key() {
+        if (defined('AAT_OMDB_API_KEY') && AAT_OMDB_API_KEY) {
+            return trim((string) AAT_OMDB_API_KEY);
+        }
+
+        $key = get_option('aat_omdb_api_key', '');
+        return trim((string) $key);
+    }
+
+    /**
+     * Build the patron Poster API URL for a title.
+     */
+    public function get_omdb_poster_api_url($imdb_id) {
+        $imdb_id = strtolower(trim((string) $imdb_id));
+        if (!preg_match('/^tt\d{7,8}$/', $imdb_id)) {
+            return '';
+        }
+
+        $key = $this->get_omdb_api_key();
+        if ($key === '') {
+            return '';
+        }
+
+        return add_query_arg(
+            array(
+                'apikey' => $key,
+                'i' => $imdb_id,
+            ),
+            'https://img.omdbapi.com/'
+        );
+    }
+
+    /**
+     * Fetch and cache OMDb title data by IMDb title ID.
+     */
+    public function get_omdb_data_for_imdb_id($imdb_id, $force_refresh = false) {
+        $imdb_id = strtolower(trim((string) $imdb_id));
+        if (!preg_match('/^tt\d{7,8}$/', $imdb_id)) {
+            return array('error' => __('Invalid IMDb title ID.', 'academy-awards-table'));
+        }
+
+        $key = $this->get_omdb_api_key();
+        if ($key === '') {
+            return array('error' => __('OMDb API key is not configured.', 'academy-awards-table'));
+        }
+
+        $cache_key = 'aat_omdb_title_v1_' . $imdb_id;
+        if (!$force_refresh) {
+            $cached = get_transient($cache_key);
+            if (is_array($cached)) {
+                return $cached;
+            }
+        }
+
+        $url = add_query_arg(
+            array(
+                'apikey' => $key,
+                'i' => $imdb_id,
+                'r' => 'json',
+                'plot' => 'short',
+            ),
+            'https://www.omdbapi.com/'
+        );
+
+        $response = wp_remote_get($url, array('timeout' => 15));
+        if (is_wp_error($response)) {
+            $out = array('error' => $response->get_error_message());
+            set_transient($cache_key, $out, HOUR_IN_SECONDS);
+            return $out;
+        }
+
+        $code = (int) wp_remote_retrieve_response_code($response);
+        if ($code < 200 || $code >= 300) {
+            $out = array(
+                'error' => sprintf(
+                    /* translators: %d: HTTP status code */
+                    __('OMDb returned HTTP %d.', 'academy-awards-table'),
+                    $code
+                ),
+            );
+            set_transient($cache_key, $out, HOUR_IN_SECONDS);
+            return $out;
+        }
+
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+        if (!is_array($data)) {
+            $out = array('error' => __('OMDb response was not valid JSON.', 'academy-awards-table'));
+            set_transient($cache_key, $out, HOUR_IN_SECONDS);
+            return $out;
+        }
+
+        if (isset($data['Response']) && strtolower((string) $data['Response']) === 'false') {
+            $out = array('error' => trim((string) ($data['Error'] ?? __('OMDb lookup failed.', 'academy-awards-table'))));
+            set_transient($cache_key, $out, HOUR_IN_SECONDS);
+            return $out;
+        }
+
+        $out = array(
+            'imdb_id' => strtolower(trim((string) ($data['imdbID'] ?? $imdb_id))),
+            'title' => trim((string) ($data['Title'] ?? '')),
+            'year' => trim((string) ($data['Year'] ?? '')),
+            'type' => trim((string) ($data['Type'] ?? '')),
+            'poster' => trim((string) ($data['Poster'] ?? '')),
+            'runtime' => trim((string) ($data['Runtime'] ?? '')),
+            'director' => trim((string) ($data['Director'] ?? '')),
+            'released' => trim((string) ($data['Released'] ?? '')),
+            'raw' => $data,
+        );
+
+        set_transient($cache_key, $out, 7 * DAY_IN_SECONDS);
+        return $out;
+    }
+
+    /**
+     * Build read-only OMDb comparison rows for the admin integrity screen.
+     */
+    public function build_omdb_integrity_audit($limit = 25, $offset = 0, $force_refresh = false) {
+        global $wpdb;
+
+        $limit = max(1, min(100, absint($limit)));
+        $offset = max(0, absint($offset));
+        $table_name = $this->get_table_name();
+
+        $rows = $wpdb->get_results(
+            "SELECT ceremony, year, film, film_id, COUNT(*) AS mentions, SUM(CASE WHEN winner = 1 THEN 1 ELSE 0 END) AS wins
+             FROM $table_name
+             WHERE TRIM(COALESCE(film_id, '')) <> ''
+             GROUP BY ceremony, year, film, film_id
+             ORDER BY ceremony DESC, wins DESC, film ASC",
+            ARRAY_A
+        );
+
+        $titles = array();
+        foreach ((array) $rows as $row) {
+            foreach ($this->extract_title_ids($row['film_id'] ?? '') as $tt_id) {
+                if (isset($titles[$tt_id])) {
+                    $titles[$tt_id]['mentions'] += (int) ($row['mentions'] ?? 0);
+                    $titles[$tt_id]['wins'] += (int) ($row['wins'] ?? 0);
+                    continue;
+                }
+
+                $titles[$tt_id] = array(
+                    'imdb_id' => $tt_id,
+                    'film' => trim((string) ($row['film'] ?? '')),
+                    'year' => preg_replace('/[^0-9]/', '', (string) ($row['year'] ?? '')),
+                    'ceremony' => (int) ($row['ceremony'] ?? 0),
+                    'mentions' => (int) ($row['mentions'] ?? 0),
+                    'wins' => (int) ($row['wins'] ?? 0),
+                );
+            }
+        }
+
+        $total = count($titles);
+        $sample = array_slice(array_values($titles), $offset, $limit);
+        $audit_rows = array();
+        $counts = array(
+            'match' => 0,
+            'warning' => 0,
+            'error' => 0,
+            'unchecked' => 0,
+        );
+
+        foreach ($sample as $item) {
+            $omdb = $this->get_omdb_data_for_imdb_id($item['imdb_id'], $force_refresh);
+            $warnings = array();
+            $status = 'match';
+
+            if (!empty($omdb['error'])) {
+                $status = $this->get_omdb_api_key() === '' ? 'unchecked' : 'error';
+                $warnings[] = (string) $omdb['error'];
+            } else {
+                $dataset_title_key = $this->normalize_title_compare_key($item['film']);
+                $omdb_title_key = $this->normalize_title_compare_key($omdb['title'] ?? '');
+                if ($dataset_title_key !== '' && $omdb_title_key !== '' && $dataset_title_key !== $omdb_title_key) {
+                    $warnings[] = sprintf(
+                        /* translators: 1: dataset title, 2: OMDb title */
+                        __('Title differs: dataset "%1$s" vs OMDb "%2$s".', 'academy-awards-table'),
+                        $item['film'],
+                        (string) ($omdb['title'] ?? '')
+                    );
+                }
+
+                $omdb_year = '';
+                if (preg_match('/\d{4}/', (string) ($omdb['year'] ?? ''), $m)) {
+                    $omdb_year = $m[0];
+                }
+
+                if ($item['year'] !== '' && $omdb_year !== '' && $item['year'] !== $omdb_year) {
+                    $warnings[] = sprintf(
+                        /* translators: 1: dataset year, 2: OMDb year */
+                        __('Year differs: dataset %1$s vs OMDb %2$s.', 'academy-awards-table'),
+                        $item['year'],
+                        $omdb_year
+                    );
+                }
+
+                if (empty($omdb['poster']) || strtoupper((string) $omdb['poster']) === 'N/A') {
+                    $warnings[] = __('OMDb has no poster URL for this title.', 'academy-awards-table');
+                }
+
+                if (!empty($warnings)) {
+                    $status = 'warning';
+                }
+            }
+
+            if (!isset($counts[$status])) {
+                $counts[$status] = 0;
+            }
+            $counts[$status]++;
+
+            $audit_rows[] = array(
+                'status' => $status,
+                'warnings' => $warnings,
+                'dataset' => $item,
+                'omdb' => $omdb,
+                'poster_api_url' => $this->get_omdb_poster_api_url($item['imdb_id']),
+                'entity_url' => $this->build_entity_url_from_id($item['imdb_id']),
+                'imdb_url' => $this->build_imdb_url($item['imdb_id']),
+            );
+        }
+
+        return array(
+            'total' => $total,
+            'limit' => $limit,
+            'offset' => $offset,
+            'rows' => $audit_rows,
+            'counts' => $counts,
+            'has_key' => $this->get_omdb_api_key() !== '',
+        );
+    }
+
+    /**
+     * Normalize title strings for OMDb comparison without over-cleaning display data.
+     */
+    private function normalize_title_compare_key($title) {
+        $title = trim((string) $title);
+        if ($title === '') {
+            return '';
+        }
+        if (function_exists('remove_accents')) {
+            $title = remove_accents($title);
+        }
+        $title = strtolower($title);
+        $title = preg_replace('/^(the|a|an)\s+/', '', $title);
+        $title = str_replace('&', 'and', $title);
+        $title = preg_replace('/[^a-z0-9]+/', ' ', (string) $title);
+        $title = preg_replace('/\s+/', ' ', (string) $title);
+        return trim((string) $title);
     }
 
 

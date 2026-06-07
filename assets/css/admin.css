@@ -241,6 +241,72 @@
     border: 1px solid #FFEEBA;
 }
 
+.aat-admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 18px;
+}
+
+.aat-omdb-audit-table td {
+    vertical-align: top;
+}
+
+.aat-omdb-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.aat-omdb-status-match {
+    background: #dff5e6;
+    color: #155724;
+}
+
+.aat-omdb-status-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.aat-omdb-status-error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.aat-omdb-status-unchecked {
+    background: #e7edf3;
+    color: #405366;
+}
+
+.aat-omdb-poster-cell {
+    width: 92px;
+}
+
+.aat-omdb-poster {
+    display: block;
+    width: 62px;
+    height: 92px;
+    object-fit: cover;
+    border-radius: 6px;
+    background: #0a1520;
+    box-shadow: 0 6px 18px rgba(10, 21, 32, .18);
+}
+
+.aat-omdb-warnings {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.aat-omdb-warnings li {
+    margin-bottom: 5px;
+}
+
 /* Danger Zone */
 .aat-danger-zone {
     border: 2px solid #DC3545;
