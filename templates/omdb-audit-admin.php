@@ -266,6 +266,9 @@ $review_filter_url_args = array(
                             $issue_type = sanitize_key((string) ($row['issue_type'] ?? $status));
                             $poster = trim((string) ($omdb['poster'] ?? ''));
                             $has_poster = $poster !== '' && strtoupper($poster) !== 'N/A';
+                            $local_poster = is_array($row['local_poster'] ?? null) ? $row['local_poster'] : array();
+                            $has_local_poster = !empty($local_poster['has_local_poster']);
+                            $local_thumb_url = (string) ($local_poster['thumb_url'] ?? '');
                             $review_state = sanitize_key((string) ($review['review_state'] ?? 'needs_review'));
                             $review_note = (string) ($review['correction_note'] ?? '');
                             $is_reviewed = !empty($review['is_reviewed']);
@@ -438,11 +441,38 @@ $review_filter_url_args = array(
                                     <?php endif; ?>
                                 </td>
                                 <td class="aat-omdb-poster-cell">
-                                    <?php if ($has_poster) : ?>
-                                        <img class="aat-omdb-poster" src="<?php echo esc_url($poster); ?>" alt="<?php echo esc_attr(((string) ($omdb['title'] ?? $dataset['film'] ?? 'Film')) . ' poster'); ?>" loading="lazy" decoding="async">
-                                    <?php else : ?>
-                                        <span class="aat-muted"><?php echo esc_html__('No poster', 'academy-awards-table'); ?></span>
-                                    <?php endif; ?>
+                                    <div class="aat-omdb-poster-stack">
+                                        <div class="aat-omdb-poster-preview-block">
+                                            <span><?php echo esc_html__('OMDb', 'academy-awards-table'); ?></span>
+                                            <?php if ($has_poster) : ?>
+                                                <img class="aat-omdb-poster" src="<?php echo esc_url($poster); ?>" alt="<?php echo esc_attr(((string) ($omdb['title'] ?? $dataset['film'] ?? 'Film')) . ' poster'); ?>" loading="lazy" decoding="async">
+                                            <?php else : ?>
+                                                <em><?php echo esc_html__('No poster', 'academy-awards-table'); ?></em>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="aat-omdb-poster-preview-block">
+                                            <span><?php echo esc_html__('Lunara', 'academy-awards-table'); ?></span>
+                                            <?php if ($has_local_poster && $local_thumb_url !== '') : ?>
+                                                <img class="aat-omdb-poster" src="<?php echo esc_url($local_thumb_url); ?>" alt="<?php echo esc_attr__('Current Lunara poster', 'academy-awards-table'); ?>" loading="lazy" decoding="async">
+                                                <em><?php echo esc_html((string) ($local_poster['source'] ?? __('Mapped', 'academy-awards-table'))); ?></em>
+                                            <?php elseif ($has_local_poster) : ?>
+                                                <em><?php echo esc_html__('Mapped locally', 'academy-awards-table'); ?></em>
+                                            <?php else : ?>
+                                                <em><?php echo esc_html__('Not mapped', 'academy-awards-table'); ?></em>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if ($has_poster && !$has_local_poster && !empty($dataset['imdb_id'])) : ?>
+                                            <form class="aat-omdb-poster-import-form" method="post" action="<?php echo esc_url(add_query_arg(array_merge($filter_url_args, array('issue' => $issue_filter, 'review_state' => $review_state_filter, 'offset' => $offset)), admin_url('admin.php'))); ?>">
+                                                <?php wp_nonce_field('aat_omdb_poster_import', 'aat_omdb_poster_import_nonce'); ?>
+                                                <input type="hidden" name="aat_omdb_poster_import_imdb_id" value="<?php echo esc_attr((string) ($dataset['imdb_id'] ?? '')); ?>">
+                                                <label>
+                                                    <input type="checkbox" name="aat_omdb_poster_import_confirm" value="1">
+                                                    <?php echo esc_html__('Accept this OMDb poster into Lunara.', 'academy-awards-table'); ?>
+                                                </label>
+                                                <button class="button button-small aat-omdb-poster-import-button" type="submit"><?php echo esc_html__('Import Poster', 'academy-awards-table'); ?></button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                 <td>
                                     <?php if (empty($warnings)) : ?>

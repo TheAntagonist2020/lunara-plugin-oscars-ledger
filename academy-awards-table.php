@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.19
+ * Version: 2.7.20
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.19');
+define('AAT_VERSION', '2.7.20');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -4496,6 +4496,21 @@ class Academy_Awards_Table {
                     (int) ($result['updated_rows'] ?? 0)
                 );
             }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_omdb_poster_import_nonce'])) {
+            check_admin_referer('aat_omdb_poster_import', 'aat_omdb_poster_import_nonce');
+
+            $result = $this->import_omdb_poster_from_request($_POST);
+            if (is_wp_error($result)) {
+                $message = $result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $message = sprintf(
+                    /* translators: 1: IMDb title ID, 2: attachment ID */
+                    __('Imported OMDb poster for %1$s as attachment %2$d and mapped it in the Poster Library.', 'academy-awards-table'),
+                    (string) ($result['imdb_id'] ?? ''),
+                    (int) ($result['attachment_id'] ?? 0)
+                );
+            }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_omdb_review_nonce'])) {
             check_admin_referer('aat_omdb_review', 'aat_omdb_review_nonce');
 
@@ -5736,7 +5751,10 @@ class Academy_Awards_Table {
         $filtered_total = $issue_filter === 'all' && $review_state_filter === 'all' ? $total_titles : count($filtered_rows);
         $audit_rows = $issue_filter === 'all' && $review_state_filter === 'all' ? $filtered_rows : array_slice($filtered_rows, $offset, $limit);
         foreach ($audit_rows as $idx => $row) {
+            $dataset = is_array($row['dataset'] ?? null) ? $row['dataset'] : array();
+            $imdb_id = strtolower(trim((string) ($dataset['imdb_id'] ?? '')));
             $audit_rows[$idx]['correction_preview'] = $this->build_omdb_correction_preview_for_row($row, $force_refresh);
+            $audit_rows[$idx]['local_poster'] = $this->get_omdb_audit_local_poster_summary($imdb_id);
         }
 
         return array(
@@ -6375,6 +6393,120 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             $html = preg_replace('/\sdata-image-title="[^"]*"/i', ' data-image-title="' . $safe_title . '"', $html, 1);
         }
         return $html;
+    }
+
+    private function get_omdb_audit_local_poster_summary($tt) {
+        $tt = strtolower(trim((string) $tt));
+        if (!$this->is_title_entity_id($tt)) {
+            return array();
+        }
+
+        $attachment_id = $this->get_poster_attachment_id_for_title($tt);
+        $mapped_attachment_id = 0;
+        $source = '';
+        $updated_at = '';
+
+        global $wpdb;
+        $poster_table = $wpdb->prefix . 'aat_posters';
+        $mapped = $wpdb->get_row($wpdb->prepare("SELECT attachment_id, source, updated_at FROM $poster_table WHERE imdb_id = %s", $tt), ARRAY_A);
+        if (is_array($mapped)) {
+            $mapped_attachment_id = (int) ($mapped['attachment_id'] ?? 0);
+            $source = (string) ($mapped['source'] ?? '');
+            $updated_at = (string) ($mapped['updated_at'] ?? '');
+        }
+
+        $thumb_url = $attachment_id ? wp_get_attachment_image_url($attachment_id, array(60, 90)) : '';
+
+        return array(
+            'imdb_id' => $tt,
+            'attachment_id' => $attachment_id,
+            'mapped_attachment_id' => $mapped_attachment_id,
+            'source' => $source,
+            'updated_at' => $updated_at,
+            'thumb_url' => $thumb_url ? (string) $thumb_url : '',
+            'has_local_poster' => $attachment_id > 0,
+            'has_mapping' => $mapped_attachment_id > 0,
+        );
+    }
+
+    private function import_omdb_poster_from_request($request) {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error('aat_omdb_poster_forbidden', __('You do not have permission to import OMDb posters.', 'academy-awards-table'));
+        }
+
+        if (empty($request['aat_omdb_poster_import_confirm'])) {
+            return new WP_Error('aat_omdb_poster_unconfirmed', __('Confirm the one-row poster import before applying it.', 'academy-awards-table'));
+        }
+
+        $imdb_id = isset($request['aat_omdb_poster_import_imdb_id']) ? strtolower(trim((string) wp_unslash($request['aat_omdb_poster_import_imdb_id']))) : '';
+        if (!$this->is_title_entity_id($imdb_id)) {
+            return new WP_Error('aat_omdb_poster_bad_id', __('Invalid IMDb title ID for poster import.', 'academy-awards-table'));
+        }
+
+        $omdb = $this->get_omdb_data_for_imdb_id($imdb_id, true);
+        if (!empty($omdb['error'])) {
+            return new WP_Error('aat_omdb_poster_source_error', (string) $omdb['error']);
+        }
+
+        $poster = trim((string) ($omdb['poster'] ?? ''));
+        if ($poster === '' || strtoupper($poster) === 'N/A') {
+            return new WP_Error('aat_omdb_poster_missing', __('OMDb does not expose a poster for this title.', 'academy-awards-table'));
+        }
+
+        $poster_api_url = $this->get_omdb_poster_api_url($imdb_id);
+        if ($poster_api_url === '') {
+            return new WP_Error('aat_omdb_poster_key_missing', __('The OMDb patron poster API URL is not available. Confirm the OMDb key is configured.', 'academy-awards-table'));
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+        $tmp = download_url($poster_api_url, 30);
+        if (is_wp_error($tmp)) {
+            return new WP_Error('aat_omdb_poster_download_failed', $tmp->get_error_message());
+        }
+
+        $safe_title = sanitize_file_name((string) ($omdb['title'] ?? $imdb_id));
+        if ($safe_title === '') {
+            $safe_title = $imdb_id;
+        }
+
+        $file = array(
+            'name' => $imdb_id . '-' . $safe_title . '-omdb-poster.jpg',
+            'type' => 'image/jpeg',
+            'tmp_name' => $tmp,
+            'error' => 0,
+            'size' => filesize($tmp),
+        );
+
+        $attachment_id = media_handle_sideload(
+            $file,
+            0,
+            sprintf(
+                /* translators: 1: title, 2: IMDb title ID */
+                __('%1$s poster (%2$s)', 'academy-awards-table'),
+                (string) ($omdb['title'] ?? $imdb_id),
+                $imdb_id
+            )
+        );
+
+        if (is_wp_error($attachment_id)) {
+            @unlink($tmp);
+            return new WP_Error('aat_omdb_poster_sideload_failed', $attachment_id->get_error_message());
+        }
+
+        update_post_meta((int) $attachment_id, '_wp_attachment_image_alt', trim((string) ($omdb['title'] ?? $imdb_id)) . ' poster');
+        update_post_meta((int) $attachment_id, '_aat_omdb_poster_imdb_id', $imdb_id);
+        update_post_meta((int) $attachment_id, '_aat_omdb_poster_source', 'omdb-poster-api');
+
+        $this->set_poster_attachment_id($imdb_id, (int) $attachment_id, 'omdb-poster-api');
+        $this->clear_awards_runtime_caches(array($imdb_id));
+
+        return array(
+            'imdb_id' => $imdb_id,
+            'attachment_id' => (int) $attachment_id,
+        );
     }
 
     /**
