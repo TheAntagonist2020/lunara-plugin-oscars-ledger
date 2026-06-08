@@ -722,6 +722,82 @@
     color: #174ea6 !important;
 }
 
+.aat-omdb-poster-review-box {
+    display: grid;
+    gap: 7px;
+    padding-top: 9px;
+    border-top: 1px solid #dce3ea;
+}
+
+.aat-omdb-poster-review-state {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #f1f4f8;
+    color: #334252;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.aat-omdb-poster-review-state.is-accepted,
+.aat-omdb-poster-review-state.is-ignore_accept {
+    background: #dff5e6;
+    color: #155724;
+}
+
+.aat-omdb-poster-review-state.is-source_failed,
+.aat-omdb-poster-review-state.is-needs_manual {
+    background: #fff3cd;
+    color: #7a5100;
+}
+
+.aat-omdb-poster-review-state.is-manual_replacement {
+    background: #e4edff;
+    color: #174ea6;
+}
+
+.aat-omdb-poster-review-meta,
+.aat-omdb-poster-note-preview {
+    margin: 0;
+    color: #4c5a68;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.aat-omdb-poster-note-preview {
+    padding: 7px;
+    border-left: 3px solid #c9a961;
+    background: #fffaf0;
+}
+
+.aat-omdb-poster-review-form {
+    display: grid;
+    gap: 7px;
+}
+
+.aat-omdb-poster-review-form label {
+    display: grid;
+    gap: 4px;
+}
+
+.aat-omdb-poster-review-form label span {
+    color: #334252;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.aat-omdb-poster-review-form select,
+.aat-omdb-poster-review-form textarea {
+    width: 100%;
+    max-width: 100%;
+}
+
 .aat-omdb-warnings {
     margin: 0;
     padding-left: 18px;

@@ -21,6 +21,7 @@ $prev_offset = max(0, $offset - $limit);
 $masked_key = $omdb_key_configured ? __('Key configured', 'academy-awards-table') : __('Not configured', 'academy-awards-table');
 $omdb_review_states = is_array($omdb_review_states ?? null) ? $omdb_review_states : array();
 $omdb_review_filter_labels = is_array($omdb_review_filter_labels ?? null) ? $omdb_review_filter_labels : array();
+$omdb_poster_review_states = is_array($omdb_poster_review_states ?? null) ? $omdb_poster_review_states : array();
 
 $issue_labels = array(
     'all' => __('All IDs', 'academy-awards-table'),
@@ -269,6 +270,11 @@ $review_filter_url_args = array(
                             $local_poster = is_array($row['local_poster'] ?? null) ? $row['local_poster'] : array();
                             $has_local_poster = !empty($local_poster['has_local_poster']);
                             $local_thumb_url = (string) ($local_poster['thumb_url'] ?? '');
+                            $poster_review = is_array($row['poster_review'] ?? null) ? $row['poster_review'] : array();
+                            $poster_state = sanitize_key((string) ($poster_review['poster_state'] ?? 'needs_review'));
+                            $poster_note = (string) ($poster_review['poster_note'] ?? '');
+                            $poster_is_reviewed = !empty($poster_review['is_reviewed']);
+                            $poster_reviewed_at = (string) ($poster_review['reviewed_at'] ?? '');
                             $review_state = sanitize_key((string) ($review['review_state'] ?? 'needs_review'));
                             $review_note = (string) ($review['correction_note'] ?? '');
                             $is_reviewed = !empty($review['is_reviewed']);
@@ -472,6 +478,40 @@ $review_filter_url_args = array(
                                                 <button class="button button-small aat-omdb-poster-import-button" type="submit"><?php echo esc_html__('Import Poster', 'academy-awards-table'); ?></button>
                                             </form>
                                         <?php endif; ?>
+                                        <div class="aat-omdb-poster-review-box">
+                                            <span class="aat-omdb-poster-review-state is-<?php echo esc_attr($poster_state); ?>">
+                                                <?php echo esc_html((string) ($poster_review['poster_state_label'] ?? $omdb_poster_review_states[$poster_state] ?? __('Needs Poster Review', 'academy-awards-table'))); ?>
+                                            </span>
+                                            <p class="aat-omdb-poster-review-meta">
+                                                <?php
+                                                if ($poster_is_reviewed && $poster_reviewed_at !== '') {
+                                                    echo esc_html(sprintf(__('Poster reviewed %s', 'academy-awards-table'), $poster_reviewed_at));
+                                                } else {
+                                                    echo esc_html__('No private poster note yet.', 'academy-awards-table');
+                                                }
+                                                ?>
+                                            </p>
+                                            <?php if ($poster_note !== '') : ?>
+                                                <p class="aat-omdb-poster-note-preview"><?php echo esc_html($poster_note); ?></p>
+                                            <?php endif; ?>
+                                            <form class="aat-omdb-poster-review-form" method="post" action="<?php echo esc_url(add_query_arg(array_merge($filter_url_args, array('issue' => $issue_filter, 'review_state' => $review_state_filter, 'offset' => $offset)), admin_url('admin.php'))); ?>">
+                                                <?php wp_nonce_field('aat_omdb_poster_review', 'aat_omdb_poster_review_nonce'); ?>
+                                                <input type="hidden" name="aat_omdb_poster_review_imdb_id" value="<?php echo esc_attr((string) ($dataset['imdb_id'] ?? '')); ?>">
+                                                <label>
+                                                    <span><?php echo esc_html__('Poster state', 'academy-awards-table'); ?></span>
+                                                    <select name="aat_omdb_poster_review_state">
+                                                        <?php foreach ($omdb_poster_review_states as $state_key => $state_label) : ?>
+                                                            <option value="<?php echo esc_attr($state_key); ?>" <?php selected($poster_state, $state_key); ?>><?php echo esc_html($state_label); ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </label>
+                                                <label>
+                                                    <span><?php echo esc_html__('Private poster note', 'academy-awards-table'); ?></span>
+                                                    <textarea name="aat_omdb_poster_review_note" rows="2" placeholder="<?php echo esc_attr__('Accept, source failure, manual replacement, or next poster action.', 'academy-awards-table'); ?>"><?php echo esc_textarea($poster_note); ?></textarea>
+                                                </label>
+                                                <button class="button button-small" type="submit"><?php echo esc_html__('Save Poster State', 'academy-awards-table'); ?></button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </td>
                                 <td>

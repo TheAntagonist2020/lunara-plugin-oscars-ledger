@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.20
+Stable tag: 2.7.21
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.21 =
+* Added private OMDb poster review annotations so accepted imports, source failures, manual poster needs, and replacement notes can be tracked separately from bad-ID correction review states.
 
 = 2.7.20 =
 * Added OMDb Audit poster integrity previews and a guarded one-by-one OMDb poster import action that sideloads accepted posters into the Media Library and maps them in the Poster Library without exposing the patron poster URL.

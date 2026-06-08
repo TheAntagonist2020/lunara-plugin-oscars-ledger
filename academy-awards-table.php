@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.20
+ * Version: 2.7.21
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.20');
+define('AAT_VERSION', '2.7.21');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -52,6 +52,11 @@ class Academy_Awards_Table {
         return $wpdb->prefix . 'aat_omdb_reviews';
     }
 
+    private function get_omdb_poster_reviews_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_omdb_poster_reviews';
+    }
+
     private function maybe_create_omdb_reviews_table($charset_collate = '') {
         global $wpdb;
 
@@ -79,6 +84,33 @@ class Academy_Awards_Table {
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql_reviews);
+    }
+
+    private function maybe_create_omdb_poster_reviews_table($charset_collate = '') {
+        global $wpdb;
+
+        if ($charset_collate === '') {
+            $charset_collate = $wpdb->get_charset_collate();
+            if (stripos($charset_collate, 'latin1') !== false) {
+                $charset_collate = 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
+            }
+        }
+
+        $poster_reviews_table = $this->get_omdb_poster_reviews_table_name();
+        $sql_poster_reviews = "CREATE TABLE IF NOT EXISTS $poster_reviews_table (
+            imdb_id varchar(16) NOT NULL,
+            poster_state varchar(32) NOT NULL DEFAULT 'needs_review',
+            poster_note text,
+            reviewer_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
+            reviewed_at datetime DEFAULT NULL,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (imdb_id),
+            KEY poster_state (poster_state),
+            KEY reviewed_at (reviewed_at)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql_poster_reviews);
     }
 
     private function __construct() {
@@ -226,6 +258,7 @@ class Academy_Awards_Table {
         dbDelta($sql_tracker);
         dbDelta($sql_posters);
         $this->maybe_create_omdb_reviews_table($charset_collate);
+        $this->maybe_create_omdb_poster_reviews_table($charset_collate);
 
 
         // Store version
@@ -243,6 +276,7 @@ class Academy_Awards_Table {
     public function maybe_upgrade_schema() {
         // Ensure lightweight annotation tables even if a historical db_version is ahead of the plugin version.
         $this->maybe_create_omdb_reviews_table();
+        $this->maybe_create_omdb_poster_reviews_table();
 
         $installed = get_option('aat_db_version', '0');
         if (version_compare((string) $installed, AAT_VERSION, '>=')) {
@@ -325,6 +359,7 @@ class Academy_Awards_Table {
         dbDelta($sql_tracker);
         dbDelta($sql_posters);
         $this->maybe_create_omdb_reviews_table($charset_collate);
+        $this->maybe_create_omdb_poster_reviews_table($charset_collate);
 
         update_option('aat_db_version', AAT_VERSION);
 
@@ -4496,6 +4531,16 @@ class Academy_Awards_Table {
                     (int) ($result['updated_rows'] ?? 0)
                 );
             }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_omdb_poster_review_nonce'])) {
+            check_admin_referer('aat_omdb_poster_review', 'aat_omdb_poster_review_nonce');
+
+            $result = $this->save_omdb_poster_review_record_from_request($_POST);
+            if (is_wp_error($result)) {
+                $message = $result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $message = __('OMDb poster review state saved.', 'academy-awards-table');
+            }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_omdb_poster_import_nonce'])) {
             check_admin_referer('aat_omdb_poster_import', 'aat_omdb_poster_import_nonce');
 
@@ -4542,6 +4587,7 @@ class Academy_Awards_Table {
         $omdb_key_configured = $this->get_omdb_api_key() !== '';
         $omdb_review_states = $this->get_omdb_review_states();
         $omdb_review_filter_labels = $this->get_omdb_review_filter_labels();
+        $omdb_poster_review_states = $this->get_omdb_poster_review_states();
         $audit = $this->build_omdb_integrity_audit($limit, $offset, $force_refresh, $issue_filter, $scan_limit, $review_state_filter);
 
         include AAT_PLUGIN_DIR . 'templates/omdb-audit-admin.php';
@@ -5035,9 +5081,26 @@ class Academy_Awards_Table {
         );
     }
 
+    private function get_omdb_poster_review_states() {
+        return array(
+            'needs_review' => __('Needs Poster Review', 'academy-awards-table'),
+            'accepted' => __('Accepted', 'academy-awards-table'),
+            'source_failed' => __('Source Failed', 'academy-awards-table'),
+            'needs_manual' => __('Needs Manual Poster', 'academy-awards-table'),
+            'manual_replacement' => __('Manual Replacement', 'academy-awards-table'),
+            'ignore_accept' => __('Ignore / Accept', 'academy-awards-table'),
+        );
+    }
+
     private function sanitize_omdb_review_state($state) {
         $state = sanitize_key((string) $state);
         $states = $this->get_omdb_review_states();
+        return isset($states[$state]) ? $state : 'needs_review';
+    }
+
+    private function sanitize_omdb_poster_review_state($state) {
+        $state = sanitize_key((string) $state);
+        $states = $this->get_omdb_poster_review_states();
         return isset($states[$state]) ? $state : 'needs_review';
     }
 
@@ -5091,6 +5154,52 @@ class Academy_Awards_Table {
         }
 
         return true;
+    }
+
+    private function save_omdb_poster_review_record($imdb_id, $state, $note) {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error('aat_omdb_poster_review_forbidden', __('You do not have permission to save OMDb poster review states.', 'academy-awards-table'));
+        }
+
+        $imdb_id = strtolower(trim((string) $imdb_id));
+        if (!$this->is_title_entity_id($imdb_id)) {
+            return new WP_Error('aat_omdb_poster_review_bad_id', __('Invalid IMDb title ID for poster review.', 'academy-awards-table'));
+        }
+
+        global $wpdb;
+        $table = $this->get_omdb_poster_reviews_table_name();
+        $this->maybe_create_omdb_poster_reviews_table();
+
+        $state = $this->sanitize_omdb_poster_review_state($state);
+        $note = sanitize_textarea_field((string) $note);
+        $now = current_time('mysql');
+
+        $result = $wpdb->replace(
+            $table,
+            array(
+                'imdb_id' => $imdb_id,
+                'poster_state' => $state,
+                'poster_note' => $note,
+                'reviewer_user_id' => get_current_user_id(),
+                'reviewed_at' => $now,
+                'updated_at' => $now,
+            ),
+            array('%s', '%s', '%s', '%d', '%s', '%s')
+        );
+
+        if ($result === false) {
+            return new WP_Error('aat_omdb_poster_review_save_failed', __('Could not save the OMDb poster review state.', 'academy-awards-table'));
+        }
+
+        return true;
+    }
+
+    private function save_omdb_poster_review_record_from_request($request) {
+        $imdb_id = isset($request['aat_omdb_poster_review_imdb_id']) ? strtolower(trim((string) wp_unslash($request['aat_omdb_poster_review_imdb_id']))) : '';
+        $state = $request['aat_omdb_poster_review_state'] ?? '';
+        $note = isset($request['aat_omdb_poster_review_note']) ? wp_unslash($request['aat_omdb_poster_review_note']) : '';
+
+        return $this->save_omdb_poster_review_record($imdb_id, $state, $note);
     }
 
     private function get_omdb_review_records_for_ids($imdb_ids) {
@@ -5150,6 +5259,62 @@ class Academy_Awards_Table {
         return $out;
     }
 
+    private function get_omdb_poster_review_records_for_ids($imdb_ids) {
+        global $wpdb;
+
+        $ids = array();
+        foreach ((array) $imdb_ids as $imdb_id) {
+            $imdb_id = strtolower(trim((string) $imdb_id));
+            if ($this->is_title_entity_id($imdb_id)) {
+                $ids[$imdb_id] = true;
+            }
+        }
+
+        if (empty($ids)) {
+            return array();
+        }
+
+        $table = $this->get_omdb_poster_reviews_table_name();
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        if ($exists !== $table) {
+            return array();
+        }
+
+        $ids = array_keys($ids);
+        $placeholders = implode(', ', array_fill(0, count($ids), '%s'));
+        $sql = $wpdb->prepare(
+            "SELECT imdb_id, poster_state, poster_note, reviewer_user_id, reviewed_at, updated_at FROM $table WHERE imdb_id IN ($placeholders)",
+            $ids
+        );
+        $rows = $wpdb->get_results($sql, ARRAY_A);
+        if (!is_array($rows)) {
+            return array();
+        }
+
+        $states = $this->get_omdb_poster_review_states();
+        $out = array();
+        foreach ($rows as $row) {
+            $imdb_id = strtolower(trim((string) ($row['imdb_id'] ?? '')));
+            if (!$this->is_title_entity_id($imdb_id)) {
+                continue;
+            }
+
+            $state = $this->sanitize_omdb_poster_review_state($row['poster_state'] ?? '');
+            $out[$imdb_id] = array(
+                'imdb_id' => $imdb_id,
+                'poster_state' => $state,
+                'poster_state_label' => $states[$state] ?? $states['needs_review'],
+                'poster_note' => (string) ($row['poster_note'] ?? ''),
+                'reviewer_user_id' => (int) ($row['reviewer_user_id'] ?? 0),
+                'reviewed_at' => (string) ($row['reviewed_at'] ?? ''),
+                'updated_at' => (string) ($row['updated_at'] ?? ''),
+                'is_reviewed' => true,
+            );
+        }
+
+        return $out;
+    }
+
     private function get_default_omdb_review_record($imdb_id) {
         $states = $this->get_omdb_review_states();
         return array(
@@ -5158,6 +5323,20 @@ class Academy_Awards_Table {
             'review_state_label' => $states['needs_review'],
             'issue_type' => '',
             'correction_note' => '',
+            'reviewer_user_id' => 0,
+            'reviewed_at' => '',
+            'updated_at' => '',
+            'is_reviewed' => false,
+        );
+    }
+
+    private function get_default_omdb_poster_review_record($imdb_id) {
+        $states = $this->get_omdb_poster_review_states();
+        return array(
+            'imdb_id' => strtolower(trim((string) $imdb_id)),
+            'poster_state' => 'needs_review',
+            'poster_state_label' => $states['needs_review'],
+            'poster_note' => '',
             'reviewer_user_id' => 0,
             'reviewed_at' => '',
             'updated_at' => '',
@@ -5750,11 +5929,18 @@ class Academy_Awards_Table {
 
         $filtered_total = $issue_filter === 'all' && $review_state_filter === 'all' ? $total_titles : count($filtered_rows);
         $audit_rows = $issue_filter === 'all' && $review_state_filter === 'all' ? $filtered_rows : array_slice($filtered_rows, $offset, $limit);
+        $poster_review_ids = array();
+        foreach ($audit_rows as $row) {
+            $dataset = is_array($row['dataset'] ?? null) ? $row['dataset'] : array();
+            $poster_review_ids[] = (string) ($dataset['imdb_id'] ?? '');
+        }
+        $poster_review_records = $this->get_omdb_poster_review_records_for_ids($poster_review_ids);
         foreach ($audit_rows as $idx => $row) {
             $dataset = is_array($row['dataset'] ?? null) ? $row['dataset'] : array();
             $imdb_id = strtolower(trim((string) ($dataset['imdb_id'] ?? '')));
             $audit_rows[$idx]['correction_preview'] = $this->build_omdb_correction_preview_for_row($row, $force_refresh);
             $audit_rows[$idx]['local_poster'] = $this->get_omdb_audit_local_poster_summary($imdb_id);
+            $audit_rows[$idx]['poster_review'] = $poster_review_records[$imdb_id] ?? $this->get_default_omdb_poster_review_record($imdb_id);
         }
 
         return array(
@@ -6501,6 +6687,15 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         update_post_meta((int) $attachment_id, '_aat_omdb_poster_source', 'omdb-poster-api');
 
         $this->set_poster_attachment_id($imdb_id, (int) $attachment_id, 'omdb-poster-api');
+        $this->save_omdb_poster_review_record(
+            $imdb_id,
+            'accepted',
+            sprintf(
+                /* translators: 1: attachment ID */
+                __('Imported and accepted OMDb poster as Media Library attachment %1$d.', 'academy-awards-table'),
+                (int) $attachment_id
+            )
+        );
         $this->clear_awards_runtime_caches(array($imdb_id));
 
         return array(
