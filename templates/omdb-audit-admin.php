@@ -270,6 +270,7 @@ $review_filter_url_args = array(
                             $review_note = (string) ($review['correction_note'] ?? '');
                             $is_reviewed = !empty($review['is_reviewed']);
                             $reviewed_at = (string) ($review['reviewed_at'] ?? '');
+                            $correction_preview = is_array($row['correction_preview'] ?? null) ? $row['correction_preview'] : array();
                         ?>
                             <tr class="aat-omdb-row is-<?php echo esc_attr($status); ?> has-issue-<?php echo esc_attr($issue_type); ?>">
                                 <td>
@@ -308,6 +309,64 @@ $review_filter_url_args = array(
                                     </p>
                                     <?php if ($review_note !== '') : ?>
                                         <p class="aat-omdb-review-note-preview"><?php echo esc_html($review_note); ?></p>
+                                    <?php endif; ?>
+                                    <?php if (!empty($correction_preview)) :
+                                        $preview_state = sanitize_html_class((string) ($correction_preview['state'] ?? ''));
+                                        $candidate = is_array($correction_preview['candidate'] ?? null) ? $correction_preview['candidate'] : array();
+                                        $preview_warnings = is_array($correction_preview['warnings'] ?? null) ? $correction_preview['warnings'] : array();
+                                        $candidate_imdb_id = (string) ($correction_preview['candidate_imdb_id'] ?? '');
+                                    ?>
+                                        <div class="aat-omdb-correction-preview is-<?php echo esc_attr($preview_state); ?>">
+                                            <div class="aat-omdb-correction-preview-head">
+                                                <span><?php echo esc_html__('Candidate Preview', 'academy-awards-table'); ?></span>
+                                                <strong><?php echo esc_html__('Preview only', 'academy-awards-table'); ?></strong>
+                                            </div>
+                                            <?php if ($candidate_imdb_id !== '' && !empty($candidate)) : ?>
+                                                <dl class="aat-omdb-correction-preview-grid">
+                                                    <div>
+                                                        <dt><?php echo esc_html__('Current ID', 'academy-awards-table'); ?></dt>
+                                                        <dd><code><?php echo esc_html((string) ($dataset['imdb_id'] ?? '')); ?></code></dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt><?php echo esc_html__('Candidate ID', 'academy-awards-table'); ?></dt>
+                                                        <dd>
+                                                            <code><?php echo esc_html($candidate_imdb_id); ?></code>
+                                                            <?php if (!empty($correction_preview['candidate_imdb_url'])) : ?>
+                                                                <a href="<?php echo esc_url((string) $correction_preview['candidate_imdb_url']); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('IMDb', 'academy-awards-table'); ?></a>
+                                                            <?php endif; ?>
+                                                        </dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt><?php echo esc_html__('Candidate title', 'academy-awards-table'); ?></dt>
+                                                        <dd><?php echo esc_html((string) ($candidate['title'] ?? '')); ?></dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt><?php echo esc_html__('Candidate year/type', 'academy-awards-table'); ?></dt>
+                                                        <dd>
+                                                            <?php echo esc_html(trim((string) ($candidate['year'] ?? ''))); ?>
+                                                            <?php if (!empty($candidate['type'])) : ?>
+                                                                <?php echo esc_html(' / ' . (string) $candidate['type']); ?>
+                                                            <?php endif; ?>
+                                                        </dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt><?php echo esc_html__('Poster', 'academy-awards-table'); ?></dt>
+                                                        <dd><?php echo !empty($candidate['poster_present']) ? esc_html__('Present', 'academy-awards-table') : esc_html__('Missing', 'academy-awards-table'); ?></dd>
+                                                    </div>
+                                                </dl>
+                                            <?php else : ?>
+                                                <p><?php echo esc_html((string) ($correction_preview['message'] ?? __('No candidate preview is available yet.', 'academy-awards-table'))); ?></p>
+                                            <?php endif; ?>
+                                            <?php if (!empty($preview_warnings)) : ?>
+                                                <ul class="aat-omdb-correction-preview-warnings">
+                                                    <?php foreach ($preview_warnings as $preview_warning) : ?>
+                                                        <li><?php echo esc_html((string) $preview_warning); ?></li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            <?php else : ?>
+                                                <p class="aat-omdb-correction-preview-ready"><?php echo esc_html__('Candidate title/year/type/poster checks are clean. Still no database write has happened.', 'academy-awards-table'); ?></p>
+                                            <?php endif; ?>
+                                        </div>
                                     <?php endif; ?>
                                     <form class="aat-omdb-review-form" method="post" action="<?php echo esc_url(add_query_arg(array_merge($filter_url_args, array('issue' => $issue_filter, 'review_state' => $review_state_filter, 'offset' => $offset)), admin_url('admin.php'))); ?>">
                                         <?php wp_nonce_field('aat_omdb_review', 'aat_omdb_review_nonce'); ?>

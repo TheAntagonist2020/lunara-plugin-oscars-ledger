@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.16
+ * Version: 2.7.17
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.16');
+define('AAT_VERSION', '2.7.17');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -5125,6 +5125,121 @@ class Academy_Awards_Table {
         );
     }
 
+    private function extract_omdb_correction_candidate_id($note, $current_imdb_id = '') {
+        $note = (string) $note;
+        $current_imdb_id = strtolower(trim((string) $current_imdb_id));
+        if ($note === '') {
+            return '';
+        }
+
+        if (preg_match('/candidate[^t]*(tt\d{7,8})/i', $note, $match)) {
+            $candidate = strtolower(trim((string) $match[1]));
+            if ($candidate !== $current_imdb_id && $this->is_title_entity_id($candidate)) {
+                return $candidate;
+            }
+        }
+
+        if (preg_match_all('/tt\d{7,8}/i', $note, $matches)) {
+            foreach ($matches[0] as $match) {
+                $candidate = strtolower(trim((string) $match));
+                if ($candidate !== $current_imdb_id && $this->is_title_entity_id($candidate)) {
+                    return $candidate;
+                }
+            }
+        }
+
+        return '';
+    }
+
+    private function build_omdb_correction_preview_for_row($row, $force_refresh = false) {
+        $review = is_array($row['review'] ?? null) ? $row['review'] : array();
+        if ((string) ($review['review_state'] ?? '') !== 'verified_bad_id') {
+            return array();
+        }
+
+        $dataset = is_array($row['dataset'] ?? null) ? $row['dataset'] : array();
+        $current_imdb_id = strtolower(trim((string) ($dataset['imdb_id'] ?? '')));
+        $candidate_imdb_id = $this->extract_omdb_correction_candidate_id(
+            (string) ($review['correction_note'] ?? ''),
+            $current_imdb_id
+        );
+
+        if (!$this->is_title_entity_id($candidate_imdb_id)) {
+            return array(
+                'state' => 'missing_candidate',
+                'candidate_imdb_id' => '',
+                'message' => __('No candidate IMDb title ID was found in the private correction note.', 'academy-awards-table'),
+                'warnings' => array(__('Add a candidate tt... ID to the private note before any correction preview.', 'academy-awards-table')),
+            );
+        }
+
+        $candidate_omdb = $this->get_omdb_data_for_imdb_id($candidate_imdb_id, $force_refresh);
+        if (!empty($candidate_omdb['error'])) {
+            return array(
+                'state' => 'candidate_error',
+                'candidate_imdb_id' => $candidate_imdb_id,
+                'candidate_imdb_url' => $this->build_imdb_url($candidate_imdb_id),
+                'message' => (string) $candidate_omdb['error'],
+                'warnings' => array(__('OMDb could not resolve the saved candidate ID.', 'academy-awards-table')),
+            );
+        }
+
+        $dataset_title = trim((string) ($dataset['film'] ?? ''));
+        $dataset_year = preg_replace('/[^0-9]/', '', (string) ($dataset['year'] ?? ''));
+        $candidate_title = trim((string) ($candidate_omdb['title'] ?? ''));
+        $candidate_year = '';
+        if (preg_match('/\d{4}/', (string) ($candidate_omdb['year'] ?? ''), $year_match)) {
+            $candidate_year = $year_match[0];
+        }
+
+        $title_match = $dataset_title !== ''
+            && $candidate_title !== ''
+            && $this->normalize_title_compare_key($dataset_title) === $this->normalize_title_compare_key($candidate_title);
+        $year_match = $dataset_year !== '' && $candidate_year !== '' && $dataset_year === $candidate_year;
+        $type = strtolower(trim((string) ($candidate_omdb['type'] ?? '')));
+        $type_ok = $type === '' || $type === 'movie';
+        $poster = trim((string) ($candidate_omdb['poster'] ?? ''));
+        $poster_present = $poster !== '' && strtoupper($poster) !== 'N/A';
+
+        $warnings = array();
+        if (!$title_match) {
+            $warnings[] = __('Candidate title still differs from the Oscar dataset title.', 'academy-awards-table');
+        }
+        if (!$year_match) {
+            $warnings[] = __('Candidate year still differs from the Oscar dataset year.', 'academy-awards-table');
+        }
+        if (!$type_ok) {
+            $warnings[] = __('Candidate is not marked as a movie by OMDb.', 'academy-awards-table');
+        }
+        if (!$poster_present) {
+            $warnings[] = __('Candidate has no OMDb poster.', 'academy-awards-table');
+        }
+
+        $state = empty($warnings) ? 'ready_preview' : 'needs_human_check';
+
+        return array(
+            'state' => $state,
+            'candidate_imdb_id' => $candidate_imdb_id,
+            'candidate_imdb_url' => $this->build_imdb_url($candidate_imdb_id),
+            'candidate' => array(
+                'imdb_id' => strtolower(trim((string) ($candidate_omdb['imdb_id'] ?? $candidate_imdb_id))),
+                'title' => $candidate_title,
+                'year' => trim((string) ($candidate_omdb['year'] ?? '')),
+                'type' => trim((string) ($candidate_omdb['type'] ?? '')),
+                'runtime' => trim((string) ($candidate_omdb['runtime'] ?? '')),
+                'director' => trim((string) ($candidate_omdb['director'] ?? '')),
+                'poster_present' => $poster_present,
+            ),
+            'checks' => array(
+                'title_match' => $title_match,
+                'year_match' => $year_match,
+                'type_ok' => $type_ok,
+                'poster_present' => $poster_present,
+            ),
+            'warnings' => $warnings,
+        );
+    }
+
     /**
      * Fetch and cache OMDb title data by IMDb title ID.
      */
@@ -5411,6 +5526,9 @@ class Academy_Awards_Table {
 
         $filtered_total = $issue_filter === 'all' && $review_state_filter === 'all' ? $total_titles : count($filtered_rows);
         $audit_rows = $issue_filter === 'all' && $review_state_filter === 'all' ? $filtered_rows : array_slice($filtered_rows, $offset, $limit);
+        foreach ($audit_rows as $idx => $row) {
+            $audit_rows[$idx]['correction_preview'] = $this->build_omdb_correction_preview_for_row($row, $force_refresh);
+        }
 
         return array(
             'total' => $filtered_total,

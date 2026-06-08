@@ -517,6 +517,101 @@
     border-radius: 6px;
 }
 
+.aat-omdb-correction-preview {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #d7c391;
+    border-radius: 8px;
+    background: #fffdf7;
+}
+
+.aat-omdb-correction-preview.is-ready_preview {
+    border-color: #9ac7a8;
+    background: #f5fbf7;
+}
+
+.aat-omdb-correction-preview.is-needs_human_check,
+.aat-omdb-correction-preview.is-missing_candidate,
+.aat-omdb-correction-preview.is-candidate_error {
+    border-color: #e0b35a;
+    background: #fff9ea;
+}
+
+.aat-omdb-correction-preview-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.aat-omdb-correction-preview-head span {
+    color: #8f7534;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.aat-omdb-correction-preview-head strong {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #0a1520;
+    color: #eadbb3;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.aat-omdb-correction-preview-grid {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+.aat-omdb-correction-preview-grid div {
+    display: grid;
+    gap: 2px;
+}
+
+.aat-omdb-correction-preview-grid dt {
+    color: #4c5a68;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.aat-omdb-correction-preview-grid dd {
+    margin: 0;
+    color: #0a1520;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.aat-omdb-correction-preview-grid dd a {
+    margin-left: 6px;
+}
+
+.aat-omdb-correction-preview-warnings {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: #7a5100;
+    font-size: 12px;
+}
+
+.aat-omdb-correction-preview-ready {
+    margin: 8px 0 0;
+    color: #155724;
+    font-size: 12px;
+    font-weight: 700;
+}
+
 .aat-omdb-review-form {
     display: grid;
     gap: 8px;
