@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.15
+Stable tag: 2.7.16
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.16 =
+* Added private OMDb Audit review states and correction notes so flagged IMDb title IDs can be marked reviewed before any dataset or poster mutation exists.
 
 = 2.7.15 =
 * Added OMDb audit filters, issue classification, and read-only correction queue recommendations for likely bad IMDb IDs, OMDb gaps, poster gaps, and clean matches.

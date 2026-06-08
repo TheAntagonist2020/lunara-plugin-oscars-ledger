@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.15
+ * Version: 2.7.16
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.15');
+define('AAT_VERSION', '2.7.16');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -45,6 +45,40 @@ class Academy_Awards_Table {
     private function get_table_name() {
         global $wpdb;
         return $wpdb->prefix . "academy_awards";
+    }
+
+    private function get_omdb_reviews_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_omdb_reviews';
+    }
+
+    private function maybe_create_omdb_reviews_table($charset_collate = '') {
+        global $wpdb;
+
+        if ($charset_collate === '') {
+            $charset_collate = $wpdb->get_charset_collate();
+            if (stripos($charset_collate, 'latin1') !== false) {
+                $charset_collate = 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
+            }
+        }
+
+        $reviews_table = $this->get_omdb_reviews_table_name();
+        $sql_reviews = "CREATE TABLE IF NOT EXISTS $reviews_table (
+            imdb_id varchar(16) NOT NULL,
+            review_state varchar(32) NOT NULL DEFAULT 'needs_review',
+            issue_type varchar(32) DEFAULT '',
+            correction_note text,
+            reviewer_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
+            reviewed_at datetime DEFAULT NULL,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (imdb_id),
+            KEY review_state (review_state),
+            KEY issue_type (issue_type),
+            KEY reviewed_at (reviewed_at)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql_reviews);
     }
 
     private function __construct() {
@@ -191,6 +225,7 @@ class Academy_Awards_Table {
 
         dbDelta($sql_tracker);
         dbDelta($sql_posters);
+        $this->maybe_create_omdb_reviews_table($charset_collate);
 
 
         // Store version
@@ -206,6 +241,9 @@ class Academy_Awards_Table {
      * Run schema upgrades when updating the plugin (plugin updates do not call activate()).
      */
     public function maybe_upgrade_schema() {
+        // Ensure lightweight annotation tables even if a historical db_version is ahead of the plugin version.
+        $this->maybe_create_omdb_reviews_table();
+
         $installed = get_option('aat_db_version', '0');
         if (version_compare((string) $installed, AAT_VERSION, '>=')) {
             return;
@@ -286,6 +324,7 @@ class Academy_Awards_Table {
 
         dbDelta($sql_tracker);
         dbDelta($sql_posters);
+        $this->maybe_create_omdb_reviews_table($charset_collate);
 
         update_option('aat_db_version', AAT_VERSION);
 
@@ -4432,6 +4471,16 @@ class Academy_Awards_Table {
                 $message = __('No key change was made.', 'academy-awards-table');
                 $message_type = 'warning';
             }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_omdb_review_nonce'])) {
+            check_admin_referer('aat_omdb_review', 'aat_omdb_review_nonce');
+
+            $result = $this->save_omdb_review_record_from_request($_POST);
+            if (is_wp_error($result)) {
+                $message = $result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $message = __('OMDb review state saved.', 'academy-awards-table');
+            }
         }
 
         $limit = isset($_GET['limit']) ? absint($_GET['limit']) : 25;
@@ -4443,6 +4492,7 @@ class Academy_Awards_Table {
         $offset = isset($_GET['offset']) ? absint($_GET['offset']) : 0;
         $force_refresh = isset($_GET['refresh']) && current_user_can('manage_options');
         $issue_filter = isset($_GET['issue']) ? sanitize_key(wp_unslash($_GET['issue'])) : 'all';
+        $review_state_filter = isset($_GET['review_state']) ? sanitize_key(wp_unslash($_GET['review_state'])) : 'all';
         $scan_limit = isset($_GET['scan']) ? absint($_GET['scan']) : 250;
         if ($scan_limit <= 0) {
             $scan_limit = 250;
@@ -4450,7 +4500,9 @@ class Academy_Awards_Table {
         $scan_limit = min(1000, $scan_limit);
 
         $omdb_key_configured = $this->get_omdb_api_key() !== '';
-        $audit = $this->build_omdb_integrity_audit($limit, $offset, $force_refresh, $issue_filter, $scan_limit);
+        $omdb_review_states = $this->get_omdb_review_states();
+        $omdb_review_filter_labels = $this->get_omdb_review_filter_labels();
+        $audit = $this->build_omdb_integrity_audit($limit, $offset, $force_refresh, $issue_filter, $scan_limit, $review_state_filter);
 
         include AAT_PLUGIN_DIR . 'templates/omdb-audit-admin.php';
     }
@@ -4922,6 +4974,157 @@ class Academy_Awards_Table {
         );
     }
 
+    private function get_omdb_review_states() {
+        return array(
+            'needs_review' => __('Needs Review', 'academy-awards-table'),
+            'verified_bad_id' => __('Verified Bad ID', 'academy-awards-table'),
+            'omdb_source_gap' => __('OMDb Source Gap', 'academy-awards-table'),
+            'poster_gap_only' => __('Poster Gap Only', 'academy-awards-table'),
+            'resolved' => __('Resolved', 'academy-awards-table'),
+            'ignore_accept' => __('Ignore / Accept', 'academy-awards-table'),
+        );
+    }
+
+    private function get_omdb_review_filter_labels() {
+        return array_merge(
+            array(
+                'all' => __('All Review States', 'academy-awards-table'),
+                'unreviewed' => __('Unreviewed', 'academy-awards-table'),
+            ),
+            $this->get_omdb_review_states()
+        );
+    }
+
+    private function sanitize_omdb_review_state($state) {
+        $state = sanitize_key((string) $state);
+        $states = $this->get_omdb_review_states();
+        return isset($states[$state]) ? $state : 'needs_review';
+    }
+
+    private function sanitize_omdb_review_filter($filter) {
+        $filter = sanitize_key((string) $filter);
+        $labels = $this->get_omdb_review_filter_labels();
+        return isset($labels[$filter]) ? $filter : 'all';
+    }
+
+    private function sanitize_omdb_review_issue_type($issue_type) {
+        $issue_type = sanitize_key((string) $issue_type);
+        $allowed = array('match', 'mismatch', 'omdb_missing', 'poster_missing', 'unchecked');
+        return in_array($issue_type, $allowed, true) ? $issue_type : '';
+    }
+
+    private function save_omdb_review_record_from_request($request) {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error('aat_omdb_review_forbidden', __('You do not have permission to save OMDb review states.', 'academy-awards-table'));
+        }
+
+        $imdb_id = isset($request['aat_omdb_review_imdb_id']) ? strtolower(trim((string) wp_unslash($request['aat_omdb_review_imdb_id']))) : '';
+        if (!$this->is_title_entity_id($imdb_id)) {
+            return new WP_Error('aat_omdb_review_bad_id', __('Invalid IMDb title ID.', 'academy-awards-table'));
+        }
+
+        global $wpdb;
+        $table = $this->get_omdb_reviews_table_name();
+        $this->maybe_create_omdb_reviews_table();
+
+        $state = $this->sanitize_omdb_review_state($request['aat_omdb_review_state'] ?? '');
+        $issue_type = $this->sanitize_omdb_review_issue_type($request['aat_omdb_review_issue_type'] ?? '');
+        $note = isset($request['aat_omdb_review_note']) ? sanitize_textarea_field(wp_unslash($request['aat_omdb_review_note'])) : '';
+        $now = current_time('mysql');
+
+        $result = $wpdb->replace(
+            $table,
+            array(
+                'imdb_id' => $imdb_id,
+                'review_state' => $state,
+                'issue_type' => $issue_type,
+                'correction_note' => $note,
+                'reviewer_user_id' => get_current_user_id(),
+                'reviewed_at' => $now,
+                'updated_at' => $now,
+            ),
+            array('%s', '%s', '%s', '%s', '%d', '%s', '%s')
+        );
+
+        if ($result === false) {
+            return new WP_Error('aat_omdb_review_save_failed', __('Could not save the OMDb review state.', 'academy-awards-table'));
+        }
+
+        return true;
+    }
+
+    private function get_omdb_review_records_for_ids($imdb_ids) {
+        global $wpdb;
+
+        $ids = array();
+        foreach ((array) $imdb_ids as $imdb_id) {
+            $imdb_id = strtolower(trim((string) $imdb_id));
+            if ($this->is_title_entity_id($imdb_id)) {
+                $ids[$imdb_id] = true;
+            }
+        }
+
+        if (empty($ids)) {
+            return array();
+        }
+
+        $table = $this->get_omdb_reviews_table_name();
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        if ($exists !== $table) {
+            return array();
+        }
+
+        $ids = array_keys($ids);
+        $placeholders = implode(', ', array_fill(0, count($ids), '%s'));
+        $sql = $wpdb->prepare(
+            "SELECT imdb_id, review_state, issue_type, correction_note, reviewer_user_id, reviewed_at, updated_at FROM $table WHERE imdb_id IN ($placeholders)",
+            $ids
+        );
+        $rows = $wpdb->get_results($sql, ARRAY_A);
+        if (!is_array($rows)) {
+            return array();
+        }
+
+        $states = $this->get_omdb_review_states();
+        $out = array();
+        foreach ($rows as $row) {
+            $imdb_id = strtolower(trim((string) ($row['imdb_id'] ?? '')));
+            if (!$this->is_title_entity_id($imdb_id)) {
+                continue;
+            }
+
+            $state = $this->sanitize_omdb_review_state($row['review_state'] ?? '');
+            $out[$imdb_id] = array(
+                'imdb_id' => $imdb_id,
+                'review_state' => $state,
+                'review_state_label' => $states[$state] ?? $states['needs_review'],
+                'issue_type' => $this->sanitize_omdb_review_issue_type($row['issue_type'] ?? ''),
+                'correction_note' => (string) ($row['correction_note'] ?? ''),
+                'reviewer_user_id' => (int) ($row['reviewer_user_id'] ?? 0),
+                'reviewed_at' => (string) ($row['reviewed_at'] ?? ''),
+                'updated_at' => (string) ($row['updated_at'] ?? ''),
+                'is_reviewed' => true,
+            );
+        }
+
+        return $out;
+    }
+
+    private function get_default_omdb_review_record($imdb_id) {
+        $states = $this->get_omdb_review_states();
+        return array(
+            'imdb_id' => strtolower(trim((string) $imdb_id)),
+            'review_state' => 'needs_review',
+            'review_state_label' => $states['needs_review'],
+            'issue_type' => '',
+            'correction_note' => '',
+            'reviewer_user_id' => 0,
+            'reviewed_at' => '',
+            'updated_at' => '',
+            'is_reviewed' => false,
+        );
+    }
+
     /**
      * Fetch and cache OMDb title data by IMDb title ID.
      */
@@ -5006,7 +5209,7 @@ class Academy_Awards_Table {
     /**
      * Build read-only OMDb comparison rows for the admin integrity screen.
      */
-    public function build_omdb_integrity_audit($limit = 25, $offset = 0, $force_refresh = false, $issue_filter = 'all', $scan_limit = 250) {
+    public function build_omdb_integrity_audit($limit = 25, $offset = 0, $force_refresh = false, $issue_filter = 'all', $scan_limit = 250, $review_state_filter = 'all') {
         global $wpdb;
 
         $limit = max(1, min(100, absint($limit)));
@@ -5017,6 +5220,7 @@ class Academy_Awards_Table {
             $issue_filter = 'all';
         }
         $scan_limit = max($limit, min(1000, absint($scan_limit)));
+        $review_state_filter = $this->sanitize_omdb_review_filter($review_state_filter);
         $table_name = $this->get_table_name();
 
         $rows = $wpdb->get_results(
@@ -5050,7 +5254,7 @@ class Academy_Awards_Table {
 
         $total_titles = count($titles);
         $candidates = array_values($titles);
-        if ($issue_filter === 'all') {
+        if ($issue_filter === 'all' && $review_state_filter === 'all') {
             $candidates = array_slice($candidates, $offset, $limit);
         } else {
             $candidates = array_slice($candidates, 0, $scan_limit);
@@ -5153,11 +5357,22 @@ class Academy_Awards_Table {
             );
         }
 
+        $review_ids = array();
+        foreach ($evaluated_rows as $row) {
+            $dataset = is_array($row['dataset'] ?? null) ? $row['dataset'] : array();
+            $review_ids[] = (string) ($dataset['imdb_id'] ?? '');
+        }
+        $review_records = $this->get_omdb_review_records_for_ids($review_ids);
+        foreach ($evaluated_rows as $idx => $row) {
+            $dataset = is_array($row['dataset'] ?? null) ? $row['dataset'] : array();
+            $imdb_id = strtolower(trim((string) ($dataset['imdb_id'] ?? '')));
+            $evaluated_rows[$idx]['review'] = $review_records[$imdb_id] ?? $this->get_default_omdb_review_record($imdb_id);
+        }
+
         if ($issue_filter === 'all') {
-            $audit_rows = $evaluated_rows;
-            $filtered_total = $total_titles;
+            $issue_filtered_rows = $evaluated_rows;
         } else {
-            $filtered_rows = array();
+            $issue_filtered_rows = array();
             foreach ($evaluated_rows as $row) {
                 $row_issue_types = (array) ($row['issue_types'] ?? array());
                 $include = false;
@@ -5170,20 +5385,40 @@ class Academy_Awards_Table {
                 }
 
                 if ($include) {
+                    $issue_filtered_rows[] = $row;
+                }
+            }
+        }
+
+        if ($review_state_filter === 'all') {
+            $filtered_rows = $issue_filtered_rows;
+        } else {
+            $filtered_rows = array();
+            foreach ($issue_filtered_rows as $row) {
+                $review = is_array($row['review'] ?? null) ? $row['review'] : array();
+                $include = false;
+                if ($review_state_filter === 'unreviewed') {
+                    $include = empty($review['is_reviewed']);
+                } else {
+                    $include = !empty($review['is_reviewed']) && (string) ($review['review_state'] ?? '') === $review_state_filter;
+                }
+
+                if ($include) {
                     $filtered_rows[] = $row;
                 }
             }
-
-            $filtered_total = count($filtered_rows);
-            $audit_rows = array_slice($filtered_rows, $offset, $limit);
         }
 
+        $filtered_total = $issue_filter === 'all' && $review_state_filter === 'all' ? $total_titles : count($filtered_rows);
+        $audit_rows = $issue_filter === 'all' && $review_state_filter === 'all' ? $filtered_rows : array_slice($filtered_rows, $offset, $limit);
+
         return array(
-            'total' => $issue_filter === 'all' ? $total_titles : $filtered_total,
+            'total' => $filtered_total,
             'total_titles' => $total_titles,
             'limit' => $limit,
             'offset' => $offset,
             'issue_filter' => $issue_filter,
+            'review_state_filter' => $review_state_filter,
             'scan_limit' => $scan_limit,
             'scanned' => count($candidates),
             'rows' => $audit_rows,

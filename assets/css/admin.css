@@ -281,6 +281,15 @@
     color: #eadbb3;
 }
 
+.aat-omdb-review-filter-bar {
+    margin-top: 0;
+}
+
+.aat-omdb-review-filter-link {
+    background: #f5f8fb;
+    border-color: #cbd8e3;
+}
+
 .aat-omdb-filter-form {
     display: flex;
     flex-wrap: wrap;
@@ -453,6 +462,84 @@
     margin: 9px 0 0;
     color: #4c5a68;
     font-size: 12px;
+}
+
+.aat-omdb-review-cell {
+    width: 260px;
+}
+
+.aat-omdb-review-state {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #eef2f6;
+    color: #334252;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.aat-omdb-review-state.is-verified_bad_id {
+    background: #fde8e6;
+    color: #9f1d14;
+}
+
+.aat-omdb-review-state.is-omdb_source_gap {
+    background: #fff3cd;
+    color: #7a5100;
+}
+
+.aat-omdb-review-state.is-poster_gap_only {
+    background: #e4edff;
+    color: #174ea6;
+}
+
+.aat-omdb-review-state.is-resolved,
+.aat-omdb-review-state.is-ignore_accept {
+    background: #dff5e6;
+    color: #155724;
+}
+
+.aat-omdb-review-meta,
+.aat-omdb-review-note-preview {
+    margin: 8px 0 0;
+    color: #4c5a68;
+    font-size: 12px;
+}
+
+.aat-omdb-review-note-preview {
+    padding: 8px;
+    border-left: 3px solid #c9a961;
+    background: #fffdf7;
+    border-radius: 6px;
+}
+
+.aat-omdb-review-form {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.aat-omdb-review-form label {
+    display: grid;
+    gap: 4px;
+}
+
+.aat-omdb-review-form label span {
+    color: #334252;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.aat-omdb-review-form select,
+.aat-omdb-review-form textarea {
+    width: 100%;
+    max-width: 100%;
 }
 
 .aat-omdb-poster-cell {

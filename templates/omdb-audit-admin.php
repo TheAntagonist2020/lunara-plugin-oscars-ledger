@@ -13,11 +13,14 @@ $offset = intval($audit['offset'] ?? 0);
 $total = intval($audit['total'] ?? 0);
 $total_titles = intval($audit['total_titles'] ?? $total);
 $issue_filter = sanitize_key((string) ($audit['issue_filter'] ?? 'all'));
+$review_state_filter = sanitize_key((string) ($audit['review_state_filter'] ?? 'all'));
 $scan_limit = intval($audit['scan_limit'] ?? 250);
 $scanned = intval($audit['scanned'] ?? count($rows));
 $next_offset = $offset + $limit;
 $prev_offset = max(0, $offset - $limit);
 $masked_key = $omdb_key_configured ? __('Key configured', 'academy-awards-table') : __('Not configured', 'academy-awards-table');
+$omdb_review_states = is_array($omdb_review_states ?? null) ? $omdb_review_states : array();
+$omdb_review_filter_labels = is_array($omdb_review_filter_labels ?? null) ? $omdb_review_filter_labels : array();
 
 $issue_labels = array(
     'all' => __('All IDs', 'academy-awards-table'),
@@ -39,6 +42,13 @@ $filter_url_args = array(
     'page' => 'academy-awards-omdb-audit',
     'limit' => $limit,
     'scan' => $scan_limit,
+    'review_state' => $review_state_filter,
+);
+$review_filter_url_args = array(
+    'page' => 'academy-awards-omdb-audit',
+    'limit' => $limit,
+    'scan' => $scan_limit,
+    'issue' => $issue_filter,
 );
 ?>
 <div class="wrap aat-admin-wrap aat-omdb-audit-admin">
@@ -125,6 +135,20 @@ $filter_url_args = array(
             <?php endforeach; ?>
         </div>
 
+        <div class="aat-omdb-filter-bar aat-omdb-review-filter-bar" aria-label="<?php echo esc_attr__('OMDb review-state filters', 'academy-awards-table'); ?>">
+            <?php foreach ($omdb_review_filter_labels as $review_filter_key => $review_filter_label) :
+                $review_filter_args = array_merge($review_filter_url_args, array('review_state' => $review_filter_key, 'offset' => 0));
+                $review_filter_classes = 'aat-omdb-filter-link aat-omdb-review-filter-link';
+                if ($review_filter_key === $review_state_filter) {
+                    $review_filter_classes .= ' is-active';
+                }
+            ?>
+                <a class="<?php echo esc_attr($review_filter_classes); ?>" href="<?php echo esc_url(add_query_arg($review_filter_args, admin_url('admin.php'))); ?>">
+                    <?php echo esc_html($review_filter_label); ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+
         <form class="aat-omdb-filter-form" method="get" action="<?php echo esc_url(admin_url('admin.php')); ?>">
             <input type="hidden" name="page" value="academy-awards-omdb-audit">
             <label>
@@ -132,6 +156,14 @@ $filter_url_args = array(
                 <select name="issue">
                     <?php foreach ($issue_labels as $issue_key => $issue_label) : ?>
                         <option value="<?php echo esc_attr($issue_key); ?>" <?php selected($issue_filter, $issue_key); ?>><?php echo esc_html($issue_label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>
+                <span><?php echo esc_html__('Review state', 'academy-awards-table'); ?></span>
+                <select name="review_state">
+                    <?php foreach ($omdb_review_filter_labels as $review_filter_key => $review_filter_label) : ?>
+                        <option value="<?php echo esc_attr($review_filter_key); ?>" <?php selected($review_state_filter, $review_filter_key); ?>><?php echo esc_html($review_filter_label); ?></option>
                     <?php endforeach; ?>
                 </select>
             </label>
@@ -171,7 +203,7 @@ $filter_url_args = array(
 
         <p>
             <?php
-            if ($issue_filter === 'all') {
+            if ($issue_filter === 'all' && $review_state_filter === 'all') {
                 echo esc_html(
                     sprintf(
                         /* translators: 1: offset, 2: shown count, 3: total count */
@@ -184,9 +216,10 @@ $filter_url_args = array(
             } else {
                 echo esc_html(
                     sprintf(
-                        /* translators: 1: filter label, 2: offset, 3: shown count, 4: total filtered count, 5: scanned count, 6: total count */
-                        __('Showing %1$s rows %2$s-%3$s from %4$s matches inside the current scan of %5$s title IDs (%6$s total known IDs).', 'academy-awards-table'),
+                        /* translators: 1: issue filter label, 2: review filter label, 3: offset, 4: shown count, 5: total filtered count, 6: scanned count, 7: total count */
+                        __('Showing %1$s / %2$s rows %3$s-%4$s from %5$s matches inside the current scan of %6$s title IDs (%7$s total known IDs).', 'academy-awards-table'),
                         strtolower((string) ($issue_labels[$issue_filter] ?? $issue_filter)),
+                        strtolower((string) ($omdb_review_filter_labels[$review_state_filter] ?? $review_state_filter)),
                         number_format_i18n($total > 0 ? $offset + 1 : 0),
                         number_format_i18n(min($total, $offset + count($rows))),
                         number_format_i18n($total),
@@ -215,6 +248,7 @@ $filter_url_args = array(
                         <tr>
                             <th><?php echo esc_html__('Status', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Queue', 'academy-awards-table'); ?></th>
+                            <th><?php echo esc_html__('Review State', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Oscar Dataset', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('OMDb Result', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Poster', 'academy-awards-table'); ?></th>
@@ -227,10 +261,15 @@ $filter_url_args = array(
                             $omdb = is_array($row['omdb'] ?? null) ? $row['omdb'] : array();
                             $warnings = is_array($row['warnings'] ?? null) ? $row['warnings'] : array();
                             $issue_types = is_array($row['issue_types'] ?? null) ? $row['issue_types'] : array();
+                            $review = is_array($row['review'] ?? null) ? $row['review'] : array();
                             $status = sanitize_html_class((string) ($row['status'] ?? 'unchecked'));
                             $issue_type = sanitize_key((string) ($row['issue_type'] ?? $status));
                             $poster = trim((string) ($omdb['poster'] ?? ''));
                             $has_poster = $poster !== '' && strtoupper($poster) !== 'N/A';
+                            $review_state = sanitize_key((string) ($review['review_state'] ?? 'needs_review'));
+                            $review_note = (string) ($review['correction_note'] ?? '');
+                            $is_reviewed = !empty($review['is_reviewed']);
+                            $reviewed_at = (string) ($review['reviewed_at'] ?? '');
                         ?>
                             <tr class="aat-omdb-row is-<?php echo esc_attr($status); ?> has-issue-<?php echo esc_attr($issue_type); ?>">
                                 <td>
@@ -253,6 +292,41 @@ $filter_url_args = array(
                                         </div>
                                     <?php endif; ?>
                                     <p class="aat-omdb-action-note"><?php echo esc_html((string) ($row['recommended_action'] ?? '')); ?></p>
+                                </td>
+                                <td class="aat-omdb-review-cell">
+                                    <span class="aat-omdb-review-state is-<?php echo esc_attr($review_state); ?>">
+                                        <?php echo esc_html((string) ($review['review_state_label'] ?? $omdb_review_states[$review_state] ?? __('Needs Review', 'academy-awards-table'))); ?>
+                                    </span>
+                                    <p class="aat-omdb-review-meta">
+                                        <?php
+                                        if ($is_reviewed && $reviewed_at !== '') {
+                                            echo esc_html(sprintf(__('Last reviewed %s', 'academy-awards-table'), $reviewed_at));
+                                        } else {
+                                            echo esc_html__('No private review note yet.', 'academy-awards-table');
+                                        }
+                                        ?>
+                                    </p>
+                                    <?php if ($review_note !== '') : ?>
+                                        <p class="aat-omdb-review-note-preview"><?php echo esc_html($review_note); ?></p>
+                                    <?php endif; ?>
+                                    <form class="aat-omdb-review-form" method="post" action="<?php echo esc_url(add_query_arg(array_merge($filter_url_args, array('issue' => $issue_filter, 'review_state' => $review_state_filter, 'offset' => $offset)), admin_url('admin.php'))); ?>">
+                                        <?php wp_nonce_field('aat_omdb_review', 'aat_omdb_review_nonce'); ?>
+                                        <input type="hidden" name="aat_omdb_review_imdb_id" value="<?php echo esc_attr((string) ($dataset['imdb_id'] ?? '')); ?>">
+                                        <input type="hidden" name="aat_omdb_review_issue_type" value="<?php echo esc_attr($issue_type); ?>">
+                                        <label>
+                                            <span><?php echo esc_html__('State', 'academy-awards-table'); ?></span>
+                                            <select name="aat_omdb_review_state">
+                                                <?php foreach ($omdb_review_states as $state_key => $state_label) : ?>
+                                                    <option value="<?php echo esc_attr($state_key); ?>" <?php selected($review_state, $state_key); ?>><?php echo esc_html($state_label); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </label>
+                                        <label>
+                                            <span><?php echo esc_html__('Private correction note', 'academy-awards-table'); ?></span>
+                                            <textarea name="aat_omdb_review_note" rows="3" placeholder="<?php echo esc_attr__('What did you verify, and what should happen next?', 'academy-awards-table'); ?>"><?php echo esc_textarea($review_note); ?></textarea>
+                                        </label>
+                                        <button class="button button-small" type="submit"><?php echo esc_html__('Save Review State', 'academy-awards-table'); ?></button>
+                                    </form>
                                 </td>
                                 <td>
                                     <strong><?php echo esc_html((string) ($dataset['film'] ?? '')); ?></strong>
