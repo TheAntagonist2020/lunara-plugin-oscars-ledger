@@ -366,6 +366,20 @@ $review_filter_url_args = array(
                                             <?php else : ?>
                                                 <p class="aat-omdb-correction-preview-ready"><?php echo esc_html__('Candidate title/year/type/poster checks are clean. Still no database write has happened.', 'academy-awards-table'); ?></p>
                                             <?php endif; ?>
+                                            <?php if ((string) ($correction_preview['state'] ?? '') === 'ready_preview' && $candidate_imdb_id !== '') : ?>
+                                                <form class="aat-omdb-correction-form" method="post" action="<?php echo esc_url(add_query_arg(array_merge($filter_url_args, array('issue' => $issue_filter, 'review_state' => $review_state_filter, 'offset' => $offset)), admin_url('admin.php'))); ?>">
+                                                    <?php wp_nonce_field('aat_omdb_correction', 'aat_omdb_correction_nonce'); ?>
+                                                    <input type="hidden" name="aat_omdb_correction_current_id" value="<?php echo esc_attr((string) ($dataset['imdb_id'] ?? '')); ?>">
+                                                    <input type="hidden" name="aat_omdb_correction_candidate_id" value="<?php echo esc_attr($candidate_imdb_id); ?>">
+                                                    <input type="hidden" name="aat_omdb_correction_dataset_title" value="<?php echo esc_attr((string) ($dataset['film'] ?? '')); ?>">
+                                                    <input type="hidden" name="aat_omdb_correction_dataset_year" value="<?php echo esc_attr((string) ($dataset['year'] ?? '')); ?>">
+                                                    <label>
+                                                        <input type="checkbox" name="aat_omdb_correction_confirm" value="1">
+                                                        <?php echo esc_html__('I reviewed this preview and want to replace this bad IMDb ID in Oscar rows.', 'academy-awards-table'); ?>
+                                                    </label>
+                                                    <button class="button button-small aat-omdb-correction-button" type="submit"><?php echo esc_html__('Apply This Candidate', 'academy-awards-table'); ?></button>
+                                                </form>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endif; ?>
                                     <form class="aat-omdb-review-form" method="post" action="<?php echo esc_url(add_query_arg(array_merge($filter_url_args, array('issue' => $issue_filter, 'review_state' => $review_state_filter, 'offset' => $offset)), admin_url('admin.php'))); ?>">

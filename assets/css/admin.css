@@ -612,6 +612,30 @@
     font-weight: 700;
 }
 
+.aat-omdb-correction-form {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(21, 87, 36, .18);
+}
+
+.aat-omdb-correction-form label {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    color: #334252;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.aat-omdb-correction-button {
+    justify-self: start;
+    border-color: #1f7a3f !important;
+    color: #155724 !important;
+}
+
 .aat-omdb-review-form {
     display: grid;
     gap: 8px;

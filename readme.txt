@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.17
+Stable tag: 2.7.19
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,12 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.19 =
+* Scoped the one-by-one OMDb correction action to the audited title/year context so reused IMDb IDs can be repaired without touching legitimate older rows that share the same ID.
+
+= 2.7.18 =
+* Added a guarded one-by-one OMDb correction action for rows marked `Verified Bad ID`, with nonce/capability checks, immediate OMDb candidate revalidation, exact-token film ID replacement, cache invalidation, and automatic `Resolved` review notes after a successful write.
 
 = 2.7.17 =
 * Added read-only candidate correction previews for OMDb Audit rows marked `Verified Bad ID`, using private note candidate IDs without mutating Oscar rows or poster records.

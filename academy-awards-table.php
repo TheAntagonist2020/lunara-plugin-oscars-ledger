@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.17
+ * Version: 2.7.19
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.17');
+define('AAT_VERSION', '2.7.19');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -1678,12 +1678,21 @@ class Academy_Awards_Table {
         $name = trim((string) ($row['name'] ?? ''));
         $nominees = trim((string) ($row['nominees'] ?? ''));
 
-        if ($film === 'Train Dreams' && trim((string) ($row['film_id'] ?? '')) === 'tt16277242') {
-            $row['film_id'] = 'tt29768334';
-        }
+        $title_id_hotfixes = array(
+            'Avatar: Fire and Ash' => array('tt13651794' => 'tt1757678'),
+            'Diane Warren: Relentless' => array('tt21197266' => 'tt14588692'),
+            'Elio' => array('tt11860228' => 'tt4900148'),
+            'Jurassic World Rebirth' => array('tt5765780' => 'tt31036941'),
+            'The Smashing Machine' => array('tt14857364' => 'tt11214558'),
+            'Train Dreams' => array('tt16277242' => 'tt29768334'),
+            'Zootopia 2' => array('tt14043526' => 'tt26443597'),
+            'The Boy, the Mole, the Fox and the Horse' => array('tt14819332' => 'tt22667880'),
+        );
 
-        if ($film === 'Avatar: Fire and Ash' && trim((string) ($row['film_id'] ?? '')) === 'tt13651794') {
-            $row['film_id'] = 'tt1757678';
+        if (isset($title_id_hotfixes[$film])) {
+            foreach ($title_id_hotfixes[$film] as $bad_id => $corrected_id) {
+                $row['film_id'] = $this->replace_title_id_token($row['film_id'] ?? '', $bad_id, $corrected_id);
+            }
         }
 
         if (trim((string) ($row['film_id'] ?? '')) === 'tt30224498' && $film === 'Kpop Demon Hunters') {
@@ -4471,6 +4480,22 @@ class Academy_Awards_Table {
                 $message = __('No key change was made.', 'academy-awards-table');
                 $message_type = 'warning';
             }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_omdb_correction_nonce'])) {
+            check_admin_referer('aat_omdb_correction', 'aat_omdb_correction_nonce');
+
+            $result = $this->apply_omdb_verified_bad_id_correction_from_request($_POST);
+            if (is_wp_error($result)) {
+                $message = $result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $message = sprintf(
+                    /* translators: 1: old IMDb ID, 2: new IMDb ID, 3: number of rows updated */
+                    __('Applied OMDb candidate correction %1$s -> %2$s across %3$d Oscar rows. Review state is now Resolved.', 'academy-awards-table'),
+                    (string) ($result['current_imdb_id'] ?? ''),
+                    (string) ($result['candidate_imdb_id'] ?? ''),
+                    (int) ($result['updated_rows'] ?? 0)
+                );
+            }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_omdb_review_nonce'])) {
             check_admin_referer('aat_omdb_review', 'aat_omdb_review_nonce');
 
@@ -5238,6 +5263,190 @@ class Academy_Awards_Table {
             ),
             'warnings' => $warnings,
         );
+    }
+
+    private function apply_omdb_verified_bad_id_correction_from_request($request) {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error('aat_omdb_correction_forbidden', __('You do not have permission to apply OMDb corrections.', 'academy-awards-table'));
+        }
+
+        if (empty($request['aat_omdb_correction_confirm'])) {
+            return new WP_Error('aat_omdb_correction_unconfirmed', __('Confirm the one-row correction before applying it.', 'academy-awards-table'));
+        }
+
+        $current_imdb_id = isset($request['aat_omdb_correction_current_id']) ? strtolower(trim((string) wp_unslash($request['aat_omdb_correction_current_id']))) : '';
+        $candidate_imdb_id = isset($request['aat_omdb_correction_candidate_id']) ? strtolower(trim((string) wp_unslash($request['aat_omdb_correction_candidate_id']))) : '';
+        $expected_title_key = isset($request['aat_omdb_correction_dataset_title'])
+            ? $this->normalize_title_compare_key((string) wp_unslash($request['aat_omdb_correction_dataset_title']))
+            : '';
+        $expected_year = isset($request['aat_omdb_correction_dataset_year'])
+            ? preg_replace('/[^0-9]/', '', (string) wp_unslash($request['aat_omdb_correction_dataset_year']))
+            : '';
+
+        if (!$this->is_title_entity_id($current_imdb_id) || !$this->is_title_entity_id($candidate_imdb_id) || $current_imdb_id === $candidate_imdb_id) {
+            return new WP_Error('aat_omdb_correction_bad_ids', __('Invalid current/candidate IMDb title IDs.', 'academy-awards-table'));
+        }
+
+        $review_records = $this->get_omdb_review_records_for_ids(array($current_imdb_id));
+        $review = $review_records[$current_imdb_id] ?? array();
+        if (empty($review['is_reviewed']) || (string) ($review['review_state'] ?? '') !== 'verified_bad_id') {
+            return new WP_Error('aat_omdb_correction_bad_state', __('Only rows marked Verified Bad ID can be corrected by this action.', 'academy-awards-table'));
+        }
+
+        $saved_candidate_id = $this->extract_omdb_correction_candidate_id((string) ($review['correction_note'] ?? ''), $current_imdb_id);
+        if ($saved_candidate_id !== $candidate_imdb_id) {
+            return new WP_Error('aat_omdb_correction_candidate_mismatch', __('The submitted candidate does not match the candidate saved in the private correction note.', 'academy-awards-table'));
+        }
+
+        global $wpdb;
+        $table_name = $this->get_table_name();
+        $like = '%' . $wpdb->esc_like($current_imdb_id) . '%';
+        $matches = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT id, ceremony, year, film, film_id FROM $table_name WHERE film_id = %s OR film_id LIKE %s ORDER BY ceremony DESC, id ASC",
+                $current_imdb_id,
+                $like
+            ),
+            ARRAY_A
+        );
+
+        $rows_to_update = array();
+        foreach (is_array($matches) ? $matches : array() as $match) {
+            $ids = $this->extract_title_ids($match['film_id'] ?? '');
+            if (!in_array($current_imdb_id, $ids, true)) {
+                continue;
+            }
+
+            if ($expected_title_key !== '' && $this->normalize_title_compare_key((string) ($match['film'] ?? '')) !== $expected_title_key) {
+                continue;
+            }
+
+            if ($expected_year !== '' && preg_replace('/[^0-9]/', '', (string) ($match['year'] ?? '')) !== $expected_year) {
+                continue;
+            }
+
+            $new_film_id = $this->replace_title_id_token((string) ($match['film_id'] ?? ''), $current_imdb_id, $candidate_imdb_id);
+            if ($new_film_id === (string) ($match['film_id'] ?? '')) {
+                continue;
+            }
+
+            $match['new_film_id'] = $new_film_id;
+            $rows_to_update[] = $match;
+        }
+
+        if (empty($rows_to_update)) {
+            return new WP_Error('aat_omdb_correction_no_rows', __('No Oscar rows contain this exact bad IMDb ID token for the submitted title/year context.', 'academy-awards-table'));
+        }
+
+        $context_keys = array();
+        foreach ($rows_to_update as $row) {
+            $context_key = $this->normalize_title_compare_key((string) ($row['film'] ?? '')) . '|' . preg_replace('/[^0-9]/', '', (string) ($row['year'] ?? ''));
+            $context_keys[$context_key] = true;
+        }
+
+        if (count($context_keys) > 1) {
+            return new WP_Error('aat_omdb_correction_mixed_context', __('This bad IMDb ID appears on multiple distinct title/year contexts. Split it manually before applying a one-row correction.', 'academy-awards-table'));
+        }
+
+        $dataset = array(
+            'imdb_id' => $current_imdb_id,
+            'film' => trim((string) ($rows_to_update[0]['film'] ?? '')),
+            'year' => preg_replace('/[^0-9]/', '', (string) ($rows_to_update[0]['year'] ?? '')),
+            'ceremony' => (int) ($rows_to_update[0]['ceremony'] ?? 0),
+        );
+        $current_omdb = $this->get_omdb_data_for_imdb_id($current_imdb_id, false);
+        $preview = $this->build_omdb_correction_preview_for_row(
+            array(
+                'dataset' => $dataset,
+                'omdb' => $current_omdb,
+                'review' => $review,
+            ),
+            true
+        );
+
+        if ((string) ($preview['state'] ?? '') !== 'ready_preview') {
+            return new WP_Error('aat_omdb_correction_not_ready', __('The candidate preview is not clean enough to apply automatically. Recheck the saved note and candidate first.', 'academy-awards-table'));
+        }
+
+        $updated = 0;
+        foreach ($rows_to_update as $row) {
+            $result = $wpdb->update(
+                $table_name,
+                array('film_id' => (string) ($row['new_film_id'] ?? '')),
+                array('id' => (int) ($row['id'] ?? 0)),
+                array('%s'),
+                array('%d')
+            );
+
+            if ($result === false) {
+                return new WP_Error('aat_omdb_correction_update_failed', __('A database update failed while applying the candidate correction.', 'academy-awards-table'));
+            }
+
+            if ($result > 0) {
+                $updated++;
+            }
+        }
+
+        if ($updated <= 0) {
+            return new WP_Error('aat_omdb_correction_no_change', __('The correction did not change any Oscar rows.', 'academy-awards-table'));
+        }
+
+        $reviews_table = $this->get_omdb_reviews_table_name();
+        $now = current_time('mysql');
+        $existing_note = trim((string) ($review['correction_note'] ?? ''));
+        $resolved_note = sprintf(
+            /* translators: 1: old IMDb ID, 2: new IMDb ID, 3: row count, 4: datetime */
+            __('Resolved %1$s -> %2$s across %3$d Oscar rows on %4$s after OMDb candidate revalidation.', 'academy-awards-table'),
+            $current_imdb_id,
+            $candidate_imdb_id,
+            $updated,
+            $now
+        );
+        if ($existing_note !== '') {
+            $resolved_note .= "\n\n" . __('Previous note:', 'academy-awards-table') . ' ' . $existing_note;
+        }
+
+        $wpdb->replace(
+            $reviews_table,
+            array(
+                'imdb_id' => $current_imdb_id,
+                'review_state' => 'resolved',
+                'issue_type' => 'mismatch',
+                'correction_note' => $resolved_note,
+                'reviewer_user_id' => get_current_user_id(),
+                'reviewed_at' => $now,
+                'updated_at' => $now,
+            ),
+            array('%s', '%s', '%s', '%s', '%d', '%s', '%s')
+        );
+
+        $this->clear_awards_runtime_caches(array($current_imdb_id, $candidate_imdb_id));
+
+        return array(
+            'current_imdb_id' => $current_imdb_id,
+            'candidate_imdb_id' => $candidate_imdb_id,
+            'updated_rows' => $updated,
+        );
+    }
+
+    private function clear_awards_runtime_caches($entity_ids = array()) {
+        delete_transient('aat_records_total_v1');
+        delete_transient('aat_records_total_v2');
+        delete_transient('aat_total_stats_v2');
+        delete_transient('aat_awards_meta_v1');
+        delete_transient('aat_hub_page_stats_v1');
+        delete_transient('aat_hub_ceremony_grid_v2');
+        delete_transient('aat_hub_category_grid_v2');
+
+        foreach ((array) $entity_ids as $entity_id) {
+            $entity_id = strtolower(trim((string) $entity_id));
+            if ($entity_id !== '') {
+                delete_transient('aat_entity_label_' . md5('title:' . $entity_id));
+                delete_transient('aat_title_context_v1_' . $entity_id);
+            }
+        }
+
+        do_action('aat_after_data_import', 'omdb_correction', 0);
     }
 
     /**
@@ -6771,6 +6980,36 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
 
         return array_values(array_unique($tt_ids));
+    }
+
+    /**
+     * Replace one exact IMDb title ID token inside a pipe-delimited film_id value.
+     */
+    private function replace_title_id_token($film_ids_raw, $current_imdb_id, $candidate_imdb_id) {
+        $current_imdb_id = strtolower(trim((string) $current_imdb_id));
+        $candidate_imdb_id = strtolower(trim((string) $candidate_imdb_id));
+
+        if (!$this->is_title_entity_id($current_imdb_id) || !$this->is_title_entity_id($candidate_imdb_id) || $current_imdb_id === $candidate_imdb_id) {
+            return (string) $film_ids_raw;
+        }
+
+        $tokens = array_filter(array_map('trim', explode('|', (string) $film_ids_raw)), 'strlen');
+        if (empty($tokens)) {
+            return (string) $film_ids_raw;
+        }
+
+        $out = array();
+        foreach ($tokens as $token) {
+            $token = strtolower(trim((string) $token));
+            if ($token === $current_imdb_id) {
+                $token = $candidate_imdb_id;
+            }
+            if ($this->is_title_entity_id($token) && !in_array($token, $out, true)) {
+                $out[] = $token;
+            }
+        }
+
+        return implode('|', $out);
     }
 
     /**
