@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.14
+ * Version: 2.7.15
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.14');
+define('AAT_VERSION', '2.7.15');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -4442,9 +4442,15 @@ class Academy_Awards_Table {
 
         $offset = isset($_GET['offset']) ? absint($_GET['offset']) : 0;
         $force_refresh = isset($_GET['refresh']) && current_user_can('manage_options');
+        $issue_filter = isset($_GET['issue']) ? sanitize_key(wp_unslash($_GET['issue'])) : 'all';
+        $scan_limit = isset($_GET['scan']) ? absint($_GET['scan']) : 250;
+        if ($scan_limit <= 0) {
+            $scan_limit = 250;
+        }
+        $scan_limit = min(1000, $scan_limit);
 
         $omdb_key_configured = $this->get_omdb_api_key() !== '';
-        $audit = $this->build_omdb_integrity_audit($limit, $offset, $force_refresh);
+        $audit = $this->build_omdb_integrity_audit($limit, $offset, $force_refresh, $issue_filter, $scan_limit);
 
         include AAT_PLUGIN_DIR . 'templates/omdb-audit-admin.php';
     }
@@ -5000,11 +5006,17 @@ class Academy_Awards_Table {
     /**
      * Build read-only OMDb comparison rows for the admin integrity screen.
      */
-    public function build_omdb_integrity_audit($limit = 25, $offset = 0, $force_refresh = false) {
+    public function build_omdb_integrity_audit($limit = 25, $offset = 0, $force_refresh = false, $issue_filter = 'all', $scan_limit = 250) {
         global $wpdb;
 
         $limit = max(1, min(100, absint($limit)));
         $offset = max(0, absint($offset));
+        $issue_filter = sanitize_key((string) $issue_filter);
+        $allowed_filters = array('all', 'actionable', 'mismatch', 'omdb_missing', 'poster_missing', 'match');
+        if (!in_array($issue_filter, $allowed_filters, true)) {
+            $issue_filter = 'all';
+        }
+        $scan_limit = max($limit, min(1000, absint($scan_limit)));
         $table_name = $this->get_table_name();
 
         $rows = $wpdb->get_results(
@@ -5036,24 +5048,39 @@ class Academy_Awards_Table {
             }
         }
 
-        $total = count($titles);
-        $sample = array_slice(array_values($titles), $offset, $limit);
-        $audit_rows = array();
+        $total_titles = count($titles);
+        $candidates = array_values($titles);
+        if ($issue_filter === 'all') {
+            $candidates = array_slice($candidates, $offset, $limit);
+        } else {
+            $candidates = array_slice($candidates, 0, $scan_limit);
+        }
+
+        $evaluated_rows = array();
         $counts = array(
             'match' => 0,
             'warning' => 0,
             'error' => 0,
             'unchecked' => 0,
         );
+        $issue_counts = array(
+            'match' => 0,
+            'mismatch' => 0,
+            'omdb_missing' => 0,
+            'poster_missing' => 0,
+            'unchecked' => 0,
+        );
 
-        foreach ($sample as $item) {
+        foreach ($candidates as $item) {
             $omdb = $this->get_omdb_data_for_imdb_id($item['imdb_id'], $force_refresh);
             $warnings = array();
+            $issue_types = array();
             $status = 'match';
 
             if (!empty($omdb['error'])) {
                 $status = $this->get_omdb_api_key() === '' ? 'unchecked' : 'error';
                 $warnings[] = (string) $omdb['error'];
+                $issue_types[] = $status === 'unchecked' ? 'unchecked' : 'omdb_missing';
             } else {
                 $dataset_title_key = $this->normalize_title_compare_key($item['film']);
                 $omdb_title_key = $this->normalize_title_compare_key($omdb['title'] ?? '');
@@ -5064,6 +5091,7 @@ class Academy_Awards_Table {
                         $item['film'],
                         (string) ($omdb['title'] ?? '')
                     );
+                    $issue_types[] = 'mismatch';
                 }
 
                 $omdb_year = '';
@@ -5078,10 +5106,12 @@ class Academy_Awards_Table {
                         $item['year'],
                         $omdb_year
                     );
+                    $issue_types[] = 'mismatch';
                 }
 
                 if (empty($omdb['poster']) || strtoupper((string) $omdb['poster']) === 'N/A') {
                     $warnings[] = __('OMDb has no poster URL for this title.', 'academy-awards-table');
+                    $issue_types[] = 'poster_missing';
                 }
 
                 if (!empty($warnings)) {
@@ -5089,13 +5119,31 @@ class Academy_Awards_Table {
                 }
             }
 
+            $issue_types = array_values(array_unique($issue_types));
+            if (empty($issue_types) && $status === 'match') {
+                $issue_types[] = 'match';
+            }
+
+            foreach ($issue_types as $issue_type) {
+                if (!isset($issue_counts[$issue_type])) {
+                    $issue_counts[$issue_type] = 0;
+                }
+                $issue_counts[$issue_type]++;
+            }
+
             if (!isset($counts[$status])) {
                 $counts[$status] = 0;
             }
             $counts[$status]++;
 
-            $audit_rows[] = array(
+            $primary_issue = $this->get_omdb_primary_issue_type($issue_types, $status);
+            $recommended_action = $this->get_omdb_recommended_action($primary_issue);
+
+            $evaluated_rows[] = array(
                 'status' => $status,
+                'issue_type' => $primary_issue,
+                'issue_types' => $issue_types,
+                'recommended_action' => $recommended_action,
                 'warnings' => $warnings,
                 'dataset' => $item,
                 'omdb' => $omdb,
@@ -5105,14 +5153,77 @@ class Academy_Awards_Table {
             );
         }
 
+        if ($issue_filter === 'all') {
+            $audit_rows = $evaluated_rows;
+            $filtered_total = $total_titles;
+        } else {
+            $filtered_rows = array();
+            foreach ($evaluated_rows as $row) {
+                $row_issue_types = (array) ($row['issue_types'] ?? array());
+                $include = false;
+                if ($issue_filter === 'actionable') {
+                    $include = !empty(array_intersect($row_issue_types, array('mismatch', 'poster_missing')));
+                } elseif ($issue_filter === 'match') {
+                    $include = in_array('match', $row_issue_types, true);
+                } else {
+                    $include = in_array($issue_filter, $row_issue_types, true);
+                }
+
+                if ($include) {
+                    $filtered_rows[] = $row;
+                }
+            }
+
+            $filtered_total = count($filtered_rows);
+            $audit_rows = array_slice($filtered_rows, $offset, $limit);
+        }
+
         return array(
-            'total' => $total,
+            'total' => $issue_filter === 'all' ? $total_titles : $filtered_total,
+            'total_titles' => $total_titles,
             'limit' => $limit,
             'offset' => $offset,
+            'issue_filter' => $issue_filter,
+            'scan_limit' => $scan_limit,
+            'scanned' => count($candidates),
             'rows' => $audit_rows,
             'counts' => $counts,
+            'issue_counts' => $issue_counts,
             'has_key' => $this->get_omdb_api_key() !== '',
         );
+    }
+
+    /**
+     * Choose the single most useful queue label for a row.
+     */
+    private function get_omdb_primary_issue_type($issue_types, $status) {
+        $issue_types = array_values(array_unique(array_map('sanitize_key', (array) $issue_types)));
+        foreach (array('mismatch', 'poster_missing', 'omdb_missing', 'unchecked', 'match') as $candidate) {
+            if (in_array($candidate, $issue_types, true)) {
+                return $candidate;
+            }
+        }
+
+        return $status === 'match' ? 'match' : 'omdb_missing';
+    }
+
+    /**
+     * Human recommendation for the read-only correction queue.
+     */
+    private function get_omdb_recommended_action($issue_type) {
+        switch ((string) $issue_type) {
+            case 'mismatch':
+                return __('Verify IMDb ID before changing any Oscar row.', 'academy-awards-table');
+            case 'poster_missing':
+                return __('Keep title ID, source poster elsewhere if needed.', 'academy-awards-table');
+            case 'omdb_missing':
+                return __('Treat as OMDb gap unless another source contradicts it.', 'academy-awards-table');
+            case 'unchecked':
+                return __('Configure OMDb key or refresh the slice.', 'academy-awards-table');
+            case 'match':
+            default:
+                return __('No correction needed.', 'academy-awards-table');
+        }
     }
 
     /**

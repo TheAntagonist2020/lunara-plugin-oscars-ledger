@@ -6,13 +6,40 @@ if (!defined('ABSPATH')) { exit; }
 
 $aat = Academy_Awards_Table::get_instance();
 $counts = is_array($audit['counts'] ?? null) ? $audit['counts'] : array();
+$issue_counts = is_array($audit['issue_counts'] ?? null) ? $audit['issue_counts'] : array();
 $rows = is_array($audit['rows'] ?? null) ? $audit['rows'] : array();
 $limit = intval($audit['limit'] ?? 25);
 $offset = intval($audit['offset'] ?? 0);
 $total = intval($audit['total'] ?? 0);
+$total_titles = intval($audit['total_titles'] ?? $total);
+$issue_filter = sanitize_key((string) ($audit['issue_filter'] ?? 'all'));
+$scan_limit = intval($audit['scan_limit'] ?? 250);
+$scanned = intval($audit['scanned'] ?? count($rows));
 $next_offset = $offset + $limit;
 $prev_offset = max(0, $offset - $limit);
-$masked_key = $omdb_key_configured ? '•••••••• configured' : 'Not configured';
+$masked_key = $omdb_key_configured ? __('Key configured', 'academy-awards-table') : __('Not configured', 'academy-awards-table');
+
+$issue_labels = array(
+    'all' => __('All IDs', 'academy-awards-table'),
+    'actionable' => __('Actionable', 'academy-awards-table'),
+    'mismatch' => __('Likely Bad IDs', 'academy-awards-table'),
+    'omdb_missing' => __('OMDb Missing', 'academy-awards-table'),
+    'poster_missing' => __('Poster Missing', 'academy-awards-table'),
+    'match' => __('Clean Matches', 'academy-awards-table'),
+);
+
+$issue_descriptions = array(
+    'mismatch' => __('Title or year disagrees with OMDb. Verify before touching the Oscar row.', 'academy-awards-table'),
+    'omdb_missing' => __('OMDb did not return a usable record. Usually a source gap, not a Lunara error.', 'academy-awards-table'),
+    'poster_missing' => __('Identity reads cleanly enough, but OMDb does not provide a poster URL.', 'academy-awards-table'),
+    'match' => __('No correction needed in the current read-only check.', 'academy-awards-table'),
+);
+
+$filter_url_args = array(
+    'page' => 'academy-awards-omdb-audit',
+    'limit' => $limit,
+    'scan' => $scan_limit,
+);
 ?>
 <div class="wrap aat-admin-wrap aat-omdb-audit-admin">
     <div class="aat-admin-header">
@@ -33,7 +60,7 @@ $masked_key = $omdb_key_configured ? '•••••••• configured' : 'No
 
     <div class="aat-admin-stats">
         <div class="aat-admin-stat-card">
-            <h3><?php echo esc_html__('Audited Slice', 'academy-awards-table'); ?></h3>
+            <h3><?php echo esc_html__('Rows Shown', 'academy-awards-table'); ?></h3>
             <div class="stat-value"><?php echo esc_html(number_format_i18n(count($rows))); ?></div>
         </div>
         <div class="aat-admin-stat-card">
@@ -79,37 +106,115 @@ $masked_key = $omdb_key_configured ? '•••••••• configured' : 'No
     </div>
 
     <div class="aat-admin-section">
-        <h2><?php echo esc_html__('Audit Queue', 'academy-awards-table'); ?></h2>
+        <h2><?php echo esc_html__('Correction Queue', 'academy-awards-table'); ?></h2>
+        <p>
+            <?php echo esc_html__('This is still a read-only audit. Use these queues to decide what needs a human correction, what is just an OMDb source gap, and what can be ignored.', 'academy-awards-table'); ?>
+        </p>
+
+        <div class="aat-omdb-filter-bar" aria-label="<?php echo esc_attr__('OMDb audit filters', 'academy-awards-table'); ?>">
+            <?php foreach ($issue_labels as $issue_key => $issue_label) :
+                $filter_args = array_merge($filter_url_args, array('issue' => $issue_key, 'offset' => 0));
+                $filter_classes = 'aat-omdb-filter-link';
+                if ($issue_key === $issue_filter) {
+                    $filter_classes .= ' is-active';
+                }
+            ?>
+                <a class="<?php echo esc_attr($filter_classes); ?>" href="<?php echo esc_url(add_query_arg($filter_args, admin_url('admin.php'))); ?>">
+                    <?php echo esc_html($issue_label); ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+
+        <form class="aat-omdb-filter-form" method="get" action="<?php echo esc_url(admin_url('admin.php')); ?>">
+            <input type="hidden" name="page" value="academy-awards-omdb-audit">
+            <label>
+                <span><?php echo esc_html__('Filter', 'academy-awards-table'); ?></span>
+                <select name="issue">
+                    <?php foreach ($issue_labels as $issue_key => $issue_label) : ?>
+                        <option value="<?php echo esc_attr($issue_key); ?>" <?php selected($issue_filter, $issue_key); ?>><?php echo esc_html($issue_label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>
+                <span><?php echo esc_html__('Rows per page', 'academy-awards-table'); ?></span>
+                <input type="number" name="limit" value="<?php echo esc_attr($limit); ?>" min="1" max="100">
+            </label>
+            <label>
+                <span><?php echo esc_html__('Scan depth', 'academy-awards-table'); ?></span>
+                <input type="number" name="scan" value="<?php echo esc_attr($scan_limit); ?>" min="25" max="1000" step="25">
+            </label>
+            <button class="button button-secondary" type="submit"><?php echo esc_html__('Apply Audit Filter', 'academy-awards-table'); ?></button>
+        </form>
+
+        <div class="aat-omdb-queue">
+            <div class="aat-omdb-queue-card is-mismatch">
+                <span><?php echo esc_html__('Likely bad IDs', 'academy-awards-table'); ?></span>
+                <strong><?php echo esc_html(number_format_i18n(intval($issue_counts['mismatch'] ?? 0))); ?></strong>
+                <p><?php echo esc_html($issue_descriptions['mismatch']); ?></p>
+            </div>
+            <div class="aat-omdb-queue-card is-omdb-missing">
+                <span><?php echo esc_html__('OMDb gaps', 'academy-awards-table'); ?></span>
+                <strong><?php echo esc_html(number_format_i18n(intval($issue_counts['omdb_missing'] ?? 0))); ?></strong>
+                <p><?php echo esc_html($issue_descriptions['omdb_missing']); ?></p>
+            </div>
+            <div class="aat-omdb-queue-card is-poster-missing">
+                <span><?php echo esc_html__('Poster gaps', 'academy-awards-table'); ?></span>
+                <strong><?php echo esc_html(number_format_i18n(intval($issue_counts['poster_missing'] ?? 0))); ?></strong>
+                <p><?php echo esc_html($issue_descriptions['poster_missing']); ?></p>
+            </div>
+            <div class="aat-omdb-queue-card is-match">
+                <span><?php echo esc_html__('Clean reads', 'academy-awards-table'); ?></span>
+                <strong><?php echo esc_html(number_format_i18n(intval($issue_counts['match'] ?? 0))); ?></strong>
+                <p><?php echo esc_html($issue_descriptions['match']); ?></p>
+            </div>
+        </div>
+
         <p>
             <?php
-            echo esc_html(
-                sprintf(
-                    /* translators: 1: offset, 2: shown count, 3: total count */
-                    __('Showing title IDs %1$s-%2$s of %3$s distinct Oscar title IDs.', 'academy-awards-table'),
-                    number_format_i18n($offset + 1),
-                    number_format_i18n(min($total, $offset + count($rows))),
-                    number_format_i18n($total)
-                )
-            );
+            if ($issue_filter === 'all') {
+                echo esc_html(
+                    sprintf(
+                        /* translators: 1: offset, 2: shown count, 3: total count */
+                        __('Showing title IDs %1$s-%2$s of %3$s distinct Oscar title IDs.', 'academy-awards-table'),
+                        number_format_i18n($total > 0 ? $offset + 1 : 0),
+                        number_format_i18n(min($total, $offset + count($rows))),
+                        number_format_i18n($total)
+                    )
+                );
+            } else {
+                echo esc_html(
+                    sprintf(
+                        /* translators: 1: filter label, 2: offset, 3: shown count, 4: total filtered count, 5: scanned count, 6: total count */
+                        __('Showing %1$s rows %2$s-%3$s from %4$s matches inside the current scan of %5$s title IDs (%6$s total known IDs).', 'academy-awards-table'),
+                        strtolower((string) ($issue_labels[$issue_filter] ?? $issue_filter)),
+                        number_format_i18n($total > 0 ? $offset + 1 : 0),
+                        number_format_i18n(min($total, $offset + count($rows))),
+                        number_format_i18n($total),
+                        number_format_i18n($scanned),
+                        number_format_i18n($total_titles)
+                    )
+                );
+            }
             ?>
         </p>
 
         <p class="aat-admin-actions">
-            <a class="button" href="<?php echo esc_url(add_query_arg(array('page' => 'academy-awards-omdb-audit', 'limit' => $limit, 'offset' => $prev_offset), admin_url('admin.php'))); ?>"><?php echo esc_html__('Previous', 'academy-awards-table'); ?></a>
+            <a class="button" href="<?php echo esc_url(add_query_arg(array_merge($filter_url_args, array('issue' => $issue_filter, 'offset' => $prev_offset)), admin_url('admin.php'))); ?>"><?php echo esc_html__('Previous', 'academy-awards-table'); ?></a>
             <?php if ($next_offset < $total) : ?>
-                <a class="button" href="<?php echo esc_url(add_query_arg(array('page' => 'academy-awards-omdb-audit', 'limit' => $limit, 'offset' => $next_offset), admin_url('admin.php'))); ?>"><?php echo esc_html__('Next', 'academy-awards-table'); ?></a>
+                <a class="button" href="<?php echo esc_url(add_query_arg(array_merge($filter_url_args, array('issue' => $issue_filter, 'offset' => $next_offset)), admin_url('admin.php'))); ?>"><?php echo esc_html__('Next', 'academy-awards-table'); ?></a>
             <?php endif; ?>
-            <a class="button button-secondary" href="<?php echo esc_url(add_query_arg(array('page' => 'academy-awards-omdb-audit', 'limit' => $limit, 'offset' => $offset, 'refresh' => 1), admin_url('admin.php'))); ?>"><?php echo esc_html__('Refresh this slice', 'academy-awards-table'); ?></a>
+            <a class="button button-secondary" href="<?php echo esc_url(add_query_arg(array_merge($filter_url_args, array('issue' => $issue_filter, 'offset' => $offset, 'refresh' => 1)), admin_url('admin.php'))); ?>"><?php echo esc_html__('Refresh this read', 'academy-awards-table'); ?></a>
         </p>
 
         <?php if (empty($rows)) : ?>
-            <p><?php echo esc_html__('No IMDb title IDs were found in the Oscars table.', 'academy-awards-table'); ?></p>
+            <p><?php echo esc_html__('No rows match this audit filter in the current read.', 'academy-awards-table'); ?></p>
         <?php else : ?>
             <div class="aat-admin-table-wrap">
                 <table class="widefat striped aat-omdb-audit-table">
                     <thead>
                         <tr>
                             <th><?php echo esc_html__('Status', 'academy-awards-table'); ?></th>
+                            <th><?php echo esc_html__('Queue', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Oscar Dataset', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('OMDb Result', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Poster', 'academy-awards-table'); ?></th>
@@ -121,28 +226,48 @@ $masked_key = $omdb_key_configured ? '•••••••• configured' : 'No
                             $dataset = is_array($row['dataset'] ?? null) ? $row['dataset'] : array();
                             $omdb = is_array($row['omdb'] ?? null) ? $row['omdb'] : array();
                             $warnings = is_array($row['warnings'] ?? null) ? $row['warnings'] : array();
+                            $issue_types = is_array($row['issue_types'] ?? null) ? $row['issue_types'] : array();
                             $status = sanitize_html_class((string) ($row['status'] ?? 'unchecked'));
+                            $issue_type = sanitize_key((string) ($row['issue_type'] ?? $status));
                             $poster = trim((string) ($omdb['poster'] ?? ''));
                             $has_poster = $poster !== '' && strtoupper($poster) !== 'N/A';
                         ?>
-                            <tr class="aat-omdb-row is-<?php echo esc_attr($status); ?>">
+                            <tr class="aat-omdb-row is-<?php echo esc_attr($status); ?> has-issue-<?php echo esc_attr($issue_type); ?>">
                                 <td>
                                     <span class="aat-omdb-status aat-omdb-status-<?php echo esc_attr($status); ?>"><?php echo esc_html(ucfirst($status)); ?></span>
+                                </td>
+                                <td>
+                                    <span class="aat-omdb-issue-chip is-<?php echo esc_attr($issue_type); ?>">
+                                        <?php echo esc_html($issue_labels[$issue_type] ?? ucfirst(str_replace('_', ' ', $issue_type))); ?>
+                                    </span>
+                                    <?php if (count($issue_types) > 1) : ?>
+                                        <div class="aat-omdb-issue-stack">
+                                            <?php foreach ($issue_types as $row_issue_type) :
+                                                $row_issue_type = sanitize_key((string) $row_issue_type);
+                                                if ($row_issue_type === $issue_type) {
+                                                    continue;
+                                                }
+                                            ?>
+                                                <span class="aat-omdb-mini-chip is-<?php echo esc_attr($row_issue_type); ?>"><?php echo esc_html($issue_labels[$row_issue_type] ?? ucfirst(str_replace('_', ' ', $row_issue_type))); ?></span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <p class="aat-omdb-action-note"><?php echo esc_html((string) ($row['recommended_action'] ?? '')); ?></p>
                                 </td>
                                 <td>
                                     <strong><?php echo esc_html((string) ($dataset['film'] ?? '')); ?></strong>
                                     <div class="aat-muted">
                                         <code><?php echo esc_html((string) ($dataset['imdb_id'] ?? '')); ?></code>
                                         <?php if (!empty($dataset['year'])) : ?>
-                                            · <?php echo esc_html((string) $dataset['year']); ?>
+                                            <?php echo esc_html(' / ' . (string) $dataset['year']); ?>
                                         <?php endif; ?>
                                         <?php if (!empty($dataset['ceremony'])) : ?>
-                                            · <?php echo esc_html(sprintf(__('Ceremony %d', 'academy-awards-table'), intval($dataset['ceremony']))); ?>
+                                            <?php echo esc_html(' / ' . sprintf(__('Ceremony %d', 'academy-awards-table'), intval($dataset['ceremony']))); ?>
                                         <?php endif; ?>
                                     </div>
                                     <div class="aat-muted">
                                         <a href="<?php echo esc_url((string) ($row['entity_url'] ?? '')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('Open Lunara title page', 'academy-awards-table'); ?></a>
-                                        ·
+                                        <?php echo esc_html(' / '); ?>
                                         <a href="<?php echo esc_url((string) ($row['imdb_url'] ?? '')); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('IMDb', 'academy-awards-table'); ?></a>
                                     </div>
                                 </td>
@@ -154,10 +279,10 @@ $masked_key = $omdb_key_configured ? '•••••••• configured' : 'No
                                         <div class="aat-muted">
                                             <?php echo esc_html((string) ($omdb['year'] ?? '')); ?>
                                             <?php if (!empty($omdb['type'])) : ?>
-                                                · <?php echo esc_html((string) $omdb['type']); ?>
+                                                <?php echo esc_html(' / ' . (string) $omdb['type']); ?>
                                             <?php endif; ?>
                                             <?php if (!empty($omdb['runtime'])) : ?>
-                                                · <?php echo esc_html((string) $omdb['runtime']); ?>
+                                                <?php echo esc_html(' / ' . (string) $omdb['runtime']); ?>
                                             <?php endif; ?>
                                         </div>
                                         <?php if (!empty($omdb['director'])) : ?>
