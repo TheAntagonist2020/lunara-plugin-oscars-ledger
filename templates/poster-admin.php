@@ -135,6 +135,67 @@ $aat = Academy_Awards_Table::get_instance();
     </div>
 
     <div class="aat-admin-section">
+        <h2><?php echo esc_html__('Person Profile Audit', 'academy-awards-table'); ?></h2>
+        <p><?php echo esc_html__('Checks Oscar person pages against the existing Media Library and shows how each portrait was resolved.', 'academy-awards-table'); ?></p>
+
+        <?php if (empty($person_profile_audit)) : ?>
+            <p><?php echo esc_html__('No Oscar person records were detected for the portrait audit.', 'academy-awards-table'); ?></p>
+        <?php else : ?>
+            <div class="aat-admin-table-wrap">
+                <table class="widefat striped">
+                    <thead>
+                        <tr>
+                            <th><?php echo esc_html__('Portrait', 'academy-awards-table'); ?></th>
+                            <th><?php echo esc_html__('Person ID', 'academy-awards-table'); ?></th>
+                            <th><?php echo esc_html__('Resolved Label', 'academy-awards-table'); ?></th>
+                            <th><?php echo esc_html__('Oscar Rows', 'academy-awards-table'); ?></th>
+                            <th><?php echo esc_html__('Match Strategy', 'academy-awards-table'); ?></th>
+                            <th><?php echo esc_html__('File', 'academy-awards-table'); ?></th>
+                            <th><?php echo esc_html__('Status', 'academy-awards-table'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($person_profile_audit as $audit_row) : ?>
+                            <tr>
+                                <td style="width:72px;">
+                                    <?php if (!empty($audit_row['thumb_url'])) : ?>
+                                        <img src="<?php echo esc_url($audit_row['thumb_url']); ?>" alt="" style="width:60px;height:60px;object-fit:cover;border-radius:8px;" />
+                                    <?php else : ?>
+                                        &mdash;
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <code><?php echo esc_html((string) ($audit_row['person_id'] ?? '')); ?></code>
+                                    <?php if (!empty($audit_row['profile_url'])) : ?>
+                                        <div class="aat-muted"><a href="<?php echo esc_url((string) $audit_row['profile_url']); ?>" target="_blank" rel="noopener"><?php echo esc_html__('Open profile page', 'academy-awards-table'); ?></a></div>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo esc_html((string) ($audit_row['label'] ?? '')); ?></td>
+                                <td><?php echo esc_html(number_format_i18n(intval($audit_row['nomination_count'] ?? 0))); ?></td>
+                                <td><?php echo esc_html((string) ($audit_row['match_strategy'] ?? '')); ?></td>
+                                <td>
+                                    <?php if (!empty($audit_row['attached_file'])) : ?>
+                                        <code><?php echo esc_html((string) ($audit_row['attached_file'] ?? '')); ?></code>
+                                    <?php else : ?>
+                                        &mdash;
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if (!empty($audit_row['matched'])) : ?>
+                                        <strong><?php echo esc_html__('Connected', 'academy-awards-table'); ?></strong>
+                                    <?php else : ?>
+                                        <strong><?php echo esc_html__('No portrait match', 'academy-awards-table'); ?></strong>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <div class="aat-admin-section">
         <h2><?php echo esc_html__('Current Poster Mappings', 'academy-awards-table'); ?></h2>
 
         <?php if (empty($rows)) : ?>

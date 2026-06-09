@@ -4887,7 +4887,7 @@ class Academy_Awards_Table {
         $nominees_table = $this->get_award_nominees_table_name();
 
         $entity = sanitize_text_field($entity);
-        $id = sanitize_text_field($id);
+        $id = strtolower(trim((string) sanitize_text_field($id)));
 
         if (!in_array($entity, array('title', 'name', 'company'), true)) {
             return array();
@@ -4948,6 +4948,9 @@ class Academy_Awards_Table {
      * Determine a display name for an entity using the dataset.
      */
     public function get_entity_display_name($entity, $id) {
+        $entity = sanitize_text_field($entity);
+        $id = strtolower(trim((string) sanitize_text_field($id)));
+
         $cache_key = 'aat_entity_label_' . md5($entity . ':' . $id);
         $cached = get_transient($cache_key);
         if ($cached !== false) {
@@ -5440,6 +5443,7 @@ class Academy_Awards_Table {
 
         $omdb_key_configured = $this->get_omdb_api_key() !== '';
         $tmdb_key_configured = $this->get_tmdb_api_key() !== '';
+        $person_profile_audit = $this->get_person_profile_attachment_audit(120);
 
         include AAT_PLUGIN_DIR . 'templates/poster-admin.php';
     }
@@ -7467,10 +7471,18 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         'fallback_html' => '',
     );
 
+    $local_attachment_id = $this->get_profile_attachment_id_for_person($nm_id);
+    if ($local_attachment_id > 0) {
+        $local_portrait_url = wp_get_attachment_image_url($local_attachment_id, $size);
+        if (is_string($local_portrait_url) && $local_portrait_url !== '') {
+            $out['portrait_url'] = $local_portrait_url;
+        }
+    }
+
     $tmdb = $this->get_tmdb_person_data_for_imdb_id($nm_id);
     if (is_array($tmdb) && !empty($tmdb)) {
         $out['tmdb'] = $tmdb;
-        if (!empty($tmdb['profile_full'])) {
+        if (empty($out['portrait_url']) && !empty($tmdb['profile_full'])) {
             $out['portrait_url'] = (string) $tmdb['profile_full'];
         }
         if (!empty($tmdb['backdrop_full'])) {
@@ -7505,6 +7517,224 @@ public function get_person_visual_package($nm_id, $size = 'large') {
 
     return $out;
 }
+
+    private function resolve_profile_attachment_for_person($nm_id, $person_name = '') {
+        global $wpdb;
+
+        $nm_id = strtolower(trim((string) $nm_id));
+        if (!preg_match('/^nm\d{7,9}$/', $nm_id)) {
+            return array(
+                'attachment_id' => 0,
+                'match_strategy' => '',
+                'attached_file' => '',
+            );
+        }
+
+        $person_name = trim((string) $person_name);
+        if ($person_name === '') {
+            $context = $this->get_person_context_for_imdb_id($nm_id);
+            $person_name = trim((string) ($context['name'] ?? ''));
+        }
+
+        static $runtime_cache = array();
+        if (array_key_exists($nm_id, $runtime_cache)) {
+            $cached_runtime = $runtime_cache[$nm_id];
+            return is_array($cached_runtime) ? $cached_runtime : array(
+                'attachment_id' => intval($cached_runtime),
+                'match_strategy' => '',
+                'attached_file' => '',
+            );
+        }
+
+        $cache_key = 'aat_person_profile_attachment_v2_' . $nm_id;
+        $cached = get_transient($cache_key);
+        if (is_array($cached) && isset($cached['attachment_id'])) {
+            $runtime_cache[$nm_id] = $cached;
+            return $cached;
+        }
+
+        $like_file = '%' . $wpdb->esc_like($nm_id . '-profile.') . '%';
+        $like_id = '%' . $wpdb->esc_like($nm_id) . '%';
+        $like_title = $wpdb->esc_like($nm_id) . '%';
+        $resolved = array(
+            'attachment_id' => 0,
+            'match_strategy' => '',
+            'attached_file' => '',
+        );
+
+        $pick_attachment = function($sql, $params, $strategy, $require_unique) use ($wpdb, &$resolved) {
+            $rows = $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A);
+            if (!is_array($rows) || empty($rows)) {
+                return false;
+            }
+
+            if ($require_unique && count($rows) !== 1) {
+                return false;
+            }
+
+            $resolved = array(
+                'attachment_id' => intval($rows[0]['ID'] ?? 0),
+                'match_strategy' => $strategy,
+                'attached_file' => (string) ($rows[0]['attached_file'] ?? ''),
+            );
+
+            return $resolved['attachment_id'] > 0;
+        };
+
+        $image_where = "p.post_type = %s AND p.post_mime_type LIKE %s";
+        $image_params = array('attachment', 'image/%');
+
+        if ($pick_attachment(
+            "SELECT p.ID, pm_file.meta_value AS attached_file
+             FROM {$wpdb->posts} p
+             LEFT JOIN {$wpdb->postmeta} pm_file ON pm_file.post_id = p.ID AND pm_file.meta_key = %s
+             WHERE {$image_where}
+               AND pm_file.meta_value LIKE %s
+             ORDER BY p.post_date DESC, p.ID DESC
+             LIMIT 2",
+            array_merge(array('_wp_attached_file'), $image_params, array($like_file)),
+            'imdb-file',
+            false
+        )) {
+            $runtime_cache[$nm_id] = $resolved;
+            set_transient($cache_key, $resolved, 12 * HOUR_IN_SECONDS);
+            return $resolved;
+        }
+
+        if ($pick_attachment(
+            "SELECT p.ID, pm_file.meta_value AS attached_file
+             FROM {$wpdb->posts} p
+             LEFT JOIN {$wpdb->postmeta} pm_file ON pm_file.post_id = p.ID AND pm_file.meta_key = %s
+             LEFT JOIN {$wpdb->postmeta} pm_alt ON pm_alt.post_id = p.ID AND pm_alt.meta_key = %s
+             WHERE {$image_where}
+               AND (
+                   p.post_name LIKE %s
+                   OR p.post_title LIKE %s
+                   OR pm_alt.meta_value LIKE %s
+                   OR pm_file.meta_value LIKE %s
+               )
+             ORDER BY p.post_date DESC, p.ID DESC
+             LIMIT 2",
+            array_merge(array('_wp_attached_file', '_wp_attachment_image_alt'), $image_params, array($like_title, $like_title, $like_id, $like_id)),
+            'imdb-meta',
+            false
+        )) {
+            $runtime_cache[$nm_id] = $resolved;
+            set_transient($cache_key, $resolved, 12 * HOUR_IN_SECONDS);
+            return $resolved;
+        }
+
+        if ($person_name !== '') {
+            $person_slug = sanitize_title($person_name);
+
+            if ($pick_attachment(
+                "SELECT p.ID, pm_file.meta_value AS attached_file
+                 FROM {$wpdb->posts} p
+                 LEFT JOIN {$wpdb->postmeta} pm_file ON pm_file.post_id = p.ID AND pm_file.meta_key = %s
+                 LEFT JOIN {$wpdb->postmeta} pm_alt ON pm_alt.post_id = p.ID AND pm_alt.meta_key = %s
+                 WHERE {$image_where}
+                   AND (
+                       p.post_title = %s
+                       OR pm_alt.meta_value = %s
+                       OR p.post_name = %s
+                   )
+                 ORDER BY p.post_date DESC, p.ID DESC
+                 LIMIT 2",
+                array_merge(array('_wp_attached_file', '_wp_attachment_image_alt'), $image_params, array($person_name, $person_name, $person_slug)),
+                'name-exact',
+                true
+            )) {
+                $runtime_cache[$nm_id] = $resolved;
+                set_transient($cache_key, $resolved, 12 * HOUR_IN_SECONDS);
+                return $resolved;
+            }
+
+            if ($person_slug !== '' && $pick_attachment(
+                "SELECT p.ID, pm_file.meta_value AS attached_file
+                 FROM {$wpdb->posts} p
+                 LEFT JOIN {$wpdb->postmeta} pm_file ON pm_file.post_id = p.ID AND pm_file.meta_key = %s
+                 WHERE {$image_where}
+                   AND (
+                       p.post_name = %s
+                       OR pm_file.meta_value LIKE %s
+                   )
+                 ORDER BY p.post_date DESC, p.ID DESC
+                 LIMIT 2",
+                array_merge(array('_wp_attached_file'), $image_params, array($person_slug, '%' . $wpdb->esc_like('/' . $person_slug . '.') . '%')),
+                'name-slug',
+                true
+            )) {
+                $runtime_cache[$nm_id] = $resolved;
+                set_transient($cache_key, $resolved, 12 * HOUR_IN_SECONDS);
+                return $resolved;
+            }
+        }
+
+        $runtime_cache[$nm_id] = $resolved;
+        set_transient($cache_key, $resolved, 12 * HOUR_IN_SECONDS);
+
+        return $resolved;
+    }
+
+    private function get_profile_attachment_id_for_person($nm_id) {
+        $resolved = $this->resolve_profile_attachment_for_person($nm_id);
+        return intval($resolved['attachment_id'] ?? 0);
+    }
+
+    private function get_person_profile_attachment_audit($limit = 100) {
+        global $wpdb;
+
+        $limit = max(1, min(500, intval($limit)));
+        $entities_table = $this->get_entities_table_name();
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT entity_id AS person_id, label
+                 FROM {$entities_table}
+                 WHERE entity_type = %s
+                 ORDER BY label ASC, entity_id ASC
+                 LIMIT %d",
+                'name',
+                $limit
+            ),
+            ARRAY_A
+        );
+
+        if (!is_array($rows) || empty($rows)) {
+            return array();
+        }
+
+        $audit = array();
+        foreach ($rows as $row) {
+            $person_id = strtolower(trim((string) ($row['person_id'] ?? '')));
+            if (!preg_match('/^nm\d{7,9}$/', $person_id)) {
+                continue;
+            }
+
+            $label = trim((string) ($row['label'] ?? ''));
+            if ($label === '') {
+                $label = trim((string) $this->get_entity_display_name('name', $person_id));
+            }
+
+            $entity_rows = $this->get_entity_rows('name', $person_id);
+            $resolved = $this->resolve_profile_attachment_for_person($person_id, $label);
+            $attachment_id = intval($resolved['attachment_id'] ?? 0);
+            $thumb_url = $attachment_id > 0 ? wp_get_attachment_image_url($attachment_id, array(60, 60)) : '';
+
+            $audit[] = array(
+                'person_id' => $person_id,
+                'label' => $label,
+                'attachment_id' => $attachment_id,
+                'attached_file' => (string) ($resolved['attached_file'] ?? ''),
+                'thumb_url' => is_string($thumb_url) ? $thumb_url : '',
+                'matched' => $attachment_id > 0,
+                'match_strategy' => (string) ($resolved['match_strategy'] ?? ''),
+                'nomination_count' => is_array($entity_rows) ? count($entity_rows) : 0,
+                'profile_url' => $this->build_entity_url_from_id($person_id),
+            );
+        }
+
+        return $audit;
+    }
 
 
     public function get_poster_attachment_id_for_title($tt) {
