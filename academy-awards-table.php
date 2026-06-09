@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.21
+ * Version: 2.7.23
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.21');
+define('AAT_VERSION', '2.7.23');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -55,6 +55,199 @@ class Academy_Awards_Table {
     private function get_omdb_poster_reviews_table_name() {
         global $wpdb;
         return $wpdb->prefix . 'aat_omdb_poster_reviews';
+    }
+
+    private function get_ceremonies_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_ceremonies';
+    }
+
+    private function get_categories_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_categories';
+    }
+
+    private function get_entities_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_entities';
+    }
+
+    private function get_award_facts_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_award_facts';
+    }
+
+    private function get_award_nominees_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_award_nominees';
+    }
+
+    private function get_ceremony_stats_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_ceremony_stats';
+    }
+
+    private function get_category_stats_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_category_stats';
+    }
+
+    private function get_entity_stats_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_entity_stats';
+    }
+
+    private function maybe_create_reporting_tables($charset_collate = '') {
+        global $wpdb;
+
+        if ($charset_collate === '') {
+            $charset_collate = $wpdb->get_charset_collate();
+            if (stripos($charset_collate, 'latin1') !== false) {
+                $charset_collate = 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
+            }
+        }
+
+        $ceremonies_table = $this->get_ceremonies_table_name();
+        $categories_table = $this->get_categories_table_name();
+        $entities_table = $this->get_entities_table_name();
+        $facts_table = $this->get_award_facts_table_name();
+        $nominees_table = $this->get_award_nominees_table_name();
+        $ceremony_stats_table = $this->get_ceremony_stats_table_name();
+        $category_stats_table = $this->get_category_stats_table_name();
+        $entity_stats_table = $this->get_entity_stats_table_name();
+
+        $sql_ceremonies = "CREATE TABLE IF NOT EXISTS $ceremonies_table (
+            ceremony int(3) NOT NULL,
+            year_label varchar(20) NOT NULL DEFAULT '',
+            ceremony_label varchar(32) NOT NULL DEFAULT '',
+            sort_year int(4) NOT NULL DEFAULT 0,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (ceremony),
+            KEY sort_year (sort_year)
+        ) $charset_collate;";
+
+        $sql_categories = "CREATE TABLE IF NOT EXISTS $categories_table (
+            category_slug varchar(191) NOT NULL,
+            canonical_category varchar(255) NOT NULL DEFAULT '',
+            display_category varchar(255) NOT NULL DEFAULT '',
+            award_class varchar(50) NOT NULL DEFAULT '',
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (category_slug),
+            KEY award_class (award_class),
+            KEY canonical_category (canonical_category(191))
+        ) $charset_collate;";
+
+        $sql_entities = "CREATE TABLE IF NOT EXISTS $entities_table (
+            entity_id varchar(32) NOT NULL,
+            entity_type varchar(20) NOT NULL DEFAULT '',
+            label varchar(500) NOT NULL DEFAULT '',
+            sort_label varchar(500) NOT NULL DEFAULT '',
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (entity_id),
+            KEY entity_type (entity_type),
+            KEY sort_label (sort_label(191))
+        ) $charset_collate;";
+
+        $sql_facts = "CREATE TABLE IF NOT EXISTS $facts_table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            source_award_id mediumint(9) unsigned NOT NULL,
+            ceremony int(3) NOT NULL,
+            year_label varchar(20) NOT NULL DEFAULT '',
+            category_slug varchar(191) NOT NULL DEFAULT '',
+            winner tinyint(1) NOT NULL DEFAULT 0,
+            film_entity_id varchar(32) NOT NULL DEFAULT '',
+            primary_entity_id varchar(32) NOT NULL DEFAULT '',
+            primary_label varchar(500) NOT NULL DEFAULT '',
+            nominee_count smallint(5) unsigned NOT NULL DEFAULT 0,
+            has_detail tinyint(1) NOT NULL DEFAULT 0,
+            has_note tinyint(1) NOT NULL DEFAULT 0,
+            has_citation tinyint(1) NOT NULL DEFAULT 0,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY source_award_id (source_award_id),
+            KEY ceremony (ceremony),
+            KEY category_slug (category_slug),
+            KEY winner (winner),
+            KEY film_entity_id (film_entity_id),
+            KEY primary_entity_id (primary_entity_id)
+        ) $charset_collate;";
+
+        $sql_nominees = "CREATE TABLE IF NOT EXISTS $nominees_table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            source_award_id mediumint(9) unsigned NOT NULL,
+            ceremony int(3) NOT NULL,
+            category_slug varchar(191) NOT NULL DEFAULT '',
+            entity_id varchar(32) NOT NULL DEFAULT '',
+            entity_type varchar(20) NOT NULL DEFAULT '',
+            entity_label varchar(500) NOT NULL DEFAULT '',
+            nominee_ordinal smallint(5) unsigned NOT NULL DEFAULT 0,
+            is_primary tinyint(1) NOT NULL DEFAULT 0,
+            winner tinyint(1) NOT NULL DEFAULT 0,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY source_entity_nominee (source_award_id, entity_id, nominee_ordinal),
+            KEY ceremony (ceremony),
+            KEY category_slug (category_slug),
+            KEY entity_id (entity_id),
+            KEY entity_type (entity_type),
+            KEY winner (winner)
+        ) $charset_collate;";
+
+        $sql_ceremony_stats = "CREATE TABLE IF NOT EXISTS $ceremony_stats_table (
+            ceremony int(3) NOT NULL,
+            year_label varchar(20) NOT NULL DEFAULT '',
+            nominations int(11) NOT NULL DEFAULT 0,
+            wins int(11) NOT NULL DEFAULT 0,
+            categories_total int(11) NOT NULL DEFAULT 0,
+            winner_categories int(11) NOT NULL DEFAULT 0,
+            winning_titles_count int(11) NOT NULL DEFAULT 0,
+            top_title_entity_id varchar(32) NOT NULL DEFAULT '',
+            top_title_label varchar(500) NOT NULL DEFAULT '',
+            top_title_mentions int(11) NOT NULL DEFAULT 0,
+            top_title_wins int(11) NOT NULL DEFAULT 0,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (ceremony),
+            KEY top_title_entity_id (top_title_entity_id)
+        ) $charset_collate;";
+
+        $sql_category_stats = "CREATE TABLE IF NOT EXISTS $category_stats_table (
+            category_slug varchar(191) NOT NULL,
+            canonical_category varchar(255) NOT NULL DEFAULT '',
+            nominations int(11) NOT NULL DEFAULT 0,
+            wins int(11) NOT NULL DEFAULT 0,
+            ceremonies int(11) NOT NULL DEFAULT 0,
+            first_ceremony int(3) NOT NULL DEFAULT 0,
+            last_ceremony int(3) NOT NULL DEFAULT 0,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (category_slug),
+            KEY canonical_category (canonical_category(191))
+        ) $charset_collate;";
+
+        $sql_entity_stats = "CREATE TABLE IF NOT EXISTS $entity_stats_table (
+            entity_id varchar(32) NOT NULL,
+            entity_type varchar(20) NOT NULL DEFAULT '',
+            label varchar(500) NOT NULL DEFAULT '',
+            nominations int(11) NOT NULL DEFAULT 0,
+            wins int(11) NOT NULL DEFAULT 0,
+            ceremonies int(11) NOT NULL DEFAULT 0,
+            first_ceremony int(3) NOT NULL DEFAULT 0,
+            last_ceremony int(3) NOT NULL DEFAULT 0,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (entity_id),
+            KEY entity_type (entity_type),
+            KEY wins (wins),
+            KEY ceremonies (ceremonies)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql_ceremonies);
+        dbDelta($sql_categories);
+        dbDelta($sql_entities);
+        dbDelta($sql_facts);
+        dbDelta($sql_nominees);
+        dbDelta($sql_ceremony_stats);
+        dbDelta($sql_category_stats);
+        dbDelta($sql_entity_stats);
     }
 
     private function maybe_create_omdb_reviews_table($charset_collate = '') {
@@ -257,8 +450,10 @@ class Academy_Awards_Table {
 
         dbDelta($sql_tracker);
         dbDelta($sql_posters);
+        $this->maybe_create_reporting_tables($charset_collate);
         $this->maybe_create_omdb_reviews_table($charset_collate);
         $this->maybe_create_omdb_poster_reviews_table($charset_collate);
+        $this->rebuild_reporting_tables();
 
 
         // Store version
@@ -277,6 +472,7 @@ class Academy_Awards_Table {
         // Ensure lightweight annotation tables even if a historical db_version is ahead of the plugin version.
         $this->maybe_create_omdb_reviews_table();
         $this->maybe_create_omdb_poster_reviews_table();
+        $this->maybe_create_reporting_tables();
 
         $installed = get_option('aat_db_version', '0');
         if (version_compare((string) $installed, AAT_VERSION, '>=')) {
@@ -358,8 +554,11 @@ class Academy_Awards_Table {
 
         dbDelta($sql_tracker);
         dbDelta($sql_posters);
+        $this->maybe_create_reporting_tables($charset_collate);
         $this->maybe_create_omdb_reviews_table($charset_collate);
         $this->maybe_create_omdb_poster_reviews_table($charset_collate);
+
+        $this->rebuild_reporting_tables();
 
         update_option('aat_db_version', AAT_VERSION);
 
@@ -370,6 +569,482 @@ class Academy_Awards_Table {
             flush_rewrite_rules();
             update_option('aat_rewrite_version', AAT_VERSION, false);
         }
+    }
+
+    private function split_pipe_tokens($value) {
+        $value = (string) $value;
+        if ($value === '') {
+            return array();
+        }
+
+        return array_values(array_filter(array_map('trim', explode('|', $value)), 'strlen'));
+    }
+
+    private function extract_entity_reference_ids($raw_ids) {
+        $raw_ids = (string) $raw_ids;
+        if ($raw_ids === '') {
+            return array();
+        }
+
+        $tokens = preg_split('/\s*[|,]\s*/', $raw_ids);
+        $entity_ids = array();
+
+        foreach ((array) $tokens as $token) {
+            $token = strtolower(trim((string) $token));
+            if ($token === '') {
+                continue;
+            }
+
+            if ($this->is_title_entity_id($token) || $this->is_name_entity_id($token) || $this->is_company_entity_id($token)) {
+                $entity_ids[] = $token;
+            }
+        }
+
+        return array_values(array_unique($entity_ids));
+    }
+
+    private function extract_sort_year_from_label($year_label) {
+        $year_label = trim((string) $year_label);
+        if ($year_label === '') {
+            return 0;
+        }
+
+        if (preg_match('/(\d{4})/', $year_label, $matches)) {
+            return intval($matches[1]);
+        }
+
+        return 0;
+    }
+
+    private function rebuild_reporting_tables() {
+        global $wpdb;
+
+        $source_table = $this->get_table_name();
+        $ceremonies_table = $this->get_ceremonies_table_name();
+        $categories_table = $this->get_categories_table_name();
+        $entities_table = $this->get_entities_table_name();
+        $facts_table = $this->get_award_facts_table_name();
+        $nominees_table = $this->get_award_nominees_table_name();
+        $ceremony_stats_table = $this->get_ceremony_stats_table_name();
+        $category_stats_table = $this->get_category_stats_table_name();
+        $entity_stats_table = $this->get_entity_stats_table_name();
+
+        $this->maybe_create_reporting_tables();
+
+        $wpdb->query("TRUNCATE TABLE $ceremonies_table");
+        $wpdb->query("TRUNCATE TABLE $categories_table");
+        $wpdb->query("TRUNCATE TABLE $entities_table");
+        $wpdb->query("TRUNCATE TABLE $facts_table");
+        $wpdb->query("TRUNCATE TABLE $nominees_table");
+        $wpdb->query("TRUNCATE TABLE $ceremony_stats_table");
+        $wpdb->query("TRUNCATE TABLE $category_stats_table");
+        $wpdb->query("TRUNCATE TABLE $entity_stats_table");
+
+        $rows = $wpdb->get_results(
+            "SELECT id, " . $this->get_awards_row_fields_sql() . " FROM $source_table ORDER BY id ASC",
+            ARRAY_A
+        );
+
+        if (!is_array($rows) || empty($rows)) {
+            return array(
+                'ceremonies' => 0,
+                'categories' => 0,
+                'entities' => 0,
+                'facts' => 0,
+                'nominees' => 0,
+                'ceremony_stats' => 0,
+                'category_stats' => 0,
+                'entity_stats' => 0,
+            );
+        }
+
+        $ceremonies = array();
+        $categories = array();
+        $entities = array();
+        $facts = array();
+        $nominees = array();
+        $ceremony_stats = array();
+        $category_stats = array();
+        $entity_stats = array();
+
+        $register_entity = function($entity_id, $entity_type, $label) use (&$entities) {
+            $entity_id = strtolower(trim((string) $entity_id));
+            $entity_type = trim((string) $entity_type);
+            $label = trim((string) $label);
+
+            if ($entity_id === '') {
+                return;
+            }
+
+            if (!isset($entities[$entity_id])) {
+                $entities[$entity_id] = array(
+                    'entity_id' => $entity_id,
+                    'entity_type' => $entity_type,
+                    'label' => $label,
+                    'sort_label' => $this->normalize_entity_name_key($label),
+                );
+                return;
+            }
+
+            if ($entities[$entity_id]['label'] === '' && $label !== '') {
+                $entities[$entity_id]['label'] = $label;
+                $entities[$entity_id]['sort_label'] = $this->normalize_entity_name_key($label);
+            }
+        };
+
+        $touch_entity_stats = function($entity_id, $entity_type, $label, $ceremony, $winner) use (&$entity_stats) {
+            $entity_id = strtolower(trim((string) $entity_id));
+            if ($entity_id === '') {
+                return;
+            }
+
+            if (!isset($entity_stats[$entity_id])) {
+                $entity_stats[$entity_id] = array(
+                    'entity_id' => $entity_id,
+                    'entity_type' => trim((string) $entity_type),
+                    'label' => trim((string) $label),
+                    'nominations' => 0,
+                    'wins' => 0,
+                    'ceremonies_map' => array(),
+                    'first_ceremony' => 0,
+                    'last_ceremony' => 0,
+                );
+            }
+
+            if ($entity_stats[$entity_id]['label'] === '' && trim((string) $label) !== '') {
+                $entity_stats[$entity_id]['label'] = trim((string) $label);
+            }
+
+            $entity_stats[$entity_id]['nominations']++;
+            $entity_stats[$entity_id]['wins'] += !empty($winner) ? 1 : 0;
+
+            if ($ceremony > 0) {
+                $entity_stats[$entity_id]['ceremonies_map'][$ceremony] = true;
+                if (empty($entity_stats[$entity_id]['first_ceremony']) || $ceremony < $entity_stats[$entity_id]['first_ceremony']) {
+                    $entity_stats[$entity_id]['first_ceremony'] = $ceremony;
+                }
+                if (empty($entity_stats[$entity_id]['last_ceremony']) || $ceremony > $entity_stats[$entity_id]['last_ceremony']) {
+                    $entity_stats[$entity_id]['last_ceremony'] = $ceremony;
+                }
+            }
+        };
+
+        foreach ($rows as $row) {
+            $row = $this->normalize_awards_row($row);
+            $source_award_id = intval($row['id'] ?? 0);
+            $ceremony = intval($row['ceremony'] ?? 0);
+            $year_label = trim((string) ($row['year'] ?? ''));
+            $category_name = trim((string) ($row['canonical_category'] ?? $row['category'] ?? ''));
+            $category_slug = $category_name !== '' ? sanitize_title($category_name) : '';
+            $film_label = trim((string) ($row['film'] ?? ''));
+            $film_ids = $this->extract_entity_reference_ids($row['film_id'] ?? '');
+            $film_entity_id = '';
+
+            foreach ($film_ids as $candidate_id) {
+                if ($this->is_title_entity_id($candidate_id)) {
+                    $film_entity_id = $candidate_id;
+                    break;
+                }
+            }
+
+            if ($ceremony > 0 && !isset($ceremonies[$ceremony])) {
+                $ceremonies[$ceremony] = array(
+                    'ceremony' => $ceremony,
+                    'year_label' => $year_label,
+                    'ceremony_label' => $this->ordinal($ceremony),
+                    'sort_year' => $this->extract_sort_year_from_label($year_label),
+                );
+            }
+
+            if ($category_slug !== '' && !isset($categories[$category_slug])) {
+                $categories[$category_slug] = array(
+                    'category_slug' => $category_slug,
+                    'canonical_category' => $category_name,
+                    'display_category' => $this->format_category_display($category_name),
+                    'award_class' => trim((string) ($row['class'] ?? '')),
+                );
+            }
+
+            if ($category_slug !== '') {
+                if (!isset($category_stats[$category_slug])) {
+                    $category_stats[$category_slug] = array(
+                        'category_slug' => $category_slug,
+                        'canonical_category' => $category_name,
+                        'nominations' => 0,
+                        'wins' => 0,
+                        'ceremonies_map' => array(),
+                        'first_ceremony' => 0,
+                        'last_ceremony' => 0,
+                    );
+                }
+
+                $category_stats[$category_slug]['nominations']++;
+                $category_stats[$category_slug]['wins'] += !empty($row['winner']) ? 1 : 0;
+                if ($ceremony > 0) {
+                    $category_stats[$category_slug]['ceremonies_map'][$ceremony] = true;
+                    if (empty($category_stats[$category_slug]['first_ceremony']) || $ceremony < $category_stats[$category_slug]['first_ceremony']) {
+                        $category_stats[$category_slug]['first_ceremony'] = $ceremony;
+                    }
+                    if (empty($category_stats[$category_slug]['last_ceremony']) || $ceremony > $category_stats[$category_slug]['last_ceremony']) {
+                        $category_stats[$category_slug]['last_ceremony'] = $ceremony;
+                    }
+                }
+            }
+
+            if ($ceremony > 0) {
+                if (!isset($ceremony_stats[$ceremony])) {
+                    $ceremony_stats[$ceremony] = array(
+                        'ceremony' => $ceremony,
+                        'year_label' => $year_label,
+                        'nominations' => 0,
+                        'wins' => 0,
+                        'categories_map' => array(),
+                        'winner_categories_map' => array(),
+                        'title_mentions' => array(),
+                        'title_labels' => array(),
+                        'title_wins' => array(),
+                    );
+                }
+
+                $ceremony_stats[$ceremony]['nominations']++;
+                $ceremony_stats[$ceremony]['wins'] += !empty($row['winner']) ? 1 : 0;
+                if ($category_slug !== '') {
+                    $ceremony_stats[$ceremony]['categories_map'][$category_slug] = true;
+                    if (!empty($row['winner'])) {
+                        $ceremony_stats[$ceremony]['winner_categories_map'][$category_slug] = true;
+                    }
+                }
+            }
+
+            if ($film_entity_id !== '') {
+                $register_entity($film_entity_id, 'title', $film_label);
+                $touch_entity_stats($film_entity_id, 'title', $film_label, $ceremony, !empty($row['winner']));
+
+                if ($ceremony > 0) {
+                    if (!isset($ceremony_stats[$ceremony]['title_mentions'][$film_entity_id])) {
+                        $ceremony_stats[$ceremony]['title_mentions'][$film_entity_id] = 0;
+                        $ceremony_stats[$ceremony]['title_wins'][$film_entity_id] = 0;
+                    }
+                    $ceremony_stats[$ceremony]['title_mentions'][$film_entity_id]++;
+                    if (!empty($row['winner'])) {
+                        $ceremony_stats[$ceremony]['title_wins'][$film_entity_id]++;
+                    }
+                    if ($film_label !== '' && empty($ceremony_stats[$ceremony]['title_labels'][$film_entity_id])) {
+                        $ceremony_stats[$ceremony]['title_labels'][$film_entity_id] = $film_label;
+                    }
+                }
+            }
+
+            $nominee_ids = $this->extract_entity_reference_ids($row['nominee_ids'] ?? '');
+            $nominee_labels = $this->split_pipe_tokens($row['nominees'] ?? '');
+            $fallback_name = trim((string) ($row['name'] ?? ''));
+            if (empty($nominee_labels) && $fallback_name !== '') {
+                $nominee_labels[] = $fallback_name;
+            }
+
+            foreach ($nominee_ids as $index => $entity_id) {
+                $label = isset($nominee_labels[$index]) ? trim((string) $nominee_labels[$index]) : '';
+                if ($label === '' && count($nominee_ids) === 1 && $fallback_name !== '') {
+                    $label = $fallback_name;
+                }
+                if ($label === '' && $entity_id === $film_entity_id && $film_label !== '') {
+                    $label = $film_label;
+                }
+
+                $entity_type = $this->infer_entity_type_from_id($entity_id);
+                $register_entity($entity_id, $entity_type, $label);
+                $touch_entity_stats($entity_id, $entity_type, $label, $ceremony, !empty($row['winner']));
+
+                if ($source_award_id > 0) {
+                    $nominees[] = array(
+                        'source_award_id' => $source_award_id,
+                        'ceremony' => $ceremony,
+                        'category_slug' => $category_slug,
+                        'entity_id' => $entity_id,
+                        'entity_type' => $entity_type,
+                        'entity_label' => $label,
+                        'nominee_ordinal' => $index + 1,
+                        'is_primary' => $index === 0 ? 1 : 0,
+                        'winner' => !empty($row['winner']) ? 1 : 0,
+                    );
+                }
+            }
+
+            if ($source_award_id > 0) {
+                $facts[] = array(
+                    'source_award_id' => $source_award_id,
+                    'ceremony' => $ceremony,
+                    'year_label' => $year_label,
+                    'category_slug' => $category_slug,
+                    'winner' => !empty($row['winner']) ? 1 : 0,
+                    'film_entity_id' => $film_entity_id,
+                    'primary_entity_id' => !empty($nominee_ids) ? (string) $nominee_ids[0] : '',
+                    'primary_label' => $fallback_name,
+                    'nominee_count' => max(count($nominee_ids), count($nominee_labels)),
+                    'has_detail' => !empty($row['detail']) ? 1 : 0,
+                    'has_note' => !empty($row['note']) ? 1 : 0,
+                    'has_citation' => !empty($row['citation']) ? 1 : 0,
+                );
+            }
+        }
+
+        foreach ($ceremonies as $ceremony_row) {
+            $wpdb->insert($ceremonies_table, $ceremony_row);
+        }
+
+        foreach ($categories as $category_row) {
+            $wpdb->insert($categories_table, $category_row);
+        }
+
+        foreach ($entities as $entity_row) {
+            $wpdb->insert($entities_table, $entity_row);
+        }
+
+        foreach ($facts as $fact_row) {
+            $wpdb->insert($facts_table, $fact_row);
+        }
+
+        foreach ($nominees as $nominee_row) {
+            $wpdb->insert($nominees_table, $nominee_row);
+        }
+
+        foreach ($category_stats as $category_slug => $stat_row) {
+            $wpdb->insert($category_stats_table, array(
+                'category_slug' => $category_slug,
+                'canonical_category' => $stat_row['canonical_category'],
+                'nominations' => intval($stat_row['nominations']),
+                'wins' => intval($stat_row['wins']),
+                'ceremonies' => count($stat_row['ceremonies_map']),
+                'first_ceremony' => intval($stat_row['first_ceremony']),
+                'last_ceremony' => intval($stat_row['last_ceremony']),
+            ));
+        }
+
+        foreach ($entity_stats as $entity_id => $stat_row) {
+            $wpdb->insert($entity_stats_table, array(
+                'entity_id' => $entity_id,
+                'entity_type' => $stat_row['entity_type'],
+                'label' => $stat_row['label'],
+                'nominations' => intval($stat_row['nominations']),
+                'wins' => intval($stat_row['wins']),
+                'ceremonies' => count($stat_row['ceremonies_map']),
+                'first_ceremony' => intval($stat_row['first_ceremony']),
+                'last_ceremony' => intval($stat_row['last_ceremony']),
+            ));
+        }
+
+        foreach ($ceremony_stats as $ceremony_key => $stat_row) {
+            $top_title_entity_id = '';
+            $top_title_label = '';
+            $top_title_mentions = 0;
+            $top_title_wins = 0;
+            $winning_titles_count = 0;
+
+            foreach ($stat_row['title_mentions'] as $title_entity_id => $mentions) {
+                $wins = isset($stat_row['title_wins'][$title_entity_id]) ? intval($stat_row['title_wins'][$title_entity_id]) : 0;
+                if ($wins > 0) {
+                    $winning_titles_count++;
+                }
+
+                if (
+                    $mentions > $top_title_mentions ||
+                    ($mentions === $top_title_mentions && $wins > $top_title_wins) ||
+                    ($mentions === $top_title_mentions && $wins === $top_title_wins && strcmp($title_entity_id, $top_title_entity_id) < 0)
+                ) {
+                    $top_title_entity_id = $title_entity_id;
+                    $top_title_label = isset($stat_row['title_labels'][$title_entity_id]) ? (string) $stat_row['title_labels'][$title_entity_id] : '';
+                    $top_title_mentions = intval($mentions);
+                    $top_title_wins = $wins;
+                }
+            }
+
+            $wpdb->insert($ceremony_stats_table, array(
+                'ceremony' => intval($ceremony_key),
+                'year_label' => $stat_row['year_label'],
+                'nominations' => intval($stat_row['nominations']),
+                'wins' => intval($stat_row['wins']),
+                'categories_total' => count($stat_row['categories_map']),
+                'winner_categories' => count($stat_row['winner_categories_map']),
+                'winning_titles_count' => $winning_titles_count,
+                'top_title_entity_id' => $top_title_entity_id,
+                'top_title_label' => $top_title_label,
+                'top_title_mentions' => $top_title_mentions,
+                'top_title_wins' => $top_title_wins,
+            ));
+        }
+
+        return array(
+            'ceremonies' => count($ceremonies),
+            'categories' => count($categories),
+            'entities' => count($entities),
+            'facts' => count($facts),
+            'nominees' => count($nominees),
+            'ceremony_stats' => count($ceremony_stats),
+            'category_stats' => count($category_stats),
+            'entity_stats' => count($entity_stats),
+        );
+    }
+
+    private function get_projection_total_counts() {
+        global $wpdb;
+
+        $facts_table = $this->get_award_facts_table_name();
+        $categories_table = $this->get_categories_table_name();
+        $ceremonies_table = $this->get_ceremonies_table_name();
+
+        return array(
+            'records' => intval($wpdb->get_var("SELECT COUNT(*) FROM $facts_table")),
+            'winners' => intval($wpdb->get_var("SELECT COUNT(*) FROM $facts_table WHERE winner = 1")),
+            'categories' => intval($wpdb->get_var("SELECT COUNT(*) FROM $categories_table")),
+            'ceremonies' => intval($wpdb->get_var("SELECT COUNT(*) FROM $ceremonies_table")),
+        );
+    }
+
+    private function get_projection_categories_list() {
+        global $wpdb;
+
+        $categories_table = $this->get_categories_table_name();
+        $rows = $wpdb->get_col("SELECT canonical_category FROM $categories_table ORDER BY canonical_category ASC");
+        return is_array($rows) ? $rows : array();
+    }
+
+    private function get_projection_classes_list() {
+        global $wpdb;
+
+        $categories_table = $this->get_categories_table_name();
+        $rows = $wpdb->get_col("SELECT DISTINCT award_class FROM $categories_table WHERE award_class != '' ORDER BY award_class ASC");
+        return is_array($rows) ? $rows : array();
+    }
+
+    private function get_projection_years_list() {
+        global $wpdb;
+
+        $ceremonies_table = $this->get_ceremonies_table_name();
+        $rows = $wpdb->get_col("SELECT year_label FROM $ceremonies_table ORDER BY ceremony DESC");
+        return is_array($rows) ? $rows : array();
+    }
+
+    private function get_projection_ceremonies_list() {
+        global $wpdb;
+
+        $ceremonies_table = $this->get_ceremonies_table_name();
+        $rows = $wpdb->get_col("SELECT ceremony FROM $ceremonies_table ORDER BY ceremony DESC");
+        return is_array($rows) ? array_map('intval', $rows) : array();
+    }
+
+    private function get_projected_entity_label($entity_id) {
+        global $wpdb;
+
+        $entity_id = strtolower(trim((string) $entity_id));
+        if ($entity_id === '') {
+            return '';
+        }
+
+        $entities_table = $this->get_entities_table_name();
+
+        return (string) $wpdb->get_var(
+            $wpdb->prepare("SELECT label FROM $entities_table WHERE entity_id = %s LIMIT 1", $entity_id)
+        );
     }
 
 
@@ -794,7 +1469,9 @@ class Academy_Awards_Table {
      */
     public function get_ceremony_title_highlights($ceremony, $limit = 18) {
         global $wpdb;
-        $table_name = $this->get_table_name();
+        $facts_table = $this->get_award_facts_table_name();
+        $categories_table = $this->get_categories_table_name();
+        $entities_table = $this->get_entities_table_name();
         $ceremony = intval($ceremony);
         $limit = max(0, intval($limit));
         if ($ceremony <= 0) {
@@ -808,7 +1485,12 @@ class Academy_Awards_Table {
         }
 
         $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT canonical_category, category, film, film_id, winner FROM $table_name WHERE ceremony = %d AND film_id <> '' ORDER BY winner DESC, canonical_category ASC, film ASC",
+            "SELECT f.category_slug, c.canonical_category, e.entity_id AS film_id, e.label AS film, f.winner
+             FROM $facts_table f
+             INNER JOIN $categories_table c ON c.category_slug = f.category_slug
+             INNER JOIN $entities_table e ON e.entity_id = f.film_entity_id
+             WHERE f.ceremony = %d AND f.film_entity_id <> ''
+             ORDER BY f.winner DESC, c.canonical_category ASC, e.label ASC",
             $ceremony
         ), ARRAY_A);
         if (!is_array($rows) || empty($rows)) {
@@ -822,7 +1504,6 @@ class Academy_Awards_Table {
         $seen = array();
 
         foreach ($rows as $r) {
-            $r = $this->apply_row_hotfixes($r);
             $fid = strtolower(trim((string) ($r['film_id'] ?? '')));
             if (!preg_match('/^tt\d+$/', $fid) || isset($seen[$fid])) {
                 continue;
@@ -857,7 +1538,9 @@ class Academy_Awards_Table {
      */
     public function get_category_title_highlights($canonical_category, $limit = 18) {
         global $wpdb;
-        $table_name = $this->get_table_name();
+        $facts_table = $this->get_award_facts_table_name();
+        $categories_table = $this->get_categories_table_name();
+        $entities_table = $this->get_entities_table_name();
         $canonical_category = trim((string) $canonical_category);
         $limit = max(0, intval($limit));
         if ($canonical_category === '') {
@@ -871,7 +1554,12 @@ class Academy_Awards_Table {
         }
 
         $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT ceremony, year, film, film_id, winner FROM $table_name WHERE canonical_category = %s AND film_id <> '' ORDER BY ceremony DESC, winner DESC, film ASC",
+            "SELECT f.ceremony, f.year_label AS year, e.label AS film, e.entity_id AS film_id, f.winner
+             FROM $facts_table f
+             INNER JOIN $categories_table c ON c.category_slug = f.category_slug
+             INNER JOIN $entities_table e ON e.entity_id = f.film_entity_id
+             WHERE c.canonical_category = %s AND f.film_entity_id <> ''
+             ORDER BY f.ceremony DESC, f.winner DESC, e.label ASC",
             $canonical_category
         ), ARRAY_A);
         if (!is_array($rows) || empty($rows)) {
@@ -882,7 +1570,6 @@ class Academy_Awards_Table {
         $out = array();
         $seen = array();
         foreach ($rows as $r) {
-            $r = $this->apply_row_hotfixes($r);
             $fid = strtolower(trim((string) ($r['film_id'] ?? '')));
             if (!preg_match('/^tt\d+$/', $fid) || isset($seen[$fid])) {
                 continue;
@@ -928,10 +1615,10 @@ class Academy_Awards_Table {
             return array_merge($empty, $cached);
         }
 
-        $table_name = $this->get_table_name();
+        $category_stats_table = $this->get_category_stats_table_name();
         $row = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT COUNT(*) AS nominations, SUM(CASE WHEN winner = 1 THEN 1 ELSE 0 END) AS wins, COUNT(DISTINCT ceremony) AS ceremonies, MIN(ceremony) AS first_ceremony, MAX(ceremony) AS last_ceremony FROM $table_name WHERE canonical_category = %s",
+                "SELECT nominations, wins, ceremonies, first_ceremony, last_ceremony FROM $category_stats_table WHERE canonical_category = %s LIMIT 1",
                 $canonical_category
             ),
             ARRAY_A
@@ -3860,7 +4547,7 @@ class Academy_Awards_Table {
      */
     public function get_ceremony_year($ceremony) {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'academy_awards';
+        $ceremonies_table = $this->get_ceremonies_table_name();
         $ceremony = intval($ceremony);
         if ($ceremony <= 0) return '';
         static $runtime_cache = array();
@@ -3873,7 +4560,7 @@ class Academy_Awards_Table {
             $runtime_cache[$ceremony] = is_string($cached) ? $cached : '';
             return $runtime_cache[$ceremony];
         }
-        $sql = $wpdb->prepare("SELECT MIN(year) FROM $table_name WHERE ceremony = %d", $ceremony);
+        $sql = $wpdb->prepare("SELECT year_label FROM $ceremonies_table WHERE ceremony = %d LIMIT 1", $ceremony);
         $year = $wpdb->get_var($sql);
         $year = is_string($year) ? $year : '';
         $runtime_cache[$ceremony] = $year;
@@ -3887,12 +4574,12 @@ class Academy_Awards_Table {
      */
     public function get_max_ceremony() {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'academy_awards';
+        $ceremonies_table = $this->get_ceremonies_table_name();
         $cached = get_transient('aat_max_ceremony_v1');
         if ($cached !== false) {
             return intval($cached);
         }
-        $max = intval($wpdb->get_var("SELECT MAX(ceremony) FROM $table_name"));
+        $max = intval($wpdb->get_var("SELECT MAX(ceremony) FROM $ceremonies_table"));
         set_transient('aat_max_ceremony_v1', $max, 6 * HOUR_IN_SECONDS);
         return $max;
     }
@@ -3982,7 +4669,9 @@ class Academy_Awards_Table {
      */
     public function get_entity_rows($entity, $id) {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'academy_awards';
+        $table_name = $this->get_table_name();
+        $facts_table = $this->get_award_facts_table_name();
+        $nominees_table = $this->get_award_nominees_table_name();
 
         $entity = sanitize_text_field($entity);
         $id = sanitize_text_field($id);
@@ -4007,14 +4696,27 @@ class Academy_Awards_Table {
             return $cached;
         }
 
-        $field = ($entity === 'title') ? 'film_id' : 'nominee_ids';
-
-        $values = array();
-        $where = $this->build_pipe_match_where($field, $id, $values);
-
         $fields = $this->get_awards_row_fields_sql();
-        $sql = "SELECT DISTINCT $fields FROM $table_name WHERE $where ORDER BY ceremony DESC, canonical_category ASC, winner DESC, film ASC, name ASC";
-        $sql = $wpdb->prepare($sql, $values);
+        if ($entity === 'title') {
+            $sql = $wpdb->prepare(
+                "SELECT DISTINCT a.$fields
+                 FROM $table_name a
+                 INNER JOIN $facts_table f ON f.source_award_id = a.id
+                 WHERE f.film_entity_id = %s
+                 ORDER BY a.ceremony DESC, a.canonical_category ASC, a.winner DESC, a.film ASC, a.name ASC",
+                $id
+            );
+        } else {
+            $sql = $wpdb->prepare(
+                "SELECT DISTINCT a.$fields
+                 FROM $table_name a
+                 INNER JOIN $nominees_table n ON n.source_award_id = a.id
+                 WHERE n.entity_id = %s
+                 ORDER BY a.ceremony DESC, a.canonical_category ASC, a.winner DESC, a.film ASC, a.name ASC",
+                $id
+            );
+        }
+
         $rows = $wpdb->get_results($sql, ARRAY_A);
         if (!is_array($rows)) {
             set_transient($cache_key, array(), 30 * MINUTE_IN_SECONDS);
@@ -4037,6 +4739,12 @@ class Academy_Awards_Table {
         $cached = get_transient($cache_key);
         if ($cached !== false) {
             return (string) $cached;
+        }
+
+        $label = $this->get_projected_entity_label($id);
+        if ($label !== '') {
+            set_transient($cache_key, $label, 12 * HOUR_IN_SECONDS);
+            return $label;
         }
 
         $rows = $this->get_entity_rows($entity, $id);
@@ -4167,8 +4875,6 @@ class Academy_Awards_Table {
 
                 $is_table_page = (
                     $is_main_oscars_page ||
-                    has_shortcode($post->post_content, 'academy_awards') ||
-                    has_shortcode($post->post_content, 'lunara_awards_tracker') ||
                     has_block('academy-awards/database', $post) ||
                     has_block('academy-awards/tracker', $post)
                 );
@@ -4432,8 +5138,9 @@ class Academy_Awards_Table {
         $stats = $this->get_total_awards_stats($table_name);
         $total_records = $stats['records_total'];
         $total_winners = $stats['winners_total'];
-        $categories = $wpdb->get_var("SELECT COUNT(DISTINCT canonical_category) FROM $table_name WHERE canonical_category != ''");
-        $years = $wpdb->get_var("SELECT COUNT(DISTINCT year) FROM $table_name WHERE year != ''");
+        $projection_counts = $this->get_projection_total_counts();
+        $categories = intval($projection_counts['categories']);
+        $years = intval($projection_counts['ceremonies']);
 
         include AAT_PLUGIN_DIR . 'templates/admin-page.php';
     }
@@ -4450,8 +5157,8 @@ class Academy_Awards_Table {
         $awards_table = $wpdb->prefix . 'academy_awards';
         $tracker_table = $wpdb->prefix . 'aat_tracker';
 
-        $ceremonies = $wpdb->get_col("SELECT DISTINCT ceremony FROM $awards_table ORDER BY ceremony DESC");
-        $categories = $wpdb->get_col("SELECT DISTINCT canonical_category FROM $awards_table WHERE canonical_category != '' ORDER BY canonical_category ASC");
+        $ceremonies = $this->get_projection_ceremonies_list();
+        $categories = $this->get_projection_categories_list();
 
         $selected_ceremony = isset($_GET['ceremony']) ? intval($_GET['ceremony']) : 0;
         if ($selected_ceremony <= 0) {
@@ -7267,21 +7974,16 @@ public function get_person_visual_package($nm_id, $size = 'large') {
      * Cached total stats over the distinct awards rowset.
      */
     private function get_total_awards_stats($table_name) {
-        global $wpdb;
-
         $cache_key = 'aat_total_stats_v2';
         $cached = get_transient($cache_key);
         if (is_array($cached) && isset($cached['records_total'], $cached['winners_total'])) {
             return $cached;
         }
 
-        $fields = $this->get_awards_row_fields_sql();
-        $sql = "SELECT COUNT(*) AS records_total, SUM(CASE WHEN winner = 1 THEN 1 ELSE 0 END) AS winners_total FROM (SELECT DISTINCT $fields FROM $table_name) aat_all_rows";
-        $row = $wpdb->get_row($sql, ARRAY_A);
-
+        $projection_counts = $this->get_projection_total_counts();
         $stats = array(
-            'records_total' => isset($row['records_total']) ? (int) $row['records_total'] : 0,
-            'winners_total' => isset($row['winners_total']) ? (int) $row['winners_total'] : 0,
+            'records_total' => intval($projection_counts['records']),
+            'winners_total' => intval($projection_counts['winners']),
         );
 
         set_transient($cache_key, $stats, 5 * MINUTE_IN_SECONDS);
@@ -7407,16 +8109,13 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             wp_send_json_success($cached_meta);
         }
 
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'academy_awards';
-
         // Get unique values for filters
-        $categories = $wpdb->get_col("SELECT DISTINCT canonical_category FROM $table_name WHERE canonical_category != '' ORDER BY canonical_category ASC");
-        $classes = $wpdb->get_col("SELECT DISTINCT class FROM $table_name WHERE class != '' ORDER BY class ASC");
-        $years = $wpdb->get_col("SELECT DISTINCT year FROM $table_name ORDER BY ceremony DESC");
-        $ceremonies = $wpdb->get_col("SELECT DISTINCT ceremony FROM $table_name ORDER BY ceremony DESC");
+        $categories = $this->get_projection_categories_list();
+        $classes = $this->get_projection_classes_list();
+        $years = $this->get_projection_years_list();
+        $ceremonies = $this->get_projection_ceremonies_list();
 
-        $stats = $this->get_total_awards_stats($table_name);
+        $stats = $this->get_total_awards_stats($this->get_table_name());
         $total_records = (int) $stats['records_total'];
         $total_winners = (int) $stats['winners_total'];
 
@@ -7809,6 +8508,7 @@ public function ajax_import_data() {
         $best_picture_repair = $this->repair_best_picture_credit_rows();
         $international_feature_repair = $this->repair_international_feature_credit_rows();
         $documentary_short_repair = $this->repair_documentary_and_short_credit_rows();
+        $reporting_rebuild = $this->rebuild_reporting_tables();
 
         wp_send_json_success(array(
             'imported' => $imported,
@@ -7818,6 +8518,7 @@ public function ajax_import_data() {
             'best_picture_repair' => $best_picture_repair,
             'international_feature_repair' => $international_feature_repair,
             'documentary_short_repair' => $documentary_short_repair,
+            'reporting_rebuild' => $reporting_rebuild,
         ));
     }
 
@@ -7909,6 +8610,7 @@ public function ajax_import_data() {
         $best_picture_repair = $this->repair_best_picture_credit_rows();
         $international_feature_repair = $this->repair_international_feature_credit_rows();
         $documentary_short_repair = $this->repair_documentary_and_short_credit_rows();
+        $reporting_rebuild = $this->rebuild_reporting_tables();
 
         wp_send_json_success(array(
             'imported' => $imported,
@@ -7918,6 +8620,7 @@ public function ajax_import_data() {
             'best_picture_repair' => $best_picture_repair,
             'international_feature_repair' => $international_feature_repair,
             'documentary_short_repair' => $documentary_short_repair,
+            'reporting_rebuild' => $reporting_rebuild,
         ));
     } catch (Exception $e) {
         wp_send_json_error(array('message' => 'Import failed: ' . $e->getMessage()));
@@ -8062,6 +8765,7 @@ public function ajax_import_ceremony_delta() {
         $best_picture_repair = $this->repair_best_picture_credit_rows();
         $international_feature_repair = $this->repair_international_feature_credit_rows();
         $documentary_short_repair = $this->repair_documentary_and_short_credit_rows();
+        $reporting_rebuild = $this->rebuild_reporting_tables();
 
         wp_send_json_success(array(
             'ceremony' => $ceremony,
@@ -8073,6 +8777,7 @@ public function ajax_import_ceremony_delta() {
             'best_picture_repair' => $best_picture_repair,
             'international_feature_repair' => $international_feature_repair,
             'documentary_short_repair' => $documentary_short_repair,
+            'reporting_rebuild' => $reporting_rebuild,
         ));
     } catch (Exception $e) {
         wp_send_json_error(array('message' => 'Delta import failed: ' . $e->getMessage()));
@@ -8088,9 +8793,11 @@ public function ajax_repair_schema() {
     $this->maybe_upgrade_schema();
     $this->register_rewrite_rules();
     flush_rewrite_rules();
+    $reporting_rebuild = $this->rebuild_reporting_tables();
 
     wp_send_json_success(array(
-        'message' => 'Schema and rewrite rules repaired.'
+        'message' => 'Schema, reporting tables, and rewrite rules repaired.',
+        'reporting_rebuild' => $reporting_rebuild,
     ));
 }
 
@@ -8255,6 +8962,7 @@ public function ajax_import_bundled_data() {
             $best_picture_repair = $this->repair_best_picture_credit_rows();
             $international_feature_repair = $this->repair_international_feature_credit_rows();
             $documentary_short_repair = $this->repair_documentary_and_short_credit_rows();
+            $reporting_rebuild = $this->rebuild_reporting_tables();
 
             // Invalidate performance caches
             delete_transient('aat_records_total_v1');
@@ -8299,6 +9007,7 @@ public function ajax_import_bundled_data() {
             'best_picture_repair' => $best_picture_repair,
             'international_feature_repair' => $international_feature_repair,
             'documentary_short_repair' => $documentary_short_repair,
+            'reporting_rebuild' => isset($reporting_rebuild) ? $reporting_rebuild : array(),
         ));
     }
 
@@ -8556,6 +9265,7 @@ public function ajax_import_bundled_data() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'academy_awards';
         $wpdb->query("TRUNCATE TABLE $table_name");
+        $reporting_rebuild = $this->rebuild_reporting_tables();
 
         // Invalidate performance caches
         delete_transient('aat_records_total_v1');
@@ -8566,7 +9276,10 @@ public function ajax_import_bundled_data() {
         /** Fires after all data is cleared. */
         do_action( 'aat_after_data_import', 'clear', 0 );
 
-        wp_send_json_success(array('message' => 'All data cleared.'));
+        wp_send_json_success(array(
+            'message' => 'All data cleared.',
+            'reporting_rebuild' => $reporting_rebuild,
+        ));
     }
 }
 
