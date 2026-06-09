@@ -29,14 +29,23 @@ Recommended minimum files when this project changes:
 - `templates/admin-page.php`
 - Any modified files under `assets/`, `templates/`, `includes/`
 
-## 4) Run repair in WordPress Admin
+## 4) Configure API keys
+
+If the release uses dynamic metadata or poster sync:
+
+- Open `wp-admin`
+- Go to `Academy Awards -> Poster Library`
+- Enter and save your `OMDb API Key`
+- Enter and save your `TMDB API Key`
+
+## 5) Run repair in WordPress Admin
 
 - Open `wp-admin`
 - Go to `Academy Awards`
 - Click `Repair Tables / Rewrite Rules`
 - Wait for success message
 
-## 5) Quick data health checks
+## 6) Quick data health checks
 
 If data looks empty, check:
 
@@ -52,18 +61,32 @@ Expected:
 - `source_rows > 0`
 - projection rows (`fact_rows`, `ceremony_rows`, `category_rows`) should also be > 0
 
-## 6) UI smoke tests
+## 7) Poster sync checks
+
+If the release changes poster handling:
+
+- Open `Academy Awards -> Poster Library`
+- Run `Sync posters from published reviews`
+- Run `Import missing posters from APIs`
+- Confirm the page shows `OMDb Status: Configured` and `TMDB Status: Configured`
+
+## 8) UI smoke tests
 
 - Main Oscars table page loads rows
 - One ceremony page loads
 - One category page loads
 - One title/person entity page loads
+- One title page shows expected poster/backdrop coverage
 - Admin Academy Awards page stats are non-zero
 
-## 7) Cache refresh (if needed)
+## 9) Cache refresh (if needed)
 
 If any page still shows stale/empty output after repair:
 
 - clear page cache / CDN cache
 - hard-refresh browser
+
+## 10) Rollback prep
+
+Before deploying, note the current live commit or plugin snapshot so rollback is immediate if needed.
 
