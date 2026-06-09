@@ -770,6 +770,48 @@
                     }
                 });
             });
+
+            // Sync missing posters from APIs (OMDb -> TMDB fallback)
+            $('#aat-posters-sync-apis').on('click', function(e) {
+                e.preventDefault();
+                const $btn = $(this);
+                const $status = $('#aat-posters-sync-apis-status');
+
+                $btn.prop('disabled', true).text('Importing…');
+                $status.text('');
+
+                $.ajax({
+                    url: aatAdmin.ajaxurl,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        action: 'aat_posters_sync_from_apis',
+                        nonce: aatAdmin.nonce,
+                        limit: 200
+                    },
+                    success: function(resp) {
+                        if (resp && resp.success) {
+                            const d = resp.data || {};
+                            $status.text(
+                                'Processed: ' + (d.processed || 0) +
+                                ' • Imported: ' + (d.synced || 0) +
+                                ' (OMDb ' + (d.synced_omdb || 0) +
+                                ', TMDB ' + (d.synced_tmdb || 0) +
+                                ') • Existing: ' + (d.skipped_existing || 0) +
+                                ' • Missing: ' + (d.missing || 0)
+                            );
+                            setTimeout(function() { window.location.reload(); }, 1000);
+                            return;
+                        }
+                        $status.text((resp && resp.data && resp.data.message) ? resp.data.message : 'API sync failed.');
+                        $btn.prop('disabled', false).text('Import missing posters from APIs');
+                    },
+                    error: function() {
+                        $status.text('Server error.');
+                        $btn.prop('disabled', false).text('Import missing posters from APIs');
+                    }
+                });
+            });
         },
 showProgress: function() {
             $('.aat-progress').show();

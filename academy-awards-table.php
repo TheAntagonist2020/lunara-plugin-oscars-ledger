@@ -365,6 +365,7 @@ class Academy_Awards_Table {
         add_action('wp_ajax_aat_posters_save', array($this, 'ajax_posters_save'));
         add_action('wp_ajax_aat_posters_delete', array($this, 'ajax_posters_delete'));
         add_action('wp_ajax_aat_posters_sync_from_reviews', array($this, 'ajax_posters_sync_from_reviews'));
+        add_action('wp_ajax_aat_posters_sync_from_apis', array($this, 'ajax_posters_sync_from_apis'));
 
 
         // Activation hook
@@ -987,53 +988,93 @@ class Academy_Awards_Table {
 
     private function get_projection_total_counts() {
         global $wpdb;
+        $this->ensure_projection_data_available();
 
         $facts_table = $this->get_award_facts_table_name();
         $categories_table = $this->get_categories_table_name();
         $ceremonies_table = $this->get_ceremonies_table_name();
 
+        $records = intval($wpdb->get_var("SELECT COUNT(*) FROM $facts_table"));
+        $winners = intval($wpdb->get_var("SELECT COUNT(*) FROM $facts_table WHERE winner = 1"));
+        $categories = intval($wpdb->get_var("SELECT COUNT(*) FROM $categories_table"));
+        $ceremonies = intval($wpdb->get_var("SELECT COUNT(*) FROM $ceremonies_table"));
+
+        if ($records === 0) {
+            $source_table = $this->get_table_name();
+            $records = intval($wpdb->get_var("SELECT COUNT(*) FROM $source_table"));
+            $winners = intval($wpdb->get_var("SELECT COUNT(*) FROM $source_table WHERE winner = 1"));
+            $categories = intval($wpdb->get_var("SELECT COUNT(DISTINCT canonical_category) FROM $source_table WHERE canonical_category != ''"));
+            $ceremonies = intval($wpdb->get_var("SELECT COUNT(DISTINCT ceremony) FROM $source_table"));
+        }
+
         return array(
-            'records' => intval($wpdb->get_var("SELECT COUNT(*) FROM $facts_table")),
-            'winners' => intval($wpdb->get_var("SELECT COUNT(*) FROM $facts_table WHERE winner = 1")),
-            'categories' => intval($wpdb->get_var("SELECT COUNT(*) FROM $categories_table")),
-            'ceremonies' => intval($wpdb->get_var("SELECT COUNT(*) FROM $ceremonies_table")),
+            'records' => $records,
+            'winners' => $winners,
+            'categories' => $categories,
+            'ceremonies' => $ceremonies,
         );
     }
 
     private function get_projection_categories_list() {
         global $wpdb;
 
+        $this->ensure_projection_data_available();
+
         $categories_table = $this->get_categories_table_name();
         $rows = $wpdb->get_col("SELECT canonical_category FROM $categories_table ORDER BY canonical_category ASC");
+        if (empty($rows)) {
+            $source_table = $this->get_table_name();
+            $rows = $wpdb->get_col("SELECT DISTINCT canonical_category FROM $source_table WHERE canonical_category != '' ORDER BY canonical_category ASC");
+        }
         return is_array($rows) ? $rows : array();
     }
 
     private function get_projection_classes_list() {
         global $wpdb;
 
+        $this->ensure_projection_data_available();
+
         $categories_table = $this->get_categories_table_name();
         $rows = $wpdb->get_col("SELECT DISTINCT award_class FROM $categories_table WHERE award_class != '' ORDER BY award_class ASC");
+        if (empty($rows)) {
+            $source_table = $this->get_table_name();
+            $rows = $wpdb->get_col("SELECT DISTINCT class FROM $source_table WHERE class != '' ORDER BY class ASC");
+        }
         return is_array($rows) ? $rows : array();
     }
 
     private function get_projection_years_list() {
         global $wpdb;
 
+        $this->ensure_projection_data_available();
+
         $ceremonies_table = $this->get_ceremonies_table_name();
         $rows = $wpdb->get_col("SELECT year_label FROM $ceremonies_table ORDER BY ceremony DESC");
+        if (empty($rows)) {
+            $source_table = $this->get_table_name();
+            $rows = $wpdb->get_col("SELECT DISTINCT year FROM $source_table ORDER BY ceremony DESC");
+        }
         return is_array($rows) ? $rows : array();
     }
 
     private function get_projection_ceremonies_list() {
         global $wpdb;
 
+        $this->ensure_projection_data_available();
+
         $ceremonies_table = $this->get_ceremonies_table_name();
         $rows = $wpdb->get_col("SELECT ceremony FROM $ceremonies_table ORDER BY ceremony DESC");
+        if (empty($rows)) {
+            $source_table = $this->get_table_name();
+            $rows = $wpdb->get_col("SELECT DISTINCT ceremony FROM $source_table ORDER BY ceremony DESC");
+        }
         return is_array($rows) ? array_map('intval', $rows) : array();
     }
 
     private function get_projected_entity_label($entity_id) {
         global $wpdb;
+
+        $this->ensure_projection_data_available();
 
         $entity_id = strtolower(trim((string) $entity_id));
         if ($entity_id === '') {
@@ -1047,6 +1088,27 @@ class Academy_Awards_Table {
         );
     }
 
+    private function ensure_projection_data_available() {
+        static $checked = false;
+        if ($checked) {
+            return;
+        }
+        $checked = true;
+
+        global $wpdb;
+        $source_table = $this->get_table_name();
+        $facts_table = $this->get_award_facts_table_name();
+
+        $source_count = intval($wpdb->get_var("SELECT COUNT(*) FROM $source_table"));
+        $facts_count = intval($wpdb->get_var("SELECT COUNT(*) FROM $facts_table"));
+
+        if ($source_count > 0 && $facts_count === 0) {
+            $this->rebuild_reporting_tables();
+            delete_transient('aat_total_stats_v2');
+            delete_transient('aat_awards_meta_v1');
+            delete_transient('aat_max_ceremony_v1');
+        }
+    }
 
     /**
      * Initialize plugin
@@ -1615,6 +1677,8 @@ class Academy_Awards_Table {
             return array_merge($empty, $cached);
         }
 
+        $this->ensure_projection_data_available();
+
         $category_stats_table = $this->get_category_stats_table_name();
         $row = $wpdb->get_row(
             $wpdb->prepare(
@@ -1623,6 +1687,17 @@ class Academy_Awards_Table {
             ),
             ARRAY_A
         );
+
+        if (!is_array($row) || empty($row)) {
+            $source_table = $this->get_table_name();
+            $row = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT COUNT(*) AS nominations, SUM(CASE WHEN winner = 1 THEN 1 ELSE 0 END) AS wins, COUNT(DISTINCT ceremony) AS ceremonies, MIN(ceremony) AS first_ceremony, MAX(ceremony) AS last_ceremony FROM $source_table WHERE canonical_category = %s",
+                    $canonical_category
+                ),
+                ARRAY_A
+            );
+        }
 
         if (!is_array($row)) {
             set_transient($cache_key, $empty, 30 * MINUTE_IN_SECONDS);
@@ -1654,7 +1729,6 @@ class Academy_Awards_Table {
     public function get_ceremony_rollup($ceremony) {
         global $wpdb;
 
-        $table_name = $this->get_table_name();
         $ceremony = intval($ceremony);
         if ($ceremony <= 0) {
             return array();
@@ -1666,18 +1740,62 @@ class Academy_Awards_Table {
             return $cached;
         }
 
-        $rows = $wpdb->get_results(
+        $rows = array();
+        $this->ensure_projection_data_available();
+
+        $facts_table = $this->get_award_facts_table_name();
+        $fact_rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT ceremony, year, canonical_category, category, film, film_id, name, nominees, nominee_ids, winner, detail, note FROM $table_name WHERE ceremony = %d AND canonical_category != '' ORDER BY canonical_category ASC, winner DESC, film ASC, name ASC",
+                "SELECT source_award_id FROM $facts_table WHERE ceremony = %d AND category_slug != '' ORDER BY category_slug ASC, winner DESC, source_award_id ASC",
                 $ceremony
             ),
             ARRAY_A
         );
 
+        if (is_array($fact_rows) && !empty($fact_rows)) {
+            $source_ids = array();
+            foreach ($fact_rows as $fact_row) {
+                $source_id = intval($fact_row['source_award_id'] ?? 0);
+                if ($source_id > 0) {
+                    $source_ids[] = $source_id;
+                }
+            }
+
+            if (!empty($source_ids)) {
+                $rows = $this->get_normalized_source_rows_by_ids(
+                    $source_ids,
+                    'ORDER BY ceremony DESC, canonical_category ASC, winner DESC, film ASC, name ASC'
+                );
+            }
+        }
+
+        if (empty($rows)) {
+            $table_name = $this->get_table_name();
+            $rows = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT ceremony, year, canonical_category, category, film, film_id, name, nominees, nominee_ids, winner, detail, note FROM $table_name WHERE ceremony = %d AND canonical_category != '' ORDER BY canonical_category ASC, winner DESC, film ASC, name ASC",
+                    $ceremony
+                ),
+                ARRAY_A
+            );
+        }
+
         if (!is_array($rows) || empty($rows)) {
             set_transient($cache_key, array(), 30 * MINUTE_IN_SECONDS);
             return array();
         }
+
+        $seen_fingerprints = array();
+        $deduped_rows = array();
+        foreach ($rows as $row) {
+            $fingerprint = $this->get_awards_row_fingerprint($row);
+            if (isset($seen_fingerprints[$fingerprint])) {
+                continue;
+            }
+            $seen_fingerprints[$fingerprint] = true;
+            $deduped_rows[] = $row;
+        }
+        $rows = $deduped_rows;
 
         $title_stats = array();
         $winner_rows = array();
@@ -1921,16 +2039,62 @@ class Academy_Awards_Table {
             return $cached;
         }
 
-        $table_name = $this->get_table_name();
-        $fields = $this->get_awards_row_fields_sql();
-        $sql = "SELECT DISTINCT $fields FROM $table_name WHERE canonical_category = %s ORDER BY ceremony DESC, winner DESC, film ASC, name ASC";
-        $sql = $wpdb->prepare($sql, $canonical_category);
+        $rows = array();
+        $this->ensure_projection_data_available();
 
-        $rows = $wpdb->get_results($sql, ARRAY_A);
+        $facts_table = $this->get_award_facts_table_name();
+        $category_slug = sanitize_title($canonical_category);
+        if ($category_slug !== '') {
+            $fact_rows = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT source_award_id FROM $facts_table WHERE category_slug = %s ORDER BY ceremony DESC, winner DESC, source_award_id ASC",
+                    $category_slug
+                ),
+                ARRAY_A
+            );
+
+            if (is_array($fact_rows) && !empty($fact_rows)) {
+                $source_ids = array();
+                foreach ($fact_rows as $fact_row) {
+                    $source_id = intval($fact_row['source_award_id'] ?? 0);
+                    if ($source_id > 0) {
+                        $source_ids[] = $source_id;
+                    }
+                }
+
+                if (!empty($source_ids)) {
+                    $rows = $this->get_normalized_source_rows_by_ids(
+                        $source_ids,
+                        'ORDER BY ceremony DESC, winner DESC, film ASC, name ASC'
+                    );
+                }
+            }
+        }
+
+        if (empty($rows)) {
+            $table_name = $this->get_table_name();
+            $fields = $this->get_awards_row_fields_sql();
+            $sql = "SELECT DISTINCT $fields FROM $table_name WHERE canonical_category = %s ORDER BY ceremony DESC, winner DESC, film ASC, name ASC";
+            $sql = $wpdb->prepare($sql, $canonical_category);
+            $rows = $wpdb->get_results($sql, ARRAY_A);
+        }
+
         if (!is_array($rows) || empty($rows)) {
             set_transient($cache_key, $empty, 30 * MINUTE_IN_SECONDS);
             return $empty;
         }
+
+        $seen_fingerprints = array();
+        $deduped_rows = array();
+        foreach ($rows as $row) {
+            $fingerprint = $this->get_awards_row_fingerprint($row);
+            if (isset($seen_fingerprints[$fingerprint])) {
+                continue;
+            }
+            $seen_fingerprints[$fingerprint] = true;
+            $deduped_rows[] = $row;
+        }
+        $rows = $deduped_rows;
 
         $review_title_ids = array();
         $by_ceremony = array(); // ceremony_int => normalized bucket
@@ -2165,6 +2329,46 @@ class Academy_Awards_Table {
      */
     private function get_awards_row_fields_sql() {
         return 'ceremony, year, class, canonical_category, category, film, film_id, name, nominees, nominee_ids, winner, detail, note, citation';
+    }
+
+    /**
+     * Fetch normalized source awards rows by source id list.
+     */
+    private function get_normalized_source_rows_by_ids($source_ids, $order_clause = '') {
+        global $wpdb;
+
+        $normalized_ids = array();
+        foreach ((array) $source_ids as $source_id) {
+            $source_id = intval($source_id);
+            if ($source_id > 0) {
+                $normalized_ids[$source_id] = true;
+            }
+        }
+
+        if (empty($normalized_ids)) {
+            return array();
+        }
+
+        $ids = array_keys($normalized_ids);
+        $table_name = $this->get_table_name();
+        $fields = $this->get_awards_row_fields_sql();
+        $placeholders = implode(', ', array_fill(0, count($ids), '%d'));
+        $sql = "SELECT id, $fields FROM $table_name WHERE id IN ($placeholders)";
+        if ($order_clause !== '') {
+            $sql .= ' ' . $order_clause;
+        }
+        $sql = $wpdb->prepare($sql, $ids);
+
+        $rows = $wpdb->get_results($sql, ARRAY_A);
+        if (!is_array($rows)) {
+            return array();
+        }
+
+        foreach ($rows as $index => $row) {
+            $rows[$index] = $this->normalize_awards_row($row);
+        }
+
+        return $rows;
     }
 
     /**
@@ -4548,6 +4752,8 @@ class Academy_Awards_Table {
     public function get_ceremony_year($ceremony) {
         global $wpdb;
         $ceremonies_table = $this->get_ceremonies_table_name();
+        $source_table = $this->get_table_name();
+        $this->ensure_projection_data_available();
         $ceremony = intval($ceremony);
         if ($ceremony <= 0) return '';
         static $runtime_cache = array();
@@ -4562,6 +4768,10 @@ class Academy_Awards_Table {
         }
         $sql = $wpdb->prepare("SELECT year_label FROM $ceremonies_table WHERE ceremony = %d LIMIT 1", $ceremony);
         $year = $wpdb->get_var($sql);
+        if (!is_string($year) || $year === '') {
+            $legacy_sql = $wpdb->prepare("SELECT MIN(year) FROM $source_table WHERE ceremony = %d", $ceremony);
+            $year = $wpdb->get_var($legacy_sql);
+        }
         $year = is_string($year) ? $year : '';
         $runtime_cache[$ceremony] = $year;
         set_transient($cache_key, $year, 6 * HOUR_IN_SECONDS);
@@ -4575,11 +4785,16 @@ class Academy_Awards_Table {
     public function get_max_ceremony() {
         global $wpdb;
         $ceremonies_table = $this->get_ceremonies_table_name();
+        $source_table = $this->get_table_name();
+        $this->ensure_projection_data_available();
         $cached = get_transient('aat_max_ceremony_v1');
         if ($cached !== false) {
             return intval($cached);
         }
         $max = intval($wpdb->get_var("SELECT MAX(ceremony) FROM $ceremonies_table"));
+        if ($max <= 0) {
+            $max = intval($wpdb->get_var("SELECT MAX(ceremony) FROM $source_table"));
+        }
         set_transient('aat_max_ceremony_v1', $max, 6 * HOUR_IN_SECONDS);
         return $max;
     }
@@ -4630,9 +4845,7 @@ class Academy_Awards_Table {
         $cache_key = 'aat_category_slug_map_v1';
         $map = get_transient($cache_key);
         if (!is_array($map)) {
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'academy_awards';
-            $cats = $wpdb->get_col("SELECT DISTINCT canonical_category FROM $table_name WHERE canonical_category != '' ORDER BY canonical_category ASC");
+            $cats = $this->get_projection_categories_list();
             $map = array();
             if (is_array($cats)) {
                 foreach ($cats as $cat) {
@@ -5187,12 +5400,46 @@ class Academy_Awards_Table {
             wp_die(__('You do not have permission to access this page.', 'academy-awards-table'));
         }
 
+        $message = '';
+        $message_type = 'success';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_poster_api_settings_nonce'])) {
+            check_admin_referer('aat_poster_api_settings', 'aat_poster_api_settings_nonce');
+
+            if (!empty($_POST['aat_omdb_clear_key']) || !empty($_POST['aat_tmdb_clear_key'])) {
+                if (!empty($_POST['aat_omdb_clear_key'])) {
+                    delete_option('aat_omdb_api_key');
+                }
+                if (!empty($_POST['aat_tmdb_clear_key'])) {
+                    delete_option('aat_tmdb_api_key');
+                }
+                $message = __('API key updates saved. Cleared selected keys from WordPress options.', 'academy-awards-table');
+            } elseif (
+                (isset($_POST['aat_omdb_api_key']) && trim((string) wp_unslash($_POST['aat_omdb_api_key'])) !== '') ||
+                (isset($_POST['aat_tmdb_api_key']) && trim((string) wp_unslash($_POST['aat_tmdb_api_key'])) !== '')
+            ) {
+                if (isset($_POST['aat_omdb_api_key']) && trim((string) wp_unslash($_POST['aat_omdb_api_key'])) !== '') {
+                    update_option('aat_omdb_api_key', sanitize_text_field(wp_unslash($_POST['aat_omdb_api_key'])), false);
+                }
+                if (isset($_POST['aat_tmdb_api_key']) && trim((string) wp_unslash($_POST['aat_tmdb_api_key'])) !== '') {
+                    update_option('aat_tmdb_api_key', sanitize_text_field(wp_unslash($_POST['aat_tmdb_api_key'])), false);
+                }
+                $message = __('API keys saved. They are stored in WordPress options, not committed to the plugin repository.', 'academy-awards-table');
+            } else {
+                $message = __('No key change was made.', 'academy-awards-table');
+                $message_type = 'warning';
+            }
+        }
+
         global $wpdb;
         $poster_table = $wpdb->prefix . 'aat_posters';
 
         $total_posters = intval($wpdb->get_var("SELECT COUNT(*) FROM $poster_table"));
         $rows = $wpdb->get_results("SELECT * FROM $poster_table ORDER BY updated_at DESC LIMIT 500", ARRAY_A);
         if (!is_array($rows)) $rows = array();
+
+        $omdb_key_configured = $this->get_omdb_api_key() !== '';
+        $tmdb_key_configured = $this->get_tmdb_api_key() !== '';
 
         include AAT_PLUGIN_DIR . 'templates/poster-admin.php';
     }
@@ -5211,13 +5458,27 @@ class Academy_Awards_Table {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_omdb_settings_nonce'])) {
             check_admin_referer('aat_omdb_settings', 'aat_omdb_settings_nonce');
 
-            if (!empty($_POST['aat_omdb_clear_key'])) {
-                delete_option('aat_omdb_api_key');
-                $message = __('OMDb API key removed from WordPress options.', 'academy-awards-table');
-            } elseif (isset($_POST['aat_omdb_api_key']) && trim((string) wp_unslash($_POST['aat_omdb_api_key'])) !== '') {
-                $key = sanitize_text_field(wp_unslash($_POST['aat_omdb_api_key']));
-                update_option('aat_omdb_api_key', $key, false);
-                $message = __('OMDb API key saved. It is stored in WordPress options, not committed to the plugin repository.', 'academy-awards-table');
+            if (!empty($_POST['aat_omdb_clear_key']) || !empty($_POST['aat_tmdb_clear_key'])) {
+                if (!empty($_POST['aat_omdb_clear_key'])) {
+                    delete_option('aat_omdb_api_key');
+                }
+                if (!empty($_POST['aat_tmdb_clear_key'])) {
+                    delete_option('aat_tmdb_api_key');
+                }
+                $message = __('API key updates saved. Cleared selected keys from WordPress options.', 'academy-awards-table');
+            } elseif (
+                (isset($_POST['aat_omdb_api_key']) && trim((string) wp_unslash($_POST['aat_omdb_api_key'])) !== '') ||
+                (isset($_POST['aat_tmdb_api_key']) && trim((string) wp_unslash($_POST['aat_tmdb_api_key'])) !== '')
+            ) {
+                if (isset($_POST['aat_omdb_api_key']) && trim((string) wp_unslash($_POST['aat_omdb_api_key'])) !== '') {
+                    $key = sanitize_text_field(wp_unslash($_POST['aat_omdb_api_key']));
+                    update_option('aat_omdb_api_key', $key, false);
+                }
+                if (isset($_POST['aat_tmdb_api_key']) && trim((string) wp_unslash($_POST['aat_tmdb_api_key'])) !== '') {
+                    $tmdb_key = sanitize_text_field(wp_unslash($_POST['aat_tmdb_api_key']));
+                    update_option('aat_tmdb_api_key', $tmdb_key, false);
+                }
+                $message = __('API keys saved. They are stored in WordPress options, not committed to the plugin repository.', 'academy-awards-table');
             } else {
                 $message = __('No key change was made.', 'academy-awards-table');
                 $message_type = 'warning';
@@ -5292,6 +5553,7 @@ class Academy_Awards_Table {
         $scan_limit = min(1000, $scan_limit);
 
         $omdb_key_configured = $this->get_omdb_api_key() !== '';
+        $tmdb_key_configured = $this->get_tmdb_api_key() !== '';
         $omdb_review_states = $this->get_omdb_review_states();
         $omdb_review_filter_labels = $this->get_omdb_review_filter_labels();
         $omdb_poster_review_states = $this->get_omdb_poster_review_states();
@@ -5403,9 +5665,7 @@ class Academy_Awards_Table {
         $picks = $this->get_tracker_picks($ceremony);
 
         // Ceremony dropdown options (for selector)
-        global $wpdb;
-        $awards_table = $wpdb->prefix . 'academy_awards';
-        $ceremonies = $wpdb->get_col("SELECT DISTINCT ceremony FROM $awards_table ORDER BY ceremony DESC");
+        $ceremonies = $this->get_projection_ceremonies_list();
         if (!is_array($ceremonies)) $ceremonies = array();
 
         ob_start();
@@ -5465,9 +5725,7 @@ class Academy_Awards_Table {
         $categories_filter = $this->parse_ballot_categories((string) ($atts['categories'] ?? ''));
         $ballot_groups = $this->get_ballot_category_groups($ceremony, $categories_filter);
 
-        global $wpdb;
-        $awards_table = $wpdb->prefix . 'academy_awards';
-        $ceremonies = $wpdb->get_col("SELECT DISTINCT ceremony FROM $awards_table ORDER BY ceremony DESC");
+        $ceremonies = $this->get_projection_ceremonies_list();
         if (!is_array($ceremonies)) {
             $ceremonies = array();
         }
@@ -5729,7 +5987,9 @@ class Academy_Awards_Table {
         if ( defined('AAT_TMDB_API_KEY') && AAT_TMDB_API_KEY ) {
             return (string) AAT_TMDB_API_KEY;
         }
-        return '';
+
+        $key = get_option('aat_tmdb_api_key', '');
+        return trim((string) $key);
     }
 
     /**
@@ -7521,6 +7781,210 @@ public function get_person_visual_package($nm_id, $size = 'large') {
     }
 
     /**
+     * Download a remote poster URL and store it in the Media Library.
+     */
+    private function sideload_api_poster_image($imdb_id, $image_url, $title, $source) {
+        $imdb_id = strtolower(trim((string) $imdb_id));
+        $image_url = trim((string) $image_url);
+        $title = trim((string) $title);
+        $source = trim((string) $source);
+
+        if (!$this->is_title_entity_id($imdb_id)) {
+            return new WP_Error('aat_poster_import_bad_id', __('Invalid IMDb title ID for poster import.', 'academy-awards-table'));
+        }
+
+        if ($image_url === '') {
+            return new WP_Error('aat_poster_import_missing_url', __('Poster image URL is missing.', 'academy-awards-table'));
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+        $tmp = download_url($image_url, 30);
+        if (is_wp_error($tmp)) {
+            return $tmp;
+        }
+
+        $safe_title = sanitize_file_name($title !== '' ? $title : $imdb_id);
+        if ($safe_title === '') {
+            $safe_title = $imdb_id;
+        }
+
+        $path = parse_url($image_url, PHP_URL_PATH);
+        $ext = strtolower(pathinfo((string) $path, PATHINFO_EXTENSION));
+        if ($ext === '' || strlen($ext) > 5) {
+            $ext = 'jpg';
+        }
+
+        $file = array(
+            'name' => $imdb_id . '-' . $safe_title . '-poster.' . $ext,
+            'type' => 'image/' . ($ext === 'png' ? 'png' : ($ext === 'webp' ? 'webp' : 'jpeg')),
+            'tmp_name' => $tmp,
+            'error' => 0,
+            'size' => @filesize($tmp),
+        );
+
+        $attachment_id = media_handle_sideload(
+            $file,
+            0,
+            sprintf(
+                /* translators: 1: title, 2: IMDb title ID */
+                __('%1$s poster (%2$s)', 'academy-awards-table'),
+                $title !== '' ? $title : $imdb_id,
+                $imdb_id
+            )
+        );
+
+        if (is_wp_error($attachment_id)) {
+            @unlink($tmp);
+            return $attachment_id;
+        }
+
+        $alt = trim(($title !== '' ? $title : $imdb_id) . ' poster');
+        update_post_meta((int) $attachment_id, '_wp_attachment_image_alt', $alt);
+        update_post_meta((int) $attachment_id, '_aat_omdb_poster_imdb_id', $imdb_id);
+        update_post_meta((int) $attachment_id, '_aat_omdb_poster_source', $source);
+
+        $this->set_poster_attachment_id($imdb_id, (int) $attachment_id, $source);
+        $this->clear_awards_runtime_caches(array($imdb_id));
+
+        return array(
+            'imdb_id' => $imdb_id,
+            'attachment_id' => (int) $attachment_id,
+            'source' => $source,
+        );
+    }
+
+    /**
+     * Import one title poster using OMDb first, then TMDB fallback.
+     */
+    private function import_title_poster_from_apis($imdb_id, $force_refresh = false) {
+        $imdb_id = strtolower(trim((string) $imdb_id));
+        if (!$this->is_title_entity_id($imdb_id)) {
+            return new WP_Error('aat_poster_sync_bad_id', __('Invalid IMDb title ID.', 'academy-awards-table'));
+        }
+
+        if ($this->get_poster_attachment_id_for_title($imdb_id) > 0) {
+            return array('status' => 'exists');
+        }
+
+        $title = trim((string) $this->lookup_title_label($imdb_id));
+
+        // 1) OMDb patron poster endpoint (best source when available).
+        $omdb = $this->get_omdb_data_for_imdb_id($imdb_id, $force_refresh);
+        if (empty($omdb['error'])) {
+            $poster = trim((string) ($omdb['poster'] ?? ''));
+            $poster_api_url = $this->get_omdb_poster_api_url($imdb_id);
+            if ($poster !== '' && strtoupper($poster) !== 'N/A' && $poster_api_url !== '') {
+                $imported = $this->sideload_api_poster_image(
+                    $imdb_id,
+                    $poster_api_url,
+                    $title !== '' ? $title : trim((string) ($omdb['title'] ?? '')),
+                    'omdb-poster-api-auto'
+                );
+                if (!is_wp_error($imported)) {
+                    return array('status' => 'imported', 'source' => 'omdb');
+                }
+            }
+        }
+
+        // 2) TMDB fallback.
+        $tmdb = $this->get_tmdb_data_for_imdb_id($imdb_id);
+        $tmdb_poster = trim((string) ($tmdb['poster_full'] ?? ''));
+        if ($tmdb_poster !== '') {
+            $imported = $this->sideload_api_poster_image(
+                $imdb_id,
+                $tmdb_poster,
+                $title !== '' ? $title : trim((string) ($tmdb['title'] ?? '')),
+                'tmdb-poster-api-auto'
+            );
+            if (!is_wp_error($imported)) {
+                return array('status' => 'imported', 'source' => 'tmdb');
+            }
+        }
+
+        return array('status' => 'missing');
+    }
+
+    /**
+     * Candidate title IDs for API poster sync.
+     */
+    private function get_candidate_title_ids_for_api_poster_sync($limit = 100) {
+        global $wpdb;
+
+        $limit = max(1, min(500, intval($limit)));
+        $this->ensure_projection_data_available();
+
+        $entities_table = $this->get_entities_table_name();
+        $rows = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT entity_id FROM $entities_table WHERE entity_type = %s AND entity_id REGEXP %s ORDER BY sort_label ASC LIMIT %d",
+                'title',
+                '^tt[0-9]{7,9}$',
+                $limit
+            )
+        );
+
+        $out = array();
+        foreach ((array) $rows as $row_id) {
+            $row_id = strtolower(trim((string) $row_id));
+            if ($this->is_title_entity_id($row_id)) {
+                $out[$row_id] = true;
+            }
+        }
+
+        return array_keys($out);
+    }
+
+    /**
+     * Bulk-sync missing posters from OMDb/TMDB API sources.
+     */
+    public function sync_posters_from_apis($limit = 100, $force_refresh = false) {
+        $title_ids = $this->get_candidate_title_ids_for_api_poster_sync($limit);
+        $synced = 0;
+        $synced_omdb = 0;
+        $synced_tmdb = 0;
+        $skipped_existing = 0;
+        $missing = 0;
+
+        foreach ($title_ids as $title_id) {
+            $result = $this->import_title_poster_from_apis($title_id, $force_refresh);
+            if (is_wp_error($result)) {
+                $missing++;
+                continue;
+            }
+
+            $status = isset($result['status']) ? (string) $result['status'] : '';
+            if ($status === 'exists') {
+                $skipped_existing++;
+                continue;
+            }
+
+            if ($status === 'imported') {
+                $synced++;
+                if (($result['source'] ?? '') === 'omdb') {
+                    $synced_omdb++;
+                } elseif (($result['source'] ?? '') === 'tmdb') {
+                    $synced_tmdb++;
+                }
+                continue;
+            }
+
+            $missing++;
+        }
+
+        return array(
+            'processed' => count($title_ids),
+            'synced' => $synced,
+            'synced_omdb' => $synced_omdb,
+            'synced_tmdb' => $synced_tmdb,
+            'skipped_existing' => $skipped_existing,
+            'missing' => $missing,
+        );
+    }
+
+    /**
      * Verify admin AJAX requests.
      */
     private function verify_admin_ajax_request() {
@@ -7792,6 +8256,27 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             'message' => 'Synced from reviews.',
             'synced' => $out['synced'] ?? 0,
             'skipped' => $out['skipped'] ?? 0,
+        ));
+    }
+
+    /**
+     * Admin AJAX: auto-import missing posters from OMDb/TMDB APIs.
+     */
+    public function ajax_posters_sync_from_apis() {
+        $this->verify_admin_ajax_request();
+
+        $limit = isset($_POST['limit']) ? intval($_POST['limit']) : 120;
+        $limit = max(1, min(500, $limit));
+
+        $out = $this->sync_posters_from_apis($limit, false);
+        wp_send_json_success(array(
+            'message' => 'API poster sync completed.',
+            'processed' => $out['processed'] ?? 0,
+            'synced' => $out['synced'] ?? 0,
+            'synced_omdb' => $out['synced_omdb'] ?? 0,
+            'synced_tmdb' => $out['synced_tmdb'] ?? 0,
+            'skipped_existing' => $out['skipped_existing'] ?? 0,
+            'missing' => $out['missing'] ?? 0,
         ));
     }
 

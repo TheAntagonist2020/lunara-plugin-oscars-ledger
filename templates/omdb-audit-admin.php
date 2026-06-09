@@ -18,7 +18,8 @@ $scan_limit = intval($audit['scan_limit'] ?? 250);
 $scanned = intval($audit['scanned'] ?? count($rows));
 $next_offset = $offset + $limit;
 $prev_offset = max(0, $offset - $limit);
-$masked_key = $omdb_key_configured ? __('Key configured', 'academy-awards-table') : __('Not configured', 'academy-awards-table');
+$omdb_masked_key = $omdb_key_configured ? __('Key configured', 'academy-awards-table') : __('Not configured', 'academy-awards-table');
+$tmdb_masked_key = !empty($tmdb_key_configured) ? __('Key configured', 'academy-awards-table') : __('Not configured', 'academy-awards-table');
 $omdb_review_states = is_array($omdb_review_states ?? null) ? $omdb_review_states : array();
 $omdb_review_filter_labels = is_array($omdb_review_filter_labels ?? null) ? $omdb_review_filter_labels : array();
 $omdb_poster_review_states = is_array($omdb_poster_review_states ?? null) ? $omdb_poster_review_states : array();
@@ -91,9 +92,10 @@ $review_filter_url_args = array(
     <div class="aat-admin-section">
         <h2><?php echo esc_html__('API Connection', 'academy-awards-table'); ?></h2>
         <p>
-            <?php echo esc_html__('Use either the AAT_OMDB_API_KEY constant or save the key here. Saved keys live in WordPress options and are not committed to GitHub.', 'academy-awards-table'); ?>
+            <?php echo esc_html__('Use constants or save keys here. Saved keys live in WordPress options and are not committed to GitHub.', 'academy-awards-table'); ?>
         </p>
-        <p><strong><?php echo esc_html__('Status:', 'academy-awards-table'); ?></strong> <?php echo esc_html($masked_key); ?></p>
+        <p><strong><?php echo esc_html__('OMDb Status:', 'academy-awards-table'); ?></strong> <?php echo esc_html($omdb_masked_key); ?></p>
+        <p><strong><?php echo esc_html__('TMDB Status:', 'academy-awards-table'); ?></strong> <?php echo esc_html($tmdb_masked_key); ?></p>
 
         <form method="post" action="">
             <?php wp_nonce_field('aat_omdb_settings', 'aat_omdb_settings_nonce'); ?>
@@ -101,7 +103,12 @@ $review_filter_url_args = array(
                 <div class="aat-field aat-field-wide">
                     <label class="aat-field-label" for="aat_omdb_api_key"><?php echo esc_html__('OMDb API Key', 'academy-awards-table'); ?></label>
                     <input class="aat-field-control" type="password" id="aat_omdb_api_key" name="aat_omdb_api_key" value="" autocomplete="off" placeholder="<?php echo esc_attr__('Paste key to save or leave blank', 'academy-awards-table'); ?>">
-                    <p class="description"><?php echo esc_html__('The screen uses i=tt... JSON lookups for identity checks. Patron Poster API usage should be added as a server-side import step after this audit proves what needs repair.', 'academy-awards-table'); ?></p>
+                    <p class="description"><?php echo esc_html__('Used for JSON identity checks and the patron poster import endpoint.', 'academy-awards-table'); ?></p>
+                </div>
+                <div class="aat-field aat-field-wide">
+                    <label class="aat-field-label" for="aat_tmdb_api_key"><?php echo esc_html__('TMDB API Key', 'academy-awards-table'); ?></label>
+                    <input class="aat-field-control" type="password" id="aat_tmdb_api_key" name="aat_tmdb_api_key" value="" autocomplete="off" placeholder="<?php echo esc_attr__('Paste key to save or leave blank', 'academy-awards-table'); ?>">
+                    <p class="description"><?php echo esc_html__('Used for dynamic metadata, backdrops, and poster fallback when OMDb poster import is unavailable.', 'academy-awards-table'); ?></p>
                 </div>
                 <div class="aat-field">
                     <label>
@@ -110,7 +117,13 @@ $review_filter_url_args = array(
                     </label>
                 </div>
                 <div class="aat-field">
-                    <button class="button button-primary" type="submit"><?php echo esc_html__('Save OMDb Settings', 'academy-awards-table'); ?></button>
+                    <label>
+                        <input type="checkbox" name="aat_tmdb_clear_key" value="1">
+                        <?php echo esc_html__('Clear saved TMDB key', 'academy-awards-table'); ?>
+                    </label>
+                </div>
+                <div class="aat-field">
+                    <button class="button button-primary" type="submit"><?php echo esc_html__('Save API Settings', 'academy-awards-table'); ?></button>
                 </div>
             </div>
         </form>

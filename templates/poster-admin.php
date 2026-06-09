@@ -17,11 +17,64 @@ $aat = Academy_Awards_Table::get_instance();
         </div>
     </div>
 
+    <?php if (!empty($message)) : ?>
+        <div class="aat-message aat-message-<?php echo esc_attr($message_type ?? 'success'); ?>">
+            <?php echo esc_html($message); ?>
+        </div>
+    <?php endif; ?>
+
     <div class="aat-admin-stats">
         <div class="aat-admin-stat-card">
             <h3><?php echo esc_html__('Mapped Posters', 'academy-awards-table'); ?></h3>
             <div class="stat-value"><?php echo esc_html(number_format_i18n($total_posters ?? 0)); ?></div>
         </div>
+    </div>
+
+    <div class="aat-admin-section">
+        <h2><?php echo esc_html__('API Settings', 'academy-awards-table'); ?></h2>
+        <p><?php echo esc_html__('Save your OMDb and TMDB keys here so the poster workflow can import missing images automatically.', 'academy-awards-table'); ?></p>
+        <p>
+            <strong><?php echo esc_html__('OMDb Status:', 'academy-awards-table'); ?></strong>
+            <?php echo esc_html(!empty($omdb_key_configured) ? __('Configured', 'academy-awards-table') : __('Not configured', 'academy-awards-table')); ?>
+            &nbsp;|&nbsp;
+            <strong><?php echo esc_html__('TMDB Status:', 'academy-awards-table'); ?></strong>
+            <?php echo esc_html(!empty($tmdb_key_configured) ? __('Configured', 'academy-awards-table') : __('Not configured', 'academy-awards-table')); ?>
+        </p>
+
+        <form method="post" action="">
+            <?php wp_nonce_field('aat_poster_api_settings', 'aat_poster_api_settings_nonce'); ?>
+            <div class="aat-grid-form">
+                <div class="aat-field aat-field-wide">
+                    <label class="aat-field-label" for="aat_omdb_api_key"><?php echo esc_html__('OMDb API Key', 'academy-awards-table'); ?></label>
+                    <input class="aat-field-control" type="password" id="aat_omdb_api_key" name="aat_omdb_api_key" value="" autocomplete="off" placeholder="<?php echo esc_attr__('Paste key to save or leave blank', 'academy-awards-table'); ?>">
+                    <p class="description"><?php echo esc_html__('Used for patron poster import and title identity checks.', 'academy-awards-table'); ?></p>
+                </div>
+
+                <div class="aat-field aat-field-wide">
+                    <label class="aat-field-label" for="aat_tmdb_api_key"><?php echo esc_html__('TMDB API Key', 'academy-awards-table'); ?></label>
+                    <input class="aat-field-control" type="password" id="aat_tmdb_api_key" name="aat_tmdb_api_key" value="" autocomplete="off" placeholder="<?php echo esc_attr__('Paste key to save or leave blank', 'academy-awards-table'); ?>">
+                    <p class="description"><?php echo esc_html__('Used for dynamic metadata, backdrops, and poster fallback when OMDb poster import is unavailable.', 'academy-awards-table'); ?></p>
+                </div>
+
+                <div class="aat-field">
+                    <label>
+                        <input type="checkbox" name="aat_omdb_clear_key" value="1">
+                        <?php echo esc_html__('Clear saved OMDb key', 'academy-awards-table'); ?>
+                    </label>
+                </div>
+
+                <div class="aat-field">
+                    <label>
+                        <input type="checkbox" name="aat_tmdb_clear_key" value="1">
+                        <?php echo esc_html__('Clear saved TMDB key', 'academy-awards-table'); ?>
+                    </label>
+                </div>
+
+                <div class="aat-field">
+                    <button class="button button-primary" type="submit"><?php echo esc_html__('Save API Settings', 'academy-awards-table'); ?></button>
+                </div>
+            </div>
+        </form>
     </div>
 
     <div class="aat-admin-section">
@@ -31,6 +84,24 @@ $aat = Academy_Awards_Table::get_instance();
             <?php echo esc_html__('Sync posters from published reviews', 'academy-awards-table'); ?>
         </button>
         <p class="description" id="aat-posters-sync-status" style="margin-top:10px;"></p>
+    </div>
+
+    <div class="aat-admin-section">
+        <h2><?php echo esc_html__('Auto Fill Missing Posters (OMDb + TMDB)', 'academy-awards-table'); ?></h2>
+        <p>
+            <?php echo esc_html__('This imports missing title posters into the Media Library using OMDb patron API first, then TMDB fallback. Existing mapped/review posters are left untouched.', 'academy-awards-table'); ?>
+        </p>
+        <p>
+            <strong><?php echo esc_html__('OMDb Key:', 'academy-awards-table'); ?></strong>
+            <?php echo esc_html($aat->get_omdb_api_key() !== '' ? __('Configured', 'academy-awards-table') : __('Not configured', 'academy-awards-table')); ?>
+            &nbsp;|&nbsp;
+            <strong><?php echo esc_html__('TMDB Key:', 'academy-awards-table'); ?></strong>
+            <?php echo esc_html($aat->get_tmdb_api_key() !== '' ? __('Configured', 'academy-awards-table') : __('Not configured', 'academy-awards-table')); ?>
+        </p>
+        <button class="button button-secondary" id="aat-posters-sync-apis">
+            <?php echo esc_html__('Import missing posters from APIs', 'academy-awards-table'); ?>
+        </button>
+        <p class="description" id="aat-posters-sync-apis-status" style="margin-top:10px;"></p>
     </div>
 
     <div class="aat-admin-section">
