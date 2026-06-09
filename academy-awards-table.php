@@ -4936,12 +4936,70 @@ class Academy_Awards_Table {
             return array();
         }
 
+        // Projection-first reads are fastest, but source fallback keeps entity pages connected
+        // if a projection table lags behind a recent import/update.
+        if (empty($rows)) {
+            $search_like = '%' . $wpdb->esc_like($id) . '%';
+
+            if ($entity === 'title') {
+                $source_sql = $wpdb->prepare(
+                    "SELECT DISTINCT $fields
+                     FROM $table_name
+                     WHERE film_id LIKE %s
+                     ORDER BY ceremony DESC, canonical_category ASC, winner DESC, film ASC, name ASC",
+                    $search_like
+                );
+            } else {
+                $source_sql = $wpdb->prepare(
+                    "SELECT DISTINCT $fields
+                     FROM $table_name
+                     WHERE nominee_ids LIKE %s
+                     ORDER BY ceremony DESC, canonical_category ASC, winner DESC, film ASC, name ASC",
+                    $search_like
+                );
+            }
+
+            $source_rows = $wpdb->get_results($source_sql, ARRAY_A);
+            if (is_array($source_rows) && !empty($source_rows)) {
+                foreach ($source_rows as $source_row) {
+                    $normalized = $this->normalize_awards_row($source_row);
+                    if ($this->normalized_row_contains_entity($normalized, $entity, $id)) {
+                        $rows[] = $normalized;
+                    }
+                }
+            }
+        }
+
         foreach ($rows as $index => $row) {
-            $rows[$index] = $this->normalize_awards_row($row);
+            if (!isset($row['ceremony']) || !isset($row['canonical_category'])) {
+                $row = $this->normalize_awards_row($row);
+            }
+            $rows[$index] = $row;
         }
 
         set_transient($cache_key, $rows, HOUR_IN_SECONDS);
         return $rows;
+    }
+
+    private function normalized_row_contains_entity($row, $entity, $id) {
+        $row = is_array($row) ? $row : array();
+        $entity = sanitize_text_field($entity);
+        $id = strtolower(trim((string) $id));
+        if ($id === '') {
+            return false;
+        }
+
+        if ($entity === 'title') {
+            $film_ids = $this->extract_entity_reference_ids((string) ($row['film_id'] ?? ''));
+            return in_array($id, $film_ids, true);
+        }
+
+        if ($entity === 'name' || $entity === 'company') {
+            $nominee_ids = $this->extract_entity_reference_ids((string) ($row['nominee_ids'] ?? ''));
+            return in_array($id, $nominee_ids, true);
+        }
+
+        return false;
     }
 
     /**
