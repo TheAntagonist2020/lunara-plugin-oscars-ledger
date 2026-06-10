@@ -2777,7 +2777,8 @@ class Academy_Awards_Table {
         $allowed_prefixes = array_values(array_unique(array_map('strtolower', (array) $allowed_prefixes)));
         $placeholder_values = array('?', 'n/a', 'na', 'none', 'unknown', 'null', 'nil', '0', '-', '--');
 
-        foreach ( array_filter(array_map('trim', explode('|', $raw_ids)), 'strlen') as $part ) {
+        $tokens = preg_split('/\s*[|,]\s*/', $raw_ids);
+        foreach (array_filter(array_map('trim', (array) $tokens), 'strlen') as $part) {
             $part = strtolower(ltrim((string) $part, '/'));
 
             if ($part === '' || in_array($part, $placeholder_values, true)) {
@@ -6093,6 +6094,64 @@ class Academy_Awards_Table {
         $entity_type = $this->infer_entity_type_from_id($id);
         if ($entity_type !== '') return esc_url_raw($base . $entity_type . '/' . strtolower($id) . '/');
         return '';
+    }
+
+    /**
+     * Resolve a canonical IMDb person id for a visible nominee label.
+     *
+     * If legacy data links a name to a stale nm id, this method picks the
+     * label-matching nm id that actually has ledger rows.
+     */
+    public function canonicalize_name_entity_id_for_label($id, $label) {
+        global $wpdb;
+
+        $id = strtolower(trim((string) $id));
+        $label = trim((string) $label);
+
+        if (!$this->is_name_entity_id($id) || $label === '' || $this->is_local_name_entity_id($id)) {
+            return $id;
+        }
+
+        $requested_label = trim((string) $this->get_projected_entity_label($id));
+        if ($requested_label !== '' && $this->normalize_entity_name_key($requested_label) === $this->normalize_entity_name_key($label)) {
+            return $id;
+        }
+
+        $entities_table = $this->get_entities_table_name();
+        $entity_stats_table = $this->get_entity_stats_table_name();
+
+        $candidates = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT e.entity_id
+                 FROM $entities_table e
+                 LEFT JOIN $entity_stats_table s ON s.entity_id = e.entity_id
+                 WHERE e.entity_type = %s
+                   AND e.label = %s
+                   AND e.entity_id REGEXP %s
+                 ORDER BY COALESCE(s.nominations, 0) DESC, e.entity_id ASC
+                 LIMIT 25",
+                'name',
+                $label,
+                '^nm[0-9]{7,9}$'
+            )
+        );
+
+        if (!is_array($candidates) || empty($candidates)) {
+            return $id;
+        }
+
+        foreach ($candidates as $candidate_id) {
+            $candidate_id = strtolower(trim((string) $candidate_id));
+            if (!$this->is_imdb_name_entity_id($candidate_id)) {
+                continue;
+            }
+
+            if (!empty($this->get_entity_rows('name', $candidate_id))) {
+                return $candidate_id;
+            }
+        }
+
+        return $id;
     }
 
     /**

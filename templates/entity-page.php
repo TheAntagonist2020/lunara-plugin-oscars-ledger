@@ -71,7 +71,7 @@ $build_ceremony_url = function($ceremony) use ($aat) {
 
 $pipe_separator_html = '<span class="aat-sep"> &middot; </span>';
 
-$render_linked_pipe = function($value_list, $id_list) use ($build_entity_url, $pipe_separator_html) {
+$render_linked_pipe = function($value_list, $id_list) use ($aat, $build_entity_url, $pipe_separator_html) {
     $values = array_values(array_filter(array_map('trim', explode('|', (string) $value_list)), 'strlen'));
     $ids = array_values(array_filter(array_map('trim', explode('|', (string) $id_list)), 'strlen'));
 
@@ -82,7 +82,11 @@ $render_linked_pipe = function($value_list, $id_list) use ($build_entity_url, $p
     if (!empty($ids) && count($ids) === count($values)) {
         $out = array();
         foreach ($values as $i => $value) {
-            $url = $build_entity_url($ids[$i] ?? '');
+            $resolved_id = (string) ($ids[$i] ?? '');
+            if (method_exists($aat, 'canonicalize_name_entity_id_for_label')) {
+                $resolved_id = $aat->canonicalize_name_entity_id_for_label($resolved_id, $value);
+            }
+            $url = $build_entity_url($resolved_id);
             if ($url) {
                 $out[] = '<a class="aat-entity-link" href="' . esc_url($url) . '">' . esc_html($value) . '</a>';
             } else {
