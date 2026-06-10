@@ -2276,12 +2276,95 @@ class Academy_Awards_Table {
             return $template;
         }
 
+        $entity = sanitize_text_field(get_query_var('aat_entity'));
+        $id = strtolower(trim((string) sanitize_text_field(get_query_var('aat_entity_id'))));
+
+        if ($entity === 'name' && $this->is_imdb_name_entity_id($id)) {
+            $canonical_id = $this->resolve_canonical_name_entity_id($id);
+            if ($canonical_id !== '' && $canonical_id !== $id) {
+                set_query_var('aat_entity_id', $canonical_id);
+
+                $canonical_url = $this->build_entity_url_from_id($canonical_id);
+                if ($canonical_url !== '' && !headers_sent()) {
+                    wp_safe_redirect($canonical_url, 301);
+                    exit;
+                }
+            }
+        }
+
         $entity_template = AAT_PLUGIN_DIR . 'templates/entity-page.php';
         if (file_exists($entity_template)) {
             return $entity_template;
         }
 
         return $template;
+    }
+
+    private function resolve_canonical_name_entity_id($id) {
+        global $wpdb;
+
+        $id = strtolower(trim((string) $id));
+        if (!$this->is_imdb_name_entity_id($id)) {
+            return $id;
+        }
+
+        $cache_key = 'aat_name_id_alias_v1_' . $id;
+        $cached = get_transient($cache_key);
+        if (is_string($cached) && $cached !== '') {
+            return $cached;
+        }
+
+        // If this ID already resolves to ledger rows, it is already canonical.
+        $rows = $this->get_entity_rows('name', $id);
+        if (!empty($rows)) {
+            set_transient($cache_key, $id, 12 * HOUR_IN_SECONDS);
+            return $id;
+        }
+
+        $label = trim((string) $this->get_projected_entity_label($id));
+        if ($label === '') {
+            set_transient($cache_key, $id, 30 * MINUTE_IN_SECONDS);
+            return $id;
+        }
+
+        $entities_table = $this->get_entities_table_name();
+        $entity_stats_table = $this->get_entity_stats_table_name();
+
+        $candidates = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT e.entity_id
+                 FROM $entities_table e
+                 LEFT JOIN $entity_stats_table s ON s.entity_id = e.entity_id
+                 WHERE e.entity_type = %s
+                   AND e.label = %s
+                   AND e.entity_id <> %s
+                   AND e.entity_id REGEXP %s
+                 ORDER BY COALESCE(s.nominations, 0) DESC, e.entity_id ASC
+                 LIMIT 25",
+                'name',
+                $label,
+                $id,
+                '^nm[0-9]{7,9}$'
+            )
+        );
+
+        if (is_array($candidates) && !empty($candidates)) {
+            foreach ($candidates as $candidate_id) {
+                $candidate_id = strtolower(trim((string) $candidate_id));
+                if (!$this->is_imdb_name_entity_id($candidate_id)) {
+                    continue;
+                }
+
+                $candidate_rows = $this->get_entity_rows('name', $candidate_id);
+                if (!empty($candidate_rows)) {
+                    set_transient($cache_key, $candidate_id, 12 * HOUR_IN_SECONDS);
+                    return $candidate_id;
+                }
+            }
+        }
+
+        set_transient($cache_key, $id, 30 * MINUTE_IN_SECONDS);
+        return $id;
     }
 
     /**
