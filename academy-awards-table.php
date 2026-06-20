@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.25
+ * Version: 2.7.26
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,13 +17,15 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.25');
+define('AAT_VERSION', '2.7.26');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
 if (!defined('AAT_TMDB_API_KEY')) {
     define('AAT_TMDB_API_KEY', 'b17bcb1a2b1a44a50898eaf079bcdede');
 }
+
+require_once AAT_PLUGIN_DIR . 'includes/class-aat-ceremony-writeups.php';
 
 /**
  * Main Plugin Class
@@ -55,6 +57,11 @@ class Academy_Awards_Table {
     private function get_omdb_poster_reviews_table_name() {
         global $wpdb;
         return $wpdb->prefix . 'aat_omdb_poster_reviews';
+    }
+
+    private function get_ceremony_writeups_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_ceremony_writeups';
     }
 
     private function get_ceremonies_table_name() {
@@ -306,6 +313,23 @@ class Academy_Awards_Table {
         dbDelta($sql_poster_reviews);
     }
 
+    private function maybe_create_ceremony_writeups_table($charset_collate = '') {
+        global $wpdb;
+
+        if ($charset_collate === '') {
+            $charset_collate = $wpdb->get_charset_collate();
+            if (stripos($charset_collate, 'latin1') !== false) {
+                $charset_collate = 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
+            }
+        }
+
+        $writeups_table = $this->get_ceremony_writeups_table_name();
+        $sql_writeups = AAT_Ceremony_Writeups::get_create_table_sql($writeups_table, $charset_collate);
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql_writeups);
+    }
+
     private function __construct() {
         add_action('init', array($this, 'init'));
         add_action('plugins_loaded', array($this, 'maybe_upgrade_schema'));
@@ -454,6 +478,7 @@ class Academy_Awards_Table {
         $this->maybe_create_reporting_tables($charset_collate);
         $this->maybe_create_omdb_reviews_table($charset_collate);
         $this->maybe_create_omdb_poster_reviews_table($charset_collate);
+        $this->maybe_create_ceremony_writeups_table($charset_collate);
         $this->rebuild_reporting_tables();
 
 
@@ -473,6 +498,7 @@ class Academy_Awards_Table {
         // Ensure lightweight annotation tables even if a historical db_version is ahead of the plugin version.
         $this->maybe_create_omdb_reviews_table();
         $this->maybe_create_omdb_poster_reviews_table();
+        $this->maybe_create_ceremony_writeups_table();
         $this->maybe_create_reporting_tables();
 
         $installed = get_option('aat_db_version', '0');
@@ -558,6 +584,7 @@ class Academy_Awards_Table {
         $this->maybe_create_reporting_tables($charset_collate);
         $this->maybe_create_omdb_reviews_table($charset_collate);
         $this->maybe_create_omdb_poster_reviews_table($charset_collate);
+        $this->maybe_create_ceremony_writeups_table($charset_collate);
 
         $this->rebuild_reporting_tables();
 
@@ -5409,7 +5436,7 @@ class Academy_Awards_Table {
          * Safer: gate by the `page` query var (our menu slugs) instead.
          */
         $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
-        $allowed_pages = array('academy-awards-table', 'academy-awards-tracker', 'academy-awards-posters', 'academy-awards-omdb-audit');
+        $allowed_pages = array('academy-awards-table', 'academy-awards-tracker', 'academy-awards-posters', 'academy-awards-omdb-audit', 'academy-awards-ceremony-writeups');
 
         if (!in_array($page, $allowed_pages, true)) {
             return;
@@ -5484,6 +5511,15 @@ class Academy_Awards_Table {
             'manage_options',
             'academy-awards-omdb-audit',
             array($this, 'render_omdb_audit_admin_page')
+        );
+
+        add_submenu_page(
+            'academy-awards-table',
+            __('Ceremony Write-Ups', 'academy-awards-table'),
+            __('Ceremony Write-Ups', 'academy-awards-table'),
+            'manage_options',
+            'academy-awards-ceremony-writeups',
+            array($this, 'render_ceremony_writeups_admin_page')
         );
     }
 
@@ -5706,6 +5742,437 @@ class Academy_Awards_Table {
         $audit = $this->build_omdb_integrity_audit($limit, $offset, $force_refresh, $issue_filter, $scan_limit, $review_state_filter);
 
         include AAT_PLUGIN_DIR . 'templates/omdb-audit-admin.php';
+    }
+
+    public function render_ceremony_writeups_admin_page() {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to access this page.', 'academy-awards-table'));
+        }
+
+        $this->maybe_create_ceremony_writeups_table();
+
+        $message = '';
+        $message_type = 'success';
+        $preview = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_ceremony_writeups_upload_nonce'])) {
+            check_admin_referer('aat_ceremony_writeups_upload', 'aat_ceremony_writeups_upload_nonce');
+
+            $result = $this->handle_ceremony_writeups_upload_from_request();
+            if (is_wp_error($result)) {
+                $message = $result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $preview = $result;
+                $message = sprintf(
+                    /* translators: %s: detected ceremony count */
+                    __('Parsed %s ceremony write-ups. Review the preview, then stage them as private drafts.', 'academy-awards-table'),
+                    number_format_i18n((int) ($preview['summary']['detected'] ?? 0))
+                );
+            }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_ceremony_writeups_stage_nonce'])) {
+            check_admin_referer('aat_ceremony_writeups_stage', 'aat_ceremony_writeups_stage_nonce');
+
+            $result = $this->stage_ceremony_writeups_preview_from_request($_POST);
+            if (is_wp_error($result)) {
+                $message = $result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $message = sprintf(
+                    /* translators: %s: staged row count */
+                    __('Staged %s ceremony write-ups as private drafts.', 'academy-awards-table'),
+                    number_format_i18n((int) ($result['count'] ?? 0))
+                );
+            }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_ceremony_writeup_save_nonce'])) {
+            check_admin_referer('aat_ceremony_writeup_save', 'aat_ceremony_writeup_save_nonce');
+
+            $result = $this->save_ceremony_writeup_record_from_request($_POST);
+            if (is_wp_error($result)) {
+                $message = $result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $message = __('Ceremony write-up saved.', 'academy-awards-table');
+            }
+        }
+
+        $rows = $this->get_ceremony_writeups_admin_rows();
+        $selected_ceremony = isset($_GET['ceremony']) ? absint($_GET['ceremony']) : 0;
+        if ($selected_ceremony <= 0 && !empty($rows[0]['ceremony_number'])) {
+            $selected_ceremony = (int) $rows[0]['ceremony_number'];
+        }
+        $selected_row = $selected_ceremony > 0 ? $this->get_ceremony_writeup_record($selected_ceremony) : array();
+        $statuses = $this->get_ceremony_writeup_status_labels();
+        ?>
+        <div class="wrap aat-admin-page aat-ceremony-writeups-admin">
+            <h1><?php echo esc_html__('Ceremony Write-Ups', 'academy-awards-table'); ?></h1>
+            <p class="description"><?php echo esc_html__('Upload Dalton-authored ceremony guide copy from Word, preview the 98 parsed entries, stage private drafts, then approve one ceremony at a time for public display.', 'academy-awards-table'); ?></p>
+
+            <?php if ($message !== '') : ?>
+                <div class="notice notice-<?php echo esc_attr($message_type === 'error' ? 'error' : 'success'); ?> is-dismissible"><p><?php echo esc_html($message); ?></p></div>
+            <?php endif; ?>
+
+            <section class="aat-admin-panel">
+                <h2><?php echo esc_html__('Upload Ceremony Guide DOCX', 'academy-awards-table'); ?></h2>
+                <form method="post" enctype="multipart/form-data">
+                    <?php wp_nonce_field('aat_ceremony_writeups_upload', 'aat_ceremony_writeups_upload_nonce'); ?>
+                    <input type="file" name="aat_ceremony_writeups_docx" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                    <?php submit_button(__('Preview DOCX', 'academy-awards-table'), 'secondary', 'submit', false); ?>
+                </form>
+            </section>
+
+            <?php if (!empty($preview['summary'])) : ?>
+                <?php
+                $summary = $preview['summary'];
+                $preview_records = !empty($preview['records']) && is_array($preview['records']) ? $preview['records'] : array();
+                ?>
+                <section class="aat-admin-panel aat-ceremony-writeups-preview">
+                    <h2><?php echo esc_html__('Import Preview', 'academy-awards-table'); ?></h2>
+                    <div class="aat-admin-stat-grid">
+                        <div><span><?php echo esc_html__('Detected', 'academy-awards-table'); ?></span><strong><?php echo esc_html(number_format_i18n((int) ($summary['detected'] ?? 0))); ?></strong></div>
+                        <div><span><?php echo esc_html__('First', 'academy-awards-table'); ?></span><strong><?php echo esc_html((string) ($summary['first'] ?? '')); ?></strong></div>
+                        <div><span><?php echo esc_html__('Last', 'academy-awards-table'); ?></span><strong><?php echo esc_html((string) ($summary['last'] ?? '')); ?></strong></div>
+                        <div><span><?php echo esc_html__('Missing', 'academy-awards-table'); ?></span><strong><?php echo esc_html(empty($summary['missing']) ? '0' : implode(', ', array_map('intval', (array) $summary['missing']))); ?></strong></div>
+                    </div>
+                    <p><code><?php echo esc_html((string) ($preview['source_hash'] ?? '')); ?></code></p>
+                    <ol class="aat-ceremony-writeups-preview-list">
+                        <?php foreach (array_slice($preview_records, 0, 6, true) as $preview_record) : ?>
+                            <li>
+                                <strong><?php echo esc_html((string) ($preview_record['ceremony_label'] ?? '')); ?></strong>
+                                <span><?php echo esc_html(wp_trim_words((string) ($preview_record['body'] ?? ''), 28)); ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ol>
+                    <form method="post">
+                        <?php wp_nonce_field('aat_ceremony_writeups_stage', 'aat_ceremony_writeups_stage_nonce'); ?>
+                        <input type="hidden" name="aat_ceremony_writeups_source_hash" value="<?php echo esc_attr((string) ($preview['source_hash'] ?? '')); ?>" />
+                        <?php submit_button(__('Stage 98 Drafts', 'academy-awards-table'), 'primary', 'submit', false); ?>
+                    </form>
+                </section>
+            <?php endif; ?>
+
+            <section class="aat-admin-panel aat-ceremony-writeups-grid">
+                <div class="aat-ceremony-writeups-list">
+                    <h2><?php echo esc_html__('Review Queue', 'academy-awards-table'); ?></h2>
+                    <?php if (empty($rows)) : ?>
+                        <p><?php echo esc_html__('No ceremony write-ups are staged yet.', 'academy-awards-table'); ?></p>
+                    <?php else : ?>
+                        <table class="widefat striped">
+                            <thead><tr><th><?php echo esc_html__('Ceremony', 'academy-awards-table'); ?></th><th><?php echo esc_html__('Status', 'academy-awards-table'); ?></th><th><?php echo esc_html__('Updated', 'academy-awards-table'); ?></th><th><?php echo esc_html__('Links', 'academy-awards-table'); ?></th></tr></thead>
+                            <tbody>
+                                <?php foreach ($rows as $row) : ?>
+                                    <?php $row_ceremony = (int) ($row['ceremony_number'] ?? 0); ?>
+                                    <tr<?php echo $row_ceremony === $selected_ceremony ? ' class="is-selected"' : ''; ?>>
+                                        <td><a href="<?php echo esc_url(add_query_arg(array('page' => 'academy-awards-ceremony-writeups', 'ceremony' => $row_ceremony), admin_url('admin.php'))); ?>"><?php echo esc_html((string) ($row['ceremony_label'] ?? '')); ?></a></td>
+                                        <td><?php echo esc_html($statuses[$row['status']] ?? (string) $row['status']); ?></td>
+                                        <td><?php echo esc_html((string) ($row['updated_at'] ?? '')); ?></td>
+                                        <td><a href="<?php echo esc_url($this->get_ceremony_url($row_ceremony)); ?>" target="_blank" rel="noopener"><?php echo esc_html__('Preview route', 'academy-awards-table'); ?></a></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+
+                <div class="aat-ceremony-writeups-editor">
+                    <h2><?php echo esc_html__('Edit Selected Ceremony', 'academy-awards-table'); ?></h2>
+                    <?php if (empty($selected_row)) : ?>
+                        <p><?php echo esc_html__('Select a staged ceremony write-up to edit.', 'academy-awards-table'); ?></p>
+                    <?php else : ?>
+                        <form method="post">
+                            <?php wp_nonce_field('aat_ceremony_writeup_save', 'aat_ceremony_writeup_save_nonce'); ?>
+                            <input type="hidden" name="aat_ceremony_writeup_ceremony" value="<?php echo esc_attr((string) $selected_ceremony); ?>" />
+                            <p>
+                                <label for="aat_ceremony_writeup_status"><strong><?php echo esc_html__('Status', 'academy-awards-table'); ?></strong></label><br />
+                                <select id="aat_ceremony_writeup_status" name="aat_ceremony_writeup_status">
+                                    <?php foreach ($statuses as $status_key => $status_label) : ?>
+                                        <option value="<?php echo esc_attr($status_key); ?>" <?php selected((string) ($selected_row['status'] ?? ''), $status_key); ?>><?php echo esc_html($status_label); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </p>
+                            <p>
+                                <label for="aat_ceremony_writeup_headline"><strong><?php echo esc_html__('Headline', 'academy-awards-table'); ?></strong></label><br />
+                                <input class="large-text" id="aat_ceremony_writeup_headline" name="aat_ceremony_writeup_headline" type="text" value="<?php echo esc_attr((string) ($selected_row['headline'] ?? '')); ?>" />
+                            </p>
+                            <p>
+                                <label for="aat_ceremony_writeup_dek"><strong><?php echo esc_html__('Deck', 'academy-awards-table'); ?></strong></label><br />
+                                <input class="large-text" id="aat_ceremony_writeup_dek" name="aat_ceremony_writeup_dek" type="text" value="<?php echo esc_attr((string) ($selected_row['dek'] ?? '')); ?>" />
+                            </p>
+                            <p>
+                                <label for="aat_ceremony_writeup_body"><strong><?php echo esc_html__('Public Body', 'academy-awards-table'); ?></strong></label><br />
+                                <textarea class="large-text" rows="12" id="aat_ceremony_writeup_body" name="aat_ceremony_writeup_body"><?php echo esc_textarea((string) ($selected_row['body'] ?? '')); ?></textarea>
+                            </p>
+                            <p>
+                                <label for="aat_ceremony_writeup_source_notes"><strong><?php echo esc_html__('Private Source Notes', 'academy-awards-table'); ?></strong></label><br />
+                                <textarea class="large-text" rows="6" id="aat_ceremony_writeup_source_notes" name="aat_ceremony_writeup_source_notes"><?php echo esc_textarea((string) ($selected_row['source_notes'] ?? '')); ?></textarea>
+                            </p>
+                            <?php submit_button(__('Save Ceremony Write-Up', 'academy-awards-table'), 'primary', 'submit', false); ?>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            </section>
+        </div>
+        <?php
+    }
+
+    private function get_ceremony_writeup_status_labels() {
+        return array(
+            AAT_Ceremony_Writeups::STATUS_DRAFT        => __('Draft', 'academy-awards-table'),
+            AAT_Ceremony_Writeups::STATUS_NEEDS_REVIEW => __('Needs Review', 'academy-awards-table'),
+            AAT_Ceremony_Writeups::STATUS_APPROVED     => __('Approved', 'academy-awards-table'),
+            AAT_Ceremony_Writeups::STATUS_HIDDEN       => __('Hidden', 'academy-awards-table'),
+        );
+    }
+
+    private function get_ceremony_writeups_preview_transient_key($source_hash) {
+        $source_hash = preg_replace('/[^a-f0-9]/', '', strtolower((string) $source_hash));
+        return 'aat_ceremony_writeups_preview_' . substr($source_hash, 0, 32);
+    }
+
+    private function handle_ceremony_writeups_upload_from_request() {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error('aat_ceremony_writeups_forbidden', __('You do not have permission to import ceremony write-ups.', 'academy-awards-table'));
+        }
+
+        if (!AAT_Ceremony_Writeups::parser_is_available()) {
+            return new WP_Error('aat_ceremony_writeups_parser_unavailable', __('This server needs ZipArchive or PharData available before it can preview DOCX ceremony guides.', 'academy-awards-table'));
+        }
+
+        if (empty($_FILES['aat_ceremony_writeups_docx']) || !is_array($_FILES['aat_ceremony_writeups_docx'])) {
+            return new WP_Error('aat_ceremony_writeups_missing_file', __('Choose a DOCX file to preview.', 'academy-awards-table'));
+        }
+
+        $file = $_FILES['aat_ceremony_writeups_docx'];
+        $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($error !== UPLOAD_ERR_OK) {
+            return new WP_Error('aat_ceremony_writeups_upload_error', __('The DOCX upload did not complete.', 'academy-awards-table'));
+        }
+
+        $filename = sanitize_file_name((string) ($file['name'] ?? ''));
+        $tmp_name = (string) ($file['tmp_name'] ?? '');
+        $size = (int) ($file['size'] ?? 0);
+        if ($filename === '' || strtolower(pathinfo($filename, PATHINFO_EXTENSION)) !== 'docx') {
+            return new WP_Error('aat_ceremony_writeups_bad_extension', __('Upload a .docx file exported from Word.', 'academy-awards-table'));
+        }
+        if ($tmp_name === '' || !is_uploaded_file($tmp_name) || !is_readable($tmp_name)) {
+            return new WP_Error('aat_ceremony_writeups_unreadable', __('The uploaded DOCX could not be read.', 'academy-awards-table'));
+        }
+        $filetype = wp_check_filetype_and_ext(
+            $tmp_name,
+            $filename,
+            array('docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        );
+        if (($filetype['ext'] ?? '') !== 'docx') {
+            return new WP_Error('aat_ceremony_writeups_bad_type', __('The uploaded file does not look like a valid DOCX document.', 'academy-awards-table'));
+        }
+        if ($size <= 0 || $size > 10 * 1024 * 1024) {
+            return new WP_Error('aat_ceremony_writeups_bad_size', __('The ceremony guide DOCX must be under 10 MB.', 'academy-awards-table'));
+        }
+
+        try {
+            $parsed = AAT_Ceremony_Writeups::parse_docx($tmp_name);
+        } catch (Exception $exception) {
+            return new WP_Error('aat_ceremony_writeups_parse_failed', $exception->getMessage());
+        }
+
+        $summary = $parsed['summary'] ?? array();
+        if ((int) ($summary['detected'] ?? 0) !== 98 || !empty($summary['missing']) || !empty($summary['duplicates'])) {
+            return new WP_Error('aat_ceremony_writeups_incomplete', __('The DOCX must contain exactly 98 ceremony headings before staging.', 'academy-awards-table'));
+        }
+
+        $parsed['source_doc'] = $filename;
+        foreach ($parsed['records'] as $number => $record) {
+            $parsed['records'][$number]['source_doc'] = $filename;
+        }
+
+        set_transient($this->get_ceremony_writeups_preview_transient_key($parsed['source_hash']), $parsed, 2 * HOUR_IN_SECONDS);
+
+        return $parsed;
+    }
+
+    private function stage_ceremony_writeups_preview_from_request($request) {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error('aat_ceremony_writeups_forbidden', __('You do not have permission to stage ceremony write-ups.', 'academy-awards-table'));
+        }
+
+        $source_hash = isset($request['aat_ceremony_writeups_source_hash']) ? sanitize_text_field(wp_unslash($request['aat_ceremony_writeups_source_hash'])) : '';
+        if (!preg_match('/^[a-f0-9]{64}$/', strtolower($source_hash))) {
+            return new WP_Error('aat_ceremony_writeups_missing_hash', __('Upload and preview a complete DOCX before staging ceremony write-ups.', 'academy-awards-table'));
+        }
+
+        $preview = get_transient($this->get_ceremony_writeups_preview_transient_key($source_hash));
+        if (empty($preview['records']) || !is_array($preview['records'])) {
+            return new WP_Error('aat_ceremony_writeups_missing_preview', __('The import preview expired. Upload the DOCX again.', 'academy-awards-table'));
+        }
+
+        $summary = $preview['summary'] ?? array();
+        if ((int) ($summary['detected'] ?? 0) !== 98 || !empty($summary['missing']) || !empty($summary['duplicates'])) {
+            return new WP_Error('aat_ceremony_writeups_incomplete_preview', __('The import preview is incomplete and cannot be staged.', 'academy-awards-table'));
+        }
+
+        global $wpdb;
+        $this->maybe_create_ceremony_writeups_table();
+        $table = $this->get_ceremony_writeups_table_name();
+        $now = current_time('mysql');
+        $user_id = get_current_user_id();
+        $count = 0;
+
+        foreach ($preview['records'] as $record) {
+            $ceremony = (int) ($record['ceremony_number'] ?? 0);
+            if ($ceremony <= 0) {
+                continue;
+            }
+
+            $saved = $wpdb->replace(
+                $table,
+                array(
+                    'ceremony_number' => $ceremony,
+                    'ceremony_label'  => sanitize_text_field((string) ($record['ceremony_label'] ?? '')),
+                    'source_doc'      => sanitize_text_field((string) ($record['source_doc'] ?? ($preview['source_doc'] ?? ''))),
+                    'source_hash'     => sanitize_text_field((string) ($record['source_hash'] ?? ($preview['source_hash'] ?? ''))),
+                    'headline'        => sanitize_text_field((string) ($record['headline'] ?? '')),
+                    'dek'             => sanitize_text_field((string) ($record['dek'] ?? '')),
+                    'body'            => sanitize_textarea_field((string) ($record['body'] ?? '')),
+                    'source_notes'    => sanitize_textarea_field((string) ($record['source_notes'] ?? '')),
+                    'status'          => AAT_Ceremony_Writeups::STATUS_DRAFT,
+                    'created_by'      => $user_id,
+                    'updated_by'      => $user_id,
+                    'created_at'      => $now,
+                    'updated_at'      => $now,
+                ),
+                array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s')
+            );
+
+            if ($saved !== false) {
+                $count++;
+            }
+        }
+
+        if ($count !== 98) {
+            return new WP_Error('aat_ceremony_writeups_stage_failed', __('Could not stage all 98 ceremony write-ups.', 'academy-awards-table'));
+        }
+
+        return array('count' => $count);
+    }
+
+    private function save_ceremony_writeup_record_from_request($request) {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error('aat_ceremony_writeups_forbidden', __('You do not have permission to save ceremony write-ups.', 'academy-awards-table'));
+        }
+
+        $ceremony = isset($request['aat_ceremony_writeup_ceremony']) ? absint($request['aat_ceremony_writeup_ceremony']) : 0;
+        if ($ceremony <= 0 || $ceremony > 999) {
+            return new WP_Error('aat_ceremony_writeups_bad_ceremony', __('Invalid ceremony number.', 'academy-awards-table'));
+        }
+
+        global $wpdb;
+        $this->maybe_create_ceremony_writeups_table();
+        $table = $this->get_ceremony_writeups_table_name();
+        $existing = $this->get_ceremony_writeup_record($ceremony);
+        $now = current_time('mysql');
+        $user_id = get_current_user_id();
+
+        $data = array(
+            'ceremony_number' => $ceremony,
+            'ceremony_label'  => !empty($existing['ceremony_label']) ? (string) $existing['ceremony_label'] : sprintf('%s Academy Awards', $this->ordinal($ceremony)),
+            'source_doc'      => !empty($existing['source_doc']) ? (string) $existing['source_doc'] : '',
+            'source_hash'     => !empty($existing['source_hash']) ? (string) $existing['source_hash'] : '',
+            'headline'        => isset($request['aat_ceremony_writeup_headline']) ? sanitize_text_field(wp_unslash($request['aat_ceremony_writeup_headline'])) : '',
+            'dek'             => isset($request['aat_ceremony_writeup_dek']) ? sanitize_text_field(wp_unslash($request['aat_ceremony_writeup_dek'])) : '',
+            'body'            => isset($request['aat_ceremony_writeup_body']) ? sanitize_textarea_field(wp_unslash($request['aat_ceremony_writeup_body'])) : '',
+            'source_notes'    => isset($request['aat_ceremony_writeup_source_notes']) ? sanitize_textarea_field(wp_unslash($request['aat_ceremony_writeup_source_notes'])) : '',
+            'status'          => AAT_Ceremony_Writeups::sanitize_status($request['aat_ceremony_writeup_status'] ?? ''),
+            'updated_by'      => $user_id,
+            'updated_at'      => $now,
+        );
+
+        if (!empty($existing)) {
+            $updated = $wpdb->update(
+                $table,
+                $data,
+                array('ceremony_number' => $ceremony),
+                array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s'),
+                array('%d')
+            );
+
+            if ($updated === false) {
+                return new WP_Error('aat_ceremony_writeups_save_failed', __('Could not save the ceremony write-up.', 'academy-awards-table'));
+            }
+
+            return array('ceremony' => $ceremony);
+        }
+
+        $data['created_by'] = $user_id;
+        $data['created_at'] = $now;
+        $inserted = $wpdb->insert(
+            $table,
+            $data,
+            array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%s')
+        );
+
+        if ($inserted === false) {
+            return new WP_Error('aat_ceremony_writeups_insert_failed', __('Could not create the ceremony write-up.', 'academy-awards-table'));
+        }
+
+        return array('ceremony' => $ceremony);
+    }
+
+    private function get_ceremony_writeups_admin_rows() {
+        global $wpdb;
+        $table = $this->get_ceremony_writeups_table_name();
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        if ($exists !== $table) {
+            return array();
+        }
+
+        $rows = $wpdb->get_results("SELECT ceremony_number, ceremony_label, status, source_hash, updated_at FROM $table ORDER BY ceremony_number DESC", ARRAY_A);
+        return is_array($rows) ? $rows : array();
+    }
+
+    private function get_ceremony_writeup_record($ceremony) {
+        global $wpdb;
+        $ceremony = absint($ceremony);
+        if ($ceremony <= 0) {
+            return array();
+        }
+
+        $table = $this->get_ceremony_writeups_table_name();
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        if ($exists !== $table) {
+            return array();
+        }
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM $table WHERE ceremony_number = %d LIMIT 1", $ceremony),
+            ARRAY_A
+        );
+
+        return is_array($row) ? $row : array();
+    }
+
+    public function get_approved_ceremony_writeup($ceremony) {
+        global $wpdb;
+        $ceremony = absint($ceremony);
+        if ($ceremony <= 0) {
+            return array();
+        }
+
+        $table = $this->get_ceremony_writeups_table_name();
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        if ($exists !== $table) {
+            return array();
+        }
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT ceremony_number, ceremony_label, headline, dek, body FROM $table WHERE ceremony_number = %d AND status = %s LIMIT 1",
+                $ceremony,
+                AAT_Ceremony_Writeups::STATUS_APPROVED
+            ),
+            ARRAY_A
+        );
+
+        return is_array($row) ? $row : array();
     }
 
 

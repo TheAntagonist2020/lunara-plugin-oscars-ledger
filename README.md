@@ -8,18 +8,19 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Source Locations
 
-- Local source: `G:\lunara-backups\work\academy-awards-table-optimized`
-- Live plugin: `/home/151589083/htdocs/wp-content/plugins/academy-awards-table-optimized`
+- Local source: `G:\lunara-backups\work\academy-awards-table-optimized-ceremony-depth`
+- Live plugin: `/srv/htdocs/wp-content/plugins/academy-awards-table-optimized`
 - Continuity workspace: `C:\Users\silve_i21do49\OneDrive\Desktop\New folder`
 
 ## Version
 
-Current baseline: `2.7.25`.
+Current baseline: `2.7.26`.
 
 ## Current Public Surface
 
 - Ceremony pages include a data-derived Ceremony Thesis layer with critical-path navigation and compact major-race briefing cards.
 - Ceremony pages include a Major Races proof module for Best Picture, Directing, Actor, and Actress before the complete ceremony ledger.
+- `Academy Awards > Ceremony Write-Ups` privately previews Dalton-authored DOCX ceremony guides, stages 98 draft rows, reviews one ceremony at a time, and renders only approved write-ups near the top of ceremony dossiers.
 
 ## Verification
 
@@ -27,4 +28,5 @@ Current baseline: `2.7.25`.
 - Confirm representative Oscars routes return `200`.
 - Confirm `/oscars/category/best-picture/` and `?history=full` preserve expected Ledger data and links.
 - Confirm `/oscars/ceremony/{N}/` and `?ledger=full` preserve the major-races module and full ballot links.
+- Confirm public ceremony HTML never exposes write-up source notes, source hashes, statuses, source paths, or reviewer user IDs.
 - Flush WordPress cache after deploys and capture visual evidence only under the Desktop `10_VISUAL_EVIDENCE` folder.

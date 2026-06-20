@@ -6104,6 +6104,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
 }
 
 .aat-ceremony-dossier .aat-ceremony-thesis,
+.aat-ceremony-dossier .aat-ceremony-editorial-writeup,
 .aat-ceremony-dossier .aat-ceremony-marquee,
 .aat-ceremony-dossier .aat-ceremony-ballot-ledger,
 .aat-ceremony-dossier .aat-ceremony-gallery-section,
@@ -6115,6 +6116,65 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
 .aat-ceremony-dossier .aat-hub-metric-grid {
     margin: 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.aat-ceremony-editorial-writeup {
+    display: grid;
+    grid-template-columns: minmax(220px, .36fr) minmax(0, .64fr);
+    gap: clamp(18px, 3vw, 34px);
+    align-items: start;
+    padding: clamp(20px, 3.2vw, 36px);
+    border: 1px solid rgba(201,169,97,.22);
+    border-radius: 18px;
+    background:
+        linear-gradient(90deg, rgba(201,169,97,.11) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(201,169,97,.07) 1px, transparent 1px),
+        radial-gradient(circle at 8% 8%, rgba(201,169,97,.15), transparent 30%),
+        linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.014)),
+        rgba(7,17,28,.8);
+    background-size: 56px 56px, 56px 56px, auto, auto, auto;
+    box-shadow: 0 24px 70px rgba(0,0,0,.22);
+    overflow: hidden;
+}
+
+.aat-ceremony-editorial-heading {
+    display: grid;
+    gap: 13px;
+    min-width: 0;
+}
+
+.aat-ceremony-editorial-writeup h2 {
+    margin: 0;
+    max-width: 13ch;
+    color: var(--aat-white);
+    font-size: clamp(2rem, 3.55vw, 3.72rem);
+    line-height: 1;
+    text-wrap: balance;
+}
+
+.aat-ceremony-editorial-writeup .aat-hub-copy {
+    margin: 0;
+    color: rgba(244,239,227,.76);
+    line-height: 1.62;
+}
+
+.aat-ceremony-editorial-body {
+    min-width: 0;
+    padding: clamp(16px, 2.4vw, 24px);
+    border: 1px solid rgba(201,169,97,.16);
+    border-radius: 14px;
+    background: rgba(2,8,15,.32);
+}
+
+.aat-ceremony-editorial-body p {
+    margin: 0;
+    color: rgba(244,239,227,.84);
+    font-size: clamp(.98rem, 1.05vw, 1.08rem);
+    line-height: 1.76;
+}
+
+.aat-ceremony-editorial-body p + p {
+    margin-top: 1em;
 }
 
 .aat-ceremony-thesis {
@@ -6465,6 +6525,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
         grid-template-columns: minmax(0, 1fr);
     }
 
+    .aat-ceremony-editorial-writeup,
     .aat-ceremony-thesis,
     .aat-major-race-briefing {
         grid-template-columns: minmax(0, 1fr);
@@ -6507,6 +6568,9 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     .aat-ceremony-dossier-hero,
     .aat-ceremony-command-band,
     .aat-ceremony-command-card,
+    .aat-ceremony-editorial-writeup,
+    .aat-ceremony-editorial-heading,
+    .aat-ceremony-editorial-body,
     .aat-ceremony-thesis,
     .aat-major-race-briefing,
     .aat-major-race-briefing-card,
@@ -6534,6 +6598,10 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     .aat-ceremony-dossier .aat-ceremony-neighbor-card,
     .aat-ceremony-dossier .aat-ceremony-neighbor-card strong,
     .aat-ceremony-dossier .aat-ceremony-neighbor-index,
+    .aat-ceremony-dossier .aat-ceremony-editorial-writeup h2,
+    .aat-ceremony-dossier .aat-ceremony-editorial-writeup .aat-hub-copy,
+    .aat-ceremony-dossier .aat-ceremony-editorial-body,
+    .aat-ceremony-dossier .aat-ceremony-editorial-body p,
     .aat-ceremony-dossier .aat-ceremony-thesis h2,
     .aat-ceremony-dossier .aat-ceremony-thesis .aat-hub-copy,
     .aat-ceremony-dossier .aat-major-race-briefing-card h3,
@@ -6564,6 +6632,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     }
 
     .aat-ceremony-command-band,
+    .aat-ceremony-editorial-writeup,
     .aat-ceremony-dossier .aat-hub-metric-grid,
     .aat-ceremony-thesis,
     .aat-ceremony-thesis-stats,
@@ -6585,6 +6654,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
         border-radius: 12px;
     }
 
+    .aat-ceremony-editorial-writeup,
     .aat-ceremony-thesis {
         padding: 15px;
         border-radius: 12px;

@@ -1110,6 +1110,27 @@ get_header();
             </nav>
         <?php endif; ?>
 
+        <?php
+            $ceremony_editorial_writeup = method_exists($aat, 'get_approved_ceremony_writeup') ? $aat->get_approved_ceremony_writeup($ceremony) : array();
+            $ceremony_editorial_body = trim((string) ($ceremony_editorial_writeup['body'] ?? ''));
+            $ceremony_editorial_headline = trim((string) ($ceremony_editorial_writeup['headline'] ?? ''));
+            $ceremony_editorial_dek = trim((string) ($ceremony_editorial_writeup['dek'] ?? ''));
+        ?>
+        <?php if ($ceremony_editorial_body !== '') : ?>
+            <section class="aat-hub-section aat-ceremony-editorial-writeup" aria-label="<?php echo esc_attr__('Ceremony editorial guide', 'academy-awards-table'); ?>">
+                <div class="aat-ceremony-editorial-heading">
+                    <p class="aat-hub-kicker aat-ceremony-guide-kicker"><?php echo esc_html__('Ceremony Guide', 'academy-awards-table'); ?></p>
+                    <h2><?php echo esc_html($ceremony_editorial_headline !== '' ? $ceremony_editorial_headline : (string) ($ceremony_editorial_writeup['ceremony_label'] ?? $ceremony_dossier_label)); ?></h2>
+                    <?php if ($ceremony_editorial_dek !== '') : ?>
+                        <p class="aat-hub-copy"><?php echo esc_html($ceremony_editorial_dek); ?></p>
+                    <?php endif; ?>
+                </div>
+                <div class="aat-ceremony-editorial-body aat-ceremony-guide-copy">
+                    <?php echo wp_kses_post(wpautop(esc_html($ceremony_editorial_body))); ?>
+                </div>
+            </section>
+        <?php endif; ?>
+
         <?php if (!empty($ceremony_major_briefing_cards)) : ?>
             <section class="aat-hub-section aat-ceremony-thesis" aria-label="<?php echo esc_attr__('Ceremony thesis and major race briefing', 'academy-awards-table'); ?>">
                 <div class="aat-ceremony-thesis-copy">
