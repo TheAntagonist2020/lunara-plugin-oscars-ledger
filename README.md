@@ -14,11 +14,16 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.21`.
+Current baseline: `2.7.24`.
+
+## Current Public Surface
+
+- Ceremony pages include a Major Races proof module for Best Picture, Directing, Actor, and Actress before the complete ceremony ledger.
 
 ## Verification
 
 - Run PHP lint on `academy-awards-table.php` and template/include PHP files after edits.
 - Confirm representative Oscars routes return `200`.
 - Confirm `/oscars/category/best-picture/` and `?history=full` preserve expected Ledger data and links.
+- Confirm `/oscars/ceremony/{N}/` and `?ledger=full` preserve the major-races module and full ballot links.
 - Flush WordPress cache after deploys and capture visual evidence only under the Desktop `10_VISUAL_EVIDENCE` folder.

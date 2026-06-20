@@ -6116,6 +6116,176 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.aat-ceremony-major-races {
+    padding: clamp(20px, 3vw, 30px);
+    border: 1px solid rgba(201,169,97,.18);
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 10% 0%, rgba(201,169,97,.14), transparent 32%),
+        linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012)),
+        rgba(6,15,26,.62);
+    overflow: hidden;
+}
+
+.aat-ceremony-major-races .aat-section-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px 20px;
+    align-items: end;
+    margin-bottom: 18px;
+}
+
+.aat-major-race-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.aat-major-race-card {
+    position: relative;
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+    padding: clamp(16px, 2.4vw, 22px);
+    border: 1px solid rgba(201,169,97,.18);
+    border-radius: 14px;
+    background:
+        linear-gradient(145deg, rgba(14,28,44,.9), rgba(6,15,26,.94)),
+        rgba(6,15,26,.82);
+    box-shadow: 0 18px 44px rgba(0,0,0,.18);
+    overflow: hidden;
+}
+
+.aat-major-race-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(90deg, rgba(201,169,97,.12) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(201,169,97,.08) 1px, transparent 1px);
+    background-size: 54px 54px;
+    opacity: .12;
+    pointer-events: none;
+}
+
+.aat-major-race-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.aat-major-race-card.is-best-picture {
+    grid-column: span 2;
+}
+
+.aat-major-race-top,
+.aat-major-race-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.aat-major-race-category,
+.aat-major-race-nominee-label {
+    color: var(--aat-gold-light);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+
+.aat-major-race-feature {
+    display: grid;
+    grid-template-columns: minmax(92px, 126px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+}
+
+.aat-major-race-card.is-best-picture .aat-major-race-feature {
+    grid-template-columns: minmax(132px, 180px) minmax(0, 1fr);
+}
+
+.aat-major-race-media {
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(201,169,97,.22);
+    background: rgba(0,0,0,.24);
+}
+
+.aat-major-race-media img,
+.aat-major-race-poster {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.aat-major-race-copy {
+    min-width: 0;
+}
+
+.aat-major-race-title {
+    margin: 0;
+    color: var(--aat-white);
+    font-size: clamp(1.22rem, 2.15vw, 2.05rem);
+    line-height: 1.06;
+    text-wrap: balance;
+}
+
+.aat-major-race-meta,
+.aat-major-race-summary {
+    margin: 8px 0 0;
+    color: rgba(255,255,255,.74);
+    line-height: 1.56;
+}
+
+.aat-major-race-nominees {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    padding-top: 12px;
+    border-top: 1px solid rgba(201,169,97,.13);
+}
+
+.aat-major-race-nominee-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.aat-major-race-card.is-best-picture .aat-major-race-nominee-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.aat-major-race-nominee-list li {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    padding: 8px 9px;
+    border: 1px solid rgba(201,169,97,.11);
+    border-radius: 10px;
+    background: rgba(2,8,15,.32);
+}
+
+.aat-major-race-nominee-primary {
+    color: rgba(255,255,255,.88);
+    font-size: .88rem;
+    line-height: 1.25;
+}
+
+.aat-major-race-nominee-secondary {
+    color: rgba(255,255,255,.58);
+    font-size: .76rem;
+    line-height: 1.25;
+}
+
 .aat-ceremony-dossier .aat-ceremony-ballot-ledger .aat-section-head {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
@@ -6156,6 +6326,16 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     }
 
     .aat-ceremony-dossier .aat-hub-metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .aat-major-race-grid,
+    .aat-major-race-card.is-best-picture {
+        grid-template-columns: minmax(0, 1fr);
+        grid-column: auto;
+    }
+
+    .aat-major-race-card.is-best-picture .aat-major-race-nominee-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -6232,8 +6412,36 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
 
     .aat-ceremony-command-band,
     .aat-ceremony-dossier .aat-hub-metric-grid,
+    .aat-ceremony-major-races .aat-section-head,
+    .aat-major-race-grid,
+    .aat-major-race-card,
+    .aat-major-race-card.is-best-picture,
+    .aat-major-race-feature,
+    .aat-major-race-card.is-best-picture .aat-major-race-feature,
+    .aat-major-race-nominee-list,
+    .aat-major-race-card.is-best-picture .aat-major-race-nominee-list,
     .aat-ceremony-dossier .aat-ceremony-ballot-row {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .aat-ceremony-major-races {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .aat-major-race-media {
+        width: min(148px, 100%);
+    }
+
+    .aat-major-race-title,
+    .aat-major-race-meta,
+    .aat-major-race-summary,
+    .aat-major-race-nominee-primary,
+    .aat-major-race-nominee-secondary {
+        max-width: 29ch;
+        overflow-wrap: anywhere;
+        text-wrap: auto;
+        white-space: normal;
     }
 
     .aat-ceremony-command-card,
