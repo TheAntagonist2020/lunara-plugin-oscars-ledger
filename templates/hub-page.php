@@ -440,6 +440,21 @@ $aat_get_visual_package = function($film_id, $size = 'medium_large') use ($aat) 
     return $visual_cache[$cache_key];
 };
 
+$aat_extract_title_ids = function($entry) {
+    $title_ids = array();
+
+    foreach (explode('|', (string) ($entry['film_id'] ?? '')) as $candidate_title_id) {
+        $candidate_title_id = strtolower(trim((string) $candidate_title_id));
+        if ($candidate_title_id === '' || !preg_match('/^tt\d+$/', $candidate_title_id)) {
+            continue;
+        }
+
+        $title_ids[$candidate_title_id] = true;
+    }
+
+    return array_keys($title_ids);
+};
+
 $aat_get_curated_winner_photo_map = function() {
     $map = array();
 
@@ -894,6 +909,124 @@ get_header();
                     return intval($left['major_rank'] ?? 999) <=> intval($right['major_rank'] ?? 999);
                 });
             }
+
+            $ceremony_major_briefing_cards = array();
+            $ceremony_major_nominee_total = 0;
+            $ceremony_major_completed_count = 0;
+            $ceremony_major_reviewed_titles = array();
+            $ceremony_major_category_links = array();
+
+            foreach ($ceremony_major_race_groups as $briefing_group) {
+                $briefing_category = trim((string) ($briefing_group['category'] ?? ''));
+                $briefing_category_key = strtoupper($briefing_category);
+                $briefing_label = trim((string) ($briefing_group['label'] ?? $aat->format_category_display($briefing_category)));
+                $briefing_url = trim((string) ($briefing_group['url'] ?? ($briefing_category !== '' ? $aat->get_category_url($briefing_category) : '')));
+                $briefing_rows = !empty($briefing_group['rows']) && is_array($briefing_group['rows']) ? $briefing_group['rows'] : array();
+                $briefing_winner_rows = array_values(array_filter($briefing_rows, function($candidate_row) {
+                    return !empty($candidate_row['winner']);
+                }));
+                $briefing_winner_row = !empty($briefing_winner_rows[0]) ? $aat_enrich_winner_entry_links($briefing_winner_rows[0]) : array();
+                $briefing_winner_label = trim((string) ($briefing_winner_row['primary_label'] ?? (!empty($briefing_winner_row) ? $aat_winner_primary($briefing_winner_row) : '')));
+                $briefing_winner_url = !empty($briefing_winner_row['primary_url']) ? (string) $briefing_winner_row['primary_url'] : '';
+                $briefing_secondary_label = trim((string) ($briefing_winner_row['secondary_label'] ?? (!empty($briefing_winner_row) ? $aat_winner_secondary($briefing_winner_row) : '')));
+                $briefing_review_count = 0;
+
+                foreach ($briefing_rows as $briefing_row) {
+                    foreach ($aat_extract_title_ids($briefing_row) as $briefing_title_id) {
+                        if (empty($ceremony_review_map[$briefing_title_id]) || isset($ceremony_major_reviewed_titles[$briefing_title_id])) {
+                            continue;
+                        }
+
+                        $briefing_review_count++;
+                        $ceremony_major_reviewed_titles[$briefing_title_id] = true;
+                    }
+                }
+
+                $ceremony_major_nominee_total += count($briefing_rows);
+                if (!empty($briefing_winner_rows)) {
+                    $ceremony_major_completed_count++;
+                }
+
+                if ($briefing_url !== '') {
+                    $ceremony_major_category_links[$briefing_category_key] = array(
+                        'label' => $briefing_label,
+                        'url'   => $briefing_url,
+                    );
+                }
+
+                $ceremony_major_briefing_cards[] = array(
+                    'category'        => $briefing_category,
+                    'category_key'    => $briefing_category_key,
+                    'label'           => $briefing_label,
+                    'url'             => $briefing_url,
+                    'field_count'     => count($briefing_rows),
+                    'winner_label'    => $briefing_winner_label,
+                    'winner_url'      => $briefing_winner_url,
+                    'secondary_label' => $briefing_secondary_label,
+                    'review_count'    => $briefing_review_count,
+                    'is_complete'     => !empty($briefing_winner_rows),
+                );
+            }
+
+            $ceremony_major_review_total = count($ceremony_major_reviewed_titles);
+            $best_picture_display_label = !empty($best_picture['film']) ? $aat_pipe_display((string) $best_picture['film']) : '';
+            $most_wins_display_label = !empty($most_wins['film']) ? $aat_pipe_display((string) $most_wins['film']) : '';
+            $ceremony_thesis_headline = __('The annual file starts with the major races.', 'academy-awards-table');
+            if ($best_picture_display_label !== '' && $most_wins_display_label !== '' && strcasecmp($best_picture_display_label, $most_wins_display_label) !== 0) {
+                $ceremony_thesis_headline = sprintf(
+                    /* translators: 1: Best Picture winner, 2: most-winning title */
+                    __('%1$s took Picture; %2$s controlled the board.', 'academy-awards-table'),
+                    $best_picture_display_label,
+                    $most_wins_display_label
+                );
+            } elseif ($best_picture_display_label !== '') {
+                $ceremony_thesis_headline = sprintf(
+                    /* translators: 1: ceremony year, 2: Best Picture winner */
+                    __('The %s ceremony centers on %s.', 'academy-awards-table'),
+                    (string) $year_label,
+                    $best_picture_display_label
+                );
+            }
+
+            $ceremony_thesis_copy = sprintf(
+                /* translators: 1: completed races, 2: total major races, 3: nominee count, 4: total winner count, 5: category count */
+                __('This dossier opens with the four races readers check first: Picture, Director, Actor, and Actress. %1$s of %2$s major races have winners recorded, with %3$s major-field records feeding into the full %4$s/%5$s ceremony ledger below.', 'academy-awards-table'),
+                number_format_i18n($ceremony_major_completed_count),
+                number_format_i18n(count($ceremony_major_race_order)),
+                number_format_i18n($ceremony_major_nominee_total),
+                number_format_i18n($wins),
+                number_format_i18n($cats_count)
+            );
+
+            $ceremony_critical_links = array(
+                array(
+                    'label' => __('Full Ballot', 'academy-awards-table'),
+                    'url'   => $ceremony_ballot_full_url,
+                    'kind'  => 'ceremony',
+                ),
+                array(
+                    'label' => __('Winner Circle', 'academy-awards-table'),
+                    'url'   => '#ceremony-winner-circle',
+                    'kind'  => 'winner',
+                ),
+                array(
+                    'label' => __('All Ceremonies', 'academy-awards-table'),
+                    'url'   => $aat->get_ceremonies_index_url(),
+                    'kind'  => 'ceremony',
+                ),
+            );
+
+            foreach ($ceremony_major_race_order as $critical_category_key) {
+                if (empty($ceremony_major_category_links[$critical_category_key])) {
+                    continue;
+                }
+
+                $ceremony_critical_links[] = array(
+                    'label' => $ceremony_major_category_links[$critical_category_key]['label'],
+                    'url'   => $ceremony_major_category_links[$critical_category_key]['url'],
+                    'kind'  => 'category',
+                );
+            }
     ?>
         <div class="aat-ceremony-dossier">
             <style>
@@ -975,6 +1108,62 @@ get_header();
                     <?php endif; ?>
                 </div>
             </nav>
+        <?php endif; ?>
+
+        <?php if (!empty($ceremony_major_briefing_cards)) : ?>
+            <section class="aat-hub-section aat-ceremony-thesis" aria-label="<?php echo esc_attr__('Ceremony thesis and major race briefing', 'academy-awards-table'); ?>">
+                <div class="aat-ceremony-thesis-copy">
+                    <p class="aat-hub-kicker"><?php echo esc_html__('Annual Thesis', 'academy-awards-table'); ?></p>
+                    <h2><?php echo esc_html($ceremony_thesis_headline); ?></h2>
+                    <p class="aat-hub-copy"><?php echo esc_html($ceremony_thesis_copy); ?></p>
+                    <div class="aat-ceremony-thesis-stats" aria-label="<?php echo esc_attr__('Major race status', 'academy-awards-table'); ?>">
+                        <span><strong><?php echo esc_html(number_format_i18n(count($ceremony_major_briefing_cards))); ?></strong><?php echo esc_html__('major races', 'academy-awards-table'); ?></span>
+                        <span><strong><?php echo esc_html(number_format_i18n($ceremony_major_nominee_total)); ?></strong><?php echo esc_html__('major-field records', 'academy-awards-table'); ?></span>
+                        <span><strong><?php echo esc_html(number_format_i18n($ceremony_major_completed_count)); ?>/<?php echo esc_html(number_format_i18n(count($ceremony_major_race_order))); ?></strong><?php echo esc_html__('winners recorded', 'academy-awards-table'); ?></span>
+                        <?php if ($ceremony_major_review_total > 0) : ?>
+                            <span><strong><?php echo esc_html(number_format_i18n($ceremony_major_review_total)); ?></strong><?php echo esc_html__('linked reviews', 'academy-awards-table'); ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="aat-ceremony-critical-path" aria-label="<?php echo esc_attr__('Ceremony critical path links', 'academy-awards-table'); ?>">
+                        <?php foreach ($ceremony_critical_links as $critical_link) : ?>
+                            <a class="aat-hub-card-action aat-winner-circle-action is-kind-<?php echo esc_attr($critical_link['kind']); ?>" href="<?php echo esc_url($critical_link['url']); ?>"><?php echo esc_html($critical_link['label']); ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <div class="aat-major-race-briefing" aria-label="<?php echo esc_attr__('Major race briefing cards', 'academy-awards-table'); ?>">
+                    <?php foreach ($ceremony_major_briefing_cards as $briefing_card) : ?>
+                        <article class="aat-major-race-briefing-card<?php echo !empty($briefing_card['is_complete']) ? ' is-complete' : ' is-pending'; ?>">
+                            <div class="aat-major-race-briefing-head">
+                                <?php echo $aat_render_hub_text_link((string) $briefing_card['label'], (string) $briefing_card['url'], 'aat-major-race-category aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                <span class="<?php echo !empty($briefing_card['is_complete']) ? 'aat-winner-badge' : 'aat-nominee-badge'; ?>"><?php echo esc_html(!empty($briefing_card['is_complete']) ? __('Winner Set', 'academy-awards-table') : __('Open Field', 'academy-awards-table')); ?></span>
+                            </div>
+                            <?php if (!empty($briefing_card['winner_label'])) : ?>
+                                <h3>
+                                    <?php echo $aat_render_hub_text_link((string) $briefing_card['winner_label'], (string) $briefing_card['winner_url'], 'aat-hub-inline-link aat-hub-inline-link-title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                </h3>
+                            <?php endif; ?>
+                            <?php if (!empty($briefing_card['secondary_label'])) : ?>
+                                <p class="aat-major-race-briefing-secondary"><?php echo esc_html($briefing_card['secondary_label']); ?></p>
+                            <?php endif; ?>
+                            <p class="aat-major-race-briefing-meta">
+                                <?php echo esc_html(sprintf(
+                                    /* translators: %s: nominee count */
+                                    _n('%s record', '%s records', intval($briefing_card['field_count']), 'academy-awards-table'),
+                                    number_format_i18n(intval($briefing_card['field_count']))
+                                )); ?>
+                                <?php if (intval($briefing_card['review_count']) > 0) : ?>
+                                    <span><?php echo esc_html(sprintf(
+                                        /* translators: %s: review count */
+                                        _n('%s linked review', '%s linked reviews', intval($briefing_card['review_count']), 'academy-awards-table'),
+                                        number_format_i18n(intval($briefing_card['review_count']))
+                                    )); ?></span>
+                                <?php endif; ?>
+                            </p>
+                            <a class="aat-major-race-briefing-jump" href="<?php echo esc_url($ceremony_ballot_full_url . '#ceremony-category-' . sanitize_title((string) $briefing_card['category'])); ?>"><?php echo esc_html__('Open race ledger', 'academy-awards-table'); ?></a>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            </section>
         <?php endif; ?>
 
         <?php if (!empty($ceremony_rollup)) :
@@ -1553,7 +1742,7 @@ get_header();
         <?php endif; ?>
 
         <?php if (!empty($ceremony_rollup['winner_rows'])) : ?>
-            <div class="aat-hub-section aat-winner-circle-section<?php echo $is_latest_ceremony ? ' is-hero-latest' : ''; ?>">
+            <div class="aat-hub-section aat-winner-circle-section<?php echo $is_latest_ceremony ? ' is-hero-latest' : ''; ?>" id="ceremony-winner-circle">
                 <h2><?php echo esc_html__('Winner Circle', 'academy-awards-table'); ?></h2>
                 <p class="aat-hub-copy"><?php echo esc_html__('A category-by-category winner roll call generated directly from the ceremony ledger.', 'academy-awards-table'); ?></p>
                 <div class="aat-winner-circle-grid<?php echo $is_latest_ceremony ? ' is-hero-latest' : ''; ?>">

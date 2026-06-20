@@ -6103,6 +6103,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     max-width: 100%;
 }
 
+.aat-ceremony-dossier .aat-ceremony-thesis,
 .aat-ceremony-dossier .aat-ceremony-marquee,
 .aat-ceremony-dossier .aat-ceremony-ballot-ledger,
 .aat-ceremony-dossier .aat-ceremony-gallery-section,
@@ -6114,6 +6115,145 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
 .aat-ceremony-dossier .aat-hub-metric-grid {
     margin: 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.aat-ceremony-thesis {
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    gap: clamp(18px, 3vw, 30px);
+    align-items: stretch;
+    padding: clamp(20px, 3vw, 32px);
+    border: 1px solid rgba(201,169,97,.2);
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 8% 10%, rgba(201,169,97,.16), transparent 34%),
+        linear-gradient(135deg, rgba(255,255,255,.052), rgba(255,255,255,.016)),
+        rgba(6,15,26,.72);
+    overflow: hidden;
+}
+
+.aat-ceremony-thesis-copy {
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    min-width: 0;
+}
+
+.aat-ceremony-thesis h2 {
+    margin: 0;
+    max-width: 15ch;
+    color: var(--aat-white);
+    font-size: clamp(2rem, 3.4vw, 3.65rem);
+    line-height: 1.02;
+    text-wrap: balance;
+}
+
+.aat-ceremony-thesis .aat-hub-copy {
+    margin: 0;
+    max-width: 62ch;
+}
+
+.aat-ceremony-thesis-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    min-width: 0;
+}
+
+.aat-ceremony-thesis-stats span {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    padding: 11px 12px;
+    border: 1px solid rgba(201,169,97,.14);
+    border-radius: 11px;
+    background: rgba(2,8,15,.36);
+    color: rgba(255,255,255,.64);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .11em;
+    line-height: 1.25;
+    text-transform: uppercase;
+}
+
+.aat-ceremony-thesis-stats strong {
+    color: var(--aat-gold);
+    font-size: clamp(1.15rem, 2vw, 1.65rem);
+    letter-spacing: 0;
+    line-height: 1;
+}
+
+.aat-ceremony-critical-path,
+.aat-major-race-briefing-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.aat-ceremony-critical-path {
+    padding-top: 4px;
+}
+
+.aat-major-race-briefing {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    min-width: 0;
+}
+
+.aat-major-race-briefing-card {
+    display: grid;
+    align-content: start;
+    gap: 9px;
+    min-width: 0;
+    padding: clamp(14px, 2.2vw, 19px);
+    border: 1px solid rgba(201,169,97,.16);
+    border-radius: 14px;
+    background:
+        linear-gradient(145deg, rgba(14,28,44,.84), rgba(6,15,26,.94)),
+        rgba(6,15,26,.78);
+    box-shadow: 0 16px 34px rgba(0,0,0,.16);
+}
+
+.aat-major-race-briefing-card.is-complete {
+    border-color: rgba(201,169,97,.26);
+}
+
+.aat-major-race-briefing-card h3 {
+    margin: 0;
+    color: var(--aat-white);
+    font-size: clamp(1.08rem, 1.55vw, 1.42rem);
+    line-height: 1.08;
+    text-wrap: balance;
+}
+
+.aat-major-race-briefing-secondary,
+.aat-major-race-briefing-meta {
+    margin: 0;
+    color: rgba(255,255,255,.62);
+    font-size: .84rem;
+    line-height: 1.42;
+}
+
+.aat-major-race-briefing-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    color: rgba(255,255,255,.72);
+}
+
+.aat-major-race-briefing-meta span {
+    color: var(--aat-gold-light);
+}
+
+.aat-major-race-briefing-jump {
+    justify-self: start;
+    color: var(--aat-gold);
+    font-size: .7rem;
+    font-weight: 900;
+    letter-spacing: .12em;
+    text-transform: uppercase;
 }
 
 .aat-ceremony-major-races {
@@ -6325,6 +6465,11 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
         grid-template-columns: minmax(0, 1fr);
     }
 
+    .aat-ceremony-thesis,
+    .aat-major-race-briefing {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .aat-ceremony-dossier .aat-hub-metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -6362,6 +6507,9 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     .aat-ceremony-dossier-hero,
     .aat-ceremony-command-band,
     .aat-ceremony-command-card,
+    .aat-ceremony-thesis,
+    .aat-major-race-briefing,
+    .aat-major-race-briefing-card,
     .aat-ceremony-dossier .aat-ceremony-ballot-row,
     .aat-ceremony-dossier .aat-ceremony-ballot-copy {
         min-width: 0;
@@ -6386,6 +6534,11 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     .aat-ceremony-dossier .aat-ceremony-neighbor-card,
     .aat-ceremony-dossier .aat-ceremony-neighbor-card strong,
     .aat-ceremony-dossier .aat-ceremony-neighbor-index,
+    .aat-ceremony-dossier .aat-ceremony-thesis h2,
+    .aat-ceremony-dossier .aat-ceremony-thesis .aat-hub-copy,
+    .aat-ceremony-dossier .aat-major-race-briefing-card h3,
+    .aat-ceremony-dossier .aat-major-race-briefing-secondary,
+    .aat-ceremony-dossier .aat-major-race-briefing-meta,
     .aat-ceremony-dossier .aat-ceremony-marquee .aat-hub-copy,
     .aat-ceremony-dossier .aat-ceremony-marquee .aat-hub-copy *,
     .aat-ceremony-dossier .aat-ceremony-ballot-copy h4,
@@ -6412,6 +6565,9 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
 
     .aat-ceremony-command-band,
     .aat-ceremony-dossier .aat-hub-metric-grid,
+    .aat-ceremony-thesis,
+    .aat-ceremony-thesis-stats,
+    .aat-major-race-briefing,
     .aat-ceremony-major-races .aat-section-head,
     .aat-major-race-grid,
     .aat-major-race-card,
@@ -6425,6 +6581,11 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     }
 
     .aat-ceremony-major-races {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .aat-ceremony-thesis {
         padding: 15px;
         border-radius: 12px;
     }
