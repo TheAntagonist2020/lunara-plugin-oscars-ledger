@@ -1119,6 +1119,110 @@
     min-width: 0;
 }
 
+.aat-ceremony-writeups-toolbar {
+    display: grid;
+    gap: 14px;
+    margin: 12px 0 16px;
+}
+
+.aat-ceremony-writeups-filter-bar {
+    align-items: end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.aat-ceremony-writeups-filter-bar label {
+    display: grid;
+    gap: 4px;
+}
+
+.aat-ceremony-writeups-filter-bar label span {
+    color: #646970;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.aat-ceremony-writeups-filter-bar input[type="search"] {
+    min-width: 240px;
+}
+
+.aat-ceremony-writeups-counts {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.aat-ceremony-writeups-count {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    color: #1d2327;
+    display: grid;
+    gap: 4px;
+    min-height: 58px;
+    padding: 10px 12px;
+    text-decoration: none;
+}
+
+.aat-ceremony-writeups-count:hover,
+.aat-ceremony-writeups-count:focus,
+.aat-ceremony-writeups-count.is-active {
+    background: #fff8e5;
+    border-color: #c9a961;
+    color: #0a1520;
+}
+
+.aat-ceremony-writeups-count span {
+    color: #646970;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.aat-ceremony-writeups-count strong {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.aat-ceremony-writeups-row-title {
+    color: #646970;
+    display: block;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.aat-ceremony-writeups-status {
+    border: 1px solid #dcdcde;
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    padding: 3px 8px;
+    text-transform: uppercase;
+}
+
+.aat-ceremony-writeups-status.is-approved {
+    background: #edfaef;
+    border-color: #68de7c;
+    color: #0a6b1f;
+}
+
+.aat-ceremony-writeups-status.is-needs_review {
+    background: #fff8e5;
+    border-color: #c9a961;
+    color: #7a5600;
+}
+
+.aat-ceremony-writeups-status.is-hidden {
+    background: #f6f7f7;
+    color: #646970;
+}
+
 .aat-ceremony-writeups-list tr.is-selected td {
     background: #fff8e5;
 }
@@ -1132,5 +1236,9 @@
     .aat-admin-stat-grid,
     .aat-ceremony-writeups-grid {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .aat-ceremony-writeups-counts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

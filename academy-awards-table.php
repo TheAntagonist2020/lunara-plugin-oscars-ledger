@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.28
+ * Version: 2.7.29
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.28');
+define('AAT_VERSION', '2.7.29');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -5796,13 +5796,18 @@ class Academy_Awards_Table {
             }
         }
 
-        $rows = $this->get_ceremony_writeups_admin_rows();
+        $filter_state = $this->get_ceremony_writeup_filter_state();
+        $status_filter = (string) $filter_state['status'];
+        $search = (string) $filter_state['search'];
+        $rows = $this->get_ceremony_writeups_admin_rows($status_filter, $search);
+        $counts = $this->get_ceremony_writeups_admin_counts($search);
         $selected_ceremony = isset($_GET['ceremony']) ? absint($_GET['ceremony']) : 0;
         if ($selected_ceremony <= 0 && !empty($rows[0]['ceremony_number'])) {
             $selected_ceremony = (int) $rows[0]['ceremony_number'];
         }
         $selected_row = $selected_ceremony > 0 ? $this->get_ceremony_writeup_record($selected_ceremony) : array();
         $statuses = $this->get_ceremony_writeup_status_labels();
+        $status_filter_labels = array_merge(array('all' => __('All', 'academy-awards-table')), $statuses);
         ?>
         <div class="wrap aat-admin-page aat-ceremony-writeups-admin">
             <h1><?php echo esc_html__('Ceremony Write-Ups', 'academy-awards-table'); ?></h1>
@@ -5854,8 +5859,42 @@ class Academy_Awards_Table {
             <section class="aat-admin-panel aat-ceremony-writeups-grid">
                 <div class="aat-ceremony-writeups-list">
                     <h2><?php echo esc_html__('Review Queue', 'academy-awards-table'); ?></h2>
+                    <div class="aat-ceremony-writeups-toolbar">
+                        <form class="aat-ceremony-writeups-filter-bar" method="get">
+                            <input type="hidden" name="page" value="academy-awards-ceremony-writeups" />
+                            <label for="aat_ceremony_writeup_status_filter">
+                                <span><?php echo esc_html__('Status', 'academy-awards-table'); ?></span>
+                                <select id="aat_ceremony_writeup_status_filter" name="aat_ceremony_writeup_status_filter">
+                                    <?php foreach ($status_filter_labels as $status_key => $status_label) : ?>
+                                        <option value="<?php echo esc_attr($status_key); ?>" <?php selected($status_filter, $status_key); ?>><?php echo esc_html($status_label); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
+                            <label for="aat_ceremony_writeup_search">
+                                <span><?php echo esc_html__('Search', 'academy-awards-table'); ?></span>
+                                <input id="aat_ceremony_writeup_search" name="aat_ceremony_writeup_search" type="search" value="<?php echo esc_attr($search); ?>" placeholder="<?php echo esc_attr__('ceremony, headline, note...', 'academy-awards-table'); ?>" />
+                            </label>
+                            <?php submit_button(__('Filter', 'academy-awards-table'), 'secondary', 'submit', false); ?>
+                            <a class="button-link" href="<?php echo esc_url($this->get_ceremony_writeups_admin_url()); ?>"><?php echo esc_html__('Reset', 'academy-awards-table'); ?></a>
+                        </form>
+                        <div class="aat-ceremony-writeups-counts" aria-label="<?php echo esc_attr__('Ceremony write-up status counts', 'academy-awards-table'); ?>">
+                            <?php foreach ($status_filter_labels as $status_key => $status_label) : ?>
+                                <?php
+                                $count_args = array('aat_ceremony_writeup_status_filter' => $status_key);
+                                if ($search !== '') {
+                                    $count_args['aat_ceremony_writeup_search'] = $search;
+                                }
+                                $count = (int) ($counts[$status_key] ?? 0);
+                                ?>
+                                <a class="aat-ceremony-writeups-count<?php echo $status_filter === $status_key ? ' is-active' : ''; ?>" href="<?php echo esc_url($this->get_ceremony_writeups_admin_url($count_args)); ?>">
+                                    <span><?php echo esc_html($status_label); ?></span>
+                                    <strong><?php echo esc_html(number_format_i18n($count)); ?></strong>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                     <?php if (empty($rows)) : ?>
-                        <p><?php echo esc_html__('No ceremony write-ups are staged yet.', 'academy-awards-table'); ?></p>
+                        <p><?php echo esc_html__('No ceremony write-ups match this queue view.', 'academy-awards-table'); ?></p>
                     <?php else : ?>
                         <table class="widefat striped">
                             <thead><tr><th><?php echo esc_html__('Ceremony', 'academy-awards-table'); ?></th><th><?php echo esc_html__('Status', 'academy-awards-table'); ?></th><th><?php echo esc_html__('Updated', 'academy-awards-table'); ?></th><th><?php echo esc_html__('Links', 'academy-awards-table'); ?></th></tr></thead>
@@ -5863,8 +5902,13 @@ class Academy_Awards_Table {
                                 <?php foreach ($rows as $row) : ?>
                                     <?php $row_ceremony = (int) ($row['ceremony_number'] ?? 0); ?>
                                     <tr<?php echo $row_ceremony === $selected_ceremony ? ' class="is-selected"' : ''; ?>>
-                                        <td><a href="<?php echo esc_url(add_query_arg(array('page' => 'academy-awards-ceremony-writeups', 'ceremony' => $row_ceremony), admin_url('admin.php'))); ?>"><?php echo esc_html((string) ($row['ceremony_label'] ?? '')); ?></a></td>
-                                        <td><?php echo esc_html($statuses[$row['status']] ?? (string) $row['status']); ?></td>
+                                        <td>
+                                            <a href="<?php echo esc_url($this->get_ceremony_writeups_admin_url(array('ceremony' => $row_ceremony, 'aat_ceremony_writeup_status_filter' => $status_filter, 'aat_ceremony_writeup_search' => $search))); ?>"><?php echo esc_html((string) ($row['ceremony_label'] ?? '')); ?></a>
+                                            <?php if (!empty($row['headline'])) : ?>
+                                                <span class="aat-ceremony-writeups-row-title"><?php echo esc_html((string) $row['headline']); ?></span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><span class="aat-ceremony-writeups-status is-<?php echo esc_attr(sanitize_html_class((string) ($row['status'] ?? 'draft'))); ?>"><?php echo esc_html($statuses[$row['status']] ?? (string) $row['status']); ?></span></td>
                                         <td><?php echo esc_html((string) ($row['updated_at'] ?? '')); ?></td>
                                         <td><a href="<?php echo esc_url($this->get_ceremony_url($row_ceremony)); ?>" target="_blank" rel="noopener"><?php echo esc_html__('Preview route', 'academy-awards-table'); ?></a></td>
                                     </tr>
@@ -5882,6 +5926,8 @@ class Academy_Awards_Table {
                         <form method="post">
                             <?php wp_nonce_field('aat_ceremony_writeup_save', 'aat_ceremony_writeup_save_nonce'); ?>
                             <input type="hidden" name="aat_ceremony_writeup_ceremony" value="<?php echo esc_attr((string) $selected_ceremony); ?>" />
+                            <input type="hidden" name="aat_ceremony_writeup_status_filter" value="<?php echo esc_attr($status_filter); ?>" />
+                            <input type="hidden" name="aat_ceremony_writeup_search" value="<?php echo esc_attr($search); ?>" />
                             <p>
                                 <label for="aat_ceremony_writeup_status"><strong><?php echo esc_html__('Status', 'academy-awards-table'); ?></strong></label><br />
                                 <select id="aat_ceremony_writeup_status" name="aat_ceremony_writeup_status">
@@ -5922,6 +5968,63 @@ class Academy_Awards_Table {
             AAT_Ceremony_Writeups::STATUS_APPROVED     => __('Approved', 'academy-awards-table'),
             AAT_Ceremony_Writeups::STATUS_HIDDEN       => __('Hidden', 'academy-awards-table'),
         );
+    }
+
+    private function sanitize_ceremony_writeup_status_filter($status) {
+        $status = sanitize_key((string) $status);
+        if ($status === '' || $status === 'all') {
+            return 'all';
+        }
+
+        $statuses = AAT_Ceremony_Writeups::get_statuses();
+        return isset($statuses[$status]) ? $status : 'all';
+    }
+
+    private function normalize_ceremony_writeup_search($search) {
+        $search = trim(sanitize_text_field((string) $search));
+        if (function_exists('mb_substr')) {
+            return mb_substr($search, 0, 120);
+        }
+
+        return substr($search, 0, 120);
+    }
+
+    private function get_ceremony_writeup_filter_state() {
+        $status = isset($_GET['aat_ceremony_writeup_status_filter']) ? wp_unslash($_GET['aat_ceremony_writeup_status_filter']) : 'all';
+        $search = isset($_GET['aat_ceremony_writeup_search']) ? wp_unslash($_GET['aat_ceremony_writeup_search']) : '';
+
+        return array(
+            'status' => $this->sanitize_ceremony_writeup_status_filter($status),
+            'search' => $this->normalize_ceremony_writeup_search($search),
+        );
+    }
+
+    private function get_ceremony_writeups_admin_url($args = array()) {
+        $query = array('page' => 'academy-awards-ceremony-writeups');
+        foreach ((array) $args as $key => $value) {
+            if ($key === 'aat_ceremony_writeup_status_filter') {
+                $value = $this->sanitize_ceremony_writeup_status_filter($value);
+                if ($value === 'all') {
+                    continue;
+                }
+            } elseif ($key === 'aat_ceremony_writeup_search') {
+                $value = $this->normalize_ceremony_writeup_search($value);
+                if ($value === '') {
+                    continue;
+                }
+            } elseif ($key === 'ceremony') {
+                $value = absint($value);
+                if ($value <= 0) {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+
+            $query[$key] = $value;
+        }
+
+        return add_query_arg($query, admin_url('admin.php'));
     }
 
     private function get_ceremony_writeups_preview_transient_key($source_hash) {
@@ -6117,7 +6220,66 @@ class Academy_Awards_Table {
         return array('ceremony' => $ceremony);
     }
 
-    private function get_ceremony_writeups_admin_rows() {
+    private function get_ceremony_writeups_search_sql($search, &$args) {
+        global $wpdb;
+
+        $search = $this->normalize_ceremony_writeup_search($search);
+        if ($search === '') {
+            return '';
+        }
+
+        $like = '%' . $wpdb->esc_like($search) . '%';
+        $args[] = $like;
+        $args[] = $like;
+        $args[] = $like;
+        $args[] = $like;
+        $args[] = $like;
+
+        return '(ceremony_label LIKE %s OR headline LIKE %s OR dek LIKE %s OR body LIKE %s OR source_notes LIKE %s)';
+    }
+
+    private function get_ceremony_writeups_admin_counts($search = '') {
+        global $wpdb;
+        $table = $this->get_ceremony_writeups_table_name();
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        $statuses = AAT_Ceremony_Writeups::get_statuses();
+        $counts = array('all' => 0);
+        foreach ($statuses as $status_key => $status_label) {
+            $counts[$status_key] = 0;
+        }
+
+        if ($exists !== $table) {
+            return $counts;
+        }
+
+        $args = array();
+        $where = $this->get_ceremony_writeups_search_sql($search, $args);
+        $sql = "SELECT status, COUNT(*) AS total FROM $table";
+        if ($where !== '') {
+            $sql .= ' WHERE ' . $where;
+        }
+        $sql .= ' GROUP BY status';
+
+        if (!empty($args)) {
+            $sql = $wpdb->prepare($sql, $args);
+        }
+
+        $rows = $wpdb->get_results($sql, ARRAY_A);
+        if (!is_array($rows)) {
+            return $counts;
+        }
+
+        foreach ($rows as $row) {
+            $status = AAT_Ceremony_Writeups::sanitize_status($row['status'] ?? '');
+            $total = (int) ($row['total'] ?? 0);
+            $counts[$status] = $total;
+            $counts['all'] += $total;
+        }
+
+        return $counts;
+    }
+
+    private function get_ceremony_writeups_admin_rows($status_filter = 'all', $search = '') {
         global $wpdb;
         $table = $this->get_ceremony_writeups_table_name();
         $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
@@ -6125,7 +6287,30 @@ class Academy_Awards_Table {
             return array();
         }
 
-        $rows = $wpdb->get_results("SELECT ceremony_number, ceremony_label, status, source_hash, updated_at FROM $table ORDER BY ceremony_number DESC", ARRAY_A);
+        $status_filter = $this->sanitize_ceremony_writeup_status_filter($status_filter);
+        $args = array();
+        $clauses = array();
+        if ($status_filter !== 'all') {
+            $clauses[] = 'status = %s';
+            $args[] = $status_filter;
+        }
+
+        $search_clause = $this->get_ceremony_writeups_search_sql($search, $args);
+        if ($search_clause !== '') {
+            $clauses[] = $search_clause;
+        }
+
+        $sql = "SELECT ceremony_number, ceremony_label, headline, status, source_hash, updated_at FROM $table";
+        if (!empty($clauses)) {
+            $sql .= ' WHERE ' . implode(' AND ', $clauses);
+        }
+        $sql .= ' ORDER BY ceremony_number DESC';
+
+        if (!empty($args)) {
+            $sql = $wpdb->prepare($sql, $args);
+        }
+
+        $rows = $wpdb->get_results($sql, ARRAY_A);
         return is_array($rows) ? $rows : array();
     }
 

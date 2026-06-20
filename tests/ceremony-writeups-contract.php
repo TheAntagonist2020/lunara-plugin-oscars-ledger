@@ -57,6 +57,28 @@ $approved_function = $approved_start !== false && $approved_end !== false ? subs
 $assert(strpos($approved_function, 'decode_ceremony_writeup_text_fields') !== false, 'Approved public write-up accessor should decode public text before templates escape it.');
 $assert(strpos($approved_function, 'body_hex') !== false, 'Approved public write-up accessor should decode body text from database hex bytes.');
 
+$admin_start = strpos($plugin_source, 'public function render_ceremony_writeups_admin_page');
+$admin_end = strpos($plugin_source, 'private function get_ceremony_writeup_status_labels', $admin_start);
+$admin_function = $admin_start !== false && $admin_end !== false ? substr($plugin_source, $admin_start, $admin_end - $admin_start) : '';
+$rows_start = strpos($plugin_source, 'private function get_ceremony_writeups_admin_rows');
+$rows_end = strpos($plugin_source, 'private function decode_ceremony_writeup_text_fields', $rows_start);
+$rows_function = $rows_start !== false && $rows_end !== false ? substr($plugin_source, $rows_start, $rows_end - $rows_start) : '';
+$search_start = strpos($plugin_source, 'private function get_ceremony_writeups_search_sql');
+$search_end = strpos($plugin_source, 'private function get_ceremony_writeups_admin_counts', $search_start);
+$search_function = $search_start !== false && $search_end !== false ? substr($plugin_source, $search_start, $search_end - $search_start) : '';
+$assert(strpos($plugin_source, 'private function sanitize_ceremony_writeup_status_filter') !== false, 'Admin queue should sanitize status filters.');
+$assert(strpos($plugin_source, 'private function get_ceremony_writeup_filter_state') !== false, 'Admin queue should centralize filter/search request state.');
+$assert(strpos($plugin_source, 'private function get_ceremony_writeups_admin_counts') !== false, 'Admin queue should expose status counts.');
+$assert(strpos($plugin_source, 'private function get_ceremony_writeups_admin_url') !== false, 'Admin queue should build context-preserving admin URLs.');
+$assert(strpos($admin_function, 'aat_ceremony_writeup_status_filter') !== false, 'Admin queue should render a status filter control.');
+$assert(strpos($admin_function, 'aat_ceremony_writeup_search') !== false, 'Admin queue should render a search control.');
+$assert(strpos($admin_function, 'aat-ceremony-writeups-filter-bar') !== false, 'Admin queue should render a dedicated filter bar.');
+$assert(strpos($admin_function, 'aat-ceremony-writeups-counts') !== false, 'Admin queue should render queue counts.');
+$assert(strpos($rows_function, '$status_filter') !== false, 'Admin row query should accept a status filter.');
+$assert(strpos($rows_function, '$search') !== false, 'Admin row query should accept a search term.');
+$assert(strpos($rows_function, '$wpdb->prepare') !== false, 'Filtered/search admin row query should use prepared SQL.');
+$assert(strpos($search_function, 'source_notes') !== false, 'Private source notes should be searchable only inside the admin queue.');
+
 $sql = AAT_Ceremony_Writeups::get_create_table_sql('wp_aat_ceremony_writeups', 'DEFAULT CHARSET=utf8mb4');
 $assert(strpos($sql, 'CREATE TABLE IF NOT EXISTS wp_aat_ceremony_writeups') !== false, 'Schema SQL should target the write-up table.');
 $assert(strpos($sql, 'ceremony_number int(3) NOT NULL') !== false, 'Schema SQL should include ceremony_number.');
