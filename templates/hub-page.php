@@ -1120,10 +1120,19 @@ get_header();
             <section class="aat-hub-section aat-ceremony-editorial-writeup" aria-label="<?php echo esc_attr__('Ceremony editorial guide', 'academy-awards-table'); ?>">
                 <div class="aat-ceremony-editorial-heading">
                     <p class="aat-hub-kicker aat-ceremony-guide-kicker"><?php echo esc_html__('Ceremony Guide', 'academy-awards-table'); ?></p>
+                    <span class="aat-ceremony-guide-file"><?php echo esc_html__('Guide File', 'academy-awards-table'); ?></span>
                     <h2><?php echo esc_html($ceremony_editorial_headline !== '' ? $ceremony_editorial_headline : (string) ($ceremony_editorial_writeup['ceremony_label'] ?? $ceremony_dossier_label)); ?></h2>
-                    <?php if ($ceremony_editorial_dek !== '') : ?>
-                        <p class="aat-hub-copy"><?php echo esc_html($ceremony_editorial_dek); ?></p>
-                    <?php endif; ?>
+                    <div class="aat-ceremony-guide-meta" aria-label="<?php echo esc_attr__('Ceremony guide metadata', 'academy-awards-table'); ?>">
+                        <?php if ($ceremony_editorial_dek !== '') : ?>
+                            <span><?php echo esc_html($ceremony_editorial_dek); ?></span>
+                        <?php endif; ?>
+                        <span><?php echo esc_html(sprintf(__('Ceremony %d', 'academy-awards-table'), (int) $ceremony)); ?></span>
+                        <span><?php echo esc_html__('Approved Guide', 'academy-awards-table'); ?></span>
+                    </div>
+                    <div class="aat-ceremony-guide-actions" aria-label="<?php echo esc_attr__('Ceremony guide actions', 'academy-awards-table'); ?>">
+                        <a class="aat-hub-card-action" href="<?php echo esc_url($ceremony_ballot_full_url); ?>"><?php echo esc_html__('Full Ballot', 'academy-awards-table'); ?></a>
+                        <a class="aat-hub-card-action" href="<?php echo esc_url($aat->get_ceremonies_index_url()); ?>"><?php echo esc_html__('All Ceremonies', 'academy-awards-table'); ?></a>
+                    </div>
                 </div>
                 <div class="aat-ceremony-editorial-body aat-ceremony-guide-copy">
                     <?php echo wp_kses_post(wpautop(esc_html($ceremony_editorial_body))); ?>

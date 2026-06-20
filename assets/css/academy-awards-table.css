@@ -6119,8 +6119,9 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
 }
 
 .aat-ceremony-editorial-writeup {
+    position: relative;
     display: grid;
-    grid-template-columns: minmax(220px, .36fr) minmax(0, .64fr);
+    grid-template-columns: minmax(240px, .34fr) minmax(0, .66fr);
     gap: clamp(18px, 3vw, 34px);
     align-items: start;
     padding: clamp(20px, 3.2vw, 36px);
@@ -6129,27 +6130,90 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     background:
         linear-gradient(90deg, rgba(201,169,97,.11) 1px, transparent 1px),
         linear-gradient(180deg, rgba(201,169,97,.07) 1px, transparent 1px),
-        radial-gradient(circle at 8% 8%, rgba(201,169,97,.15), transparent 30%),
+        linear-gradient(90deg, rgba(201,169,97,.14), transparent 28%),
         linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.014)),
         rgba(7,17,28,.8);
     background-size: 56px 56px, 56px 56px, auto, auto, auto;
-    box-shadow: 0 24px 70px rgba(0,0,0,.22);
+    box-shadow: 0 24px 70px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.06);
     overflow: hidden;
 }
 
 .aat-ceremony-editorial-heading {
     display: grid;
-    gap: 13px;
+    gap: 15px;
+    align-content: start;
     min-width: 0;
+}
+
+.aat-ceremony-guide-file {
+    justify-self: start;
+    padding-left: 12px;
+    border-left: 3px solid var(--aat-gold);
+    color: var(--aat-gold);
+    font-size: .66rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    line-height: 1;
+    text-transform: uppercase;
 }
 
 .aat-ceremony-editorial-writeup h2 {
     margin: 0;
-    max-width: 13ch;
+    max-width: 14ch;
     color: var(--aat-white);
     font-size: clamp(2rem, 3.55vw, 3.72rem);
     line-height: 1;
     text-wrap: balance;
+}
+
+.aat-ceremony-guide-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 26rem;
+    color: rgba(244,239,227,.78);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    line-height: 1.35;
+    text-transform: uppercase;
+}
+
+.aat-ceremony-guide-meta span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 5px 9px;
+    border: 1px solid rgba(201,169,97,.18);
+    border-radius: 999px;
+    background: rgba(2,8,15,.24);
+}
+
+.aat-ceremony-guide-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 2px;
+}
+
+.aat-ceremony-guide-actions .aat-hub-card-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 13px;
+    border-color: rgba(201,169,97,.26);
+    background: rgba(201,169,97,.08);
+}
+
+.aat-ceremony-guide-actions .aat-hub-card-action:hover,
+.aat-ceremony-guide-actions .aat-hub-card-action:focus-visible {
+    border-color: rgba(201,169,97,.48);
+    background: rgba(201,169,97,.16);
+}
+
+body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-card-action {
+    min-height: 44px !important;
 }
 
 .aat-ceremony-editorial-writeup .aat-hub-copy {
@@ -6160,10 +6224,12 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
 
 .aat-ceremony-editorial-body {
     min-width: 0;
+    max-width: 76ch;
     padding: clamp(16px, 2.4vw, 24px);
     border: 1px solid rgba(201,169,97,.16);
     border-radius: 14px;
-    background: rgba(2,8,15,.32);
+    background: linear-gradient(180deg, rgba(2,8,15,.42), rgba(2,8,15,.26));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
 }
 
 .aat-ceremony-editorial-body p {
@@ -6175,6 +6241,15 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
 
 .aat-ceremony-editorial-body p + p {
     margin-top: 1em;
+}
+
+.aat-ceremony-guide-copy p:first-child::first-letter {
+    float: left;
+    margin: .06em .16em 0 0;
+    color: var(--aat-gold);
+    font-size: 3.15rem;
+    font-weight: 900;
+    line-height: .82;
 }
 
 .aat-ceremony-thesis {
@@ -6598,6 +6673,11 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     .aat-ceremony-dossier .aat-ceremony-neighbor-card,
     .aat-ceremony-dossier .aat-ceremony-neighbor-card strong,
     .aat-ceremony-dossier .aat-ceremony-neighbor-index,
+    .aat-ceremony-dossier .aat-ceremony-guide-file,
+    .aat-ceremony-dossier .aat-ceremony-guide-meta,
+    .aat-ceremony-dossier .aat-ceremony-guide-meta span,
+    .aat-ceremony-dossier .aat-ceremony-guide-actions,
+    .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-card-action,
     .aat-ceremony-dossier .aat-ceremony-editorial-writeup h2,
     .aat-ceremony-dossier .aat-ceremony-editorial-writeup .aat-hub-copy,
     .aat-ceremony-dossier .aat-ceremony-editorial-body,
@@ -6658,6 +6738,29 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     .aat-ceremony-thesis {
         padding: 15px;
         border-radius: 12px;
+    }
+
+    .aat-ceremony-guide-meta {
+        gap: 6px;
+    }
+
+    .aat-ceremony-guide-meta span {
+        min-height: 24px;
+        padding: 5px 8px;
+    }
+
+    .aat-ceremony-guide-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .aat-ceremony-guide-actions .aat-hub-card-action {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .aat-ceremony-guide-copy p:first-child::first-letter {
+        font-size: 2.65rem;
     }
 
     .aat-major-race-media {

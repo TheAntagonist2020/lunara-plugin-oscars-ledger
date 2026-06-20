@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.27
+Stable tag: 2.7.28
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.28 =
+* Polished public Ceremony Guide modules with a stronger guide-file presentation, metadata rail, reader actions, and responsive editorial typography.
 
 = 2.7.27 =
 * Normalized approved Ceremony Write-Up headline, deck, and body text before public escaping so smart punctuation survives WordPress DB charset conversions.
