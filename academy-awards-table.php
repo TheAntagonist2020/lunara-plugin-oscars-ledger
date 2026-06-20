@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.26
+ * Version: 2.7.27
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.26');
+define('AAT_VERSION', '2.7.27');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -6129,6 +6129,20 @@ class Academy_Awards_Table {
         return is_array($rows) ? $rows : array();
     }
 
+    private function decode_ceremony_writeup_text_fields($row, $fields) {
+        if (!is_array($row)) {
+            return array();
+        }
+
+        foreach ($fields as $field) {
+            $hex_field = $field . '_hex';
+            $row[$field] = AAT_Ceremony_Writeups::decode_database_text($row[$field] ?? '', $row[$hex_field] ?? '');
+            unset($row[$hex_field]);
+        }
+
+        return $row;
+    }
+
     private function get_ceremony_writeup_record($ceremony) {
         global $wpdb;
         $ceremony = absint($ceremony);
@@ -6143,11 +6157,14 @@ class Academy_Awards_Table {
         }
 
         $row = $wpdb->get_row(
-            $wpdb->prepare("SELECT * FROM $table WHERE ceremony_number = %d LIMIT 1", $ceremony),
+            $wpdb->prepare(
+                "SELECT *, HEX(ceremony_label) AS ceremony_label_hex, HEX(headline) AS headline_hex, HEX(dek) AS dek_hex, HEX(body) AS body_hex, HEX(source_notes) AS source_notes_hex FROM $table WHERE ceremony_number = %d LIMIT 1",
+                $ceremony
+            ),
             ARRAY_A
         );
 
-        return is_array($row) ? $row : array();
+        return $this->decode_ceremony_writeup_text_fields($row, array('ceremony_label', 'headline', 'dek', 'body', 'source_notes'));
     }
 
     public function get_approved_ceremony_writeup($ceremony) {
@@ -6165,14 +6182,14 @@ class Academy_Awards_Table {
 
         $row = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT ceremony_number, ceremony_label, headline, dek, body FROM $table WHERE ceremony_number = %d AND status = %s LIMIT 1",
+                "SELECT ceremony_number, HEX(ceremony_label) AS ceremony_label_hex, HEX(headline) AS headline_hex, HEX(dek) AS dek_hex, HEX(body) AS body_hex FROM $table WHERE ceremony_number = %d AND status = %s LIMIT 1",
                 $ceremony,
                 AAT_Ceremony_Writeups::STATUS_APPROVED
             ),
             ARRAY_A
         );
 
-        return is_array($row) ? $row : array();
+        return $this->decode_ceremony_writeup_text_fields($row, array('ceremony_label', 'headline', 'dek', 'body'));
     }
 
 

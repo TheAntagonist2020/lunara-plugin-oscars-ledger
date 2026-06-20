@@ -28,6 +28,70 @@ if (!class_exists('AAT_Ceremony_Writeups')) {
             return isset($statuses[$status]) ? $status : self::STATUS_DRAFT;
         }
 
+        public static function normalize_public_text($text) {
+            $text = (string) $text;
+            if ($text === '') {
+                return '';
+            }
+
+            if (preg_match('//u', $text) !== 1) {
+                $converted = false;
+                if (function_exists('mb_convert_encoding')) {
+                    $converted = @mb_convert_encoding($text, 'UTF-8', 'Windows-1252');
+                } elseif (function_exists('iconv')) {
+                    $converted = @iconv('Windows-1252', 'UTF-8//IGNORE', $text);
+                }
+
+                if (is_string($converted) && $converted !== '' && preg_match('//u', $converted) === 1) {
+                    $text = $converted;
+                } else {
+                    $text = strtr($text, array(
+                        "\x80" => '€',
+                        "\x82" => '‚',
+                        "\x83" => 'ƒ',
+                        "\x84" => '„',
+                        "\x85" => '…',
+                        "\x86" => '†',
+                        "\x87" => '‡',
+                        "\x88" => 'ˆ',
+                        "\x89" => '‰',
+                        "\x8A" => 'Š',
+                        "\x8B" => '‹',
+                        "\x8C" => 'Œ',
+                        "\x8E" => 'Ž',
+                        "\x91" => '‘',
+                        "\x92" => '’',
+                        "\x93" => '“',
+                        "\x94" => '”',
+                        "\x95" => '•',
+                        "\x96" => '–',
+                        "\x97" => '—',
+                        "\x98" => '˜',
+                        "\x99" => '™',
+                        "\x9A" => 'š',
+                        "\x9B" => '›',
+                        "\x9C" => 'œ',
+                        "\x9E" => 'ž',
+                        "\x9F" => 'Ÿ',
+                    ));
+                }
+            }
+
+            return self::normalize_text($text);
+        }
+
+        public static function decode_database_text($value, $hex_value = '') {
+            $hex_value = preg_replace('/[^0-9a-f]/i', '', (string) $hex_value);
+            if ($hex_value !== '' && strlen($hex_value) % 2 === 0) {
+                $decoded = @hex2bin($hex_value);
+                if (is_string($decoded)) {
+                    return self::normalize_public_text($decoded);
+                }
+            }
+
+            return self::normalize_public_text($value);
+        }
+
         public static function parser_is_available() {
             return class_exists('ZipArchive') || class_exists('PharData');
         }
