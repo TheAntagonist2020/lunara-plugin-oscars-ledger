@@ -23,7 +23,7 @@ Spec: `docs/staging/specs/2026-06-22-related-review-media-guards.md`
   - acceptance: no `aat-related-review-card.has-no-media` visual rule is missing and `git diff --check` passes.
   - spec: `docs/staging/specs/2026-06-22-related-review-media-guards.md#invariants`
 
-- [ ] T4: Verify, deploy, and preserve continuity
+- [x] T4: Verify, deploy, and preserve continuity
   - goal: Deploy only changed plugin files, verify public routes, update continuity, and push the plugin repo.
   - files: `LUNARA_WORLD_CHANGELOG.md`, active session log, `LUNARA_WEBSITE_HANDOFF.md`
   - acceptance: local/remote lint and hashes pass, cache flush succeeds, public smoke and visual QA pass, evidence is under `10_VISUAL_EVIDENCE`.
