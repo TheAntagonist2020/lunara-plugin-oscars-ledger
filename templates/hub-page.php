@@ -571,6 +571,14 @@ $aat_build_hub_review_cards = function($title_entries, $limit = 6) use ($aat) {
         }
 
         $visual = method_exists($aat, 'get_title_visual_package') ? $aat->get_title_visual_package($film_id, 'medium_large') : array();
+        $visual_media_html = '';
+        if (!empty($visual['poster_html'])) {
+            $visual_media_html = (string) $visual['poster_html'];
+        } elseif (!empty($visual['poster_url'])) {
+            $visual_media_html = '<img class="aat-related-review-image" src="' . esc_url($visual['poster_url']) . '" alt="' . esc_attr(sprintf(__('%s poster', 'academy-awards-table'), $film_label)) . '" loading="lazy" decoding="async" />';
+        } elseif (!empty($visual['backdrop_url'])) {
+            $visual_media_html = '<img class="aat-related-review-image" src="' . esc_url($visual['backdrop_url']) . '" alt="' . esc_attr($film_label) . '" loading="lazy" decoding="async" />';
+        }
         $sort_date = get_post_time('U', true, $review_id);
         if (!$sort_date) {
             $sort_date = 0;
@@ -591,7 +599,7 @@ $aat_build_hub_review_cards = function($title_entries, $limit = 6) use ($aat) {
             'film_label' => $film_label,
             'film_url' => $aat->get_entity_url($film_id),
             'film_year' => trim((string) ($entry['year'] ?? '')),
-            'fallback_html' => !empty($visual['card_fallback_html']) ? $visual['card_fallback_html'] : '',
+            'fallback_html' => $visual_media_html,
             'sort_date' => intval($sort_date),
         );
 
@@ -1720,16 +1728,20 @@ get_header();
                 <p class="aat-hub-copy"><?php echo esc_html__("Criticism from the Lunara archive tied to this ceremony's most visible contenders and winners.", 'academy-awards-table'); ?></p>
                 <div class="aat-related-reviews-grid">
                     <?php foreach ($ceremony_review_cards as $card) : ?>
-                        <article class="aat-related-review-card">
+                        <?php
+                            $aat_related_review_has_media = !empty($card['review_thumb']) || !empty($card['fallback_html']);
+                            $aat_related_review_classes = array('aat-related-review-card', $aat_related_review_has_media ? 'has-media' : 'has-no-media');
+                        ?>
+                        <article class="<?php echo esc_attr(implode(' ', $aat_related_review_classes)); ?>">
+                            <?php if ($aat_related_review_has_media) : ?>
                             <a class="aat-related-review-media" href="<?php echo esc_url($card['review_url']); ?>">
                                 <?php if (!empty($card['review_thumb'])) : ?>
                                     <?php echo $card['review_thumb']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                 <?php elseif (!empty($card['fallback_html'])) : ?>
                                     <?php echo $card['fallback_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                                <?php else : ?>
-                                    <div class="aat-filmography-poster-placeholder"><span><?php echo esc_html($card['film_label']); ?></span></div>
                                 <?php endif; ?>
                             </a>
+                            <?php endif; ?>
                             <div class="aat-related-review-body">
                                 <div class="aat-related-review-kicker"><?php echo esc_html__('Lunara Film Review', 'academy-awards-table'); ?></div>
                                 <h3 class="aat-related-review-title"><a href="<?php echo esc_url($card['review_url']); ?>"><?php echo esc_html($card['review_title']); ?></a></h3>
@@ -2543,16 +2555,20 @@ get_header();
                 <p class="aat-hub-copy"><?php echo esc_html__('Criticism from the Lunara archive connected to the films that define this Oscar category.', 'academy-awards-table'); ?></p>
                 <div class="aat-related-reviews-grid">
                     <?php foreach ($category_review_cards as $card) : ?>
-                        <article class="aat-related-review-card">
+                        <?php
+                            $aat_related_review_has_media = !empty($card['review_thumb']) || !empty($card['fallback_html']);
+                            $aat_related_review_classes = array('aat-related-review-card', $aat_related_review_has_media ? 'has-media' : 'has-no-media');
+                        ?>
+                        <article class="<?php echo esc_attr(implode(' ', $aat_related_review_classes)); ?>">
+                            <?php if ($aat_related_review_has_media) : ?>
                             <a class="aat-related-review-media" href="<?php echo esc_url($card['review_url']); ?>">
                                 <?php if (!empty($card['review_thumb'])) : ?>
                                     <?php echo $card['review_thumb']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                 <?php elseif (!empty($card['fallback_html'])) : ?>
                                     <?php echo $card['fallback_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                                <?php else : ?>
-                                    <div class="aat-filmography-poster-placeholder"><span><?php echo esc_html($card['film_label']); ?></span></div>
                                 <?php endif; ?>
                             </a>
+                            <?php endif; ?>
                             <div class="aat-related-review-body">
                                 <div class="aat-related-review-kicker"><?php echo esc_html__('Lunara Film Review', 'academy-awards-table'); ?></div>
                                 <h3 class="aat-related-review-title"><a href="<?php echo esc_url($card['review_url']); ?>"><?php echo esc_html($card['review_title']); ?></a></h3>

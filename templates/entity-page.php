@@ -583,6 +583,14 @@ if ($entity !== 'title' && !empty($distinct_films)) {
         $related_review_thumb = get_the_post_thumbnail_url($related_review_id, 'medium_large');
         $related_review_excerpt = get_the_excerpt($related_review_id);
         $related_film_visual = method_exists($aat, 'get_title_visual_package') ? $aat->get_title_visual_package($related_film_id, 'medium') : array();
+        $related_visual_media_html = '';
+        if (!empty($related_film_visual['poster_html'])) {
+            $related_visual_media_html = (string) $related_film_visual['poster_html'];
+        } elseif (!empty($related_film_visual['poster_url'])) {
+            $related_visual_media_html = '<img class="aat-related-review-image" src="' . esc_url($related_film_visual['poster_url']) . '" alt="' . esc_attr(sprintf(__('%s poster', 'academy-awards-table'), $related_film_label)) . '" loading="lazy" decoding="async" />';
+        } elseif (!empty($related_film_visual['backdrop_url'])) {
+            $related_visual_media_html = '<img class="aat-related-review-image" src="' . esc_url($related_film_visual['backdrop_url']) . '" alt="' . esc_attr($related_film_label) . '" loading="lazy" decoding="async" />';
+        }
         $related_release_year = '';
         if (!empty($related_film_visual['release_year'])) {
             $related_release_year = (string) $related_film_visual['release_year'];
@@ -600,7 +608,7 @@ if ($entity !== 'title' && !empty($distinct_films)) {
             'film_label' => $related_film_label,
             'film_url' => $build_entity_url($related_film_id),
             'film_year' => $related_release_year,
-            'fallback_html' => !empty($related_film_visual['card_fallback_html']) ? $related_film_visual['card_fallback_html'] : '',
+            'fallback_html' => $related_visual_media_html,
             'sort_date' => get_post_field('post_date', $related_review_id),
         );
     }
@@ -1182,16 +1190,20 @@ get_header();
             </div>
             <div class="aat-related-reviews-grid">
                 <?php foreach ($aat_related_reviews as $related_review) : ?>
-                    <article class="aat-related-review-card">
+                    <?php
+                        $aat_related_review_has_media = !empty($related_review['review_thumb']) || !empty($related_review['fallback_html']);
+                        $aat_related_review_classes = array('aat-related-review-card', $aat_related_review_has_media ? 'has-media' : 'has-no-media');
+                    ?>
+                    <article class="<?php echo esc_attr(implode(' ', $aat_related_review_classes)); ?>">
+                        <?php if ($aat_related_review_has_media) : ?>
                         <a class="aat-related-review-media" href="<?php echo esc_url($related_review['review_url']); ?>">
                             <?php if (!empty($related_review['review_thumb'])) : ?>
                                 <img class="aat-related-review-image" src="<?php echo esc_url($related_review['review_thumb']); ?>" alt="<?php echo esc_attr($related_review['review_title']); ?>" loading="lazy" decoding="async" />
                             <?php elseif (!empty($related_review['fallback_html'])) : ?>
                                 <?php echo $related_review['fallback_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                            <?php else : ?>
-                                <div class="aat-filmography-poster-placeholder"><span><?php echo esc_html($related_review['film_label']); ?></span></div>
                             <?php endif; ?>
                         </a>
+                        <?php endif; ?>
                         <div class="aat-related-review-body">
                             <div class="aat-related-review-kicker">LUNARA FILM REVIEW</div>
                             <h3 class="aat-related-review-title"><a href="<?php echo esc_url($related_review['review_url']); ?>"><?php echo esc_html($related_review['review_title']); ?></a></h3>

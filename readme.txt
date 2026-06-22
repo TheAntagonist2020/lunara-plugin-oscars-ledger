@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.29
+Stable tag: 2.7.30
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.30 =
+* Added media guards for Oscars related-review cards so label-only placeholders render as intentional text-led cards instead of empty public media chambers.
 
 = 2.7.29 =
 * Added private Ceremony Write-Ups queue filters, search, status counts, and clearer row/status presentation for faster review of staged ceremony guide drafts.

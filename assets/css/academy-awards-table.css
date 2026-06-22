@@ -3446,6 +3446,28 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     transition: transform .32s ease, border-color .32s ease, box-shadow .32s ease, background .32s ease;
 }
 
+.aat-related-review-card.has-no-media {
+    min-height: 100%;
+    border-color: rgba(201,169,97,.24);
+    background:
+        radial-gradient(circle at 18% 0%, rgba(201,169,97,.12), rgba(201,169,97,0) 34%),
+        linear-gradient(135deg, rgba(11,23,36,.98), rgba(18,31,45,.95));
+}
+
+.aat-related-review-card.has-no-media .aat-related-review-body {
+    min-height: 100%;
+    padding: clamp(20px, 3vw, 28px);
+}
+
+.aat-related-review-card.has-no-media .aat-related-review-body::before {
+    content: '';
+    display: block;
+    width: 54px;
+    height: 1px;
+    margin-bottom: 2px;
+    background: linear-gradient(90deg, rgba(201,169,97,.82), rgba(201,169,97,0));
+}
+
 .aat-related-review-body {
     gap: 13px;
 }
