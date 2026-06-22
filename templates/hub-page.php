@@ -540,6 +540,19 @@ $aat_get_card_backdrop_style = function($poster_url = '', $backdrop_url = '') {
     return "background-image: linear-gradient(145deg, rgba(3,10,22,.54), rgba(3,10,22,.86) 40%, rgba(3,10,22,.96)), url('" . esc_url($image_url) . "'); background-size: cover; background-position: center;";
 };
 
+$aat_get_related_review_limit = function() {
+    $limit = function_exists('get_theme_mod') ? get_theme_mod('lunara_oscars_related_reviews_count', 6) : 6;
+    return max(2, min(8, absint($limit)));
+};
+
+$aat_get_related_review_treatment = function() {
+    $allowed = array('standard-grid', 'compact-rail', 'feature-strip');
+    $treatment = function_exists('get_theme_mod') ? sanitize_key((string) get_theme_mod('lunara_oscars_related_reviews_treatment', 'standard-grid')) : 'standard-grid';
+    return in_array($treatment, $allowed, true) ? $treatment : 'standard-grid';
+};
+
+$aat_related_review_treatment_class = 'aat-related-treatment-' . $aat_get_related_review_treatment();
+
 $aat_build_hub_review_cards = function($title_entries, $limit = 6) use ($aat) {
     $cards = array();
     $seen_reviews = array();
@@ -1678,7 +1691,7 @@ get_header();
         <?php endif; ?>
 
         <?php $ceremony_titles = method_exists($aat, 'get_ceremony_title_highlights') ? $aat->get_ceremony_title_highlights($ceremony, 18) : array(); ?>
-        <?php $ceremony_review_cards = !empty($ceremony_titles) ? $aat_build_hub_review_cards($ceremony_titles, 6) : array(); ?>
+        <?php $ceremony_review_cards = !empty($ceremony_titles) ? $aat_build_hub_review_cards($ceremony_titles, $aat_get_related_review_limit()) : array(); ?>
         <?php if (!empty($ceremony_titles)) : ?>
             <div class="aat-hub-section aat-ceremony-gallery-section">
                 <h2><?php echo esc_html__('Ceremony Highlights', 'academy-awards-table'); ?></h2>
@@ -1723,10 +1736,10 @@ get_header();
         <?php endif; ?>
 
         <?php if (!empty($ceremony_review_cards)) : ?>
-            <div class="aat-hub-section">
+            <div class="aat-hub-section aat-related-reviews-section <?php echo esc_attr($aat_related_review_treatment_class); ?>">
                 <h2><?php echo esc_html__('On Lunara', 'academy-awards-table'); ?></h2>
                 <p class="aat-hub-copy"><?php echo esc_html__("Criticism from the Lunara archive tied to this ceremony's most visible contenders and winners.", 'academy-awards-table'); ?></p>
-                <div class="aat-related-reviews-grid">
+                <div class="aat-related-reviews-grid <?php echo esc_attr($aat_related_review_treatment_class); ?>">
                     <?php foreach ($ceremony_review_cards as $card) : ?>
                         <?php
                             $aat_related_review_has_media = !empty($card['review_thumb']) || !empty($card['fallback_html']);
@@ -2505,7 +2518,7 @@ get_header();
         <?php $category_highlight_limit = $category_history_full_requested ? 18 : (int) apply_filters('aat_category_title_highlights_fast_limit', 9, $canonical); ?>
         <?php $category_highlight_limit = max(6, min(18, $category_highlight_limit)); ?>
         <?php $category_titles = method_exists($aat, 'get_category_title_highlights') ? $aat->get_category_title_highlights($canonical, $category_highlight_limit) : array(); ?>
-        <?php $category_review_cards = !empty($category_titles) ? $aat_build_hub_review_cards($category_titles, 6) : array(); ?>
+        <?php $category_review_cards = !empty($category_titles) ? $aat_build_hub_review_cards($category_titles, $aat_get_related_review_limit()) : array(); ?>
         <?php if (!empty($category_titles)) : ?>
             <div class="aat-hub-section aat-category-gallery-section">
                 <h2><?php echo esc_html__('Category Highlights', 'academy-awards-table'); ?></h2>
@@ -2550,10 +2563,10 @@ get_header();
         <?php endif; ?>
 
         <?php if (!empty($category_review_cards)) : ?>
-            <div class="aat-hub-section">
+            <div class="aat-hub-section aat-related-reviews-section <?php echo esc_attr($aat_related_review_treatment_class); ?>">
                 <h2><?php echo esc_html__('On Lunara', 'academy-awards-table'); ?></h2>
                 <p class="aat-hub-copy"><?php echo esc_html__('Criticism from the Lunara archive connected to the films that define this Oscar category.', 'academy-awards-table'); ?></p>
-                <div class="aat-related-reviews-grid">
+                <div class="aat-related-reviews-grid <?php echo esc_attr($aat_related_review_treatment_class); ?>">
                     <?php foreach ($category_review_cards as $card) : ?>
                         <?php
                             $aat_related_review_has_media = !empty($card['review_thumb']) || !empty($card['fallback_html']);

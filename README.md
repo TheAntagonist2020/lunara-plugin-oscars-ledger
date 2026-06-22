@@ -14,7 +14,7 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.30`.
+Current baseline: `2.7.31`.
 
 ## Current Public Surface
 
@@ -25,6 +25,7 @@ Current baseline: `2.7.30`.
 - Approved ceremony write-up fields are normalized to valid UTF-8 before public escaping so WordPress DB charset conversions cannot blank smart punctuation in public modules.
 - Approved Ceremony Guide modules now include a stronger public guide-file presentation with metadata, ballot/ceremony actions, and refined responsive typography.
 - Oscars related-review cards collapse label-only visual fallbacks into intentional text-led cards instead of public empty media chambers.
+- Oscars related-review lanes now obey Theme Studio count and visual-treatment controls, including profile image focus support from the active theme.
 
 ## Verification
 

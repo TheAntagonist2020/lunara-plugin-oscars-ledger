@@ -556,6 +556,19 @@ $aat_editorial_refs = method_exists($aat, 'get_entity_editorial_references')
     ? $aat->get_entity_editorial_references($entity, $id, $label, 6)
     : array();
 
+$aat_get_related_review_limit = function() {
+    $limit = function_exists('get_theme_mod') ? get_theme_mod('lunara_oscars_related_reviews_count', 6) : 6;
+    return max(2, min(8, absint($limit)));
+};
+
+$aat_get_related_review_treatment = function() {
+    $allowed = array('standard-grid', 'compact-rail', 'feature-strip');
+    $treatment = function_exists('get_theme_mod') ? sanitize_key((string) get_theme_mod('lunara_oscars_related_reviews_treatment', 'standard-grid')) : 'standard-grid';
+    return in_array($treatment, $allowed, true) ? $treatment : 'standard-grid';
+};
+
+$aat_related_review_treatment_class = 'aat-related-treatment-' . $aat_get_related_review_treatment();
+
 $aat_related_reviews = array();
 if ($entity !== 'title' && !empty($distinct_films)) {
     foreach (array_keys($distinct_films) as $related_film_id) {
@@ -617,7 +630,7 @@ if ($entity !== 'title' && !empty($distinct_films)) {
         usort($aat_related_reviews, function($left, $right) {
             return strcmp((string) ($right['sort_date'] ?? ''), (string) ($left['sort_date'] ?? ''));
         });
-        $aat_related_reviews = array_slice($aat_related_reviews, 0, 6);
+        $aat_related_reviews = array_slice($aat_related_reviews, 0, $aat_get_related_review_limit());
     }
 }
 
@@ -1183,12 +1196,12 @@ get_header();
     <?php endif; ?>
 
     <?php if ($entity !== 'title' && !empty($aat_related_reviews)) : ?>
-        <section id="on-lunara" class="aat-entity-section aat-related-reviews-section">
+        <section id="on-lunara" class="aat-entity-section aat-related-reviews-section <?php echo esc_attr($aat_related_review_treatment_class); ?>">
             <div class="aat-section-head">
                 <h2 class="aat-section-title">On Lunara</h2>
                 <p class="aat-section-description">Criticism from the Lunara archive that keeps this Oscar history tied to the writing.</p>
             </div>
-            <div class="aat-related-reviews-grid">
+            <div class="aat-related-reviews-grid <?php echo esc_attr($aat_related_review_treatment_class); ?>">
                 <?php foreach ($aat_related_reviews as $related_review) : ?>
                     <?php
                         $aat_related_review_has_media = !empty($related_review['review_thumb']) || !empty($related_review['fallback_html']);
