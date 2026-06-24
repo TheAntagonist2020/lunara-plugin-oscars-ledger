@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.31
+Stable tag: 2.7.32
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.32 =
+* Added route-oriented composite indexes to plugin-owned Oscars reporting and legacy tables for faster ceremony/category/entity lookups.
+* Added a private source-data validation helper and contract for the repaired workbook and normalized SQL candidates.
 
 = 2.7.31 =
 * Added Theme Studio hooks for Oscars related-review count and treatment controls across ceremony, category, and profile routes.

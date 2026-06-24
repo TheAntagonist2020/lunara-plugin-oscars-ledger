@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.31
+ * Version: 2.7.32
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.31');
+define('AAT_VERSION', '2.7.32');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -176,7 +176,11 @@ class Academy_Awards_Table {
             KEY category_slug (category_slug),
             KEY winner (winner),
             KEY film_entity_id (film_entity_id),
-            KEY primary_entity_id (primary_entity_id)
+            KEY primary_entity_id (primary_entity_id),
+            KEY ceremony_category_winner (ceremony, category_slug, winner),
+            KEY category_ceremony_winner (category_slug, ceremony, winner),
+            KEY film_ceremony (film_entity_id, ceremony),
+            KEY primary_entity_ceremony (primary_entity_id, ceremony)
         ) $charset_collate;";
 
         $sql_nominees = "CREATE TABLE IF NOT EXISTS $nominees_table (
@@ -197,7 +201,11 @@ class Academy_Awards_Table {
             KEY category_slug (category_slug),
             KEY entity_id (entity_id),
             KEY entity_type (entity_type),
-            KEY winner (winner)
+            KEY winner (winner),
+            KEY ceremony_category_winner (ceremony, category_slug, winner),
+            KEY category_ceremony_winner (category_slug, ceremony, winner),
+            KEY entity_ceremony (entity_id, ceremony),
+            KEY entity_type_entity (entity_type, entity_id)
         ) $charset_collate;";
 
         $sql_ceremony_stats = "CREATE TABLE IF NOT EXISTS $ceremony_stats_table (
@@ -435,6 +443,8 @@ class Academy_Awards_Table {
             KEY film (film(191)),
             KEY name (name(191)),
             KEY ceremony_cat_winner (ceremony, canonical_category(191), winner),
+            KEY category_ceremony_winner (canonical_category(191), ceremony, winner),
+            KEY winner_category_ceremony (winner, canonical_category(191), ceremony),
             KEY film_id (film_id(191))
         ) $charset_collate;";
 
@@ -541,6 +551,8 @@ class Academy_Awards_Table {
             KEY film (film(191)),
             KEY name (name(191)),
             KEY ceremony_cat_winner (ceremony, canonical_category(191), winner),
+            KEY category_ceremony_winner (canonical_category(191), ceremony, winner),
+            KEY winner_category_ceremony (winner, canonical_category(191), ceremony),
             KEY film_id (film_id(191))
         ) $charset_collate;";
 

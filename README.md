@@ -14,7 +14,7 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.31`.
+Current baseline: `2.7.32`.
 
 ## Current Public Surface
 
@@ -26,10 +26,13 @@ Current baseline: `2.7.31`.
 - Approved Ceremony Guide modules now include a stronger public guide-file presentation with metadata, ballot/ceremony actions, and refined responsive typography.
 - Oscars related-review cards collapse label-only visual fallbacks into intentional text-led cards instead of public empty media chambers.
 - Oscars related-review lanes now obey Theme Studio count and visual-treatment controls, including profile image focus support from the active theme.
+- Oscars reporting tables now declare route-oriented composite indexes for category, ceremony, winner, and entity lookups.
 
 ## Verification
 
 - Run PHP lint on `academy-awards-table.php` and template/include PHP files after edits.
+- Run `php tests\source-data-validation-contract.php` when validating the repaired workbook and normalized SQL candidates.
+- Run `php tests\sql-performance-contract.php` after schema/index changes.
 - Confirm representative Oscars routes return `200`.
 - Confirm `/oscars/category/best-picture/` and `?history=full` preserve expected Ledger data and links.
 - Confirm `/oscars/ceremony/{N}/` and `?ledger=full` preserve the major-races module and full ballot links.
