@@ -1692,6 +1692,209 @@ class Academy_Awards_Table {
     }
 
     /**
+     * Return cached top-level hub stats from projection tables first.
+     */
+    public function get_hub_page_stats() {
+        global $wpdb;
+
+        $empty = array(
+            'total_records'    => 0,
+            'total_winners'    => 0,
+            'total_categories' => 0,
+            'total_ceremonies' => 0,
+            'min_ceremony'     => 0,
+            'max_ceremony'     => 0,
+        );
+
+        $cache_key = 'aat_hub_page_stats_v2';
+        $cached = get_transient($cache_key);
+        if (is_array($cached)) {
+            return array_merge($empty, $cached);
+        }
+
+        $this->ensure_projection_data_available();
+
+        $facts_table = $this->get_award_facts_table_name();
+        $category_stats_table = $this->get_category_stats_table_name();
+        $ceremony_stats_table = $this->get_ceremony_stats_table_name();
+        $categories_table = $this->get_categories_table_name();
+        $ceremonies_table = $this->get_ceremonies_table_name();
+        $source_table = $this->get_table_name();
+
+        $stats = $empty;
+        $stats['total_records'] = intval($wpdb->get_var("SELECT COUNT(*) FROM $facts_table"));
+        if ($stats['total_records'] > 0) {
+            $stats['total_winners'] = intval($wpdb->get_var("SELECT COUNT(*) FROM $facts_table WHERE winner = 1"));
+        }
+
+        $stats['total_categories'] = intval($wpdb->get_var("SELECT COUNT(*) FROM $category_stats_table"));
+        if ($stats['total_categories'] <= 0) {
+            $stats['total_categories'] = intval($wpdb->get_var("SELECT COUNT(*) FROM $categories_table"));
+        }
+
+        $stats['total_ceremonies'] = intval($wpdb->get_var("SELECT COUNT(*) FROM $ceremony_stats_table"));
+        if ($stats['total_ceremonies'] <= 0) {
+            $stats['total_ceremonies'] = intval($wpdb->get_var("SELECT COUNT(*) FROM $ceremonies_table"));
+        }
+
+        $bounds = $wpdb->get_row("SELECT MIN(ceremony) AS min_ceremony, MAX(ceremony) AS max_ceremony FROM $ceremonies_table", ARRAY_A);
+        if (!is_array($bounds) || intval($bounds['max_ceremony'] ?? 0) <= 0) {
+            $bounds = $wpdb->get_row("SELECT MIN(ceremony) AS min_ceremony, MAX(ceremony) AS max_ceremony FROM $ceremony_stats_table", ARRAY_A);
+        }
+        if (is_array($bounds)) {
+            $stats['min_ceremony'] = intval($bounds['min_ceremony'] ?? 0);
+            $stats['max_ceremony'] = intval($bounds['max_ceremony'] ?? 0);
+        }
+
+        if ($stats['total_records'] <= 0) {
+            $stats['total_records'] = intval($wpdb->get_var("SELECT COUNT(*) FROM $source_table"));
+            $stats['total_winners'] = intval($wpdb->get_var("SELECT COUNT(*) FROM $source_table WHERE winner = 1"));
+        }
+
+        if ($stats['total_categories'] <= 0) {
+            $stats['total_categories'] = intval($wpdb->get_var("SELECT COUNT(DISTINCT canonical_category) FROM $source_table WHERE canonical_category != ''"));
+        }
+
+        if ($stats['total_ceremonies'] <= 0) {
+            $stats['total_ceremonies'] = intval($wpdb->get_var("SELECT COUNT(DISTINCT ceremony) FROM $source_table"));
+        }
+
+        if ($stats['min_ceremony'] <= 0 || $stats['max_ceremony'] <= 0) {
+            $legacy_bounds = $wpdb->get_row("SELECT MIN(ceremony) AS min_ceremony, MAX(ceremony) AS max_ceremony FROM $source_table", ARRAY_A);
+            if (is_array($legacy_bounds)) {
+                $stats['min_ceremony'] = intval($legacy_bounds['min_ceremony'] ?? 0);
+                $stats['max_ceremony'] = intval($legacy_bounds['max_ceremony'] ?? 0);
+            }
+        }
+
+        set_transient($cache_key, $stats, 15 * MINUTE_IN_SECONDS);
+        return $stats;
+    }
+
+    /**
+     * Return ceremony page summary data from projection tables first.
+     */
+    public function get_ceremony_summary($ceremony) {
+        global $wpdb;
+
+        $ceremony = intval($ceremony);
+        $empty = array(
+            'year_label'       => '',
+            'nominations'      => 0,
+            'wins'             => 0,
+            'categories_count' => 0,
+            'winner_categories' => 0,
+            'categories'       => array(),
+            'newer_ceremony'   => 0,
+            'older_ceremony'   => 0,
+        );
+
+        if ($ceremony <= 0) {
+            return $empty;
+        }
+
+        $cache_key = 'aat_ceremony_summary_v1_' . $ceremony;
+        $cached = get_transient($cache_key);
+        if (is_array($cached)) {
+            return array_merge($empty, $cached);
+        }
+
+        $this->ensure_projection_data_available();
+
+        $ceremony_stats_table = $this->get_ceremony_stats_table_name();
+        $facts_table = $this->get_award_facts_table_name();
+        $categories_table = $this->get_categories_table_name();
+        $ceremonies_table = $this->get_ceremonies_table_name();
+        $source_table = $this->get_table_name();
+
+        $summary = $empty;
+        $summary['year_label'] = $this->get_ceremony_year($ceremony);
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT year_label, nominations, wins, categories_total, winner_categories FROM $ceremony_stats_table WHERE ceremony = %d LIMIT 1",
+                $ceremony
+            ),
+            ARRAY_A
+        );
+
+        if (is_array($row) && !empty($row)) {
+            if ($summary['year_label'] === '') {
+                $summary['year_label'] = (string) ($row['year_label'] ?? '');
+            }
+            $summary['nominations'] = intval($row['nominations'] ?? 0);
+            $summary['wins'] = intval($row['wins'] ?? 0);
+            $summary['categories_count'] = intval($row['categories_total'] ?? 0);
+            $summary['winner_categories'] = intval($row['winner_categories'] ?? 0);
+        }
+
+        if ($summary['nominations'] <= 0) {
+            $legacy_row = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT COUNT(*) AS nominations, SUM(CASE WHEN winner = 1 THEN 1 ELSE 0 END) AS wins, COUNT(DISTINCT canonical_category) AS categories_count FROM $source_table WHERE ceremony = %d AND canonical_category != ''",
+                    $ceremony
+                ),
+                ARRAY_A
+            );
+            if (is_array($legacy_row)) {
+                $summary['nominations'] = intval($legacy_row['nominations'] ?? 0);
+                $summary['wins'] = intval($legacy_row['wins'] ?? 0);
+                $summary['categories_count'] = intval($legacy_row['categories_count'] ?? 0);
+            }
+        }
+
+        $categories = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT c.canonical_category FROM $facts_table f INNER JOIN $categories_table c ON c.category_slug = f.category_slug WHERE f.ceremony = %d AND c.canonical_category != '' GROUP BY c.canonical_category ORDER BY c.canonical_category ASC",
+                $ceremony
+            )
+        );
+
+        if (empty($categories)) {
+            $categories = $wpdb->get_col(
+                $wpdb->prepare(
+                    "SELECT DISTINCT canonical_category FROM $source_table WHERE ceremony = %d AND canonical_category != '' ORDER BY canonical_category ASC",
+                    $ceremony
+                )
+            );
+        }
+
+        $summary['categories'] = is_array($categories) ? $categories : array();
+        if ($summary['categories_count'] <= 0 && !empty($summary['categories'])) {
+            $summary['categories_count'] = count($summary['categories']);
+        }
+
+        $summary['newer_ceremony'] = intval(
+            $wpdb->get_var(
+                $wpdb->prepare("SELECT MIN(ceremony) FROM $ceremonies_table WHERE ceremony > %d", $ceremony)
+            )
+        );
+        if ($summary['newer_ceremony'] <= 0) {
+            $summary['newer_ceremony'] = intval(
+                $wpdb->get_var(
+                    $wpdb->prepare("SELECT MIN(ceremony) FROM $source_table WHERE ceremony > %d", $ceremony)
+                )
+            );
+        }
+
+        $summary['older_ceremony'] = intval(
+            $wpdb->get_var(
+                $wpdb->prepare("SELECT MAX(ceremony) FROM $ceremonies_table WHERE ceremony < %d", $ceremony)
+            )
+        );
+        if ($summary['older_ceremony'] <= 0) {
+            $summary['older_ceremony'] = intval(
+                $wpdb->get_var(
+                    $wpdb->prepare("SELECT MAX(ceremony) FROM $source_table WHERE ceremony < %d", $ceremony)
+                )
+            );
+        }
+
+        set_transient($cache_key, $summary, 15 * MINUTE_IN_SECONDS);
+        return $summary;
+    }
+
+    /**
      * Return cached summary stats for a category hub.
      */
     public function get_category_summary($canonical_category) {
@@ -4927,13 +5130,18 @@ class Academy_Awards_Table {
      */
     public function get_latest_year_label() {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'academy_awards';
+        $ceremonies_table = $this->get_ceremonies_table_name();
+        $source_table = $this->get_table_name();
+        $this->ensure_projection_data_available();
         $cached = get_transient('aat_latest_year_label_v1');
         if ($cached !== false) {
             return is_string($cached) ? $cached : '';
         }
-        $row = $wpdb->get_row("SELECT year FROM $table_name ORDER BY ceremony DESC, id DESC LIMIT 1", ARRAY_A);
-        $year = is_array($row) ? (string) ($row['year'] ?? '') : '';
+        $year = (string) $wpdb->get_var("SELECT year_label FROM $ceremonies_table ORDER BY ceremony DESC LIMIT 1");
+        if ($year === '') {
+            $row = $wpdb->get_row("SELECT year FROM $source_table ORDER BY ceremony DESC, id DESC LIMIT 1", ARRAY_A);
+            $year = is_array($row) ? (string) ($row['year'] ?? '') : '';
+        }
         set_transient('aat_latest_year_label_v1', $year, 6 * HOUR_IN_SECONDS);
         return $year;
     }

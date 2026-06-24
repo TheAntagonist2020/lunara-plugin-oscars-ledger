@@ -21,26 +21,14 @@ $hub_id = sanitize_text_field(get_query_var('aat_hub_id'));
 global $wpdb;
 $table_name = $wpdb->prefix . 'academy_awards';
 
-// Common dynamic scope values — cached to avoid 6 COUNT queries on every hub page load.
-$hub_stats_cache_key = 'aat_hub_page_stats_v1';
-$hub_stats = get_transient( $hub_stats_cache_key );
-if ( ! is_array( $hub_stats ) ) {
-    $hub_stats = array(
-        'total_records'    => intval($wpdb->get_var("SELECT COUNT(*) FROM $table_name")),
-        'total_winners'    => intval($wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE winner = 1")),
-        'total_categories' => intval($wpdb->get_var("SELECT COUNT(DISTINCT canonical_category) FROM $table_name WHERE canonical_category != ''")),
-        'total_ceremonies' => intval($wpdb->get_var("SELECT COUNT(DISTINCT ceremony) FROM $table_name")),
-        'min_ceremony'     => intval($wpdb->get_var("SELECT MIN(ceremony) FROM $table_name")),
-        'max_ceremony'     => intval($wpdb->get_var("SELECT MAX(ceremony) FROM $table_name")),
-    );
-    set_transient( $hub_stats_cache_key, $hub_stats, 15 * MINUTE_IN_SECONDS );
-}
-$total_records    = $hub_stats['total_records'];
-$total_winners    = $hub_stats['total_winners'];
-$total_categories = $hub_stats['total_categories'];
-$total_ceremonies = $hub_stats['total_ceremonies'];
-$min_ceremony     = $hub_stats['min_ceremony'];
-$max_ceremony     = $hub_stats['max_ceremony'];
+// Common dynamic scope values are supplied by projection-aware helpers.
+$hub_stats = $aat->get_hub_page_stats();
+$total_records    = intval($hub_stats['total_records'] ?? 0);
+$total_winners    = intval($hub_stats['total_winners'] ?? 0);
+$total_categories = intval($hub_stats['total_categories'] ?? 0);
+$total_ceremonies = intval($hub_stats['total_ceremonies'] ?? 0);
+$min_ceremony     = intval($hub_stats['min_ceremony'] ?? 0);
+$max_ceremony     = intval($hub_stats['max_ceremony'] ?? 0);
 $span = '';
 if ($min_ceremony > 0 && $max_ceremony > 0) {
     $first_year = $aat->get_ceremony_year($min_ceremony);
@@ -865,15 +853,16 @@ get_header();
             if ($ceremony <= 0) {
                 $mark_404();
             }
-            $year_label = $aat->get_ceremony_year($ceremony);
-            $noms = intval($wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE ceremony = %d", $ceremony)));
-            $wins = intval($wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE ceremony = %d AND winner = 1", $ceremony)));
-            $cats_count = intval($wpdb->get_var($wpdb->prepare("SELECT COUNT(DISTINCT canonical_category) FROM $table_name WHERE ceremony = %d AND canonical_category != ''", $ceremony)));
-            $cats = $wpdb->get_col($wpdb->prepare("SELECT DISTINCT canonical_category FROM $table_name WHERE ceremony = %d AND canonical_category != '' ORDER BY canonical_category ASC", $ceremony));
+            $ceremony_summary = $aat->get_ceremony_summary($ceremony);
+            $year_label = (string) ($ceremony_summary['year_label'] ?? '');
+            $noms = intval($ceremony_summary['nominations'] ?? 0);
+            $wins = intval($ceremony_summary['wins'] ?? 0);
+            $cats_count = intval($ceremony_summary['categories_count'] ?? 0);
+            $cats = !empty($ceremony_summary['categories']) && is_array($ceremony_summary['categories']) ? $ceremony_summary['categories'] : array();
             $ceremony_rollup = method_exists($aat, 'get_ceremony_rollup') ? $aat->get_ceremony_rollup($ceremony) : array();
             $is_latest_ceremony = ($ceremony === intval($aat->get_max_ceremony()));
-            $newer_ceremony = intval($wpdb->get_var($wpdb->prepare("SELECT MIN(ceremony) FROM $table_name WHERE ceremony > %d", $ceremony)));
-            $older_ceremony = intval($wpdb->get_var($wpdb->prepare("SELECT MAX(ceremony) FROM $table_name WHERE ceremony < %d", $ceremony)));
+            $newer_ceremony = intval($ceremony_summary['newer_ceremony'] ?? 0);
+            $older_ceremony = intval($ceremony_summary['older_ceremony'] ?? 0);
             $ceremony_ballot_ledger = method_exists($aat, 'get_ceremony_ballot_ledger') ? $aat->get_ceremony_ballot_ledger($ceremony) : array();
             $ceremony_ballot_groups = !empty($ceremony_ballot_ledger['categories']) && is_array($ceremony_ballot_ledger['categories']) ? $ceremony_ballot_ledger['categories'] : array();
             $ceremony_review_map = !empty($ceremony_ballot_ledger['review_map']) && is_array($ceremony_ballot_ledger['review_map']) ? $ceremony_ballot_ledger['review_map'] : array();
