@@ -4980,6 +4980,91 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     margin-top: 4px;
 }
 
+.aat-generic-category-dossier .aat-generic-category-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(300px, .92fr);
+    gap: 24px;
+    align-items: stretch;
+    padding: 34px;
+    border: 1px solid rgba(201, 169, 97, 0.24);
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 88% 12%, rgba(201, 169, 97, 0.18), transparent 30%),
+        linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.018)),
+        rgba(8, 18, 29, 0.94);
+    overflow: hidden;
+}
+
+.aat-generic-category-dossier .aat-dossier-hero-copy {
+    display: grid;
+    align-content: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.aat-generic-category-dossier .aat-dossier-hero .aat-hub-title {
+    max-width: 11ch;
+    color: var(--aat-white);
+    text-align: left;
+    text-transform: none;
+}
+
+.aat-generic-category-dossier .aat-dossier-hero .aat-hub-subtitle {
+    max-width: 62ch;
+    color: rgba(244, 239, 227, 0.84);
+    line-height: 1.68;
+}
+
+.aat-generic-category-dossier .aat-dossier-command-band {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-self: center;
+    min-width: 0;
+}
+
+.aat-generic-category-dossier .aat-dossier-command-card {
+    display: grid;
+    align-content: end;
+    gap: 8px;
+    min-height: 112px;
+    padding: 17px;
+    border: 1px solid rgba(201, 169, 97, 0.20);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,.052), rgba(255,255,255,.018)), rgba(6, 15, 26, .72);
+}
+
+.aat-generic-category-dossier .aat-dossier-command-card.is-latest {
+    grid-column: 1 / -1;
+    min-height: 142px;
+}
+
+.aat-generic-category-dossier .aat-dossier-command-card span {
+    color: var(--aat-gold-light);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+.aat-generic-category-dossier .aat-dossier-command-card strong {
+    color: var(--aat-white);
+    font-size: 1.38rem;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+}
+
+.aat-generic-category-dossier .aat-dossier-command-card.is-latest strong {
+    color: var(--aat-gold);
+    font-size: 1.72rem;
+}
+
+.aat-generic-category-dossier .aat-dossier-actions {
+    grid-column: 1 / -1;
+    justify-content: start;
+    margin-top: 4px;
+}
+
 /* --- Decade jump pills ---------------------------------------------------- */
 .aat-decade-nav {
     display: flex;
@@ -5150,6 +5235,136 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 6px;
+}
+
+.aat-category-dossier .aat-ledger-card {
+    display: grid;
+    grid-template-columns: minmax(136px, .25fr) minmax(0, 1fr);
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.aat-category-dossier .aat-ledger-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, rgba(201,169,97,.12), transparent 24%),
+        linear-gradient(180deg, rgba(255,255,255,.035), transparent 58%);
+    opacity: .72;
+}
+
+.aat-category-dossier .aat-ledger-card > * {
+    position: relative;
+}
+
+.aat-category-dossier .aat-ledger-card .aat-category-ceremony-meta {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    margin: 0;
+    padding: 0 16px 0 0;
+    border-right: 1px dashed rgba(201, 169, 97, 0.22);
+    border-bottom: 0;
+}
+
+.aat-category-person-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    margin: 10px 0 8px;
+    padding: 10px;
+    border: 1px solid rgba(201, 169, 97, 0.16);
+    border-radius: 10px;
+    background: rgba(2, 9, 18, 0.34);
+}
+
+.aat-category-person-strip.is-compact {
+    grid-column: 2;
+    margin: 4px 0 2px;
+    padding: 8px;
+}
+
+.aat-category-person-strip-label {
+    color: rgba(201, 169, 97, 0.9);
+    font-size: .66rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+.aat-category-person-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    max-width: 100%;
+    padding: 5px 9px;
+    border: 1px solid rgba(201, 169, 97, 0.25);
+    border-radius: 999px;
+    color: rgba(244, 239, 227, 0.94);
+    background: rgba(255, 255, 255, 0.045);
+    font-size: .82rem;
+    line-height: 1.15;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.aat-category-person-chip:hover,
+.aat-category-person-chip:focus-visible {
+    border-color: rgba(201, 169, 97, 0.72);
+    color: #07101b;
+    background: #c9a961;
+    text-decoration: none;
+}
+
+@media (max-width: 700px) {
+    .aat-generic-category-dossier .aat-generic-category-hero,
+    .aat-generic-category-dossier .aat-dossier-command-band,
+    .aat-category-dossier .aat-ledger-card {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .aat-generic-category-dossier .aat-generic-category-hero {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .aat-generic-category-dossier .aat-dossier-command-card,
+    .aat-generic-category-dossier .aat-dossier-command-card.is-latest {
+        min-height: 0;
+        padding: 15px;
+    }
+
+    .aat-generic-category-dossier .aat-dossier-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
+    }
+
+    .aat-generic-category-dossier .aat-dossier-actions .aat-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .aat-category-dossier .aat-ledger-card .aat-category-ceremony-meta {
+        padding: 0 0 10px;
+        border-right: 0;
+        border-bottom: 1px dashed rgba(201, 169, 97, 0.22);
+    }
+
+    .aat-category-person-strip,
+    .aat-category-person-strip.is-compact {
+        grid-column: auto;
+        align-items: stretch;
+    }
+
+    .aat-category-person-chip {
+        justify-content: center;
+        text-align: center;
+    }
 }
 
 /* --- Nominee trail (collapsible) ----------------------------------------- */
@@ -5551,7 +5766,8 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
 .aat-container,
 .aat-container *,
 .aat-entity-page,
-.aat-hub-page {
+.aat-hub-page,
+.aat-inner-route-system {
     box-sizing: border-box;
 }
 
@@ -5563,6 +5779,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
 
 .aat-entity-page,
 .aat-hub-page,
+.aat-inner-route-system,
 .aat-hub-section,
 .aat-entity-hero,
 .aat-entity-main,
@@ -5572,6 +5789,12 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
 .aat-table-wrapper {
     min-width: 0;
     max-width: 100%;
+}
+
+.aat-inner-route-system {
+    display: grid;
+    gap: 28px;
+    overflow-x: clip;
 }
 
 @media (max-width: 640px) {

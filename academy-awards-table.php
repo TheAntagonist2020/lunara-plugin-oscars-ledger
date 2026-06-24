@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.32
+ * Version: 2.7.33
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.32');
+define('AAT_VERSION', '2.7.33');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -6983,6 +6983,126 @@ class Academy_Awards_Table {
         $entity_type = $this->infer_entity_type_from_id($id);
         if ($entity_type !== '') return esc_url_raw($base . $entity_type . '/' . strtolower($id) . '/');
         return '';
+    }
+
+    /**
+     * Resolve a visible person label to an internal name entity link.
+     */
+    public function get_name_entity_link_by_label($label) {
+        global $wpdb;
+
+        $label = trim((string) wp_strip_all_tags($label));
+        $empty = array(
+            'label' => $label,
+            'id'    => '',
+            'url'   => '',
+        );
+
+        if ($label === '') {
+            return $empty;
+        }
+
+        $cache_key = 'aat_name_entity_link_by_label_' . md5($label);
+        $cached = get_transient($cache_key);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $normalized_label = $this->normalize_entity_name_key($label);
+        if ($normalized_label === '') {
+            set_transient($cache_key, $empty, HOUR_IN_SECONDS);
+            return $empty;
+        }
+
+        $split_visible_credit_labels = function($value) {
+            $value = trim((string) $value);
+            if ($value === '') {
+                return array();
+            }
+
+            $parts = strpos($value, '|') !== false
+                ? explode('|', $value)
+                : preg_split('/\s*(?:,|\s+and\s+)\s*/i', $value);
+
+            return array_values(array_filter(array_map(function($part) {
+                return trim((string) wp_strip_all_tags($part));
+            }, (array) $parts), 'strlen'));
+        };
+
+        $entities_table = $this->get_entities_table_name();
+        $entity_stats_table = $this->get_entity_stats_table_name();
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT e.entity_id, e.label
+                 FROM $entities_table e
+                 LEFT JOIN $entity_stats_table s ON s.entity_id = e.entity_id
+                 WHERE e.entity_type = %s
+                   AND e.sort_label = %s
+                 ORDER BY CASE WHEN e.entity_id REGEXP %s THEN 0 ELSE 1 END, COALESCE(s.nominations, 0) DESC, e.entity_id ASC
+                 LIMIT 1",
+                'name',
+                $normalized_label,
+                '^nm[0-9]{7,9}$'
+            ),
+            ARRAY_A
+        );
+
+        if (is_array($row) && !empty($row['entity_id']) && $this->is_name_entity_id((string) $row['entity_id'])) {
+            $result = array(
+                'label' => trim((string) ($row['label'] ?? $label)) ?: $label,
+                'id'    => strtolower(trim((string) $row['entity_id'])),
+                'url'   => $this->build_entity_url_from_id((string) $row['entity_id']),
+            );
+            set_transient($cache_key, $result, 12 * HOUR_IN_SECONDS);
+            return $result;
+        }
+
+        $table_name = $this->get_table_name();
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT name, nominees, nominee_ids
+                 FROM $table_name
+                 WHERE TRIM(COALESCE(nominee_ids, '')) <> ''
+                   AND (nominees LIKE %s OR name = %s)
+                 LIMIT 60",
+                '%' . $wpdb->esc_like($label) . '%',
+                $label
+            ),
+            ARRAY_A
+        );
+
+        foreach ((array) $rows as $candidate_row) {
+            $candidate_labels = $split_visible_credit_labels($candidate_row['nominees'] ?? '');
+            if (empty($candidate_labels) && !empty($candidate_row['name'])) {
+                $candidate_labels = $split_visible_credit_labels($candidate_row['name']);
+            }
+
+            $candidate_ids = $this->extract_entity_reference_ids($candidate_row['nominee_ids'] ?? '');
+            foreach ($candidate_labels as $index => $candidate_label) {
+                $candidate_label = trim((string) $candidate_label);
+                if ($candidate_label === '' || $this->normalize_entity_name_key($candidate_label) !== $normalized_label) {
+                    continue;
+                }
+
+                $candidate_id = isset($candidate_ids[$index]) ? strtolower(trim((string) $candidate_ids[$index])) : '';
+                if ($candidate_id === '' || !$this->is_name_entity_id($candidate_id)) {
+                    continue;
+                }
+
+                $canonical_id = $this->canonicalize_name_entity_id_for_label($candidate_id, $candidate_label);
+                $result = array(
+                    'label' => $candidate_label,
+                    'id'    => $canonical_id,
+                    'url'   => $this->build_entity_url_from_id($canonical_id),
+                );
+                set_transient($cache_key, $result, 12 * HOUR_IN_SECONDS);
+                return $result;
+            }
+        }
+
+        set_transient($cache_key, $empty, HOUR_IN_SECONDS);
+        return $empty;
     }
 
     /**

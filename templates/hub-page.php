@@ -263,6 +263,77 @@ $aat_enrich_winner_entry_links = function($entry) use ($aat, $aat_winner_primary
     return $entry;
 };
 
+$aat_build_person_link_items = function($entry) use ($aat, $aat_clean_nominee_label, $aat_build_entity_url) {
+    $entry = is_array($entry) ? $entry : array();
+    $split_credit_labels = function($value) use ($aat_clean_nominee_label) {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return array();
+        }
+
+        $parts = strpos($value, '|') !== false
+            ? explode('|', $value)
+            : preg_split('/\s*(?:,|\s+and\s+)\s*/i', $value);
+
+        return array_values(array_filter(array_map(function($part) use ($aat_clean_nominee_label) {
+            return $aat_clean_nominee_label($part);
+        }, (array) $parts), 'strlen'));
+    };
+
+    $labels = $split_credit_labels($entry['nominees'] ?? '');
+    $ids = array_values(array_filter(array_map('trim', explode('|', (string) ($entry['nominee_ids'] ?? ''))), 'strlen'));
+
+    if (empty($labels) && !empty($entry['person_label'])) {
+        $labels[] = trim((string) $entry['person_label']);
+    } elseif (empty($labels) && !empty($entry['name'])) {
+        $labels = $split_credit_labels($entry['name']);
+    }
+
+    $items = array();
+    $seen = array();
+
+    foreach ($labels as $index => $label) {
+        $label = trim((string) $label);
+        if ($label === '') {
+            continue;
+        }
+
+        $entity_id = isset($ids[$index]) ? strtolower(trim((string) $ids[$index])) : '';
+        $url = '';
+
+        if ($entity_id !== '' && preg_match('/^(nm\d{7,9}|lnm-[a-z0-9-]+)$/i', $entity_id)) {
+            $url = $aat_build_entity_url($entity_id);
+        }
+
+        if ($url === '' && method_exists($aat, 'get_name_entity_link_by_label')) {
+            $resolved = $aat->get_name_entity_link_by_label($label);
+            if (!empty($resolved['url'])) {
+                $url = (string) $resolved['url'];
+                if (!empty($resolved['label'])) {
+                    $label = (string) $resolved['label'];
+                }
+            }
+        }
+
+        if ($url === '') {
+            continue;
+        }
+
+        $fingerprint = strtolower($url . '|' . $label);
+        if (isset($seen[$fingerprint])) {
+            continue;
+        }
+
+        $seen[$fingerprint] = true;
+        $items[] = array(
+            'label' => $label,
+            'url'   => $url,
+        );
+    }
+
+    return $items;
+};
+
 $aat_render_hub_text_link = function($label, $url = '', $class = '') {
     $label = trim((string) $label);
     if ($label === '') {
@@ -1907,6 +1978,15 @@ get_header();
             }
 
             $label = $aat->format_category_display($canonical);
+            $category_heading_label = $label;
+            if ($category_heading_label !== '' && strtoupper($category_heading_label) === $category_heading_label) {
+                $category_heading_label = ucwords(strtolower($category_heading_label));
+                $category_heading_label = str_replace(
+                    array(' And ', ' Of ', ' In ', ' For '),
+                    array(' and ', ' of ', ' in ', ' for '),
+                    $category_heading_label
+                );
+            }
             $category_summary = method_exists($aat, 'get_category_summary') ? $aat->get_category_summary($canonical) : array();
             $noms = intval($category_summary['nominations'] ?? 0);
             $wins = intval($category_summary['wins'] ?? 0);
@@ -2051,7 +2131,7 @@ get_header();
                 $latest_winner_label = !empty($latest_winner['primary_label']) ? (string) $latest_winner['primary_label'] : (!empty($latest_winner['film']) ? (string) $latest_winner['film'] : (string) ($latest_winner['name'] ?? ''));
             }
     ?>
-        <div class="aat-category-dossier<?php echo $is_premium_category_dossier ? ' aat-premium-category-dossier ' . esc_attr((string) $premium_category_profile['class']) : ''; ?>">
+        <div class="aat-category-dossier aat-inner-route-system<?php echo $is_premium_category_dossier ? ' aat-premium-category-dossier ' . esc_attr((string) $premium_category_profile['class']) : ' aat-generic-category-dossier'; ?>">
         <?php if ($is_premium_category_dossier) : ?>
             <style>
                 body .aat-container .aat-premium-category-dossier{min-width:0!important;max-width:100%!important;overflow:hidden!important}
@@ -2106,15 +2186,43 @@ get_header();
                 </div>
             </section>
         <?php else : ?>
-            <div class="aat-hub-header">
-                <h1 class="aat-hub-title"><?php echo esc_html($label); ?></h1>
-                <p class="aat-hub-subtitle"><?php echo esc_html($canonical); ?></p>
-
-                <div class="aat-hub-actions">
+            <section class="aat-dossier-hero aat-generic-category-hero">
+                <div class="aat-dossier-hero-copy">
+                    <p class="aat-hub-kicker"><?php echo esc_html__('Oscar Category File', 'academy-awards-table'); ?></p>
+                    <h1 class="aat-hub-title"><?php echo esc_html($category_heading_label); ?></h1>
+                    <p class="aat-hub-subtitle"><?php echo esc_html(sprintf(
+                        /* translators: %s: Oscar category display label. */
+                        __('A working %s dossier with winners, craft credits, ceremony trails, and nominee history kept close to the surface.', 'academy-awards-table'),
+                        $category_heading_label
+                    )); ?></p>
+                </div>
+                <div class="aat-dossier-command-band" aria-label="<?php echo esc_attr(sprintf(__('%s category summary', 'academy-awards-table'), $category_heading_label)); ?>">
+                    <div class="aat-dossier-command-card is-latest">
+                        <span><?php echo esc_html__('Latest Winner', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html($latest_winner_label !== '' ? $latest_winner_label : __('Pending', 'academy-awards-table')); ?></strong>
+                    </div>
+                    <div class="aat-dossier-command-card">
+                        <span><?php echo esc_html__('Span', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html($category_span_label !== '' ? $category_span_label : '-'); ?></strong>
+                    </div>
+                    <div class="aat-dossier-command-card">
+                        <span><?php echo esc_html__('Ceremonies', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html(number_format_i18n($cers)); ?></strong>
+                    </div>
+                    <div class="aat-dossier-command-card">
+                        <span><?php echo esc_html__('Winners', 'academy-awards-table'); ?></span>
+                        <strong><?php echo esc_html(number_format_i18n($wins)); ?></strong>
+                    </div>
+                </div>
+                <div class="aat-hub-actions aat-dossier-actions">
                     <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($aat->get_categories_index_url()); ?>"><?php echo esc_html__('All Categories', 'academy-awards-table'); ?></a>
+                    <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($aat->get_ceremonies_index_url()); ?>"><?php echo esc_html__('Ceremonies', 'academy-awards-table'); ?></a>
+                    <?php if ($latest_ceremony_url !== '') : ?>
+                        <a class="aat-btn aat-btn-secondary" href="<?php echo esc_url($latest_ceremony_url); ?>"><?php echo esc_html__('Latest Ceremony', 'academy-awards-table'); ?></a>
+                    <?php endif; ?>
                     <a class="aat-btn aat-btn-primary" href="<?php echo esc_url($db_url); ?>"><?php echo esc_html__('Open Full Ledger', 'academy-awards-table'); ?></a>
                 </div>
-            </div>
+            </section>
         <?php endif; ?>
 
         <?php if (!empty($latest_winner)) : ?>
@@ -2324,7 +2432,7 @@ get_header();
                                     $render_full_nominee_trail = $category_history_full_requested || $category_history_rendered_ceremonies <= $category_history_recent_trail_limit;
                                     $render_compact_actions = !$category_history_full_requested && !$render_full_nominee_trail;
                                 ?>
-                                    <article class="aat-category-ceremony-row<?php echo $is_premium_category_dossier ? ' aat-ledger-card' : ''; ?>">
+                                    <article class="aat-category-ceremony-row aat-ledger-card<?php echo $is_premium_category_dossier ? ' is-premium-ledger-card' : ''; ?>">
                                         <header class="aat-category-ceremony-meta">
                                             <?php if ($cer_url !== '' && $cer > 0) : ?>
                                                 <a class="aat-entity-link aat-timeline-link" href="<?php echo esc_url($cer_url); ?>"><?php echo esc_html($aat->ordinal($cer)); ?> <?php esc_html_e('Ceremony', 'academy-awards-table'); ?></a>
@@ -2340,6 +2448,7 @@ get_header();
                                             $winner_row = $aat_enrich_winner_entry_links($winner_row);
                                             $winner_row['category_label'] = $label;
                                             $winner_actions  = $aat_build_winner_actions($winner_row, (string) ($winner_row['category_url'] ?? ''), $cer_url);
+                                            $winner_people   = $aat_build_person_link_items($winner_row);
                                             if ($render_compact_actions && !empty($winner_actions)) {
                                                 $winner_actions = array_values(array_filter($winner_actions, function($winner_action) {
                                                     $kind = isset($winner_action['kind']) ? sanitize_key((string) $winner_action['kind']) : '';
@@ -2359,6 +2468,14 @@ get_header();
                                                 <?php endif; ?>
                                                 <?php if (!empty($winner_row['detail'])) : ?>
                                                     <p class="aat-category-history-detail"><?php echo esc_html((string) $winner_row['detail']); ?></p>
+                                                <?php endif; ?>
+                                                <?php if (!empty($winner_people) && (count($winner_people) > 1 || empty($winner_row['primary_url']))) : ?>
+                                                    <div class="aat-category-person-strip" aria-label="<?php echo esc_attr__('Linked craft credits', 'academy-awards-table'); ?>">
+                                                        <span class="aat-category-person-strip-label"><?php echo esc_html__('Craft Credits', 'academy-awards-table'); ?></span>
+                                                        <?php foreach ($winner_people as $person_item) : ?>
+                                                            <a class="aat-category-person-chip" href="<?php echo esc_url($person_item['url']); ?>"><?php echo esc_html($person_item['label']); ?></a>
+                                                        <?php endforeach; ?>
+                                                    </div>
                                                 <?php endif; ?>
                                                 <?php if (!empty($winner_actions)) : ?>
                                                     <div class="aat-category-history-actions">
@@ -2385,6 +2502,7 @@ get_header();
                                                         $nominee_row['category_label'] = $label;
                                                         $nominee_primary   = trim((string) ($nominee_row['primary_label'] ?? ''));
                                                         $nominee_secondary = trim((string) ($nominee_row['secondary_label'] ?? ''));
+                                                        $nominee_people    = $aat_build_person_link_items($nominee_row);
                                                         $nominee_deep_links = array();
                                                         if (!empty($nominee_row['film_history_url'])) {
                                                             $nominee_deep_links[] = array(
@@ -2411,6 +2529,14 @@ get_header();
                                                             <?php endif; ?>
                                                             <?php if (!empty($nominee_row['detail'])) : ?>
                                                                 <span class="aat-nominee-detail"><?php echo esc_html((string) $nominee_row['detail']); ?></span>
+                                                            <?php endif; ?>
+                                                            <?php if (!empty($nominee_people) && (count($nominee_people) > 1 || empty($nominee_row['primary_url']))) : ?>
+                                                                <span class="aat-category-person-strip is-compact" aria-label="<?php echo esc_attr__('Linked nominee credits', 'academy-awards-table'); ?>">
+                                                                    <span class="aat-category-person-strip-label"><?php echo esc_html__('Credits', 'academy-awards-table'); ?></span>
+                                                                    <?php foreach ($nominee_people as $person_item) : ?>
+                                                                        <a class="aat-category-person-chip" href="<?php echo esc_url($person_item['url']); ?>"><?php echo esc_html($person_item['label']); ?></a>
+                                                                    <?php endforeach; ?>
+                                                                </span>
                                                             <?php endif; ?>
                                                             <?php if (!empty($nominee_deep_links)) : ?>
                                                                 <span class="aat-nominee-trail-actions">
