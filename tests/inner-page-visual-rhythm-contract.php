@@ -45,6 +45,15 @@ foreach (array(
     $assert(strpos($css, $needle) !== false, "CSS should define {$needle}.");
 }
 
+foreach (array(
+    'Generic category dossier final mobile guard',
+    '.aat-container .aat-generic-category-dossier .aat-dossier-command-card strong',
+    'body .aat-container .aat-category-dossier.aat-generic-category-dossier',
+    'overflow-wrap: anywhere !important',
+) as $needle) {
+    $assert(strpos($css, $needle) !== false, "Generic category mobile guard should include {$needle}.");
+}
+
 if ($failures) {
     fwrite(STDERR, implode("\n", $failures) . "\n");
     exit(1);

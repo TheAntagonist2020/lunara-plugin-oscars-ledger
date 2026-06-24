@@ -5367,6 +5367,56 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     }
 }
 
+/* Generic category dossier final mobile guard: craft categories can carry long credit strings. */
+@media (max-width: 640px) {
+    .aat-container .aat-generic-category-dossier,
+    .aat-container .aat-generic-category-dossier *,
+    .aat-container .aat-generic-category-dossier .aat-hub-breadcrumbs,
+    .aat-container .aat-generic-category-dossier .aat-dossier-hero,
+    .aat-container .aat-generic-category-dossier .aat-dossier-hero-copy,
+    .aat-container .aat-generic-category-dossier .aat-hub-subtitle,
+    .aat-container .aat-generic-category-dossier .aat-dossier-command-band,
+    .aat-container .aat-generic-category-dossier .aat-dossier-command-card,
+    .aat-container .aat-generic-category-dossier .aat-dossier-actions,
+    .aat-container .aat-generic-category-dossier .aat-ledger-card {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    body .aat-container .aat-category-dossier.aat-generic-category-dossier {
+        width: min(100%, calc(100vw - 24px)) !important;
+        max-width: calc(100vw - 24px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .aat-container .aat-generic-category-dossier .aat-hub-breadcrumbs {
+        justify-content: flex-start !important;
+        text-align: left !important;
+        overflow-wrap: anywhere !important;
+        white-space: normal !important;
+    }
+
+    .aat-container .aat-generic-category-dossier .aat-dossier-command-card strong,
+    .aat-container .aat-generic-category-dossier .aat-hub-title,
+    .aat-container .aat-generic-category-dossier .aat-hub-subtitle,
+    .aat-container .aat-generic-category-dossier .aat-category-history-title,
+    .aat-container .aat-generic-category-dossier .aat-category-history-meta,
+    .aat-container .aat-generic-category-dossier .aat-category-history-detail {
+        overflow-wrap: anywhere !important;
+        text-wrap: auto !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+
+    .aat-container .aat-generic-category-dossier .aat-dossier-command-card.is-latest strong {
+        font-size: clamp(1.28rem, 8vw, 1.56rem) !important;
+        line-height: 1.12 !important;
+    }
+}
+
 /* --- Nominee trail (collapsible) ----------------------------------------- */
 .aat-nominee-trail {
     margin-top: 14px;
