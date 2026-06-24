@@ -1,0 +1,41 @@
+# Repository metadata and documentation
+.deployignore
+.gitattributes
+.git
+.git/**
+.github
+.github/**
+.gitignore
+README.md
+LIVE_DEPLOY_CHECKLIST.md
+docs
+docs/**
+tests
+tests/**
+
+# Local backups, exports, and transient files
+*.bak
+*.bak-*
+*.log
+*.tmp
+*.zip
+*.sql
+*.xlsx
+*.docx
+
+# Dependency/build artifacts
+node_modules
+node_modules/**
+vendor
+vendor/**
+composer.json
+composer.lock
+package.json
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
