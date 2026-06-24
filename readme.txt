@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.33
+Stable tag: 2.7.34
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.34 =
+* Added honest Oscars person/profile visual-source states for local portraits, TMDb portraits, contextual title fallbacks, and no-portrait cases.
+* Expanded the private Person Profile Audit with visible portrait state/source columns to guide manual cleanup without exposing operational metadata publicly.
 
 = 2.7.33 =
 * Upgraded generic Oscar category pages into dossier-grade inner routes with command-band summaries, denser ledger-card rows, and linked craft/person credit chips where name entities can be resolved.

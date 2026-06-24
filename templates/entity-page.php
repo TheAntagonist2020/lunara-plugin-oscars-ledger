@@ -502,6 +502,17 @@ if ($entity === 'title' && method_exists($aat, 'get_title_visual_package')) {
 }
 $tmdb = !empty($visual['tmdb']) ? $visual['tmdb'] : array();
 $hero_classes = array('aat-entity-hero');
+$aat_person_visual_state = $entity === 'name' ? sanitize_html_class((string) ($visual['visual_state'] ?? 'no-portrait')) : '';
+$aat_person_visual_source = $entity === 'name' ? sanitize_html_class((string) ($visual['visual_source'] ?? 'none')) : '';
+if ($entity === 'name') {
+    $aat_person_visual_state = $aat_person_visual_state !== '' ? $aat_person_visual_state : 'no-portrait';
+    $aat_person_visual_source = $aat_person_visual_source !== '' ? $aat_person_visual_source : 'none';
+    $hero_classes[] = 'has-person-visual-state-' . $aat_person_visual_state;
+    $hero_classes[] = 'has-person-visual-source-' . $aat_person_visual_source;
+    if (in_array($aat_person_visual_state, array('no-portrait', 'contextual-fallback'), true)) {
+        $hero_classes[] = 'is-person-visual-fallback';
+    }
+}
 $hero_visual = ($entity === 'name' && !empty($latest_result['title_id']))
     ? $get_title_visual($latest_result['title_id'], 'medium_large')
     : $visual;
@@ -668,7 +679,21 @@ get_header();
             <?php $aat_company_poster_html = ($entity === 'company' && !empty($visual['poster_html'])) ? $visual['poster_html'] : ''; ?>
             <?php $aat_fallback_html = !empty($visual['fallback_html']) ? $visual['fallback_html'] : ''; ?>
             <?php if (!empty($aat_poster_html) || !empty($aat_company_poster_html) || !empty($visual['poster_url']) || !empty($aat_person_portrait_url) || !empty($aat_fallback_html)) : ?>
-                <div class="aat-entity-poster-wrap<?php echo $entity === 'name' ? ' is-person' : ''; ?><?php echo $entity === 'company' ? ' is-company' : ''; ?>">
+                <?php
+                $aat_visual_wrap_classes = array('aat-entity-poster-wrap');
+                if ($entity === 'name') {
+                    $aat_visual_wrap_classes[] = 'is-person';
+                    $aat_visual_wrap_classes[] = 'has-person-visual-state-' . $aat_person_visual_state;
+                    $aat_visual_wrap_classes[] = 'has-person-visual-source-' . $aat_person_visual_source;
+                    if (empty($aat_person_portrait_url)) {
+                        $aat_visual_wrap_classes[] = 'is-person-fallback';
+                    }
+                }
+                if ($entity === 'company') {
+                    $aat_visual_wrap_classes[] = 'is-company';
+                }
+                ?>
+                <div class="<?php echo esc_attr(implode(' ', $aat_visual_wrap_classes)); ?>">
                     <?php if (!empty($aat_poster_html)) : ?>
                         <?php echo $aat_poster_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     <?php elseif (!empty($aat_company_poster_html)) : ?>

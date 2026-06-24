@@ -146,9 +146,11 @@ $aat = Academy_Awards_Table::get_instance();
                     <thead>
                         <tr>
                             <th><?php echo esc_html__('Portrait', 'academy-awards-table'); ?></th>
+                            <th><?php echo esc_html__('Visual State', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Person ID', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Resolved Label', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Oscar Rows', 'academy-awards-table'); ?></th>
+                            <th><?php echo esc_html__('Source', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Match Strategy', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('File', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Status', 'academy-awards-table'); ?></th>
@@ -165,6 +167,12 @@ $aat = Academy_Awards_Table::get_instance();
                                     <?php endif; ?>
                                 </td>
                                 <td>
+                                    <strong><?php echo esc_html((string) ($audit_row['portrait_state_label'] ?? '')); ?></strong>
+                                    <?php if (!empty($audit_row['visual_state'])) : ?>
+                                        <div class="aat-muted"><code><?php echo esc_html((string) $audit_row['visual_state']); ?></code></div>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
                                     <code><?php echo esc_html((string) ($audit_row['person_id'] ?? '')); ?></code>
                                     <?php if (!empty($audit_row['profile_url'])) : ?>
                                         <div class="aat-muted"><a href="<?php echo esc_url((string) $audit_row['profile_url']); ?>" target="_blank" rel="noopener"><?php echo esc_html__('Open profile page', 'academy-awards-table'); ?></a></div>
@@ -172,6 +180,7 @@ $aat = Academy_Awards_Table::get_instance();
                                 </td>
                                 <td><?php echo esc_html((string) ($audit_row['label'] ?? '')); ?></td>
                                 <td><?php echo esc_html(number_format_i18n(intval($audit_row['nomination_count'] ?? 0))); ?></td>
+                                <td><code><?php echo esc_html((string) ($audit_row['visual_source'] ?? '')); ?></code></td>
                                 <td><?php echo esc_html((string) ($audit_row['match_strategy'] ?? '')); ?></td>
                                 <td>
                                     <?php if (!empty($audit_row['attached_file'])) : ?>

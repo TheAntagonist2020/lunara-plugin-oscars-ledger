@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.33
+ * Version: 2.7.34
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.33');
+define('AAT_VERSION', '2.7.34');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -8678,13 +8678,24 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         'meta_bits' => array(),
         'tmdb' => array(),
         'fallback_html' => '',
+        'visual_source' => 'none',
+        'visual_state' => 'no-portrait',
+        'portrait_attachment_id' => 0,
+        'portrait_match_strategy' => '',
+        'portrait_verified' => false,
     );
 
-    $local_attachment_id = $this->get_profile_attachment_id_for_person($nm_id);
+    $local_profile = $this->resolve_profile_attachment_for_person($nm_id, $dataset_name);
+    $local_attachment_id = intval($local_profile['attachment_id'] ?? 0);
+    $out['portrait_attachment_id'] = $local_attachment_id;
+    $out['portrait_match_strategy'] = (string) ($local_profile['match_strategy'] ?? '');
     if ($local_attachment_id > 0) {
         $local_portrait_url = wp_get_attachment_image_url($local_attachment_id, $size);
         if (is_string($local_portrait_url) && $local_portrait_url !== '') {
             $out['portrait_url'] = $local_portrait_url;
+            $out['visual_source'] = 'local-media-library';
+            $out['visual_state'] = 'local-portrait';
+            $out['portrait_verified'] = true;
         }
     }
 
@@ -8693,9 +8704,15 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $out['tmdb'] = $tmdb;
         if (empty($out['portrait_url']) && !empty($tmdb['profile_full'])) {
             $out['portrait_url'] = (string) $tmdb['profile_full'];
+            $out['visual_source'] = 'tmdb-person-profile';
+            $out['visual_state'] = 'tmdb-portrait';
         }
         if (!empty($tmdb['backdrop_full'])) {
             $out['backdrop_url'] = (string) $tmdb['backdrop_full'];
+        }
+        if ($out['visual_state'] === 'no-portrait' && !empty($out['backdrop_url'])) {
+            $out['visual_source'] = 'tmdb-contextual-title';
+            $out['visual_state'] = 'contextual-fallback';
         }
         if (!empty($tmdb['name'])) {
             $out['name'] = (string) $tmdb['name'];
@@ -8928,6 +8945,29 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             $resolved = $this->resolve_profile_attachment_for_person($person_id, $label);
             $attachment_id = intval($resolved['attachment_id'] ?? 0);
             $thumb_url = $attachment_id > 0 ? wp_get_attachment_image_url($attachment_id, array(60, 60)) : '';
+            $visual_source = 'none';
+            $visual_state = 'no-portrait';
+            $portrait_verified = false;
+            $portrait_state_label = __('No portrait', 'academy-awards-table');
+
+            if ($attachment_id > 0) {
+                $visual_source = 'local-media-library';
+                $visual_state = 'local-portrait';
+                $portrait_verified = true;
+                $portrait_state_label = __('Local portrait', 'academy-awards-table');
+            } else {
+                $cached_tmdb = get_transient('aat_tmdb_person_v2_' . $person_id);
+                if (is_array($cached_tmdb) && !empty($cached_tmdb['profile_full'])) {
+                    $visual_source = 'tmdb-person-profile';
+                    $visual_state = 'tmdb-portrait';
+                    $portrait_state_label = __('TMDb portrait', 'academy-awards-table');
+                    $thumb_url = (string) $cached_tmdb['profile_full'];
+                } elseif (is_array($cached_tmdb) && !empty($cached_tmdb['backdrop_full'])) {
+                    $visual_source = 'tmdb-contextual-title';
+                    $visual_state = 'contextual-fallback';
+                    $portrait_state_label = __('Contextual fallback', 'academy-awards-table');
+                }
+            }
 
             $audit[] = array(
                 'person_id' => $person_id,
@@ -8937,6 +8977,10 @@ public function get_person_visual_package($nm_id, $size = 'large') {
                 'thumb_url' => is_string($thumb_url) ? $thumb_url : '',
                 'matched' => $attachment_id > 0,
                 'match_strategy' => (string) ($resolved['match_strategy'] ?? ''),
+                'visual_source' => $visual_source,
+                'visual_state' => $visual_state,
+                'portrait_verified' => $portrait_verified,
+                'portrait_state_label' => $portrait_state_label,
                 'nomination_count' => is_array($entity_rows) ? count($entity_rows) : 0,
                 'profile_url' => $this->build_entity_url_from_id($person_id),
             );
