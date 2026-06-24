@@ -66,6 +66,7 @@ Examples:
 = 2.7.32 =
 * Added route-oriented composite indexes to plugin-owned Oscars reporting and legacy tables for faster ceremony/category/entity lookups.
 * Added a private source-data validation helper and contract for the repaired workbook and normalized SQL candidates.
+* Expanded source validation with header-adjusted row reconciliation, ID-shape checks, duplicate-key reporting, mojibake repair previews, and a documented path from external normalized SQL tables into plugin-owned `wp_aat_*` runtime tables.
 
 = 2.7.31 =
 * Added Theme Studio hooks for Oscars related-review count and treatment controls across ceremony, category, and profile routes.

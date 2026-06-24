@@ -27,6 +27,7 @@ Current baseline: `2.7.32`.
 - Oscars related-review cards collapse label-only visual fallbacks into intentional text-led cards instead of public empty media chambers.
 - Oscars related-review lanes now obey Theme Studio count and visual-treatment controls, including profile image focus support from the active theme.
 - Oscars reporting tables now declare route-oriented composite indexes for category, ceremony, winner, and entity lookups.
+- The private source validator distinguishes the raw SQL/workbook dimension delta from the header-adjusted data-row delta, reports ID-shape and duplicate-key checks, previews mojibake repair, and documents the safe external-SQL-to-`wp_aat_*` mapping path.
 
 ## Verification
 
