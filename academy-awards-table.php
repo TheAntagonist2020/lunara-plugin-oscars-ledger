@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.49
+ * Version: 2.7.50
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.49');
+define('AAT_VERSION', '2.7.50');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -9361,6 +9361,8 @@ public function get_person_visual_package($nm_id, $size = 'large') {
      * wp aat profile-images coverage --results-csv=/private/tmdb_profile_results.csv --batch=oscars-profile-images-20260625 --sample=25
      * wp aat profile-images existing-media-audit --folder=PEOPLE --sample=25 --output-csv=/private/people-media-reconciliation.csv
      * wp aat profile-images person-credit-audit --category=sound-mixing --state=unresolved --sample=50 --output-csv=/private/person-credit-reconciliation.csv
+     * wp aat profile-images person-credit-stage --input-csv=/private/person-credit-batch-01.csv
+     * wp aat profile-images person-credit-stage --input-csv=/private/person-credit-batch-01.csv --commit
      */
     public function handle_profile_image_batch_cli($args, $assoc_args) {
         if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI')) {
@@ -9368,8 +9370,32 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
 
         $mode = isset($args[0]) ? sanitize_key((string) $args[0]) : 'dry-run';
-        if (!in_array($mode, array('dry-run', 'import', 'coverage', 'existing-media-audit', 'person-credit-audit'), true)) {
-            WP_CLI::error('Mode must be dry-run, import, coverage, existing-media-audit, or person-credit-audit.');
+        if (!in_array($mode, array('dry-run', 'import', 'coverage', 'existing-media-audit', 'person-credit-audit', 'person-credit-stage'), true)) {
+            WP_CLI::error('Mode must be dry-run, import, coverage, existing-media-audit, person-credit-audit, or person-credit-stage.');
+        }
+
+        if ($mode === 'person-credit-stage') {
+            $options = $this->normalize_profile_image_person_credit_stage_cli_args(is_array($assoc_args) ? $assoc_args : array());
+            if (is_wp_error($options)) {
+                WP_CLI::error($options->get_error_message());
+            }
+
+            $stage = $this->stage_profile_image_person_credit_reviews_from_csv($options);
+            if (is_wp_error($stage)) {
+                WP_CLI::error($stage->get_error_message());
+            }
+
+            $summary = is_array($stage['summary'] ?? null) ? $stage['summary'] : array();
+            $samples = is_array($stage['samples'] ?? null) ? $stage['samples'] : array();
+            $this->profile_image_batch_cli_report($summary);
+            $this->profile_image_person_credit_stage_cli_samples($samples);
+
+            if (!empty($options['commit'])) {
+                WP_CLI::success('Person credit review annotations staged.');
+            } else {
+                WP_CLI::success('Person credit review staging dry-run complete. Re-run with --commit to write annotations.');
+            }
+            return;
         }
 
         if ($mode === 'person-credit-audit') {
@@ -9489,6 +9515,295 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $summary['errors'] = intval($summary['errors'] ?? 0);
         $this->profile_image_batch_cli_report($summary);
         WP_CLI::success('Manual profile image batch dry-run complete.');
+    }
+
+    private function profile_image_cli_flag_is_truthy($value) {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        $value = strtolower(trim((string) $value));
+        return in_array($value, array('1', 'true', 'yes', 'y', 'on'), true);
+    }
+
+    private function normalize_profile_image_person_credit_stage_cli_args($assoc_args) {
+        $clean_path = function($value) {
+            return trim((string) $value, " \t\n\r\0\x0B\"'");
+        };
+
+        $input_csv = isset($assoc_args['input-csv']) ? $clean_path($assoc_args['input-csv']) : '';
+        $state = isset($assoc_args['state']) ? sanitize_key((string) $assoc_args['state']) : 'candidate_found';
+        $limit = isset($assoc_args['limit']) ? intval($assoc_args['limit']) : 0;
+        $commit = isset($assoc_args['commit']) ? $this->profile_image_cli_flag_is_truthy($assoc_args['commit']) : false;
+        $overwrite = isset($assoc_args['overwrite']) ? $this->profile_image_cli_flag_is_truthy($assoc_args['overwrite']) : false;
+        $note_prefix = isset($assoc_args['note-prefix']) ? sanitize_text_field((string) $assoc_args['note-prefix']) : 'Private exact-ID candidate. Source row correction remains deferred.';
+
+        if ($input_csv === '') {
+            return new WP_Error('aat_person_credit_stage_missing_input', 'Pass --input-csv pointing at a private person-credit review batch CSV.');
+        }
+        if (!is_readable($input_csv)) {
+            return new WP_Error('aat_person_credit_stage_input_unreadable', 'The --input-csv file is not readable.');
+        }
+
+        $states = $this->get_person_credit_review_states();
+        if (!isset($states[$state])) {
+            return new WP_Error('aat_person_credit_stage_bad_state', 'Pass --state as one of: ' . implode(', ', array_keys($states)) . '.');
+        }
+
+        return array(
+            'mode' => 'person-credit-stage',
+            'input_csv' => $input_csv,
+            'state' => $state,
+            'limit' => max(0, min(1000, $limit)),
+            'commit' => $commit,
+            'overwrite' => $overwrite,
+            'note_prefix' => $note_prefix,
+        );
+    }
+
+    private function normalize_person_credit_stage_csv_key($key) {
+        $key = preg_replace('/^\xEF\xBB\xBF/', '', (string) $key);
+        $key = strtolower(trim($key));
+        $key = str_replace(array(' ', '-'), '_', $key);
+        return sanitize_key($key);
+    }
+
+    private function map_person_credit_stage_state($suggested_state, $fallback_state) {
+        $suggested_state = sanitize_key((string) $suggested_state);
+        if (in_array($suggested_state, array('candidate_found_with_portrait', 'candidate_found_id_only'), true)) {
+            return 'candidate_found';
+        }
+        if ($suggested_state === 'source_gap_or_department_credit') {
+            return 'source_gap';
+        }
+        if (in_array($suggested_state, array('manual_label_id_mismatch', 'manual_duplicate_name'), true)) {
+            return 'needs_review';
+        }
+
+        return $this->sanitize_person_credit_review_state($fallback_state);
+    }
+
+    private function build_person_credit_stage_note($row, $options) {
+        $parts = array();
+        $note_prefix = trim((string) ($options['note_prefix'] ?? ''));
+        if ($note_prefix !== '') {
+            $parts[] = $note_prefix;
+        }
+
+        $parts[] = 'Private batch file: ' . basename((string) ($options['input_csv'] ?? ''));
+
+        $context = array(
+            'Film' => $row['film'] ?? '',
+            'Ceremony' => $row['ceremony'] ?? '',
+            'Year' => $row['year'] ?? '',
+            'Suggested state' => $row['suggested_state'] ?? '',
+            'TMDb status' => $row['tmdb_status'] ?? '',
+            'TMDb person id' => $row['tmdb_person_id'] ?? '',
+            'TMDb image file' => $row['tmdb_image_file'] ?? '',
+            'Match confidence' => $row['match_confidence'] ?? '',
+            'Match note' => $row['match_note'] ?? '',
+        );
+
+        foreach ($context as $label => $value) {
+            $value = trim((string) $value);
+            if ($value !== '') {
+                $parts[] = $label . ': ' . $value;
+            }
+        }
+
+        return implode("\n", $parts);
+    }
+
+    private function read_person_credit_stage_csv_rows($options) {
+        $input_csv = (string) ($options['input_csv'] ?? '');
+        $limit = max(0, min(1000, intval($options['limit'] ?? 0)));
+        $handle = fopen($input_csv, 'r');
+        if (!$handle) {
+            return new WP_Error('aat_person_credit_stage_csv_open_failed', 'Could not open --input-csv for reading.');
+        }
+
+        $headers = fgetcsv($handle);
+        if (!is_array($headers) || empty($headers)) {
+            fclose($handle);
+            return new WP_Error('aat_person_credit_stage_csv_missing_header', 'The --input-csv file must include a header row.');
+        }
+
+        $keys = array();
+        foreach ($headers as $index => $header) {
+            $key = $this->normalize_person_credit_stage_csv_key($header);
+            if ($key !== '') {
+                $keys[$index] = $key;
+            }
+        }
+
+        $required = array('review_key', 'source_award_id', 'credit_label', 'proposed_person_id');
+        foreach ($required as $field) {
+            if (!in_array($field, $keys, true)) {
+                fclose($handle);
+                return new WP_Error('aat_person_credit_stage_csv_missing_column', 'The --input-csv file must include a ' . $field . ' column.');
+            }
+        }
+
+        $rows = array();
+        $errors = array();
+        $seen = array();
+        $row_number = 1;
+        while (($values = fgetcsv($handle)) !== false) {
+            $row_number++;
+            $raw = array();
+            foreach ($keys as $index => $key) {
+                $raw[$key] = isset($values[$index]) && is_scalar($values[$index]) ? trim((string) $values[$index]) : '';
+            }
+
+            if (implode('', $raw) === '') {
+                continue;
+            }
+
+            $review_key = $this->sanitize_person_credit_review_key($raw['review_key'] ?? '');
+            $source_award_id = absint($raw['source_award_id'] ?? 0);
+            $credit_label = sanitize_text_field((string) ($raw['credit_label'] ?? ''));
+            $proposed_person_id = strtolower(trim(sanitize_text_field((string) ($raw['proposed_person_id'] ?? ''))));
+            $category_slug = sanitize_title((string) ($raw['category_slug'] ?? ($raw['category'] ?? '')));
+            $state = $this->map_person_credit_stage_state($raw['suggested_state'] ?? '', (string) ($options['state'] ?? 'candidate_found'));
+
+            if ($review_key === '') {
+                $errors[] = 'Row ' . $row_number . ' has an invalid review_key.';
+                continue;
+            }
+            if (isset($seen[$review_key])) {
+                $errors[] = 'Row ' . $row_number . ' repeats review_key ' . $review_key . '.';
+                continue;
+            }
+            if ($source_award_id <= 0) {
+                $errors[] = 'Row ' . $row_number . ' has an invalid source_award_id.';
+                continue;
+            }
+            if ($credit_label === '') {
+                $errors[] = 'Row ' . $row_number . ' has an empty credit_label.';
+                continue;
+            }
+            if (!$this->is_imdb_name_entity_id($proposed_person_id)) {
+                $errors[] = 'Row ' . $row_number . ' has an invalid proposed_person_id.';
+                continue;
+            }
+
+            $seen[$review_key] = true;
+            $raw['review_key'] = $review_key;
+            $raw['source_award_id'] = $source_award_id;
+            $raw['credit_label'] = $credit_label;
+            $raw['proposed_person_id'] = $proposed_person_id;
+            $raw['category_slug'] = $category_slug;
+            $raw['review_state'] = $state;
+            $raw['correction_note'] = $this->build_person_credit_stage_note($raw, $options);
+            $rows[] = $raw;
+
+            if ($limit > 0 && count($rows) >= $limit) {
+                break;
+            }
+        }
+        fclose($handle);
+
+        if (!empty($errors)) {
+            return new WP_Error('aat_person_credit_stage_csv_errors', implode(' ', array_slice($errors, 0, 10)));
+        }
+        if (empty($rows)) {
+            return new WP_Error('aat_person_credit_stage_csv_empty', 'The --input-csv file did not contain any stageable rows.');
+        }
+
+        return $rows;
+    }
+
+    private function stage_profile_image_person_credit_reviews_from_csv($options) {
+        $rows = $this->read_person_credit_stage_csv_rows($options);
+        if (is_wp_error($rows)) {
+            return $rows;
+        }
+
+        $review_keys = array();
+        foreach ($rows as $row) {
+            $review_keys[] = (string) ($row['review_key'] ?? '');
+        }
+        $existing = $this->get_person_credit_review_records_for_keys($review_keys);
+
+        $summary = array(
+            'mode' => 'person-credit-stage',
+            'input_csv' => basename((string) ($options['input_csv'] ?? '')),
+            'state' => (string) ($options['state'] ?? 'candidate_found'),
+            'limit' => intval($options['limit'] ?? 0),
+            'commit' => !empty($options['commit']) ? 'yes' : 'no',
+            'overwrite' => !empty($options['overwrite']) ? 'yes' : 'no',
+            'parsed_rows' => count($rows),
+            'stageable' => 0,
+            'would_stage' => 0,
+            'staged' => 0,
+            'skipped_existing' => 0,
+            'errors' => 0,
+        );
+
+        $samples = array();
+        $errors = array();
+        foreach ($rows as $row) {
+            $review_key = (string) ($row['review_key'] ?? '');
+            if (isset($existing[$review_key]) && empty($options['overwrite'])) {
+                $summary['skipped_existing']++;
+                continue;
+            }
+
+            $summary['stageable']++;
+            if (empty($options['commit'])) {
+                $summary['would_stage']++;
+                $samples[] = $row;
+                continue;
+            }
+
+            $result = $this->replace_person_credit_review_record(array(
+                'review_key' => $review_key,
+                'review_state' => (string) ($row['review_state'] ?? 'candidate_found'),
+                'proposed_person_id' => (string) ($row['proposed_person_id'] ?? ''),
+                'category_slug' => (string) ($row['category_slug'] ?? ''),
+                'credit_label' => (string) ($row['credit_label'] ?? ''),
+                'correction_note' => (string) ($row['correction_note'] ?? ''),
+                'reviewer_user_id' => 0,
+            ));
+
+            if (is_wp_error($result)) {
+                $summary['errors']++;
+                $errors[] = $review_key . ': ' . $result->get_error_message();
+                continue;
+            }
+
+            $summary['staged']++;
+            $samples[] = $row;
+        }
+
+        if (!empty($errors)) {
+            foreach (array_slice($errors, 0, 10) as $error) {
+                WP_CLI::warning($error);
+            }
+        }
+
+        return array(
+            'summary' => $summary,
+            'samples' => array_slice($samples, 0, 10),
+        );
+    }
+
+    private function profile_image_person_credit_stage_cli_samples($samples) {
+        if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI') || empty($samples)) {
+            return;
+        }
+
+        WP_CLI::line('person_credit_stage_samples:');
+        foreach ($samples as $row) {
+            WP_CLI::line(sprintf(
+                '  - %s | #%d | %s | %s | %s',
+                (string) ($row['review_key'] ?? ''),
+                intval($row['source_award_id'] ?? 0),
+                (string) ($row['review_state'] ?? ''),
+                (string) ($row['credit_label'] ?? ''),
+                (string) ($row['proposed_person_id'] ?? '')
+            ));
+        }
     }
 
     private function normalize_profile_image_person_credit_audit_cli_args($assoc_args) {
@@ -9776,26 +10091,23 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         return $this->get_person_credit_review_key($match[1], $match[2]);
     }
 
-    private function save_person_credit_review_record_from_request($request) {
-        if (!current_user_can('manage_options')) {
-            return new WP_Error('aat_person_credit_review_forbidden', __('You do not have permission to save person-credit review states.', 'academy-awards-table'));
-        }
-
-        $review_key = $this->sanitize_person_credit_review_key($request['aat_person_credit_review_key'] ?? '');
+    private function replace_person_credit_review_record($args) {
+        $review_key = $this->sanitize_person_credit_review_key($args['review_key'] ?? '');
         if ($review_key === '') {
             return new WP_Error('aat_person_credit_review_bad_key', __('Invalid person-credit review key.', 'academy-awards-table'));
         }
 
         list($source_award_id, $label_index) = array_map('intval', explode(':', $review_key, 2));
-        $state = $this->sanitize_person_credit_review_state($request['aat_person_credit_review_state'] ?? '');
-        $proposed_person_id = isset($request['aat_person_credit_proposed_person_id']) ? strtolower(trim(sanitize_text_field(wp_unslash($request['aat_person_credit_proposed_person_id'])))) : '';
+        $state = $this->sanitize_person_credit_review_state($args['review_state'] ?? '');
+        $proposed_person_id = strtolower(trim(sanitize_text_field((string) ($args['proposed_person_id'] ?? ''))));
         if ($proposed_person_id !== '' && !$this->is_imdb_name_entity_id($proposed_person_id)) {
             return new WP_Error('aat_person_credit_review_bad_person_id', __('Proposed person ID must be a valid IMDb nm ID or blank.', 'academy-awards-table'));
         }
 
-        $category_slug = isset($request['aat_person_credit_category_slug']) ? sanitize_title(wp_unslash($request['aat_person_credit_category_slug'])) : '';
-        $credit_label = isset($request['aat_person_credit_label']) ? sanitize_text_field(wp_unslash($request['aat_person_credit_label'])) : '';
-        $note = isset($request['aat_person_credit_review_note']) ? sanitize_textarea_field(wp_unslash($request['aat_person_credit_review_note'])) : '';
+        $category_slug = sanitize_title((string) ($args['category_slug'] ?? ''));
+        $credit_label = sanitize_text_field((string) ($args['credit_label'] ?? ''));
+        $note = sanitize_textarea_field((string) ($args['correction_note'] ?? ''));
+        $reviewer_user_id = absint($args['reviewer_user_id'] ?? get_current_user_id());
         $now = current_time('mysql');
 
         global $wpdb;
@@ -9813,7 +10125,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
                 'review_state' => $state,
                 'proposed_person_id' => $proposed_person_id,
                 'correction_note' => $note,
-                'reviewer_user_id' => get_current_user_id(),
+                'reviewer_user_id' => $reviewer_user_id,
                 'reviewed_at' => $now,
                 'updated_at' => $now,
             ),
@@ -9825,6 +10137,36 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
 
         return true;
+    }
+
+    private function save_person_credit_review_record_from_request($request) {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error('aat_person_credit_review_forbidden', __('You do not have permission to save person-credit review states.', 'academy-awards-table'));
+        }
+
+        $review_key = $this->sanitize_person_credit_review_key($request['aat_person_credit_review_key'] ?? '');
+        if ($review_key === '') {
+            return new WP_Error('aat_person_credit_review_bad_key', __('Invalid person-credit review key.', 'academy-awards-table'));
+        }
+
+        $state = $this->sanitize_person_credit_review_state($request['aat_person_credit_review_state'] ?? '');
+        $proposed_person_id = isset($request['aat_person_credit_proposed_person_id']) ? strtolower(trim(sanitize_text_field(wp_unslash($request['aat_person_credit_proposed_person_id'])))) : '';
+        if ($proposed_person_id !== '' && !$this->is_imdb_name_entity_id($proposed_person_id)) {
+            return new WP_Error('aat_person_credit_review_bad_person_id', __('Proposed person ID must be a valid IMDb nm ID or blank.', 'academy-awards-table'));
+        }
+
+        $category_slug = isset($request['aat_person_credit_category_slug']) ? sanitize_title(wp_unslash($request['aat_person_credit_category_slug'])) : '';
+        $credit_label = isset($request['aat_person_credit_label']) ? sanitize_text_field(wp_unslash($request['aat_person_credit_label'])) : '';
+        $note = isset($request['aat_person_credit_review_note']) ? sanitize_textarea_field(wp_unslash($request['aat_person_credit_review_note'])) : '';
+        return $this->replace_person_credit_review_record(array(
+            'review_key' => $review_key,
+            'review_state' => $state,
+            'proposed_person_id' => $proposed_person_id,
+            'category_slug' => $category_slug,
+            'credit_label' => $credit_label,
+            'correction_note' => $note,
+            'reviewer_user_id' => get_current_user_id(),
+        ));
     }
 
     private function get_person_credit_review_records_for_keys($review_keys) {
@@ -10720,6 +11062,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $ordered = array(
             'mode',
             'source',
+            'input_csv',
             'results_csv',
             'missing_csv',
             'batch',
@@ -10732,6 +11075,13 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             'sample',
             'limit',
             'offset',
+            'commit',
+            'overwrite',
+            'parsed_rows',
+            'stageable',
+            'would_stage',
+            'staged',
+            'skipped_existing',
             'source_rows',
             'credit_labels',
             'person_credit_linked',

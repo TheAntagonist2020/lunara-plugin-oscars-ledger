@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.49
+Stable tag: 2.7.50
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.50 =
+* Added a private default-dry-run `person-credit-stage` WP-CLI mode for Batch 01 person-credit review candidates.
+* The staging command validates a private CSV, maps exact-ID candidates into `wp_aat_person_credit_reviews`, and requires `--commit` before writing annotations.
+* Staged rows remain review metadata only; Oscar source rows, nominee projections, media attachments, and public routes are not mutated.
 
 = 2.7.49 =
 * Added a private person-credit review lane inside `Academy Awards > Person Portrait Queue`.
