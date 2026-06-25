@@ -348,11 +348,21 @@ $aat_render_hub_text_link = function($label, $url = '', $class = '') {
     return '<span class="' . esc_attr($class_attr) . '">' . esc_html($label) . '</span>';
 };
 
-$aat_render_pipe_links = function($value_list, $id_list = '', $class = 'aat-hub-inline-link') use ($aat_build_entity_url, $aat_clean_nominee_label) {
+$aat_render_pipe_links = function($value_list, $id_list = '', $class = 'aat-hub-inline-link') use ($aat, $aat_build_entity_url, $aat_clean_nominee_label) {
+    $raw_value_list = (string) $value_list;
     $values = array_values(array_filter(array_map(function($part) use ($aat_clean_nominee_label) {
         return $aat_clean_nominee_label($part);
-    }, explode('|', (string) $value_list)), 'strlen'));
+    }, explode('|', $raw_value_list)), 'strlen'));
     $ids = array_values(array_filter(array_map('trim', explode('|', (string) $id_list)), 'strlen'));
+
+    if (empty($ids) && strpos($raw_value_list, '|') === false && strpos((string) $class, 'aat-ballot-main-link') === false) {
+        $split_values = array_values(array_filter(array_map(function($part) use ($aat_clean_nominee_label) {
+            return $aat_clean_nominee_label($part);
+        }, (array) preg_split('/\s*(?:,|\s+and\s+)\s*/i', $raw_value_list)), 'strlen'));
+        if (count($split_values) > 1) {
+            $values = $split_values;
+        }
+    }
 
     if (empty($values)) {
         return '';
@@ -361,6 +371,15 @@ $aat_render_pipe_links = function($value_list, $id_list = '', $class = 'aat-hub-
     $out = array();
     foreach ($values as $index => $value) {
         $url = isset($ids[$index]) ? $aat_build_entity_url($ids[$index]) : '';
+        if ($url === '' && method_exists($aat, 'get_name_entity_link_by_label')) {
+            $resolved = $aat->get_name_entity_link_by_label($value);
+            if (!empty($resolved['url'])) {
+                $url = (string) $resolved['url'];
+                if (!empty($resolved['label'])) {
+                    $value = (string) $resolved['label'];
+                }
+            }
+        }
         if ($url !== '') {
             $out[] = '<a class="' . esc_attr($class) . '" href="' . esc_url($url) . '">' . esc_html($value) . '</a>';
         } else {

@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.45
+ * Version: 2.7.46
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.45');
+define('AAT_VERSION', '2.7.46');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -624,6 +624,99 @@ class Academy_Awards_Table {
         return array_values(array_filter(array_map('trim', explode('|', $value)), 'strlen'));
     }
 
+    private function clean_visible_person_credit_label($value) {
+        $value = trim((string) wp_strip_all_tags($value));
+        if ($value === '') {
+            return '';
+        }
+
+        $patterns = array(
+            '/^Written by\s+/i',
+            '/^Music and Lyric by\s+/i',
+            '/^Music by\s+/i',
+            '/^Lyric by\s+/i',
+            '/^Produced by\s+/i',
+            '/^Directed by\s+/i',
+        );
+
+        return trim((string) preg_replace($patterns, '', $value));
+    }
+
+    private function split_visible_person_credit_labels($value) {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return array();
+        }
+
+        $parts = strpos($value, '|') !== false
+            ? explode('|', $value)
+            : preg_split('/\s*(?:,|\s+and\s+)\s*/i', $value);
+
+        return array_values(array_filter(array_map(array($this, 'clean_visible_person_credit_label'), (array) $parts), 'strlen'));
+    }
+
+    private function build_profile_media_person_label_id_index() {
+        $folder_data = $this->get_profile_image_existing_media_attachment_ids(array(
+            'folder' => 'PEOPLE',
+            'all_media' => 0,
+        ));
+        if (is_wp_error($folder_data)) {
+            return array();
+        }
+
+        $attachment_ids = is_array($folder_data['attachment_ids'] ?? null) ? $folder_data['attachment_ids'] : array();
+        $attachment_rows = $this->get_profile_image_existing_media_attachment_rows($attachment_ids);
+        $index = array();
+        $conflicts = array();
+
+        foreach ((array) $attachment_rows as $attachment) {
+            $attached_file = (string) ($attachment['attached_file'] ?? '');
+            $post_title = trim((string) ($attachment['post_title'] ?? ''));
+            $post_name = (string) ($attachment['post_name'] ?? '');
+            $alt_text = (string) ($attachment['alt_text'] ?? '');
+
+            if (stripos($post_title, 'PERSON_BACKDROP') !== false || stripos($attached_file, 'backdrop') !== false) {
+                continue;
+            }
+            if (stripos($post_title, 'PERSON_PROFILE') === false && stripos($attached_file, 'profile') === false) {
+                continue;
+            }
+
+            $person_id = $this->extract_imdb_name_id_from_profile_media_text(array($attached_file, $post_title, $post_name, $alt_text));
+            if (!$this->is_imdb_name_entity_id($person_id)) {
+                continue;
+            }
+
+            $label = $post_title !== '' ? $post_title : preg_replace('/\.[A-Za-z0-9]+$/', '', wp_basename($attached_file));
+            $label = preg_replace('/\s+PERSON_(?:PROFILE|BACKDROP)\s*$/i', '', (string) $label);
+            $label = preg_replace('/[-_\s]+profile\s*$/i', '', (string) $label);
+            $label = $this->clean_visible_person_credit_label($label);
+            if ($label === '' || preg_match('/[,|]|\s+and\s+/i', $label)) {
+                continue;
+            }
+            if (preg_match('/\b(?:inc|llc|ltd|company|companies|studio|studios|team|department|crew)\b/i', $label)) {
+                continue;
+            }
+
+            $key = $this->normalize_entity_name_key($label);
+            if ($key === '' || isset($conflicts[$key])) {
+                continue;
+            }
+            if (isset($index[$key]) && $index[$key]['id'] !== $person_id) {
+                unset($index[$key]);
+                $conflicts[$key] = true;
+                continue;
+            }
+
+            $index[$key] = array(
+                'id' => $person_id,
+                'label' => $label,
+            );
+        }
+
+        return $index;
+    }
+
     private function extract_entity_reference_ids($raw_ids) {
         $raw_ids = (string) $raw_ids;
         if ($raw_ids === '') {
@@ -710,6 +803,7 @@ class Academy_Awards_Table {
         $ceremony_stats = array();
         $category_stats = array();
         $entity_stats = array();
+        $profile_media_person_index = null;
 
         $register_entity = function($entity_id, $entity_type, $label) use (&$entities) {
             $entity_id = strtolower(trim((string) $entity_id));
@@ -771,6 +865,41 @@ class Academy_Awards_Table {
                     $entity_stats[$entity_id]['last_ceremony'] = $ceremony;
                 }
             }
+        };
+
+        $recover_nominee_ids_from_profile_media = function($labels) use (&$profile_media_person_index) {
+            $labels = array_values(array_filter(array_map('trim', (array) $labels), 'strlen'));
+            if (empty($labels)) {
+                return array(
+                    'ids' => array(),
+                    'labels' => array(),
+                );
+            }
+            if ($profile_media_person_index === null) {
+                $profile_media_person_index = $this->build_profile_media_person_label_id_index();
+            }
+            if (empty($profile_media_person_index)) {
+                return array(
+                    'ids' => array(),
+                    'labels' => array(),
+                );
+            }
+
+            $ids = array();
+            $resolved_labels = array();
+            foreach ($labels as $label) {
+                $key = $this->normalize_entity_name_key($label);
+                if ($key === '' || empty($profile_media_person_index[$key]['id'])) {
+                    continue;
+                }
+                $ids[] = (string) $profile_media_person_index[$key]['id'];
+                $resolved_labels[] = !empty($profile_media_person_index[$key]['label']) ? (string) $profile_media_person_index[$key]['label'] : (string) $label;
+            }
+
+            return array(
+                'ids' => $ids,
+                'labels' => $resolved_labels,
+            );
         };
 
         foreach ($rows as $row) {
@@ -884,6 +1013,17 @@ class Academy_Awards_Table {
             $fallback_name = trim((string) ($row['name'] ?? ''));
             if (empty($nominee_labels) && $fallback_name !== '') {
                 $nominee_labels[] = $fallback_name;
+            }
+            $visible_nominee_labels = $this->split_visible_person_credit_labels(!empty($row['nominees']) ? $row['nominees'] : $fallback_name);
+            if (empty($nominee_labels) && !empty($visible_nominee_labels)) {
+                $nominee_labels = $visible_nominee_labels;
+            }
+            if (empty($nominee_ids) && !empty($visible_nominee_labels)) {
+                $recovered_nominees = $recover_nominee_ids_from_profile_media($visible_nominee_labels);
+                if (!empty($recovered_nominees['ids'])) {
+                    $nominee_ids = $recovered_nominees['ids'];
+                    $nominee_labels = $recovered_nominees['labels'];
+                }
             }
 
             foreach ($nominee_ids as $index => $entity_id) {
