@@ -38,6 +38,11 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
 
     <section class="aat-admin-section">
         <h2><?php esc_html_e('Manual batch upload', 'academy-awards-table'); ?></h2>
+        <p><?php esc_html_e('Before importing another portrait package, reconcile the existing PEOPLE media folder so already-uploaded person images can be reviewed without creating duplicates.', 'academy-awards-table'); ?></p>
+        <div class="aat-admin-note">
+            <code>wp aat profile-images existing-media-audit --folder=PEOPLE --sample=25 --output-csv=/private/people-media-reconciliation.csv</code>
+        </div>
+        <p><?php esc_html_e('Existing media audit is read-only. It reports route-backed portraits, reusable filename/metadata matches, likely name matches, duplicates, and manual-review rows; adoption metadata comes later after review.', 'academy-awards-table'); ?></p>
         <p><?php esc_html_e('For large Dalton-supplied portrait batches, use the private WP-CLI importer after uploading the reviewed image package and CSV manifests outside the public web root.', 'academy-awards-table'); ?></p>
         <div class="aat-admin-note">
             <code>wp aat profile-images dry-run --source=/private/oscars-profile-images --results-csv=/private/tmdb_profile_results.csv --missing-csv=/private/profiles_missing.csv</code>

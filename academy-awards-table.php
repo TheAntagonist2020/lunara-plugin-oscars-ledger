@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.38
+ * Version: 2.7.39
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.38');
+define('AAT_VERSION', '2.7.39');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -9089,6 +9089,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
      * wp aat profile-images dry-run --source=/private/oscars-profile-images --results-csv=/private/tmdb_profile_results.csv --missing-csv=/private/profiles_missing.csv
      * wp aat profile-images import --source=/private/oscars-profile-images --results-csv=/private/tmdb_profile_results.csv --missing-csv=/private/profiles_missing.csv --limit=100 --offset=0 --batch=oscars-profile-images-20260625
      * wp aat profile-images coverage --results-csv=/private/tmdb_profile_results.csv --batch=oscars-profile-images-20260625 --sample=25
+     * wp aat profile-images existing-media-audit --folder=PEOPLE --sample=25 --output-csv=/private/people-media-reconciliation.csv
      */
     public function handle_profile_image_batch_cli($args, $assoc_args) {
         if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI')) {
@@ -9096,8 +9097,32 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
 
         $mode = isset($args[0]) ? sanitize_key((string) $args[0]) : 'dry-run';
-        if (!in_array($mode, array('dry-run', 'import', 'coverage'), true)) {
-            WP_CLI::error('Mode must be dry-run, import, or coverage.');
+        if (!in_array($mode, array('dry-run', 'import', 'coverage', 'existing-media-audit'), true)) {
+            WP_CLI::error('Mode must be dry-run, import, coverage, or existing-media-audit.');
+        }
+
+        if ($mode === 'existing-media-audit') {
+            $options = $this->normalize_profile_image_existing_media_audit_cli_args(is_array($assoc_args) ? $assoc_args : array());
+            if (is_wp_error($options)) {
+                WP_CLI::error($options->get_error_message());
+            }
+
+            $audit = $this->build_profile_image_existing_media_audit($options);
+            if (is_wp_error($audit)) {
+                WP_CLI::error($audit->get_error_message());
+            }
+
+            $summary = is_array($audit['summary'] ?? null) ? $audit['summary'] : array();
+            $samples = is_array($audit['samples'] ?? null) ? $audit['samples'] : array();
+            $this->profile_image_batch_cli_report($summary);
+            $this->profile_image_existing_media_cli_samples($samples);
+
+            if (empty($summary['folder_found'])) {
+                WP_CLI::warning('No matching media folder was found. Re-run with --all-media to scan every image attachment.');
+            }
+
+            WP_CLI::success('Existing people media audit complete.');
+            return;
         }
 
         if ($mode === 'coverage') {
@@ -9393,6 +9418,521 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
     }
 
+    private function normalize_profile_image_existing_media_audit_cli_args($assoc_args) {
+        $clean_path = function($value) {
+            return trim((string) $value, " \t\n\r\0\x0B\"'");
+        };
+
+        $folder = isset($assoc_args['folder']) ? trim((string) $assoc_args['folder']) : 'PEOPLE';
+        $sample = isset($assoc_args['sample']) ? intval($assoc_args['sample']) : 25;
+        $all_media = !empty($assoc_args['all-media']);
+        $output_csv = isset($assoc_args['output-csv']) ? $clean_path($assoc_args['output-csv']) : '';
+
+        if (!$all_media && $folder === '') {
+            return new WP_Error('aat_profile_existing_media_missing_folder', 'Pass --folder=PEOPLE or use --all-media.');
+        }
+
+        if ($output_csv !== '') {
+            $dir = dirname($output_csv);
+            if ($dir === '' || !is_dir($dir) || !is_writable($dir)) {
+                return new WP_Error('aat_profile_existing_media_csv_unwritable', 'The --output-csv directory is not writable.');
+            }
+        }
+
+        return array(
+            'mode' => 'existing-media-audit',
+            'folder' => sanitize_text_field($folder),
+            'sample' => max(0, min(200, $sample)),
+            'all_media' => $all_media ? 1 : 0,
+            'output_csv' => $output_csv,
+        );
+    }
+
+    private function build_profile_image_existing_media_audit($options) {
+        $folder_data = $this->get_profile_image_existing_media_attachment_ids($options);
+        if (is_wp_error($folder_data)) {
+            return $folder_data;
+        }
+
+        $attachment_ids = is_array($folder_data['attachment_ids'] ?? null) ? $folder_data['attachment_ids'] : array();
+        $entity_set = $this->get_profile_image_coverage_id_set('entities');
+        $entity_ids = is_array($entity_set['ids'] ?? null) ? $entity_set['ids'] : array();
+        $label_index = $this->get_profile_image_person_label_index();
+        $attachment_rows = $this->get_profile_image_existing_media_attachment_rows($attachment_ids);
+
+        $rows = array();
+        $candidate_counts = array();
+        $summary = array(
+            'mode' => 'existing-media-audit',
+            'folder' => (string) ($options['folder'] ?? 'PEOPLE'),
+            'folder_strategy' => (string) ($folder_data['strategy'] ?? ''),
+            'folder_found' => !empty($folder_data['found']) ? 1 : 0,
+            'all_media' => !empty($options['all_media']) ? 1 : 0,
+            'folder_attachments' => count($attachment_ids),
+            'scanned' => 0,
+            'already_route_backed' => 0,
+            'mapped_no_route' => 0,
+            'reusable_nm_filename' => 0,
+            'likely_name_match' => 0,
+            'ambiguous_name_match' => 0,
+            'needs_manual_review' => 0,
+            'adoption_candidates' => 0,
+            'duplicate_person_id_rows' => 0,
+            'samples' => max(0, min(200, intval($options['sample'] ?? 25))),
+            'output_csv' => (string) ($options['output_csv'] ?? ''),
+        );
+
+        foreach ($attachment_rows as $attachment) {
+            $row = $this->build_profile_image_existing_media_audit_row($attachment, $entity_ids, $label_index);
+            $rows[] = $row;
+
+            $summary['scanned']++;
+            $state = (string) ($row['state'] ?? 'needs_manual_review');
+            if (isset($summary[$state])) {
+                $summary[$state]++;
+            }
+            if (!empty($row['adoption_candidate'])) {
+                $summary['adoption_candidates']++;
+            }
+
+            $candidate_id = (string) ($row['candidate_person_id'] ?? '');
+            if ($candidate_id !== '' && $this->is_imdb_name_entity_id($candidate_id)) {
+                if (!isset($candidate_counts[$candidate_id])) {
+                    $candidate_counts[$candidate_id] = 0;
+                }
+                $candidate_counts[$candidate_id]++;
+            }
+        }
+
+        foreach ($rows as &$row) {
+            $candidate_id = (string) ($row['candidate_person_id'] ?? '');
+            $duplicate_count = ($candidate_id !== '' && isset($candidate_counts[$candidate_id])) ? intval($candidate_counts[$candidate_id]) : 0;
+            $row['duplicate_person_id'] = $duplicate_count > 1 ? 1 : 0;
+            $row['duplicate_count'] = $duplicate_count;
+            if ($duplicate_count > 1) {
+                $summary['duplicate_person_id_rows']++;
+            }
+        }
+        unset($row);
+
+        $output_csv = (string) ($options['output_csv'] ?? '');
+        if ($output_csv !== '') {
+            $csv_result = $this->write_profile_image_existing_media_audit_csv($output_csv, $rows);
+            if (is_wp_error($csv_result)) {
+                return $csv_result;
+            }
+        }
+
+        return array(
+            'summary' => $summary,
+            'samples' => $this->profile_image_existing_media_sample_rows($rows, $summary['samples']),
+        );
+    }
+
+    private function get_profile_image_existing_media_attachment_ids($options) {
+        global $wpdb;
+
+        $all_media = !empty($options['all_media']);
+        $folder = trim((string) ($options['folder'] ?? 'PEOPLE'));
+
+        if ($all_media) {
+            $ids = $wpdb->get_col(
+                "SELECT ID
+                 FROM {$wpdb->posts}
+                 WHERE post_type = 'attachment'
+                   AND post_mime_type LIKE 'image/%'
+                 ORDER BY ID ASC"
+            );
+
+            return array(
+                'attachment_ids' => array_values(array_unique(array_map('intval', (array) $ids))),
+                'strategy' => 'all-media',
+                'found' => true,
+            );
+        }
+
+        $matches = $this->find_profile_image_media_folder_attachment_ids($folder);
+        $ids = array();
+        $strategies = array();
+
+        foreach ($matches as $strategy => $strategy_ids) {
+            $strategies[] = (string) $strategy;
+            foreach ((array) $strategy_ids as $id) {
+                $id = intval($id);
+                if ($id > 0) {
+                    $ids[$id] = true;
+                }
+            }
+        }
+
+        return array(
+            'attachment_ids' => array_keys($ids),
+            'strategy' => empty($strategies) ? 'not-found' : implode('+', $strategies),
+            'found' => !empty($ids),
+        );
+    }
+
+    private function find_profile_image_media_folder_attachment_ids($folder) {
+        global $wpdb;
+
+        $folder = trim((string) $folder);
+        if ($folder === '') {
+            return array();
+        }
+
+        $matches = array();
+
+        $taxonomy_rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT DISTINCT tr.object_id, tt.taxonomy
+                 FROM {$wpdb->terms} t
+                 INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_id = t.term_id
+                 INNER JOIN {$wpdb->term_relationships} tr ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                 INNER JOIN {$wpdb->posts} p ON p.ID = tr.object_id
+                 WHERE LOWER(t.name) = LOWER(%s)
+                   AND p.post_type = 'attachment'
+                   AND p.post_mime_type LIKE 'image/%%'",
+                $folder
+            ),
+            ARRAY_A
+        );
+
+        foreach ((array) $taxonomy_rows as $row) {
+            $strategy = 'taxonomy:' . sanitize_key((string) ($row['taxonomy'] ?? 'unknown'));
+            if (!isset($matches[$strategy])) {
+                $matches[$strategy] = array();
+            }
+            $matches[$strategy][] = intval($row['object_id'] ?? 0);
+        }
+
+        $filebird_folders = $wpdb->prefix . 'fbv';
+        $filebird_links = $wpdb->prefix . 'fbv_attachment_folder';
+        if ($this->profile_image_existing_media_table_exists($filebird_folders) && $this->profile_image_existing_media_table_exists($filebird_links)) {
+            $ids = $wpdb->get_col(
+                $wpdb->prepare(
+                    "SELECT DISTINCT af.attachment_id
+                     FROM {$filebird_folders} f
+                     INNER JOIN {$filebird_links} af ON af.folder_id = f.id
+                     INNER JOIN {$wpdb->posts} p ON p.ID = af.attachment_id
+                     WHERE LOWER(f.name) = LOWER(%s)
+                       AND p.post_type = 'attachment'
+                       AND p.post_mime_type LIKE 'image/%%'",
+                    $folder
+                )
+            );
+            if (!empty($ids)) {
+                $matches['filebird'] = array_map('intval', (array) $ids);
+            }
+        }
+
+        $rml_folders = $wpdb->prefix . 'realmedialibrary';
+        $rml_links = $wpdb->prefix . 'realmedialibrary_posts';
+        if ($this->profile_image_existing_media_table_exists($rml_folders) && $this->profile_image_existing_media_table_exists($rml_links)) {
+            $ids = $wpdb->get_col(
+                $wpdb->prepare(
+                    "SELECT DISTINCT rp.attachment
+                     FROM {$rml_folders} r
+                     INNER JOIN {$rml_links} rp ON rp.fid = r.id
+                     INNER JOIN {$wpdb->posts} p ON p.ID = rp.attachment
+                     WHERE LOWER(r.name) = LOWER(%s)
+                       AND p.post_type = 'attachment'
+                       AND p.post_mime_type LIKE 'image/%%'",
+                    $folder
+                )
+            );
+            if (!empty($ids)) {
+                $matches['real-media-library'] = array_map('intval', (array) $ids);
+            }
+        }
+
+        return $matches;
+    }
+
+    private function profile_image_existing_media_table_exists($table_name) {
+        global $wpdb;
+
+        $table_name = (string) $table_name;
+        if ($table_name === '' || preg_match('/[^A-Za-z0-9_]/', $table_name)) {
+            return false;
+        }
+
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_name));
+        return (string) $exists === $table_name;
+    }
+
+    private function get_profile_image_existing_media_attachment_rows($attachment_ids) {
+        global $wpdb;
+
+        $attachment_ids = array_values(array_unique(array_filter(array_map('intval', (array) $attachment_ids))));
+        if (empty($attachment_ids)) {
+            return array();
+        }
+
+        $rows = array();
+        foreach (array_chunk($attachment_ids, 500) as $chunk) {
+            $in = implode(',', array_map('intval', $chunk));
+            $chunk_rows = $wpdb->get_results(
+                "SELECT p.ID,
+                        p.post_title,
+                        p.post_name,
+                        p.post_excerpt,
+                        p.post_date,
+                        pm_file.meta_value AS attached_file,
+                        pm_alt.meta_value AS alt_text,
+                        pm_person.meta_value AS explicit_person_id,
+                        pm_source.meta_value AS portrait_source,
+                        pm_verified.meta_value AS portrait_verified
+                 FROM {$wpdb->posts} p
+                 LEFT JOIN {$wpdb->postmeta} pm_file ON pm_file.post_id = p.ID AND pm_file.meta_key = '_wp_attached_file'
+                 LEFT JOIN {$wpdb->postmeta} pm_alt ON pm_alt.post_id = p.ID AND pm_alt.meta_key = '_wp_attachment_image_alt'
+                 LEFT JOIN {$wpdb->postmeta} pm_person ON pm_person.post_id = p.ID AND pm_person.meta_key = '_aat_person_imdb_id'
+                 LEFT JOIN {$wpdb->postmeta} pm_source ON pm_source.post_id = p.ID AND pm_source.meta_key = '_aat_person_portrait_source'
+                 LEFT JOIN {$wpdb->postmeta} pm_verified ON pm_verified.post_id = p.ID AND pm_verified.meta_key = '_aat_person_portrait_verified'
+                 WHERE p.ID IN ({$in})
+                   AND p.post_type = 'attachment'
+                   AND p.post_mime_type LIKE 'image/%'
+                 ORDER BY p.post_title ASC, p.ID ASC",
+                ARRAY_A
+            );
+            $rows = array_merge($rows, is_array($chunk_rows) ? $chunk_rows : array());
+        }
+
+        return $rows;
+    }
+
+    private function build_profile_image_existing_media_audit_row($attachment, $entity_ids, $label_index) {
+        $attachment_id = intval($attachment['ID'] ?? 0);
+        $attached_file = (string) ($attachment['attached_file'] ?? '');
+        $post_title = (string) ($attachment['post_title'] ?? '');
+        $post_name = (string) ($attachment['post_name'] ?? '');
+        $alt_text = (string) ($attachment['alt_text'] ?? '');
+        $explicit_person_id = strtolower(trim((string) ($attachment['explicit_person_id'] ?? '')));
+        $portrait_source = (string) ($attachment['portrait_source'] ?? '');
+        $portrait_verified = (string) ($attachment['portrait_verified'] ?? '');
+        $detected_id = $this->extract_imdb_name_id_from_profile_media_text(array($attached_file, $post_title, $post_name, $alt_text));
+        $candidate_person_id = '';
+        $candidate_label = '';
+        $match_strategy = 'none';
+        $state = 'needs_manual_review';
+        $adoption_candidate = 0;
+
+        if ($this->is_imdb_name_entity_id($explicit_person_id)) {
+            $candidate_person_id = $explicit_person_id;
+            $match_strategy = 'aat-person-meta';
+            $state = isset($entity_ids[$candidate_person_id]) ? 'already_route_backed' : 'mapped_no_route';
+        } elseif ($this->is_imdb_name_entity_id($detected_id)) {
+            $candidate_person_id = $detected_id;
+            $match_strategy = 'imdb-text';
+            if (isset($entity_ids[$candidate_person_id])) {
+                $state = 'reusable_nm_filename';
+                $adoption_candidate = 1;
+            }
+        } else {
+            $name_match = $this->match_profile_image_existing_media_name($post_title, $alt_text, $attached_file, $label_index);
+            $name_state = (string) ($name_match['state'] ?? '');
+            if ($name_state === 'unique') {
+                $candidate_person_id = (string) ($name_match['person_id'] ?? '');
+                $candidate_label = (string) ($name_match['label'] ?? '');
+                $match_strategy = 'name-exact';
+                if (isset($entity_ids[$candidate_person_id])) {
+                    $state = 'likely_name_match';
+                    $adoption_candidate = 1;
+                }
+            } elseif ($name_state === 'ambiguous') {
+                $match_strategy = 'name-ambiguous';
+                $state = 'ambiguous_name_match';
+                $candidate_label = (string) ($name_match['label'] ?? '');
+            }
+        }
+
+        if ($candidate_label === '' && $candidate_person_id !== '') {
+            $context = $this->get_person_context_for_imdb_id($candidate_person_id);
+            $candidate_label = trim((string) ($context['name'] ?? ''));
+        }
+
+        return array(
+            'attachment_id' => $attachment_id,
+            'attached_file' => $attached_file,
+            'post_title' => $post_title,
+            'alt_text' => $alt_text,
+            'explicit_person_id' => $explicit_person_id,
+            'detected_person_id' => $detected_id,
+            'candidate_person_id' => $candidate_person_id,
+            'candidate_label' => $candidate_label,
+            'match_strategy' => $match_strategy,
+            'state' => $state,
+            'adoption_candidate' => $adoption_candidate,
+            'duplicate_person_id' => 0,
+            'duplicate_count' => 0,
+            'portrait_source' => $portrait_source,
+            'portrait_verified' => $portrait_verified,
+        );
+    }
+
+    private function extract_imdb_name_id_from_profile_media_text($texts) {
+        foreach ((array) $texts as $text) {
+            if (preg_match('/\bnm\d{7,9}\b/i', (string) $text, $matches)) {
+                return strtolower((string) $matches[0]);
+            }
+        }
+
+        return '';
+    }
+
+    private function get_profile_image_person_label_index() {
+        global $wpdb;
+
+        $entities_table = $this->get_entities_table_name();
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT entity_id AS person_id, label
+                 FROM {$entities_table}
+                 WHERE entity_type = %s
+                   AND entity_id REGEXP %s",
+                'name',
+                '^nm[0-9]{7,9}$'
+            ),
+            ARRAY_A
+        );
+
+        $index = array();
+        foreach ((array) $rows as $row) {
+            $label = trim((string) ($row['label'] ?? ''));
+            $person_id = strtolower(trim((string) ($row['person_id'] ?? '')));
+            $normalized = $this->normalize_profile_image_existing_media_person_name($label);
+            if ($label === '' || !$this->is_imdb_name_entity_id($person_id) || $normalized === '') {
+                continue;
+            }
+            if (!isset($index[$normalized])) {
+                $index[$normalized] = array();
+            }
+            $index[$normalized][] = array(
+                'person_id' => $person_id,
+                'label' => $label,
+            );
+        }
+
+        return $index;
+    }
+
+    private function match_profile_image_existing_media_name($post_title, $alt_text, $attached_file, $label_index) {
+        $candidates = array($post_title, $alt_text, wp_basename((string) $attached_file));
+        foreach ($candidates as $candidate) {
+            $normalized = $this->normalize_profile_image_existing_media_person_name($candidate);
+            if ($normalized === '' || empty($label_index[$normalized])) {
+                continue;
+            }
+
+            $matches = $label_index[$normalized];
+            if (count($matches) === 1) {
+                return array(
+                    'state' => 'unique',
+                    'person_id' => (string) ($matches[0]['person_id'] ?? ''),
+                    'label' => (string) ($matches[0]['label'] ?? ''),
+                );
+            }
+
+            return array(
+                'state' => 'ambiguous',
+                'label' => $candidate,
+            );
+        }
+
+        return array('state' => 'none');
+    }
+
+    private function normalize_profile_image_existing_media_person_name($value) {
+        $value = wp_strip_all_tags((string) $value);
+        $value = wp_basename(str_replace('\\', '/', $value));
+        $value = preg_replace('/\.[A-Za-z0-9]{2,5}$/', '', $value);
+        $value = preg_replace('/\bnm\d{7,9}\b/i', ' ', $value);
+        $value = str_replace(array('_', '-'), ' ', $value);
+        $value = preg_replace('/\b(person\s*profile|profile|portrait|headshot|photo|image)\b/i', ' ', $value);
+        $value = remove_accents($value);
+        $value = function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+        $value = preg_replace('/[^a-z0-9 ]+/', ' ', $value);
+        $value = preg_replace('/\s+/', ' ', $value);
+
+        return trim((string) $value);
+    }
+
+    private function profile_image_existing_media_sample_rows($rows, $limit) {
+        $limit = max(0, min(200, intval($limit)));
+        if ($limit < 1 || empty($rows)) {
+            return array();
+        }
+
+        $samples = array();
+        foreach ($rows as $row) {
+            $samples[] = $row;
+            if (count($samples) >= $limit) {
+                break;
+            }
+        }
+
+        return $samples;
+    }
+
+    private function write_profile_image_existing_media_audit_csv($path, $rows) {
+        $path = trim((string) $path, " \t\n\r\0\x0B\"'");
+        if ($path === '') {
+            return true;
+        }
+
+        $handle = fopen($path, 'w');
+        if (!$handle) {
+            return new WP_Error('aat_profile_existing_media_csv_open_failed', 'Could not open --output-csv for writing.');
+        }
+
+        $fields = array(
+            'attachment_id',
+            'state',
+            'candidate_person_id',
+            'candidate_label',
+            'match_strategy',
+            'adoption_candidate',
+            'duplicate_person_id',
+            'duplicate_count',
+            'explicit_person_id',
+            'detected_person_id',
+            'portrait_source',
+            'portrait_verified',
+            'post_title',
+            'alt_text',
+            'attached_file',
+        );
+        fputcsv($handle, $fields);
+        foreach ($rows as $row) {
+            $line = array();
+            foreach ($fields as $field) {
+                $line[] = isset($row[$field]) && is_scalar($row[$field]) ? (string) $row[$field] : '';
+            }
+            fputcsv($handle, $line);
+        }
+
+        fclose($handle);
+        return true;
+    }
+
+    private function profile_image_existing_media_cli_samples($samples) {
+        if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI') || empty($samples)) {
+            return;
+        }
+
+        WP_CLI::line('existing_media_samples:');
+        foreach ($samples as $row) {
+            WP_CLI::line(sprintf(
+                '  - #%d | %s | %s | %s | %s | %s',
+                intval($row['attachment_id'] ?? 0),
+                (string) ($row['state'] ?? ''),
+                (string) ($row['candidate_person_id'] ?? ''),
+                (string) ($row['candidate_label'] ?? ''),
+                (string) ($row['match_strategy'] ?? ''),
+                (string) ($row['attached_file'] ?? '')
+            ));
+        }
+    }
+
     private function profile_image_batch_cli_report($summary) {
         if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI')) {
             return;
@@ -9404,9 +9944,14 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             'results_csv',
             'missing_csv',
             'batch',
+            'folder',
+            'folder_strategy',
+            'folder_found',
+            'all_media',
             'sample',
             'limit',
             'offset',
+            'folder_attachments',
             'source_images',
             'csv_approved',
             'approved_ids',
@@ -9421,6 +9966,15 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             'imported_without_entity',
             'route_backed_imported',
             'samples',
+            'already_route_backed',
+            'mapped_no_route',
+            'reusable_nm_filename',
+            'likely_name_match',
+            'ambiguous_name_match',
+            'needs_manual_review',
+            'adoption_candidates',
+            'duplicate_person_id_rows',
+            'output_csv',
             'missing_ids',
             'source_in_approved',
             'source_in_missing',

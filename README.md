@@ -14,7 +14,7 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.38`.
+Current baseline: `2.7.39`.
 
 ## Current Public Surface
 
@@ -25,6 +25,7 @@ Current baseline: `2.7.38`.
 - `Academy Awards > Person Portrait Queue` imports one verified TMDb person profile image at a time, marks the attachment with plugin-owned person portrait metadata, and keeps title/backdrop art barred from person portraits.
 - A private WP-CLI manual batch importer can dry-run and import Dalton-supplied `oscars-profile-images` JPEGs against `tmdb_profile_results.csv` and `profiles_missing.csv`, marking approved portraits as `manual-batch-upload`.
 - The private profile-image coverage audit compares `tmdb_profile_results.csv` `Status=OK` IDs against live `people`, `wp_aat_entities`, and imported attachment metadata so route-backed, approved-source/no-people-row, and imported-media/no-route buckets are visible before scaling.
+- The private existing media reconciliation audit scans the current `PEOPLE` Media Library folder before new imports, reporting already route-backed portraits, reusable `nm...` filename matches, likely name matches, duplicates, and manual-review rows without mutating attachments.
 - Ceremony pages include a Major Races proof module for Best Picture, Directing, Actor, and Actress before the complete ceremony ledger.
 - `Academy Awards > Ceremony Write-Ups` privately previews Dalton-authored DOCX ceremony guides, stages 98 draft rows, reviews one ceremony at a time, and renders only approved write-ups near the top of ceremony dossiers.
 - Ceremony Write-Ups includes private status filters, text search across staged copy/notes, and status counts so the 98-row editorial queue can be reviewed efficiently.
