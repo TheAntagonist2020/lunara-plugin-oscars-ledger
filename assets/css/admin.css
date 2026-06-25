@@ -216,6 +216,135 @@
     color: #666;
 }
 
+/* Person Portrait Import Queue */
+.aat-person-portrait-import .aat-admin-header p {
+    color: #e9dfc5;
+    margin: 6px 0 0;
+}
+
+.aat-person-portrait-filters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(140px, 1fr));
+    gap: 16px;
+    align-items: end;
+}
+
+.aat-person-portrait-filters label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-weight: 600;
+    color: #26313d;
+}
+
+.aat-person-portrait-filters select,
+.aat-person-portrait-filters input[type="number"],
+.aat-person-portrait-filters textarea {
+    width: 100%;
+    max-width: none;
+}
+
+.aat-person-portrait-checkbox {
+    justify-content: end;
+}
+
+.aat-person-portrait-checkbox input {
+    margin: 0 8px 0 0;
+}
+
+.aat-person-portrait-checkbox {
+    flex-direction: row !important;
+    align-items: center;
+}
+
+.aat-person-portrait-id-paste {
+    grid-column: 1 / -1;
+}
+
+.aat-person-portrait-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.aat-person-portrait-summary span,
+.aat-person-portrait-state {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.aat-person-portrait-summary span {
+    background: #f3efe3;
+    color: #453b28;
+}
+
+.aat-person-portrait-table td {
+    vertical-align: middle;
+}
+
+.aat-person-portrait-thumb {
+    align-items: center;
+    background: #101820;
+    border-radius: 8px;
+    color: #eadbb3;
+    display: flex;
+    height: 82px;
+    justify-content: center;
+    overflow: hidden;
+    width: 62px;
+}
+
+.aat-person-portrait-thumb img {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+.aat-person-portrait-thumb span {
+    font-size: 11px;
+    padding: 8px;
+    text-align: center;
+}
+
+.aat-person-portrait-state-candidate_external {
+    background: #e8f4ff;
+    color: #0b5394;
+}
+
+.aat-person-portrait-state-ready {
+    background: #e7f6ed;
+    color: #17653a;
+}
+
+.aat-person-portrait-state-needs_attention {
+    background: #fff4df;
+    color: #7a4b00;
+}
+
+.aat-person-portrait-muted {
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+@media (max-width: 782px) {
+    .aat-person-portrait-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .aat-person-portrait-table {
+        min-width: 780px;
+    }
+}
+
 /* Messages */
 .aat-message {
     padding: 15px 20px;

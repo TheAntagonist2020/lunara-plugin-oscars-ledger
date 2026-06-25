@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.35
+Stable tag: 2.7.36
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.36 =
+* Added `Academy Awards > Person Portrait Queue`, a private Person Portrait Import Queue that imports one verified TMDb person profile image at a time.
+* Imported person portraits are marked with plugin-owned person metadata so Oscar profile pages prefer verified local portraits without accepting contextual title or backdrop art.
 
 = 2.7.35 =
 * Stopped contextual title/backdrop imagery from rendering as person portrait fallbacks on Oscars person profile pages.

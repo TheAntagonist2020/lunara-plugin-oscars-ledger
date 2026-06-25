@@ -32,7 +32,7 @@ files: `tools/person-portrait-batch-audit.php`, `tests/person-nominee-portrait-b
 acceptance: `php tests/person-nominee-portrait-batch-contract.php`
 spec: `docs/staging/specs/2026-06-24-oscars-person-profile-visual-integrity.md#decisions`
 
-- [ ] T6: Verify Gwendolyn regression and document.
+- [x] T6: Verify Gwendolyn regression and document.
 goal: Confirm `/oscars/name/nm0946705/` no longer shows title-character art as a portrait, then update continuity and prepare deployment.
 files: `templates/entity-page.php`, `assets/css/academy-awards-table.css`, continuity docs
 acceptance: PHP lint changed PHP files, focused contracts pass, mobile screenshot confirms no Peanuts/Snoopy portrait chamber.

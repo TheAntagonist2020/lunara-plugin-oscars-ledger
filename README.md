@@ -14,7 +14,7 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.35`.
+Current baseline: `2.7.36`.
 
 ## Current Public Surface
 
@@ -22,6 +22,7 @@ Current baseline: `2.7.35`.
 - Generic Oscar category pages now use dossier-grade route framing with command-band summaries, denser ledger-card rows, and linked craft/person credit chips where the person entity can be resolved.
 - Person profile files now expose honest visual-source states for local portraits, TMDb portraits, and no-portrait cases; contextual title art is barred from the person portrait chamber.
 - A dry-run nominee portrait batch audit can use Dalton's nominee CSV roster to review all person image states safely before any import or Media Library mutation.
+- `Academy Awards > Person Portrait Queue` imports one verified TMDb person profile image at a time, marks the attachment with plugin-owned person portrait metadata, and keeps title/backdrop art barred from person portraits.
 - Ceremony pages include a Major Races proof module for Best Picture, Directing, Actor, and Actress before the complete ceremony ledger.
 - `Academy Awards > Ceremony Write-Ups` privately previews Dalton-authored DOCX ceremony guides, stages 98 draft rows, reviews one ceremony at a time, and renders only approved write-ups near the top of ceremony dossiers.
 - Ceremony Write-Ups includes private status filters, text search across staged copy/notes, and status counts so the 98-row editorial queue can be reviewed efficiently.

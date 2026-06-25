@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.35
+ * Version: 2.7.36
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.35');
+define('AAT_VERSION', '2.7.36');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -5656,7 +5656,7 @@ class Academy_Awards_Table {
          * Safer: gate by the `page` query var (our menu slugs) instead.
          */
         $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
-        $allowed_pages = array('academy-awards-table', 'academy-awards-tracker', 'academy-awards-posters', 'academy-awards-omdb-audit', 'academy-awards-ceremony-writeups');
+        $allowed_pages = array('academy-awards-table', 'academy-awards-tracker', 'academy-awards-posters', 'academy-awards-person-portraits', 'academy-awards-omdb-audit', 'academy-awards-ceremony-writeups');
 
         if (!in_array($page, $allowed_pages, true)) {
             return;
@@ -5722,6 +5722,15 @@ class Academy_Awards_Table {
             'manage_options',
             'academy-awards-posters',
             array($this, 'render_poster_admin_page')
+        );
+
+        add_submenu_page(
+            'academy-awards-table',
+            __('Person Portrait Queue', 'academy-awards-table'),
+            __('Person Portrait Queue', 'academy-awards-table'),
+            'manage_options',
+            'academy-awards-person-portraits',
+            array($this, 'render_person_portrait_import_admin_page')
         );
 
         add_submenu_page(
@@ -5844,6 +5853,65 @@ class Academy_Awards_Table {
         $person_profile_audit = $this->get_person_profile_attachment_audit(120);
 
         include AAT_PLUGIN_DIR . 'templates/poster-admin.php';
+    }
+
+    /**
+     * Render the private person portrait import queue.
+     */
+    public function render_person_portrait_import_admin_page() {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to access this page.', 'academy-awards-table'));
+        }
+
+        $message = '';
+        $message_type = 'success';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_person_portrait_import_nonce'])) {
+            check_admin_referer('aat_person_portrait_import', 'aat_person_portrait_import_nonce');
+
+            $person_id = isset($_POST['person_id']) ? strtolower(trim(sanitize_text_field(wp_unslash($_POST['person_id'])))) : '';
+            $import_result = $this->import_tmdb_person_profile_portrait($person_id);
+
+            if (is_wp_error($import_result)) {
+                $message = $import_result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $attachment_id = intval($import_result['attachment_id'] ?? 0);
+                $status = (string) ($import_result['status'] ?? 'imported');
+                if ($status === 'existing') {
+                    $message = sprintf(__('Existing verified portrait found for %1$s. Attachment #%2$d is already connected.', 'academy-awards-table'), esc_html($person_id), $attachment_id);
+                } else {
+                    $message = sprintf(__('Verified portrait imported for %1$s as attachment #%2$d.', 'academy-awards-table'), esc_html($person_id), $attachment_id);
+                }
+            }
+        }
+
+        $allowed_states = array('all', 'candidate_external', 'ready', 'needs_attention');
+        $selected_state = isset($_GET['state']) ? sanitize_key(wp_unslash($_GET['state'])) : 'candidate_external';
+        if (!in_array($selected_state, $allowed_states, true)) {
+            $selected_state = 'candidate_external';
+        }
+
+        $selected_limit = isset($_GET['limit']) ? intval($_GET['limit']) : 50;
+        $selected_limit = max(1, min(200, $selected_limit));
+        $selected_offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
+        $selected_offset = max(0, $selected_offset);
+        $refresh_tmdb = !empty($_GET['refresh_tmdb']);
+        $ids_raw = isset($_GET['person_ids']) ? sanitize_textarea_field(wp_unslash($_GET['person_ids'])) : '';
+
+        $queue = $this->get_person_portrait_import_queue_rows(array(
+            'state' => $selected_state,
+            'limit' => $selected_limit,
+            'offset' => $selected_offset,
+            'refresh_tmdb' => $refresh_tmdb,
+            'ids_raw' => $ids_raw,
+        ));
+
+        $queue_rows = is_array($queue['rows'] ?? null) ? $queue['rows'] : array();
+        $queue_summary = is_array($queue['summary'] ?? null) ? $queue['summary'] : array();
+        $tmdb_key_configured = $this->get_tmdb_api_key() !== '';
+
+        include AAT_PLUGIN_DIR . 'templates/person-portrait-import-admin.php';
     }
 
     /**
@@ -8752,6 +8820,17 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             );
         }
 
+        $explicit_attachment_id = $this->find_existing_person_portrait_attachment($nm_id, '');
+        if ($explicit_attachment_id > 0) {
+            $resolved = array(
+                'attachment_id' => $explicit_attachment_id,
+                'match_strategy' => 'aat-person-meta',
+                'attached_file' => (string) get_post_meta($explicit_attachment_id, '_wp_attached_file', true),
+            );
+            set_transient('aat_person_profile_attachment_v2_' . $nm_id, $resolved, 12 * HOUR_IN_SECONDS);
+            return $resolved;
+        }
+
         $person_name = trim((string) $person_name);
         if ($person_name === '') {
             $context = $this->get_person_context_for_imdb_id($nm_id);
@@ -8979,6 +9058,326 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
 
         return $audit;
+    }
+
+    private function parse_person_ids_from_text($ids_raw) {
+        $ids_raw = trim((string) $ids_raw);
+        if ($ids_raw === '') {
+            return array();
+        }
+
+        preg_match_all('/nm\d{7,9}/i', $ids_raw, $matches);
+        $ids = array();
+        foreach ((array) ($matches[0] ?? array()) as $id) {
+            $id = strtolower(trim((string) $id));
+            if ($this->is_imdb_name_entity_id($id)) {
+                $ids[$id] = $id;
+            }
+        }
+
+        return array_values($ids);
+    }
+
+    private function get_person_portrait_import_queue_rows($args = array()) {
+        global $wpdb;
+
+        $allowed_states = array('all', 'candidate_external', 'ready', 'needs_attention');
+        $state_filter = isset($args['state']) ? sanitize_key((string) $args['state']) : 'candidate_external';
+        if (!in_array($state_filter, $allowed_states, true)) {
+            $state_filter = 'candidate_external';
+        }
+
+        $limit = isset($args['limit']) ? intval($args['limit']) : 50;
+        $limit = max(1, min(200, $limit));
+        $offset = isset($args['offset']) ? intval($args['offset']) : 0;
+        $offset = max(0, $offset);
+        $refresh_tmdb = !empty($args['refresh_tmdb']);
+        $ids_raw = isset($args['ids_raw']) ? (string) $args['ids_raw'] : '';
+        $selected_ids = $this->parse_person_ids_from_text($ids_raw);
+
+        $roster = array();
+        $source = 'wordpress';
+        $total_roster = 0;
+
+        if (!empty($selected_ids)) {
+            $source = 'manual';
+            $total_roster = count($selected_ids);
+            foreach ($selected_ids as $person_id) {
+                $context = $this->get_person_context_for_imdb_id($person_id);
+                $label = trim((string) ($context['name'] ?? ''));
+                if ($label === '') {
+                    $label = trim((string) $this->get_entity_display_name('name', $person_id));
+                }
+                $roster[] = array(
+                    'person_id' => $person_id,
+                    'label' => $label,
+                );
+            }
+        } else {
+            $entities_table = $this->get_entities_table_name();
+            $total_roster = intval($wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*)
+                     FROM {$entities_table}
+                     WHERE entity_type = %s
+                       AND entity_id REGEXP %s",
+                    'name',
+                    '^nm[0-9]{7,9}$'
+                )
+            ));
+            $roster = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT entity_id AS person_id, label
+                     FROM {$entities_table}
+                     WHERE entity_type = %s
+                       AND entity_id REGEXP %s
+                     ORDER BY label ASC, entity_id ASC
+                     LIMIT %d OFFSET %d",
+                    'name',
+                    '^nm[0-9]{7,9}$',
+                    $limit,
+                    $offset
+                ),
+                ARRAY_A
+            );
+            if (!is_array($roster)) {
+                $roster = array();
+            }
+        }
+
+        $rows = array();
+        $force_tmdb_lookup = $refresh_tmdb || !empty($selected_ids);
+        foreach ($roster as $item) {
+            $row = $this->build_person_portrait_import_queue_row(
+                (string) ($item['person_id'] ?? ''),
+                (string) ($item['label'] ?? ''),
+                $force_tmdb_lookup
+            );
+            if ($state_filter !== 'all' && $row['state'] !== $state_filter) {
+                continue;
+            }
+            $rows[] = $row;
+        }
+
+        return array(
+            'summary' => array(
+                'source' => $source,
+                'state' => $state_filter,
+                'limit' => $limit,
+                'offset' => $offset,
+                'refresh_tmdb' => $refresh_tmdb,
+                'total_roster' => $total_roster,
+                'scanned' => count($roster),
+                'returned' => count($rows),
+            ),
+            'rows' => $rows,
+        );
+    }
+
+    private function build_person_portrait_import_queue_row($person_id, $label = '', $refresh_tmdb = false) {
+        $person_id = strtolower(trim((string) $person_id));
+        $label = trim((string) $label);
+        $context = array();
+        if ($this->is_imdb_name_entity_id($person_id)) {
+            $context = $this->get_person_context_for_imdb_id($person_id);
+        }
+        if ($label === '') {
+            $label = trim((string) ($context['name'] ?? ''));
+        }
+        if ($label === '') {
+            $label = strtoupper($person_id);
+        }
+
+        $row = array(
+            'person_id' => $person_id,
+            'label' => $label,
+            'state' => 'needs_attention',
+            'state_label' => __('Needs attention', 'academy-awards-table'),
+            'visual_source' => 'none',
+            'local_attachment_id' => 0,
+            'thumb_url' => '',
+            'tmdb_person_id' => 0,
+            'tmdb_profile_path' => '',
+            'tmdb_profile_url' => '',
+            'tmdb_has_context_backdrop' => false,
+            'nomination_count' => 0,
+            'profile_url' => '',
+            'notes' => array(),
+        );
+
+        if (!$this->is_imdb_name_entity_id($person_id)) {
+            $row['notes'][] = __('Invalid IMDb person ID.', 'academy-awards-table');
+            return $row;
+        }
+
+        $entity_rows = $this->get_entity_rows('name', $person_id);
+        $row['nomination_count'] = is_array($entity_rows) ? count($entity_rows) : 0;
+        $row['profile_url'] = $this->build_entity_url_from_id($person_id);
+
+        $resolved = $this->resolve_profile_attachment_for_person($person_id, $label);
+        $attachment_id = intval($resolved['attachment_id'] ?? 0);
+        if ($attachment_id > 0) {
+            $row['state'] = 'ready';
+            $row['state_label'] = __('Ready', 'academy-awards-table');
+            $row['visual_source'] = 'local-media-library';
+            $row['local_attachment_id'] = $attachment_id;
+            $thumb_url = wp_get_attachment_image_url($attachment_id, array(80, 80));
+            $row['thumb_url'] = is_string($thumb_url) ? $thumb_url : '';
+            $row['notes'][] = __('Local verified portrait is already connected.', 'academy-awards-table');
+            return $row;
+        }
+
+        $tmdb = get_transient('aat_tmdb_person_v2_' . $person_id);
+        if ($refresh_tmdb) {
+            $tmdb = $this->get_tmdb_person_data_for_imdb_id($person_id);
+        }
+
+        if (is_array($tmdb) && !empty($tmdb['profile_path']) && !empty($tmdb['profile_full'])) {
+            $row['state'] = 'candidate_external';
+            $row['state_label'] = __('Candidate external', 'academy-awards-table');
+            $row['visual_source'] = 'tmdb-person-profile';
+            $row['tmdb_person_id'] = intval($tmdb['id'] ?? 0);
+            $row['tmdb_profile_path'] = (string) $tmdb['profile_path'];
+            $row['tmdb_profile_url'] = (string) $tmdb['profile_full'];
+            $row['thumb_url'] = (string) $tmdb['profile_full'];
+            $row['notes'][] = __('TMDb profile image candidate exists; review before import.', 'academy-awards-table');
+            return $row;
+        }
+
+        if (is_array($tmdb) && !empty($tmdb['backdrop_full'])) {
+            $row['tmdb_has_context_backdrop'] = true;
+            $row['notes'][] = __('TMDb only has title/backdrop context; not acceptable as a portrait.', 'academy-awards-table');
+        } else {
+            $row['notes'][] = __('No local portrait or TMDb profile image candidate.', 'academy-awards-table');
+        }
+
+        return $row;
+    }
+
+    private function import_tmdb_person_profile_portrait($person_id) {
+        $person_id = strtolower(trim((string) $person_id));
+        if (!$this->is_imdb_name_entity_id($person_id)) {
+            return new WP_Error('aat_invalid_person_id', __('A valid IMDb person ID is required.', 'academy-awards-table'));
+        }
+
+        $context = $this->get_person_context_for_imdb_id($person_id);
+        $label = trim((string) ($context['name'] ?? ''));
+        if ($label === '') {
+            $label = trim((string) $this->get_entity_display_name('name', $person_id));
+        }
+        if ($label === '') {
+            $label = strtoupper($person_id);
+        }
+
+        $tmdb = $this->get_tmdb_person_data_for_imdb_id($person_id);
+        if (!is_array($tmdb) || empty($tmdb['profile_path']) || empty($tmdb['profile_full'])) {
+            return new WP_Error('aat_no_tmdb_profile', __('TMDb does not have a verified person profile image for this nominee.', 'academy-awards-table'));
+        }
+
+        $profile_path = (string) $tmdb['profile_path'];
+        if (strpos($profile_path, '/') !== 0) {
+            return new WP_Error('aat_invalid_tmdb_profile_path', __('TMDb returned an invalid profile image path.', 'academy-awards-table'));
+        }
+
+        $existing_attachment_id = $this->find_existing_person_portrait_attachment($person_id, $profile_path);
+        if ($existing_attachment_id > 0) {
+            return array(
+                'status' => 'existing',
+                'attachment_id' => $existing_attachment_id,
+                'person_id' => $person_id,
+            );
+        }
+
+        $profile_full = 'https://image.tmdb.org/t/p/h632' . $profile_path;
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+        $tmp_file = download_url($profile_full, 30);
+        if (is_wp_error($tmp_file)) {
+            return $tmp_file;
+        }
+
+        $extension = pathinfo(parse_url($profile_path, PHP_URL_PATH), PATHINFO_EXTENSION);
+        $extension = $extension !== '' ? strtolower($extension) : 'jpg';
+        if (!in_array($extension, array('jpg', 'jpeg', 'png', 'webp'), true)) {
+            $extension = 'jpg';
+        }
+
+        $file_array = array(
+            'name' => sanitize_file_name($person_id . '-profile.' . $extension),
+            'tmp_name' => $tmp_file,
+        );
+
+        $attachment_id = media_handle_sideload($file_array, 0, sprintf(__('Portrait %s', 'academy-awards-table'), $person_id));
+        if (is_wp_error($attachment_id)) {
+            @unlink($tmp_file);
+            return $attachment_id;
+        }
+
+        $attachment_id = intval($attachment_id);
+        wp_update_post(array(
+            'ID' => $attachment_id,
+            'post_title' => $label . ' portrait',
+            'post_excerpt' => sprintf(__('Verified TMDb person profile image for %s.', 'academy-awards-table'), $label),
+        ));
+
+        update_post_meta($attachment_id, '_wp_attachment_image_alt', $label . ' portrait');
+        update_post_meta($attachment_id, '_aat_person_imdb_id', $person_id);
+        update_post_meta($attachment_id, '_aat_person_portrait_source', 'tmdb-person-profile');
+        update_post_meta($attachment_id, '_aat_tmdb_profile_path', $profile_path);
+        update_post_meta($attachment_id, '_aat_tmdb_person_id', intval($tmdb['id'] ?? 0));
+        update_post_meta($attachment_id, '_aat_person_portrait_verified', '1');
+
+        delete_transient('aat_person_profile_attachment_v2_' . $person_id);
+
+        return array(
+            'status' => 'imported',
+            'attachment_id' => $attachment_id,
+            'person_id' => $person_id,
+            'profile_path' => $profile_path,
+        );
+    }
+
+    private function find_existing_person_portrait_attachment($person_id, $profile_path = '') {
+        global $wpdb;
+
+        $person_id = strtolower(trim((string) $person_id));
+        if (!$this->is_imdb_name_entity_id($person_id)) {
+            return 0;
+        }
+
+        $profile_path = trim((string) $profile_path);
+        $meta_conditions = array(
+            "pm_person.meta_key = '_aat_person_imdb_id'",
+            "pm_person.meta_value = %s",
+            "pm_source.meta_key = '_aat_person_portrait_source'",
+            "pm_source.meta_value = %s",
+        );
+        $params = array($person_id, 'tmdb-person-profile');
+
+        $profile_join = '';
+        if ($profile_path !== '') {
+            $profile_join = "INNER JOIN {$wpdb->postmeta} pm_profile ON pm_profile.post_id = p.ID";
+            $meta_conditions[] = "pm_profile.meta_key = '_aat_tmdb_profile_path'";
+            $meta_conditions[] = "pm_profile.meta_value = %s";
+            $params[] = $profile_path;
+        }
+
+        $where = implode(' AND ', $meta_conditions);
+        $sql = "SELECT p.ID
+                FROM {$wpdb->posts} p
+                INNER JOIN {$wpdb->postmeta} pm_person ON pm_person.post_id = p.ID
+                INNER JOIN {$wpdb->postmeta} pm_source ON pm_source.post_id = p.ID
+                {$profile_join}
+                WHERE p.post_type = 'attachment'
+                  AND p.post_mime_type LIKE 'image/%'
+                  AND {$where}
+                ORDER BY p.post_date DESC, p.ID DESC
+                LIMIT 1";
+
+        return intval($wpdb->get_var($wpdb->prepare($sql, ...$params)));
     }
 
 

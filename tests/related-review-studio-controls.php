@@ -24,11 +24,15 @@ foreach ($files as $relative_path) {
     $assert(is_string($source[$relative_path]) && $source[$relative_path] !== '', "{$relative_path} should be readable.");
 }
 
-$assert(strpos($source['academy-awards-table.php'], 'Version: 2.7.34') !== false, 'Plugin header should report 2.7.34.');
-$assert(strpos($source['academy-awards-table.php'], "define('AAT_VERSION', '2.7.34')") !== false, 'AAT_VERSION should report 2.7.34.');
-$assert(strpos($source['README.md'], 'Current baseline: `2.7.34`') !== false, 'README should report 2.7.34.');
-$assert(strpos($source['readme.txt'], 'Stable tag: 2.7.34') !== false, 'readme stable tag should report 2.7.34.');
-$assert(strpos($source['readme.txt'], '= 2.7.34 =') !== false, 'readme changelog should include 2.7.34.');
+$version = '';
+if (preg_match('/Version:\s*([0-9.]+)/', $source['academy-awards-table.php'], $matches)) {
+    $version = $matches[1];
+}
+$assert($version !== '', 'Plugin header should expose a version.');
+$assert(strpos($source['academy-awards-table.php'], "define('AAT_VERSION', '{$version}')") !== false, 'AAT_VERSION should match the plugin header.');
+$assert(strpos($source['README.md'], 'Current baseline: `' . $version . '`') !== false, 'README should match the plugin version.');
+$assert(strpos($source['readme.txt'], 'Stable tag: ' . $version) !== false, 'readme stable tag should match the plugin version.');
+$assert(strpos($source['readme.txt'], '= ' . $version . ' =') !== false, 'readme changelog should include the current plugin version.');
 
 foreach (array('templates/hub-page.php', 'templates/entity-page.php') as $relative_path) {
     $assert(strpos($source[$relative_path], 'aat_get_related_review_limit') !== false, "{$relative_path} should use a bounded related-review limit helper.");

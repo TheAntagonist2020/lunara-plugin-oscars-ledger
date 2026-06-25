@@ -25,11 +25,15 @@ foreach ($files as $relative_path) {
 
 $plugin = $source['academy-awards-table.php'];
 
-$assert(strpos($plugin, 'Version: 2.7.34') !== false, 'Plugin header should report 2.7.34.');
-$assert(strpos($plugin, "define('AAT_VERSION', '2.7.34')") !== false, 'AAT_VERSION should report 2.7.34.');
-$assert(strpos($source['README.md'], 'Current baseline: `2.7.34`') !== false, 'README should report 2.7.34.');
-$assert(strpos($source['readme.txt'], 'Stable tag: 2.7.34') !== false, 'readme stable tag should report 2.7.34.');
-$assert(strpos($source['readme.txt'], '= 2.7.34 =') !== false, 'readme changelog should include 2.7.34.');
+$version = '';
+if (preg_match('/Version:\s*([0-9.]+)/', $plugin, $matches)) {
+    $version = $matches[1];
+}
+$assert($version !== '', 'Plugin header should expose a version.');
+$assert(strpos($plugin, "define('AAT_VERSION', '{$version}')") !== false, 'AAT_VERSION should match the plugin header.');
+$assert(strpos($source['README.md'], 'Current baseline: `' . $version . '`') !== false, 'README should match the plugin version.');
+$assert(strpos($source['readme.txt'], 'Stable tag: ' . $version) !== false, 'readme stable tag should match the plugin version.');
+$assert(strpos($source['readme.txt'], '= ' . $version . ' =') !== false, 'readme changelog should include the current plugin version.');
 
 $required_reporting_indexes = array(
     'facts ceremony/category/winner' => 'KEY ceremony_category_winner (ceremony, category_slug, winner)',
