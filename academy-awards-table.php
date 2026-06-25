@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.40
+ * Version: 2.7.41
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.40');
+define('AAT_VERSION', '2.7.41');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -5931,6 +5931,12 @@ class Academy_Awards_Table {
 
         $queue_rows = is_array($queue['rows'] ?? null) ? $queue['rows'] : array();
         $queue_summary = is_array($queue['summary'] ?? null) ? $queue['summary'] : array();
+        $allowed_adoption_views = array('all', 'ready', 'duplicates');
+        $adoption_view = isset($_GET['adoption_view']) ? sanitize_key(wp_unslash($_GET['adoption_view'])) : 'all';
+        if (!in_array($adoption_view, $allowed_adoption_views, true)) {
+            $adoption_view = 'all';
+        }
+
         $adoption_limit = isset($_GET['adoption_limit']) ? intval($_GET['adoption_limit']) : 24;
         $adoption_limit = max(1, min(60, $adoption_limit));
         $adoption_offset = isset($_GET['adoption_offset']) ? intval($_GET['adoption_offset']) : 0;
@@ -5938,6 +5944,7 @@ class Academy_Awards_Table {
         $adoption = $this->get_existing_person_portrait_adoption_rows(array(
             'limit' => $adoption_limit,
             'offset' => $adoption_offset,
+            'view' => $adoption_view,
         ));
         $adoption_rows = is_array($adoption['rows'] ?? null) ? $adoption['rows'] : array();
         $adoption_summary = is_array($adoption['summary'] ?? null) ? $adoption['summary'] : array();
@@ -10472,6 +10479,10 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $limit = max(1, min(60, $limit));
         $offset = isset($args['offset']) ? intval($args['offset']) : 0;
         $offset = max(0, $offset);
+        $view = isset($args['view']) ? sanitize_key((string) $args['view']) : 'all';
+        if (!in_array($view, array('all', 'ready', 'duplicates'), true)) {
+            $view = 'all';
+        }
 
         $audit = $this->build_profile_image_existing_media_audit(array(
             'folder' => 'PEOPLE',
@@ -10518,10 +10529,64 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             ));
         }
 
-        $paged_rows = array_slice($candidate_rows, $offset, $limit);
+        $duplicate_groups = array();
+        foreach ($candidate_rows as $candidate_row) {
+            if (empty($candidate_row['duplicate_person_id'])) {
+                continue;
+            }
+
+            $person_id = (string) ($candidate_row['person_id'] ?? '');
+            if ($person_id === '') {
+                continue;
+            }
+            if (!isset($duplicate_groups[$person_id])) {
+                $duplicate_groups[$person_id] = array();
+            }
+
+            $duplicate_groups[$person_id][] = array(
+                'attachment_id' => intval($candidate_row['attachment_id'] ?? 0),
+                'post_title' => (string) ($candidate_row['post_title'] ?? ''),
+                'thumb_url' => (string) ($candidate_row['thumb_url'] ?? ''),
+                'full_url' => (string) ($candidate_row['full_url'] ?? ''),
+            );
+        }
+
+        $ready_total = 0;
+        $duplicate_total = 0;
+        $duplicate_person_ids = array();
+        $filtered_rows = array();
+        foreach ($candidate_rows as $candidate_row) {
+            $is_duplicate = !empty($candidate_row['duplicate_person_id']);
+            if ($is_duplicate) {
+                $duplicate_total++;
+                $person_id = (string) ($candidate_row['person_id'] ?? '');
+                if ($person_id !== '') {
+                    $duplicate_person_ids[$person_id] = true;
+                    $candidate_row['duplicate_group'] = $duplicate_groups[$person_id] ?? array();
+                }
+            } else {
+                $ready_total++;
+            }
+
+            if ($view === 'ready' && $is_duplicate) {
+                continue;
+            }
+            if ($view === 'duplicates' && !$is_duplicate) {
+                continue;
+            }
+
+            $filtered_rows[] = $candidate_row;
+        }
+
+        $paged_rows = array_slice($filtered_rows, $offset, $limit);
         $summary = is_array($audit['summary'] ?? null) ? $audit['summary'] : array();
         $summary['returned'] = count($paged_rows);
         $summary['adoption_total'] = count($candidate_rows);
+        $summary['adoption_review_total'] = count($filtered_rows);
+        $summary['ready_adoption_total'] = $ready_total;
+        $summary['duplicate_adoption_total'] = $duplicate_total;
+        $summary['duplicate_person_total'] = count($duplicate_person_ids);
+        $summary['adoption_view'] = $view;
         $summary['adoption_limit'] = $limit;
         $summary['adoption_offset'] = $offset;
 

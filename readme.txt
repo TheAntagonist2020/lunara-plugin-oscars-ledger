@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.40
+Stable tag: 2.7.41
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.41 =
+* Added a private duplicate-review view to the Existing PEOPLE adoption lane.
+* Duplicate `nm...` filename matches now show competing attachment thumbnails, media links, and duplicate-set counts while remaining blocked from automatic adoption.
+* The clean one-click adoption path remains limited to non-duplicate PEOPLE candidates.
 
 = 2.7.40 =
 * Added a private Existing PEOPLE adoption lane to `Academy Awards > Person Portrait Queue`.

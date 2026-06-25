@@ -9,6 +9,7 @@ $files = array(
     'README.md',
     'readme.txt',
     'docs/staging/specs/2026-06-25-existing-portrait-adoption-queue.md',
+    'docs/staging/specs/2026-06-25-existing-portrait-duplicate-review.md',
 );
 
 $failures = array();
@@ -30,7 +31,7 @@ $plugin = is_string($source['academy-awards-table.php']) ? $source['academy-awar
 $template = is_string($source['templates/person-portrait-import-admin.php']) ? $source['templates/person-portrait-import-admin.php'] : '';
 $admin_css = is_string($source['assets/css/admin.css']) ? $source['assets/css/admin.css'] : '';
 $docs = (is_string($source['README.md']) ? $source['README.md'] : '') . "\n" . (is_string($source['readme.txt']) ? $source['readme.txt'] : '');
-$spec = is_string($source['docs/staging/specs/2026-06-25-existing-portrait-adoption-queue.md']) ? $source['docs/staging/specs/2026-06-25-existing-portrait-adoption-queue.md'] : '';
+$spec = (is_string($source['docs/staging/specs/2026-06-25-existing-portrait-adoption-queue.md']) ? $source['docs/staging/specs/2026-06-25-existing-portrait-adoption-queue.md'] : '') . "\n" . (is_string($source['docs/staging/specs/2026-06-25-existing-portrait-duplicate-review.md']) ? $source['docs/staging/specs/2026-06-25-existing-portrait-duplicate-review.md'] : '');
 
 $method_slice = function ($haystack, $start, $end) {
     $start_pos = strpos($haystack, $start);
@@ -50,8 +51,8 @@ $adopt_method = $method_slice($plugin, 'private function adopt_existing_person_p
 $existing_lookup_method = $method_slice($plugin, 'private function find_existing_person_portrait_attachment', 'public function get_poster_attachment_id_for_title');
 
 foreach (array(
-    'Version: 2.7.40',
-    "define('AAT_VERSION', '2.7.40')",
+    'Version: 2.7.41',
+    "define('AAT_VERSION', '2.7.41')",
     'get_existing_person_portrait_adoption_rows',
     'adopt_existing_person_portrait_attachment',
     'existing-media-adoption',
@@ -69,6 +70,7 @@ foreach (array(
     "current_user_can('manage_options')",
     "check_admin_referer('aat_existing_person_portrait_adopt'",
     'sanitize_text_field',
+    'sanitize_key',
     'absint',
     'sanitize_textarea_field',
 ) as $needle) {
@@ -80,6 +82,11 @@ foreach (array(
     "'folder' => 'PEOPLE'",
     "'state' => 'reusable_nm_filename'",
     'duplicate_person_id',
+    'duplicate_group',
+    'adoption_view',
+    'ready_adoption_total',
+    'duplicate_adoption_total',
+    'duplicate_person_total',
     'adoption_candidate',
     'wp_get_attachment_image_url',
     'build_entity_url_from_id',
@@ -119,6 +126,8 @@ foreach (array(
     'Adopt existing portrait',
     'aat_existing_person_portrait_adopt_nonce',
     'Duplicate candidate',
+    'Duplicate review',
+    'Competing PEOPLE images',
     'Manual review required',
     'existing-media-adoption',
 ) as $needle) {
@@ -129,14 +138,17 @@ foreach (array(
     '.aat-person-portrait-adoption-grid',
     '.aat-person-portrait-adoption-card',
     '.aat-person-portrait-adoption-card img',
+    '.aat-person-portrait-duplicate-review',
+    '.aat-person-portrait-duplicate-option',
 ) as $needle) {
     $assert(strpos($admin_css, $needle) !== false, "Admin CSS should style existing portrait adoption lane: {$needle}");
 }
 
 foreach (array(
     'Existing PEOPLE adoption',
+    'duplicate-review',
     'existing-media-adoption',
-    '2.7.40',
+    '2.7.41',
 ) as $needle) {
     $assert(strpos($docs . $spec, $needle) !== false, "Docs/spec should describe the existing PEOPLE adoption workflow: {$needle}");
 }
