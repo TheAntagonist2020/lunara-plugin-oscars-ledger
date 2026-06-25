@@ -14,13 +14,14 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.46`.
+Current baseline: `2.7.47`.
 
 ## Current Public Surface
 
 - Ceremony pages include a data-derived Ceremony Thesis layer with critical-path navigation and compact major-race briefing cards.
 - Generic Oscar category pages now use dossier-grade route framing with command-band summaries, denser ledger-card rows, and linked craft/person credit chips where the person entity can be resolved.
 - Oscar reporting-table rebuilds now recover missing person-link projections from unique, single-person `PERSON_PROFILE` media labels with embedded IMDb `nm` IDs, giving craft/category credits a real route-backed fallback when source rows lack `nominee_ids`.
+- Person profile route queries now hydrate joined nominee-projection rows with fully qualified source columns, so recovered person links render real profile pages instead of falling through to 404.
 - Person profile files now expose honest visual-source states for local portraits, TMDb portraits, and no-portrait cases; contextual title art is barred from the person portrait chamber.
 - A dry-run nominee portrait batch audit can use Dalton's nominee CSV roster to review all person image states safely before any import or Media Library mutation.
 - `Academy Awards > Person Portrait Queue` imports one verified TMDb person profile image at a time, marks the attachment with plugin-owned person portrait metadata, and keeps title/backdrop art barred from person portraits.

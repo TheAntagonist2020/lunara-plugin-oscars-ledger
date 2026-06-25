@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.46
+Stable tag: 2.7.47
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.47 =
+* Fixed person profile route hydration for nominee-projection rows recovered from existing PEOPLE profile media.
+* Recovered craft/person links now resolve to real profile pages even when the original source row still lacks public `nominee_ids`.
 
 = 2.7.46 =
 * Recovered missing person-link projections from unique single-person `PERSON_PROFILE` media labels with embedded IMDb `nm` IDs.

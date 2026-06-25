@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.46
+ * Version: 2.7.47
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.46');
+define('AAT_VERSION', '2.7.47');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -5385,9 +5385,12 @@ class Academy_Awards_Table {
         }
 
         $fields = $this->get_awards_row_fields_sql();
+        $qualified_fields = implode(', ', array_map(function($field) {
+            return 'a.' . trim((string) $field);
+        }, explode(',', $fields)));
         if ($entity === 'title') {
             $sql = $wpdb->prepare(
-                "SELECT DISTINCT a.$fields
+                "SELECT DISTINCT $qualified_fields
                  FROM $table_name a
                  INNER JOIN $facts_table f ON f.source_award_id = a.id
                  WHERE f.film_entity_id = %s
@@ -5396,7 +5399,7 @@ class Academy_Awards_Table {
             );
         } else {
             $sql = $wpdb->prepare(
-                "SELECT DISTINCT a.$fields
+                "SELECT DISTINCT $qualified_fields
                  FROM $table_name a
                  INNER JOIN $nominees_table n ON n.source_award_id = a.id
                  WHERE n.entity_id = %s
