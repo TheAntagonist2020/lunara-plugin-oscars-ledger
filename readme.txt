@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.48
+Stable tag: 2.7.49
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.49 =
+* Added a private person-credit review lane inside `Academy Awards > Person Portrait Queue`.
+* Unresolved audit rows can now be marked one at a time with review state, proposed IMDb person ID, and private note metadata as a deferred correction queue.
+* Saving review metadata does not mutate Oscar source rows, nominee projections, media attachments, post meta, or public routes.
 
 = 2.7.48 =
 * Added a private read-only `person-credit-audit` WP-CLI mode for unresolved person credit reconciliation.

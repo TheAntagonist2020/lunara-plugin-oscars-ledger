@@ -14,7 +14,7 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.48`.
+Current baseline: `2.7.49`.
 
 ## Current Public Surface
 
@@ -23,6 +23,7 @@ Current baseline: `2.7.48`.
 - Oscar reporting-table rebuilds now recover missing person-link projections from unique, single-person `PERSON_PROFILE` media labels with embedded IMDb `nm` IDs, giving craft/category credits a real route-backed fallback when source rows lack `nominee_ids`.
 - Person profile route queries now hydrate joined nominee-projection rows with fully qualified source columns, so recovered person links render real profile pages instead of falling through to 404.
 - The private `wp aat profile-images person-credit-audit` command generates a read-only unresolved person credit reconciliation queue, with optional private CSV output, before any source-row correction or portrait adoption work.
+- `Academy Awards > Person Portrait Queue` includes a private person-credit review lane for unresolved audit rows, storing one-row states, proposed IMDb person IDs, and notes as deferred correction metadata without mutating Oscar rows or media.
 - Person profile files now expose honest visual-source states for local portraits, TMDb portraits, and no-portrait cases; contextual title art is barred from the person portrait chamber.
 - A dry-run nominee portrait batch audit can use Dalton's nominee CSV roster to review all person image states safely before any import or Media Library mutation.
 - `Academy Awards > Person Portrait Queue` imports one verified TMDb person profile image at a time, marks the attachment with plugin-owned person portrait metadata, and keeps title/backdrop art barred from person portraits.

@@ -9,12 +9,20 @@ $queue_rows = isset($queue_rows) && is_array($queue_rows) ? $queue_rows : array(
 $queue_summary = isset($queue_summary) && is_array($queue_summary) ? $queue_summary : array();
 $adoption_rows = isset($adoption_rows) && is_array($adoption_rows) ? $adoption_rows : array();
 $adoption_summary = isset($adoption_summary) && is_array($adoption_summary) ? $adoption_summary : array();
+$person_credit_rows = isset($person_credit_rows) && is_array($person_credit_rows) ? $person_credit_rows : array();
+$person_credit_summary = isset($person_credit_summary) && is_array($person_credit_summary) ? $person_credit_summary : array();
+$person_credit_review_states = isset($person_credit_review_states) && is_array($person_credit_review_states) ? $person_credit_review_states : array();
+$person_credit_review_filter_labels = isset($person_credit_review_filter_labels) && is_array($person_credit_review_filter_labels) ? $person_credit_review_filter_labels : array();
 $selected_state = isset($selected_state) ? (string) $selected_state : 'candidate_external';
 $selected_limit = isset($selected_limit) ? intval($selected_limit) : 50;
 $selected_offset = isset($selected_offset) ? intval($selected_offset) : 0;
 $adoption_view = isset($adoption_view) ? (string) $adoption_view : 'all';
 $adoption_limit = isset($adoption_limit) ? intval($adoption_limit) : 24;
 $adoption_offset = isset($adoption_offset) ? intval($adoption_offset) : 0;
+$person_credit_category = isset($person_credit_category) ? (string) $person_credit_category : 'sound-mixing';
+$person_credit_review_state = isset($person_credit_review_state) ? (string) $person_credit_review_state : 'all';
+$person_credit_limit = isset($person_credit_limit) ? intval($person_credit_limit) : 25;
+$person_credit_offset = isset($person_credit_offset) ? intval($person_credit_offset) : 0;
 $ids_raw = isset($ids_raw) ? (string) $ids_raw : '';
 $refresh_tmdb = !empty($refresh_tmdb);
 $tmdb_key_configured = !empty($tmdb_key_configured);
@@ -60,6 +68,127 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
         </div>
         <p><?php esc_html_e('The batch path never searches for images. It only imports approved JPEG files whose IMDb IDs match the verified CSV, then marks them as manual-batch-upload portraits.', 'academy-awards-table'); ?></p>
         <p><?php esc_html_e('Use coverage mode after imports to separate route-backed portraits, approved portrait IDs absent from source people, and imported-media/no-route cleanup rows. It reads tmdb_profile_results.csv Status=OK rows and does not import media.', 'academy-awards-table'); ?></p>
+    </section>
+
+    <section class="aat-admin-section aat-person-credit-review">
+        <h2><?php esc_html_e('Person credit review', 'academy-awards-table'); ?></h2>
+        <p><?php esc_html_e('Review unresolved visible Oscar person credits one row at a time before any source-row correction happens. This saves private judgment metadata only; it does not edit award results, nominees, media, or public routes.', 'academy-awards-table'); ?></p>
+        <div class="aat-admin-note">
+            <code>wp aat profile-images person-credit-audit --category=sound-mixing --state=unresolved --sample=50 --output-csv=/private/person-credit-reconciliation.csv</code>
+        </div>
+
+        <?php if (!empty($person_credit_summary['error'])) : ?>
+            <div class="notice notice-error inline">
+                <p><?php echo esc_html((string) $person_credit_summary['error']); ?></p>
+            </div>
+        <?php else : ?>
+            <div class="aat-person-portrait-summary">
+                <span><?php echo esc_html(sprintf(__('Source rows: %d', 'academy-awards-table'), intval($person_credit_summary['source_rows'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Visible credits: %d', 'academy-awards-table'), intval($person_credit_summary['credit_labels'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Unresolved: %d', 'academy-awards-table'), intval($person_credit_summary['person_credit_unresolved'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Missing source IDs: %d', 'academy-awards-table'), intval($person_credit_summary['missing_source_nominee_ids'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Label/ID mismatches: %d', 'academy-awards-table'), intval($person_credit_summary['label_id_mismatch'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Saved reviews in window: %d', 'academy-awards-table'), intval($person_credit_summary['reviewed_total'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Showing: %d', 'academy-awards-table'), intval($person_credit_summary['returned'] ?? count($person_credit_rows)))); ?></span>
+            </div>
+        <?php endif; ?>
+
+        <form method="get" class="aat-person-portrait-filters aat-person-credit-review-controls">
+            <input type="hidden" name="page" value="academy-awards-person-portraits" />
+            <input type="hidden" name="state" value="<?php echo esc_attr($selected_state); ?>" />
+            <input type="hidden" name="limit" value="<?php echo esc_attr((string) $selected_limit); ?>" />
+            <input type="hidden" name="offset" value="<?php echo esc_attr((string) $selected_offset); ?>" />
+            <label>
+                <span><?php esc_html_e('Category slug', 'academy-awards-table'); ?></span>
+                <input type="text" name="person_credit_category" value="<?php echo esc_attr($person_credit_category); ?>" />
+            </label>
+            <label>
+                <span><?php esc_html_e('Review state', 'academy-awards-table'); ?></span>
+                <select name="person_credit_review_state">
+                    <?php foreach ($person_credit_review_filter_labels as $value => $label) : ?>
+                        <option value="<?php echo esc_attr($value); ?>" <?php selected($person_credit_review_state, $value); ?>><?php echo esc_html($label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>
+                <span><?php esc_html_e('Limit', 'academy-awards-table'); ?></span>
+                <input type="number" name="person_credit_limit" value="<?php echo esc_attr((string) $person_credit_limit); ?>" min="1" max="100" />
+            </label>
+            <label>
+                <span><?php esc_html_e('Offset', 'academy-awards-table'); ?></span>
+                <input type="number" name="person_credit_offset" value="<?php echo esc_attr((string) $person_credit_offset); ?>" min="0" />
+            </label>
+            <button type="submit" class="button"><?php esc_html_e('Refresh person-credit review', 'academy-awards-table'); ?></button>
+        </form>
+
+        <?php if (empty($person_credit_rows)) : ?>
+            <p class="aat-person-portrait-muted"><?php esc_html_e('No unresolved person credits matched the current review window.', 'academy-awards-table'); ?></p>
+        <?php else : ?>
+            <div class="aat-person-portrait-adoption-grid aat-person-credit-review-grid">
+                <?php foreach ($person_credit_rows as $row) : ?>
+                    <?php
+                    $review_key = (string) ($row['review_key'] ?? '');
+                    $review_state = (string) ($row['review_state'] ?? 'needs_review');
+                    $proposed_person_id = (string) ($row['proposed_person_id'] ?? '');
+                    $correction_note = (string) ($row['correction_note'] ?? '');
+                    $source_nominee_ids = (string) ($row['source_nominee_ids'] ?? '');
+                    ?>
+                    <article class="aat-person-portrait-adoption-card aat-person-credit-review-card">
+                        <div class="aat-person-portrait-adoption-body">
+                            <span class="aat-person-portrait-state aat-person-portrait-state-needs_attention">
+                                <?php echo esc_html((string) ($row['review_state_label'] ?? __('Needs Review', 'academy-awards-table'))); ?>
+                            </span>
+                            <h3><?php echo esc_html((string) ($row['credit_label'] ?? '')); ?></h3>
+                            <p>
+                                <code><?php echo esc_html($review_key); ?></code>
+                                <span><?php echo esc_html(sprintf(__('Award row #%d', 'academy-awards-table'), intval($row['source_award_id'] ?? 0))); ?></span>
+                            </p>
+                            <dl>
+                                <div>
+                                    <dt><?php esc_html_e('Ceremony', 'academy-awards-table'); ?></dt>
+                                    <dd><?php echo esc_html((string) ($row['ceremony'] ?? '')); ?></dd>
+                                </div>
+                                <div>
+                                    <dt><?php esc_html_e('Film', 'academy-awards-table'); ?></dt>
+                                    <dd><?php echo esc_html((string) ($row['film'] ?? '')); ?></dd>
+                                </div>
+                                <div>
+                                    <dt><?php esc_html_e('Category', 'academy-awards-table'); ?></dt>
+                                    <dd><?php echo esc_html((string) ($row['category'] ?? '')); ?></dd>
+                                </div>
+                                <div>
+                                    <dt><?php esc_html_e('source_nominee_ids', 'academy-awards-table'); ?></dt>
+                                    <dd><code><?php echo esc_html($source_nominee_ids); ?></code></dd>
+                                </div>
+                            </dl>
+                            <form method="post" class="aat-person-credit-review-form">
+                                <?php wp_nonce_field('aat_person_credit_review', 'aat_person_credit_review_nonce'); ?>
+                                <input type="hidden" name="aat_person_credit_review_key" value="<?php echo esc_attr($review_key); ?>" />
+                                <input type="hidden" name="aat_person_credit_category_slug" value="<?php echo esc_attr((string) ($row['category_slug'] ?? '')); ?>" />
+                                <input type="hidden" name="aat_person_credit_label" value="<?php echo esc_attr((string) ($row['credit_label'] ?? '')); ?>" />
+                                <label>
+                                    <span><?php esc_html_e('Review state', 'academy-awards-table'); ?></span>
+                                    <select name="aat_person_credit_review_state">
+                                        <?php foreach ($person_credit_review_states as $value => $label) : ?>
+                                            <option value="<?php echo esc_attr($value); ?>" <?php selected($review_state, $value); ?>><?php echo esc_html($label); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span><?php esc_html_e('Proposed IMDb person ID', 'academy-awards-table'); ?></span>
+                                    <input type="text" name="aat_person_credit_proposed_person_id" value="<?php echo esc_attr($proposed_person_id); ?>" placeholder="nm0000000" autocomplete="off" />
+                                </label>
+                                <label>
+                                    <span><?php esc_html_e('Private note', 'academy-awards-table'); ?></span>
+                                    <textarea name="aat_person_credit_review_note" rows="3"><?php echo esc_textarea($correction_note); ?></textarea>
+                                </label>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Save person-credit review', 'academy-awards-table'); ?></button>
+                            </form>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </section>
 
     <section class="aat-admin-section">
