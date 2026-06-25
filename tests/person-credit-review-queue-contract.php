@@ -50,13 +50,15 @@ $method_slice = function ($haystack, $start, $end) {
 $schema = $method_slice($plugin, 'private function maybe_create_person_credit_reviews_table', 'private function maybe_create_omdb_reviews_table');
 $states = $method_slice($plugin, 'private function get_person_credit_review_states', 'private function sanitize_person_credit_review_state');
 $saver = $method_slice($plugin, 'private function save_person_credit_review_record_from_request', 'private function get_person_credit_review_records_for_keys');
+$source_preview = $method_slice($plugin, 'private function build_person_credit_source_correction_preview', 'private function apply_person_credit_source_correction_from_request');
+$source_correction = $method_slice($plugin, 'private function apply_person_credit_source_correction_from_request', 'private function get_person_credit_review_records_for_keys');
 $fetcher = $method_slice($plugin, 'private function get_person_credit_review_records_for_keys', 'private function get_default_person_credit_review_record');
 $queue = $method_slice($plugin, 'private function get_person_credit_review_queue_rows', 'private function normalize_profile_image_coverage_cli_args');
 $admin = $method_slice($plugin, 'public function render_person_portrait_import_admin_page', 'public function render_omdb_audit_admin_page');
 
 foreach (array(
-    'Version: 2.7.49',
-    "define('AAT_VERSION', '2.7.49')",
+    'Version: 2.7.51',
+    "define('AAT_VERSION', '2.7.51')",
     'get_person_credit_reviews_table_name',
     'maybe_create_person_credit_reviews_table',
     'wp_aat_person_credit_reviews',
@@ -69,6 +71,8 @@ foreach (array(
 $assert($schema !== '', 'Person-credit review table schema should be inspectable.');
 $assert($states !== '', 'Person-credit review states should be inspectable.');
 $assert($saver !== '', 'Person-credit review saver should be inspectable.');
+$assert($source_preview !== '', 'Person-credit source correction preview should be inspectable.');
+$assert($source_correction !== '', 'Person-credit source correction action should be inspectable.');
 $assert($fetcher !== '', 'Person-credit review fetcher should be inspectable.');
 $assert($queue !== '', 'Person-credit review queue builder should be inspectable.');
 $assert($admin !== '', 'Person Portrait Queue admin handler should be inspectable.');
@@ -107,7 +111,7 @@ foreach (array(
     'aat_person_credit_proposed_person_id',
     'aat_person_credit_review_note',
     'sanitize_textarea_field',
-    '$wpdb->replace',
+    'replace_person_credit_review_record',
     'reviewer_user_id',
 ) as $needle) {
     $assert(strpos($saver, $needle) !== false, "Saver should validate and persist one private review row: {$needle}");
@@ -121,6 +125,8 @@ foreach (array(
     'proposed_person_id',
     'correction_note',
     'review_state_label',
+    'source_correction_preview',
+    'build_person_credit_source_correction_preview',
 ) as $needle) {
     $assert(strpos($queue . $fetcher, $needle) !== false, "Queue should merge audit rows with saved review records: {$needle}");
 }
@@ -129,6 +135,9 @@ foreach (array(
     'aat_person_credit_review_nonce',
     'aat_person_credit_review',
     'save_person_credit_review_record_from_request',
+    'aat_person_credit_source_correction_nonce',
+    'aat_person_credit_source_correction',
+    'apply_person_credit_source_correction_from_request',
     'person_credit_category',
     'person_credit_review_state',
     'person_credit_rows',
@@ -138,12 +147,48 @@ foreach (array(
 }
 
 foreach (array(
+    'current_user_can',
+    'manage_options',
+    'aat_person_credit_source_confirm',
+    'aat_person_credit_source_confirm_person_id',
+    'get_person_credit_review_records_for_keys',
+    'build_person_credit_source_correction_preview',
+    '$wpdb->update',
+    "'nominee_ids'",
+    'START TRANSACTION',
+    'ROLLBACK',
+    'COMMIT',
+    'rebuild_reporting_tables',
+    'clear_awards_runtime_caches',
+    "'resolved'",
+) as $needle) {
+    $assert(strpos($source_correction, $needle) !== false, "Source correction should be one-row guarded and rebuild projections: {$needle}");
+}
+
+foreach (array(
+    'multi_credit_needs_full_row',
+    'label_mismatch',
+    'existing_ids_present',
+    'candidate_found',
+    'ready_to_correct',
+    'visible_label_count',
+    'normalize_person_credit_label_for_compare',
+) as $needle) {
+    $assert(strpos($source_preview, $needle) !== false, "Source correction preview should block unsafe rows: {$needle}");
+}
+
+foreach (array(
     'Person credit review',
     'aat-person-credit-review',
     'aat_person_credit_review_key',
     'aat_person_credit_review_state',
     'aat_person_credit_proposed_person_id',
     'aat_person_credit_review_note',
+    'aat_person_credit_source_correction_nonce',
+    'aat_person_credit_source_review_key',
+    'aat_person_credit_source_proposed_person_id',
+    'aat_person_credit_source_confirm_person_id',
+    'Apply one-row source correction',
     'source_nominee_ids',
     'private note',
 ) as $needle) {
@@ -168,7 +213,9 @@ foreach (array(
     'private',
     'read-only',
     'deferred correction',
-    '2.7.49',
+    'one-row',
+    'source correction',
+    '2.7.51',
 ) as $needle) {
     $assert(stripos($docs, $needle) !== false, "Docs/spec should describe the private review queue: {$needle}");
 }

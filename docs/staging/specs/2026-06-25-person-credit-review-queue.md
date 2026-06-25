@@ -16,7 +16,7 @@ invariant: Saving a person-credit review record never mutates Oscar result rows,
 
 invariant: Public HTML never exposes person-credit review states, notes, reviewer IDs, source nominee IDs, private CSV paths, or admin-only queue markers.
 
-test: Local PHP lint and contract tests prove version `2.7.49`, schema creation, admin-only save helpers, review-state labels, review-key merging, docs, and no mutation calls inside the review queue builder/saver beyond the plugin-owned review table.
+test: Local PHP lint and contract tests prove current plugin version, schema creation, admin-only save helpers, review-state labels, review-key merging, docs, and no mutation calls inside the review queue builder/saver beyond the plugin-owned review table.
 
 deferred: Actual Oscar source-row correction, nominee projection rebuild, bulk actions, external API lookup, and automatic IMDb ID repair.
 

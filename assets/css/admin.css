@@ -438,6 +438,62 @@
     width: 100%;
 }
 
+.aat-person-credit-source-correction {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 12px;
+}
+
+.aat-person-credit-source-correction.is-ready {
+    background: #f4fbf2;
+    border-color: #7ad278;
+}
+
+.aat-person-credit-source-correction strong {
+    color: #0a1520;
+}
+
+.aat-person-credit-source-correction p {
+    margin: 0;
+}
+
+.aat-person-credit-source-correction dl {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+}
+
+.aat-person-credit-source-correction dl > div {
+    display: grid;
+    gap: 3px;
+}
+
+.aat-person-credit-source-correction dt {
+    color: #646970;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.aat-person-credit-source-correction dd {
+    margin: 0;
+}
+
+.aat-person-credit-source-correction-confirm {
+    align-items: start;
+    display: flex !important;
+    gap: 8px;
+}
+
+.aat-person-credit-source-correction-confirm input {
+    margin-top: 2px;
+}
+
 .aat-person-portrait-adoption-links {
     display: flex;
     flex-wrap: wrap;

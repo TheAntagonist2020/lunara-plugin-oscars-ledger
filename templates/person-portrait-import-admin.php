@@ -132,6 +132,8 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                     $proposed_person_id = (string) ($row['proposed_person_id'] ?? '');
                     $correction_note = (string) ($row['correction_note'] ?? '');
                     $source_nominee_ids = (string) ($row['source_nominee_ids'] ?? '');
+                    $source_correction_preview = isset($row['source_correction_preview']) && is_array($row['source_correction_preview']) ? $row['source_correction_preview'] : array();
+                    $source_correction_ready = !empty($source_correction_preview['ready']);
                     ?>
                     <article class="aat-person-portrait-adoption-card aat-person-credit-review-card">
                         <div class="aat-person-portrait-adoption-body">
@@ -184,6 +186,38 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                                 </label>
                                 <button type="submit" class="button button-primary"><?php esc_html_e('Save person-credit review', 'academy-awards-table'); ?></button>
                             </form>
+                            <?php if (!empty($source_correction_preview)) : ?>
+                                <div class="aat-person-credit-source-correction <?php echo $source_correction_ready ? 'is-ready' : 'is-blocked'; ?>">
+                                    <strong><?php esc_html_e('One-row source correction', 'academy-awards-table'); ?></strong>
+                                    <p><?php echo esc_html((string) ($source_correction_preview['message'] ?? '')); ?></p>
+                                    <?php if ($source_correction_ready) : ?>
+                                        <dl>
+                                            <div>
+                                                <dt><?php esc_html_e('Current nominee_ids', 'academy-awards-table'); ?></dt>
+                                                <dd><code><?php echo esc_html((string) ($source_correction_preview['current_nominee_ids'] ?? '')); ?></code></dd>
+                                            </div>
+                                            <div>
+                                                <dt><?php esc_html_e('New nominee_ids', 'academy-awards-table'); ?></dt>
+                                                <dd><code><?php echo esc_html((string) ($source_correction_preview['new_nominee_ids'] ?? '')); ?></code></dd>
+                                            </div>
+                                        </dl>
+                                        <form method="post" class="aat-person-credit-source-correction-form">
+                                            <?php wp_nonce_field('aat_person_credit_source_correction', 'aat_person_credit_source_correction_nonce'); ?>
+                                            <input type="hidden" name="aat_person_credit_source_review_key" value="<?php echo esc_attr($review_key); ?>" />
+                                            <input type="hidden" name="aat_person_credit_source_proposed_person_id" value="<?php echo esc_attr((string) ($source_correction_preview['proposed_person_id'] ?? '')); ?>" />
+                                            <label class="aat-person-credit-source-correction-confirm">
+                                                <input type="checkbox" name="aat_person_credit_source_confirm" value="1" />
+                                                <span><?php esc_html_e('I confirm this updates only this award row source nominee_ids.', 'academy-awards-table'); ?></span>
+                                            </label>
+                                            <label>
+                                                <span><?php esc_html_e('Type exact IMDb person ID', 'academy-awards-table'); ?></span>
+                                                <input type="text" name="aat_person_credit_source_confirm_person_id" value="" placeholder="<?php echo esc_attr((string) ($source_correction_preview['proposed_person_id'] ?? 'nm0000000')); ?>" autocomplete="off" />
+                                            </label>
+                                            <button type="submit" class="button button-secondary"><?php esc_html_e('Apply one-row source correction', 'academy-awards-table'); ?></button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </article>
                 <?php endforeach; ?>
