@@ -46,10 +46,21 @@ foreach (array(
     'local-portrait',
     'tmdb-person-profile',
     'tmdb-portrait',
-    'tmdb-contextual-title',
-    'contextual-fallback',
 ) as $needle) {
     $assert(strpos($plugin, $needle) !== false, "Person visual package should use {$needle}.");
+}
+
+$person_visual_start = strpos($plugin, 'public function get_person_visual_package');
+$person_visual_end = strpos($plugin, 'private function resolve_profile_attachment_for_person', (int) $person_visual_start);
+$person_visual_method = ($person_visual_start !== false && $person_visual_end !== false)
+    ? substr($plugin, $person_visual_start, $person_visual_end - $person_visual_start)
+    : '';
+$assert($person_visual_method !== '', 'Person visual package method should be inspectable.');
+foreach (array(
+    'tmdb-contextual-title',
+    'contextual-fallback',
+) as $forbidden) {
+    $assert(strpos($person_visual_method, $forbidden) === false, "Person visual package should not use title-context imagery as a portrait state: {$forbidden}.");
 }
 
 foreach (array(
@@ -64,7 +75,6 @@ foreach (array(
 
 foreach (array(
     '.aat-entity-poster-wrap.is-person-fallback',
-    '.aat-entity-hero.has-person-visual-state-contextual-fallback',
     '.aat-entity-hero.has-person-visual-state-no-portrait',
 ) as $needle) {
     $assert(strpos($css, $needle) !== false, "CSS should style person visual state {$needle}.");

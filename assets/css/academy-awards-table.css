@@ -3492,7 +3492,6 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
     grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
 }
 
-.aat-entity-hero.has-person-visual-state-contextual-fallback,
 .aat-entity-hero.has-person-visual-state-no-portrait {
     grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
 }

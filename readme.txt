@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.34
+Stable tag: 2.7.35
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,8 +63,12 @@ Examples:
 
 == Changelog ==
 
+= 2.7.35 =
+* Stopped contextual title/backdrop imagery from rendering as person portrait fallbacks on Oscars person profile pages.
+* Added a dry-run nominee portrait batch audit helper that can use Dalton's nominee CSV roster with batch size, offset, and state filters before any image imports exist.
+
 = 2.7.34 =
-* Added honest Oscars person/profile visual-source states for local portraits, TMDb portraits, contextual title fallbacks, and no-portrait cases.
+* Added honest Oscars person/profile visual-source states for local portraits, TMDb portraits, and no-portrait cases.
 * Expanded the private Person Profile Audit with visible portrait state/source columns to guide manual cleanup without exposing operational metadata publicly.
 
 = 2.7.33 =

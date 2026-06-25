@@ -509,7 +509,7 @@ if ($entity === 'name') {
     $aat_person_visual_source = $aat_person_visual_source !== '' ? $aat_person_visual_source : 'none';
     $hero_classes[] = 'has-person-visual-state-' . $aat_person_visual_state;
     $hero_classes[] = 'has-person-visual-source-' . $aat_person_visual_source;
-    if (in_array($aat_person_visual_state, array('no-portrait', 'contextual-fallback'), true)) {
+    if ($aat_person_visual_state === 'no-portrait') {
         $hero_classes[] = 'is-person-visual-fallback';
     }
 }

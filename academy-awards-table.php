@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.34
+ * Version: 2.7.35
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.34');
+define('AAT_VERSION', '2.7.35');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -8710,10 +8710,6 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         if (!empty($tmdb['backdrop_full'])) {
             $out['backdrop_url'] = (string) $tmdb['backdrop_full'];
         }
-        if ($out['visual_state'] === 'no-portrait' && !empty($out['backdrop_url'])) {
-            $out['visual_source'] = 'tmdb-contextual-title';
-            $out['visual_state'] = 'contextual-fallback';
-        }
         if (!empty($tmdb['name'])) {
             $out['name'] = (string) $tmdb['name'];
         }
@@ -8738,8 +8734,8 @@ public function get_person_visual_package($nm_id, $size = 'large') {
     $display_name = $out['name'] !== '' ? $out['name'] : strtoupper($nm_id);
     $meta_bits = array_map('esc_html', array_values(array_filter($out['meta_bits'], 'strlen')));
     $meta_line = !empty($meta_bits) ? '<div class="aat-fallback-meta">' . implode('<span class="aat-fallback-dot">&bull;</span>', $meta_bits) . '</div>' : '';
-    $backdrop_style = !empty($out['backdrop_url']) ? ' style="background-image: linear-gradient(180deg, rgba(4,11,22,.28), rgba(4,11,22,.82)), url(' . esc_url($out['backdrop_url']) . '); background-size: cover; background-position: center;"' : '';
-    $out['fallback_html'] = '<div class="aat-entity-poster-fallback aat-person-portrait-fallback"' . $backdrop_style . '><div class="aat-fallback-inner"><div class="aat-fallback-kicker">LUNARA FILM</div><div class="aat-fallback-title">' . esc_html($display_name) . '</div>' . $meta_line . '</div></div>';
+    // A title/backdrop image can support page atmosphere, but it must never occupy a person portrait chamber.
+    $out['fallback_html'] = '<div class="aat-entity-poster-fallback aat-person-portrait-fallback"><div class="aat-fallback-inner"><div class="aat-fallback-kicker">LUNARA FILM</div><div class="aat-fallback-title">' . esc_html($display_name) . '</div>' . $meta_line . '</div></div>';
 
     return $out;
 }
@@ -8962,10 +8958,6 @@ public function get_person_visual_package($nm_id, $size = 'large') {
                     $visual_state = 'tmdb-portrait';
                     $portrait_state_label = __('TMDb portrait', 'academy-awards-table');
                     $thumb_url = (string) $cached_tmdb['profile_full'];
-                } elseif (is_array($cached_tmdb) && !empty($cached_tmdb['backdrop_full'])) {
-                    $visual_source = 'tmdb-contextual-title';
-                    $visual_state = 'contextual-fallback';
-                    $portrait_state_label = __('Contextual fallback', 'academy-awards-table');
                 }
             }
 
