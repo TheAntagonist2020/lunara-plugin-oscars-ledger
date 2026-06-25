@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.43
+ * Version: 2.7.44
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.43');
+define('AAT_VERSION', '2.7.44');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -5953,7 +5953,7 @@ class Academy_Awards_Table {
 
         $queue_rows = is_array($queue['rows'] ?? null) ? $queue['rows'] : array();
         $queue_summary = is_array($queue['summary'] ?? null) ? $queue['summary'] : array();
-        $allowed_adoption_views = array('all', 'ready', 'duplicates', 'manual');
+        $allowed_adoption_views = array('all', 'ready', 'duplicates', 'duplicate_groups', 'manual');
         $adoption_view = isset($_GET['adoption_view']) ? sanitize_key(wp_unslash($_GET['adoption_view'])) : 'all';
         if (!in_array($adoption_view, $allowed_adoption_views, true)) {
             $adoption_view = 'all';
@@ -10502,7 +10502,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $offset = isset($args['offset']) ? intval($args['offset']) : 0;
         $offset = max(0, $offset);
         $view = isset($args['view']) ? sanitize_key((string) $args['view']) : 'all';
-        if (!in_array($view, array('all', 'ready', 'duplicates', 'manual'), true)) {
+        if (!in_array($view, array('all', 'ready', 'duplicates', 'duplicate_groups', 'manual'), true)) {
             $view = 'all';
         }
 
@@ -10596,10 +10596,37 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             $duplicate_groups[$person_id][] = array(
                 'attachment_id' => intval($candidate_row['attachment_id'] ?? 0),
                 'post_title' => (string) ($candidate_row['post_title'] ?? ''),
+                'attached_file' => (string) ($candidate_row['attached_file'] ?? ''),
                 'thumb_url' => (string) ($candidate_row['thumb_url'] ?? ''),
                 'full_url' => (string) ($candidate_row['full_url'] ?? ''),
             );
         }
+
+        $duplicate_group_review_rows_map = array();
+        foreach ($candidate_rows as $candidate_row) {
+            if (empty($candidate_row['duplicate_person_id'])) {
+                continue;
+            }
+
+            $person_id = (string) ($candidate_row['person_id'] ?? '');
+            if ($person_id === '' || isset($duplicate_group_review_rows_map[$person_id])) {
+                continue;
+            }
+
+            $duplicate_group_candidates = isset($duplicate_groups[$person_id]) && is_array($duplicate_groups[$person_id])
+                ? array_values($duplicate_groups[$person_id])
+                : array();
+
+            $duplicate_group_review_rows_map[$person_id] = array_merge($candidate_row, array(
+                'duplicate_group_review' => 1,
+                'duplicate_group_person_id' => $person_id,
+                'duplicate_group_candidates' => $duplicate_group_candidates,
+                'duplicate_group' => $duplicate_group_candidates,
+                'duplicate_count' => count($duplicate_group_candidates),
+                'state_label' => __('Duplicate group review', 'academy-awards-table'),
+            ));
+        }
+        $duplicate_group_review_rows = array_values($duplicate_group_review_rows_map);
 
         $ready_total = 0;
         $duplicate_total = 0;
@@ -10622,6 +10649,9 @@ public function get_person_visual_package($nm_id, $size = 'large') {
                 $ready_total++;
             }
 
+            if ($view === 'duplicate_groups') {
+                continue;
+            }
             if ($view === 'manual' && !$is_manual) {
                 continue;
             }
@@ -10638,7 +10668,12 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             $filtered_rows[] = $candidate_row;
         }
 
-        $paged_rows = array_slice($filtered_rows, $offset, $limit);
+        if ($view === 'duplicate_groups') {
+            $paged_rows = array_slice($duplicate_group_review_rows, $offset, $limit);
+            $filtered_rows = $duplicate_group_review_rows;
+        } else {
+            $paged_rows = array_slice($filtered_rows, $offset, $limit);
+        }
         $summary = is_array($audit['summary'] ?? null) ? $audit['summary'] : array();
         $summary['returned'] = count($paged_rows);
         $summary['adoption_total'] = $ready_total + $duplicate_total;
@@ -10646,6 +10681,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $summary['ready_adoption_total'] = $ready_total;
         $summary['duplicate_adoption_total'] = $duplicate_total;
         $summary['duplicate_person_total'] = count($duplicate_person_ids);
+        $summary['duplicate_group_review_total'] = count($duplicate_group_review_rows);
         $summary['manual_review_total'] = $manual_review_total;
         $summary['adoption_view'] = $view;
         $summary['adoption_limit'] = $limit;

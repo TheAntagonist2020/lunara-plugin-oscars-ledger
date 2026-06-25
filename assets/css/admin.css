@@ -376,6 +376,11 @@
     border-color: #e6bf78;
 }
 
+.aat-person-portrait-adoption-card.is-duplicate-group {
+    background: #fffaf0;
+    border-color: #d9a441;
+}
+
 .aat-person-portrait-adoption-card.is-manual {
     background: #f9fafb;
     border-color: #cbd5e1;
@@ -502,6 +507,84 @@
 }
 
 .aat-person-portrait-duplicate-resolver code {
+    color: #6f4a00;
+}
+
+.aat-person-portrait-duplicate-group-card {
+    background: #fffaf0;
+    border: 1px solid #d9b66d;
+    border-radius: 8px;
+    display: grid;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 12px;
+}
+
+.aat-person-portrait-duplicate-group-card > p {
+    color: #725015;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.aat-person-portrait-duplicate-group-candidates {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.aat-person-portrait-duplicate-group-option {
+    background: #fff;
+    border: 1px solid #ead7aa;
+    border-radius: 8px;
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    padding: 8px;
+}
+
+.aat-person-portrait-duplicate-group-media {
+    align-items: center;
+    aspect-ratio: 2 / 3;
+    background: #111923;
+    color: #eadbb3;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    width: 100%;
+}
+
+.aat-person-portrait-duplicate-group-media img {
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+.aat-person-portrait-duplicate-group-meta {
+    display: grid;
+    gap: 4px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.aat-person-portrait-duplicate-group-meta span {
+    font-weight: 700;
+}
+
+.aat-person-portrait-duplicate-group-meta small {
+    color: #5f5041;
+}
+
+.aat-person-portrait-duplicate-group-resolver {
+    background: #fffdf7;
+    border: 1px solid #e6cf92;
+    border-radius: 8px;
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+}
+
+.aat-person-portrait-duplicate-group-resolver code {
     color: #6f4a00;
 }
 
