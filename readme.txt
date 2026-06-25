@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.44
+Stable tag: 2.7.45
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.45 =
+* Fixed the private Duplicate groups view so resolved one-candidate leftovers no longer remain in the grouped chooser.
+* The grouped duplicate-review count now reflects only live groups with at least two current candidates.
 
 = 2.7.44 =
 * Added a private Duplicate groups view for Existing PEOPLE portrait cleanup.
