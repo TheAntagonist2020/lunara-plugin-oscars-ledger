@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.37
+ * Version: 2.7.38
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.37');
+define('AAT_VERSION', '2.7.38');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -9088,6 +9088,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
      * Usage:
      * wp aat profile-images dry-run --source=/private/oscars-profile-images --results-csv=/private/tmdb_profile_results.csv --missing-csv=/private/profiles_missing.csv
      * wp aat profile-images import --source=/private/oscars-profile-images --results-csv=/private/tmdb_profile_results.csv --missing-csv=/private/profiles_missing.csv --limit=100 --offset=0 --batch=oscars-profile-images-20260625
+     * wp aat profile-images coverage --results-csv=/private/tmdb_profile_results.csv --batch=oscars-profile-images-20260625 --sample=25
      */
     public function handle_profile_image_batch_cli($args, $assoc_args) {
         if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI')) {
@@ -9095,8 +9096,27 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
 
         $mode = isset($args[0]) ? sanitize_key((string) $args[0]) : 'dry-run';
-        if (!in_array($mode, array('dry-run', 'import'), true)) {
-            WP_CLI::error('Mode must be dry-run or import.');
+        if (!in_array($mode, array('dry-run', 'import', 'coverage'), true)) {
+            WP_CLI::error('Mode must be dry-run, import, or coverage.');
+        }
+
+        if ($mode === 'coverage') {
+            $options = $this->normalize_profile_image_coverage_cli_args(is_array($assoc_args) ? $assoc_args : array());
+            if (is_wp_error($options)) {
+                WP_CLI::error($options->get_error_message());
+            }
+
+            $audit = $this->build_profile_image_coverage_audit($options);
+            if (is_wp_error($audit)) {
+                WP_CLI::error($audit->get_error_message());
+            }
+
+            $summary = is_array($audit['summary'] ?? null) ? $audit['summary'] : array();
+            $samples = is_array($audit['samples'] ?? null) ? $audit['samples'] : array();
+            $this->profile_image_batch_cli_report($summary);
+            $this->profile_image_coverage_cli_samples($samples);
+            WP_CLI::success('Manual profile image coverage audit complete.');
+            return;
         }
 
         $options = $this->normalize_profile_image_batch_cli_args($mode, is_array($assoc_args) ? $assoc_args : array());
@@ -9156,6 +9176,223 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         WP_CLI::success('Manual profile image batch dry-run complete.');
     }
 
+    private function normalize_profile_image_coverage_cli_args($assoc_args) {
+        $clean_path = function($value) {
+            return trim((string) $value, " \t\n\r\0\x0B\"'");
+        };
+
+        $results_csv = isset($assoc_args['results-csv']) ? $clean_path($assoc_args['results-csv']) : '';
+        $batch = isset($assoc_args['batch']) ? sanitize_key((string) $assoc_args['batch']) : '';
+        $sample = isset($assoc_args['sample']) ? intval($assoc_args['sample']) : 25;
+
+        if ($results_csv === '') {
+            return new WP_Error('aat_profile_coverage_missing_results_csv', 'Pass --results-csv pointing at tmdb_profile_results.csv.');
+        }
+        if (!is_readable($results_csv)) {
+            return new WP_Error('aat_profile_coverage_results_unreadable', 'The --results-csv file is not readable.');
+        }
+
+        return array(
+            'mode' => 'coverage',
+            'results-csv' => $results_csv,
+            'batch' => $batch,
+            'sample' => max(0, min(100, $sample)),
+        );
+    }
+
+    private function build_profile_image_coverage_audit($options) {
+        $results_csv = (string) ($options['results-csv'] ?? '');
+        $batch = sanitize_key((string) ($options['batch'] ?? ''));
+        $sample_limit = max(0, min(100, intval($options['sample'] ?? 25)));
+
+        $approved_rows = $this->read_profile_image_batch_results_csv($results_csv);
+        if (is_wp_error($approved_rows)) {
+            return $approved_rows;
+        }
+
+        $approved_set = array_fill_keys(array_keys($approved_rows), true);
+        $people = $this->get_profile_image_coverage_id_set('people');
+        $entities = $this->get_profile_image_coverage_id_set('entities');
+        $imported = $this->get_profile_image_coverage_id_set('imported', array('batch' => $batch));
+
+        $people_set = is_array($people['ids'] ?? null) ? $people['ids'] : array();
+        $entity_set = is_array($entities['ids'] ?? null) ? $entities['ids'] : array();
+        $imported_set = is_array($imported['ids'] ?? null) ? $imported['ids'] : array();
+        $people_table_available = !empty($people['available']);
+
+        $route_backed_approved = array_intersect_key($approved_set, $entity_set);
+        $approved_without_people = $people_table_available ? array_diff_key($approved_set, $people_set) : $approved_set;
+        $approved_without_entity = array_diff_key($approved_set, $entity_set);
+        $approved_in_people_without_entity = array_diff_key(array_intersect_key($approved_set, $people_set), $entity_set);
+        $imported_without_entity = array_diff_key($imported_set, $entity_set);
+        $route_backed_imported = array_intersect_key($imported_set, $entity_set);
+
+        $samples = array(
+            'approved_without_people' => $this->profile_image_coverage_sample_rows($approved_without_people, $approved_rows, $sample_limit),
+            'approved_without_entity' => $this->profile_image_coverage_sample_rows($approved_without_entity, $approved_rows, $sample_limit),
+            'approved_in_people_without_entity' => $this->profile_image_coverage_sample_rows($approved_in_people_without_entity, $approved_rows, $sample_limit),
+            'imported_without_entity' => $this->profile_image_coverage_sample_rows($imported_without_entity, $approved_rows, $sample_limit),
+        );
+
+        return array(
+            'summary' => array(
+                'mode' => 'coverage',
+                'results_csv' => $results_csv,
+                'batch' => $batch,
+                'sample' => $sample_limit,
+                'approved_ids' => count($approved_set),
+                'people_table_available' => $people_table_available ? 1 : 0,
+                'people_ids' => count($people_set),
+                'entity_ids' => count($entity_set),
+                'imported_ids' => count($imported_set),
+                'route_backed_approved' => count($route_backed_approved),
+                'approved_without_people' => count($approved_without_people),
+                'approved_without_entity' => count($approved_without_entity),
+                'approved_in_people_without_entity' => count($approved_in_people_without_entity),
+                'imported_without_entity' => count($imported_without_entity),
+                'route_backed_imported' => count($route_backed_imported),
+                'samples' => $sample_limit,
+            ),
+            'samples' => $samples,
+        );
+    }
+
+    private function get_profile_image_coverage_id_set($source, $args = array()) {
+        global $wpdb;
+
+        $source = sanitize_key((string) $source);
+        $ids = array();
+        $available = true;
+
+        if ($source === 'people') {
+            $people_table = 'people';
+            $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($people_table)));
+            if (!$exists) {
+                return array(
+                    'ids' => array(),
+                    'available' => false,
+                );
+            }
+
+            $rows = $wpdb->get_col(
+                "SELECT LOWER(TRIM(imdb_id))
+                 FROM {$people_table}
+                 WHERE imdb_id REGEXP '^nm[0-9]{7,9}$'"
+            );
+        } elseif ($source === 'entities') {
+            $entities_table = $this->get_entities_table_name();
+            $rows = $wpdb->get_col(
+                $wpdb->prepare(
+                    "SELECT LOWER(TRIM(entity_id))
+                     FROM {$entities_table}
+                     WHERE entity_type = %s
+                       AND entity_id REGEXP %s",
+                    'name',
+                    '^nm[0-9]{7,9}$'
+                )
+            );
+        } elseif ($source === 'imported') {
+            $batch = sanitize_key((string) ($args['batch'] ?? ''));
+            $source_values = array('manual-batch-upload', 'tmdb-person-profile');
+            $source_placeholders = implode(', ', array_fill(0, count($source_values), '%s'));
+            $batch_join = '';
+            $batch_where = '';
+            $params = array(
+                '_aat_person_imdb_id',
+                '^nm[0-9]{7,9}$',
+                '_aat_person_portrait_source',
+            );
+            $params = array_merge($params, $source_values);
+
+            if ($batch !== '') {
+                $batch_join = "INNER JOIN {$wpdb->postmeta} pm_batch ON pm_batch.post_id = p.ID";
+                $batch_where = ' AND pm_batch.meta_key = %s AND pm_batch.meta_value = %s';
+                $params[] = '_aat_person_portrait_batch';
+                $params[] = $batch;
+            }
+
+            $rows = $wpdb->get_col(
+                $wpdb->prepare(
+                    "SELECT DISTINCT LOWER(TRIM(pm_person.meta_value))
+                     FROM {$wpdb->posts} p
+                     INNER JOIN {$wpdb->postmeta} pm_person ON pm_person.post_id = p.ID
+                     INNER JOIN {$wpdb->postmeta} pm_source ON pm_source.post_id = p.ID
+                     {$batch_join}
+                     WHERE p.post_type = 'attachment'
+                       AND p.post_mime_type LIKE 'image/%%'
+                       AND pm_person.meta_key = %s
+                       AND pm_person.meta_value REGEXP %s
+                       AND pm_source.meta_key = %s
+                       AND pm_source.meta_value IN ({$source_placeholders})
+                       {$batch_where}",
+                    $params
+                )
+            );
+        } else {
+            $rows = array();
+            $available = false;
+        }
+
+        foreach ((array) $rows as $id) {
+            $id = strtolower(trim((string) $id));
+            if ($this->is_imdb_name_entity_id($id)) {
+                $ids[$id] = true;
+            }
+        }
+
+        return array(
+            'ids' => $ids,
+            'available' => $available,
+        );
+    }
+
+    private function profile_image_coverage_sample_rows($id_set, $approved_rows, $limit) {
+        $limit = max(0, min(100, intval($limit)));
+        if ($limit < 1 || empty($id_set)) {
+            return array();
+        }
+
+        $ids = array_keys((array) $id_set);
+        sort($ids, SORT_NATURAL);
+        $ids = array_slice($ids, 0, $limit);
+
+        $samples = array();
+        foreach ($ids as $id) {
+            $approved = is_array($approved_rows[$id] ?? null) ? $approved_rows[$id] : array();
+            $samples[] = array(
+                'person_id' => $id,
+                'expected_name' => (string) ($approved['expected_name'] ?? ''),
+                'tmdb_name' => (string) ($approved['tmdb_name'] ?? ''),
+                'image_file' => (string) ($approved['image_file'] ?? ''),
+            );
+        }
+
+        return $samples;
+    }
+
+    private function profile_image_coverage_cli_samples($samples) {
+        if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI') || empty($samples)) {
+            return;
+        }
+
+        foreach ($samples as $bucket => $rows) {
+            if (empty($rows) || !is_array($rows)) {
+                continue;
+            }
+
+            WP_CLI::line($bucket . '_samples:');
+            foreach ($rows as $row) {
+                WP_CLI::line(sprintf(
+                    '  - %s | %s | %s | %s',
+                    (string) ($row['person_id'] ?? ''),
+                    (string) ($row['expected_name'] ?? ''),
+                    (string) ($row['tmdb_name'] ?? ''),
+                    (string) ($row['image_file'] ?? '')
+                ));
+            }
+        }
+    }
+
     private function profile_image_batch_cli_report($summary) {
         if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI')) {
             return;
@@ -9167,10 +9404,23 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             'results_csv',
             'missing_csv',
             'batch',
+            'sample',
             'limit',
             'offset',
             'source_images',
             'csv_approved',
+            'approved_ids',
+            'people_table_available',
+            'people_ids',
+            'entity_ids',
+            'imported_ids',
+            'route_backed_approved',
+            'approved_without_people',
+            'approved_without_entity',
+            'approved_in_people_without_entity',
+            'imported_without_entity',
+            'route_backed_imported',
+            'samples',
             'missing_ids',
             'source_in_approved',
             'source_in_missing',

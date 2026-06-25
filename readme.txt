@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.37
+Stable tag: 2.7.38
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.38 =
+* Added a private read-only `wp aat profile-images coverage` audit for approved `tmdb_profile_results.csv` `Status=OK` portrait IDs.
+* Coverage mode reports source `people`, public entity-route, and imported-media buckets, including approved portrait IDs absent from source people and imported-media/no-route samples.
 
 = 2.7.37 =
 * Added a private WP-CLI manual batch importer for Dalton-supplied Oscars person portrait JPEGs.

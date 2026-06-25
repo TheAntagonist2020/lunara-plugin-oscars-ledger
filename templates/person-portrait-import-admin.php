@@ -45,7 +45,11 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
         <div class="aat-admin-note">
             <code>wp aat profile-images import --source=/private/oscars-profile-images --results-csv=/private/tmdb_profile_results.csv --missing-csv=/private/profiles_missing.csv --limit=100 --offset=0 --batch=manual-batch-upload</code>
         </div>
+        <div class="aat-admin-note">
+            <code>wp aat profile-images coverage --results-csv=/private/tmdb_profile_results.csv --batch=manual-batch-upload --sample=25</code>
+        </div>
         <p><?php esc_html_e('The batch path never searches for images. It only imports approved JPEG files whose IMDb IDs match the verified CSV, then marks them as manual-batch-upload portraits.', 'academy-awards-table'); ?></p>
+        <p><?php esc_html_e('Use coverage mode after imports to separate route-backed portraits, approved portrait IDs absent from source people, and imported-media/no-route cleanup rows. It reads tmdb_profile_results.csv Status=OK rows and does not import media.', 'academy-awards-table'); ?></p>
     </section>
 
     <section class="aat-admin-section">
