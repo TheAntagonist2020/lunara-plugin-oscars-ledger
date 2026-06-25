@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.39
+ * Version: 2.7.40
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.39');
+define('AAT_VERSION', '2.7.40');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -5870,7 +5870,25 @@ class Academy_Awards_Table {
         $message = '';
         $message_type = 'success';
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_person_portrait_import_nonce'])) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_existing_person_portrait_adopt_nonce'])) {
+            check_admin_referer('aat_existing_person_portrait_adopt', 'aat_existing_person_portrait_adopt_nonce');
+
+            $attachment_id = isset($_POST['attachment_id']) ? absint($_POST['attachment_id']) : 0;
+            $person_id = isset($_POST['person_id']) ? strtolower(trim(sanitize_text_field(wp_unslash($_POST['person_id'])))) : '';
+            $adoption_note = isset($_POST['adoption_note']) ? sanitize_textarea_field(wp_unslash($_POST['adoption_note'])) : '';
+            $adoption_result = $this->adopt_existing_person_portrait_attachment($attachment_id, $person_id, $adoption_note);
+
+            if (is_wp_error($adoption_result)) {
+                $message = $adoption_result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $message = sprintf(
+                    __('Adopted existing PEOPLE attachment #%1$d for %2$s as a verified local portrait.', 'academy-awards-table'),
+                    intval($adoption_result['attachment_id'] ?? 0),
+                    esc_html((string) ($adoption_result['person_id'] ?? $person_id))
+                );
+            }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_person_portrait_import_nonce'])) {
             check_admin_referer('aat_person_portrait_import', 'aat_person_portrait_import_nonce');
 
             $person_id = isset($_POST['person_id']) ? strtolower(trim(sanitize_text_field(wp_unslash($_POST['person_id'])))) : '';
@@ -5913,6 +5931,16 @@ class Academy_Awards_Table {
 
         $queue_rows = is_array($queue['rows'] ?? null) ? $queue['rows'] : array();
         $queue_summary = is_array($queue['summary'] ?? null) ? $queue['summary'] : array();
+        $adoption_limit = isset($_GET['adoption_limit']) ? intval($_GET['adoption_limit']) : 24;
+        $adoption_limit = max(1, min(60, $adoption_limit));
+        $adoption_offset = isset($_GET['adoption_offset']) ? intval($_GET['adoption_offset']) : 0;
+        $adoption_offset = max(0, $adoption_offset);
+        $adoption = $this->get_existing_person_portrait_adoption_rows(array(
+            'limit' => $adoption_limit,
+            'offset' => $adoption_offset,
+        ));
+        $adoption_rows = is_array($adoption['rows'] ?? null) ? $adoption['rows'] : array();
+        $adoption_summary = is_array($adoption['summary'] ?? null) ? $adoption['summary'] : array();
         $tmdb_key_configured = $this->get_tmdb_api_key() !== '';
 
         include AAT_PLUGIN_DIR . 'templates/person-portrait-import-admin.php';
@@ -9525,6 +9553,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
 
         return array(
             'summary' => $summary,
+            'rows' => $rows,
             'samples' => $this->profile_image_existing_media_sample_rows($rows, $summary['samples']),
         );
     }
@@ -10438,6 +10467,147 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         return new WP_Error('aat_profile_batch_unknown_source_type', 'Manual profile image source type is not supported.');
     }
 
+    private function get_existing_person_portrait_adoption_rows($args = array()) {
+        $limit = isset($args['limit']) ? intval($args['limit']) : 24;
+        $limit = max(1, min(60, $limit));
+        $offset = isset($args['offset']) ? intval($args['offset']) : 0;
+        $offset = max(0, $offset);
+
+        $audit = $this->build_profile_image_existing_media_audit(array(
+            'folder' => 'PEOPLE',
+            'sample' => 0,
+            'all_media' => 0,
+            'output_csv' => '',
+            'state' => 'reusable_nm_filename',
+        ));
+        if (is_wp_error($audit)) {
+            return array(
+                'rows' => array(),
+                'summary' => array(
+                    'error' => $audit->get_error_message(),
+                    'returned' => 0,
+                ),
+            );
+        }
+
+        $audit_rows = is_array($audit['rows'] ?? null) ? $audit['rows'] : array();
+        $candidate_rows = array();
+        foreach ($audit_rows as $row) {
+            if ((string) ($row['state'] ?? '') !== 'reusable_nm_filename') {
+                continue;
+            }
+            if (empty($row['adoption_candidate'])) {
+                continue;
+            }
+
+            $attachment_id = intval($row['attachment_id'] ?? 0);
+            $person_id = strtolower(trim((string) ($row['candidate_person_id'] ?? '')));
+            $label = trim((string) ($row['candidate_label'] ?? ''));
+            if ($label === '') {
+                $label = trim((string) $this->get_entity_display_name('name', $person_id));
+            }
+
+            $candidate_rows[] = array_merge($row, array(
+                'attachment_id' => $attachment_id,
+                'person_id' => $person_id,
+                'label' => $label !== '' ? $label : strtoupper($person_id),
+                'thumb_url' => $attachment_id > 0 ? (string) wp_get_attachment_image_url($attachment_id, 'medium') : '',
+                'full_url' => $attachment_id > 0 ? (string) wp_get_attachment_url($attachment_id) : '',
+                'profile_url' => $this->build_entity_url_from_id($person_id),
+                'state_label' => !empty($row['duplicate_person_id']) ? __('Duplicate candidate', 'academy-awards-table') : __('Ready to adopt', 'academy-awards-table'),
+            ));
+        }
+
+        $paged_rows = array_slice($candidate_rows, $offset, $limit);
+        $summary = is_array($audit['summary'] ?? null) ? $audit['summary'] : array();
+        $summary['returned'] = count($paged_rows);
+        $summary['adoption_total'] = count($candidate_rows);
+        $summary['adoption_limit'] = $limit;
+        $summary['adoption_offset'] = $offset;
+
+        return array(
+            'rows' => $paged_rows,
+            'summary' => $summary,
+        );
+    }
+
+    private function adopt_existing_person_portrait_attachment($attachment_id, $person_id, $note = '') {
+        $attachment_id = absint($attachment_id);
+        $person_id = strtolower(trim((string) $person_id));
+        $note = sanitize_textarea_field((string) $note);
+
+        if ($attachment_id <= 0) {
+            return new WP_Error('aat_existing_portrait_missing_attachment', __('A valid attachment is required.', 'academy-awards-table'));
+        }
+        if (!$this->is_imdb_name_entity_id($person_id)) {
+            return new WP_Error('aat_existing_portrait_invalid_person', __('A valid IMDb person ID is required.', 'academy-awards-table'));
+        }
+        $label = trim((string) $this->get_entity_display_name('name', $person_id));
+        if ($label === '') {
+            return new WP_Error('aat_existing_portrait_missing_route', __('That IMDb person ID does not currently resolve to an Oscars person route.', 'academy-awards-table'));
+        }
+        if (get_post_type($attachment_id) !== 'attachment' || !wp_attachment_is_image($attachment_id)) {
+            return new WP_Error('aat_existing_portrait_not_image', __('The selected attachment is not an image attachment.', 'academy-awards-table'));
+        }
+
+        $entity_set = $this->get_profile_image_coverage_id_set('entities');
+        $entity_ids = is_array($entity_set['ids'] ?? null) ? $entity_set['ids'] : array();
+        $label_index = $this->get_profile_image_person_label_index();
+        $attachment_rows = $this->get_profile_image_existing_media_attachment_rows(array($attachment_id));
+        if (empty($attachment_rows)) {
+            return new WP_Error('aat_existing_portrait_attachment_missing', __('The selected attachment could not be inspected.', 'academy-awards-table'));
+        }
+
+        $row = $this->build_profile_image_existing_media_audit_row($attachment_rows[0], $entity_ids, $label_index);
+        $audit = $this->build_profile_image_existing_media_audit(array(
+            'folder' => 'PEOPLE',
+            'sample' => 0,
+            'all_media' => 0,
+            'output_csv' => '',
+        ));
+        if (is_wp_error($audit)) {
+            return new WP_Error('aat_existing_portrait_audit_unavailable', $audit->get_error_message());
+        }
+
+        $matched_people_row = false;
+        if (is_array($audit['rows'] ?? null)) {
+            foreach ($audit['rows'] as $audit_row) {
+                if (intval($audit_row['attachment_id'] ?? 0) !== $attachment_id) {
+                    continue;
+                }
+
+                $row = array_merge($row, $audit_row);
+                $matched_people_row = true;
+                break;
+            }
+        }
+        if (!$matched_people_row) {
+            return new WP_Error('aat_existing_portrait_not_people_media', __('The selected attachment is not currently present in the PEOPLE folder audit.', 'academy-awards-table'));
+        }
+
+        if ((string) ($row['candidate_person_id'] ?? '') !== $person_id || empty($row['adoption_candidate'])) {
+            return new WP_Error('aat_existing_portrait_not_candidate', __('The selected attachment is not a reusable candidate for that person.', 'academy-awards-table'));
+        }
+        if (!empty($row['duplicate_person_id'])) {
+            return new WP_Error('aat_existing_portrait_duplicate_candidate', __('Duplicate candidate rows require manual review before adoption.', 'academy-awards-table'));
+        }
+
+        update_post_meta($attachment_id, '_aat_person_imdb_id', $person_id);
+        update_post_meta($attachment_id, '_aat_person_portrait_source', 'existing-media-adoption');
+        update_post_meta($attachment_id, '_aat_person_portrait_verified', '1');
+        update_post_meta($attachment_id, '_aat_person_portrait_adopted_at', current_time('mysql', true));
+        update_post_meta($attachment_id, '_aat_person_portrait_adopted_by', get_current_user_id());
+        update_post_meta($attachment_id, '_aat_person_portrait_adoption_note', $note);
+        delete_transient('aat_person_profile_attachment_v2_' . $person_id);
+
+        return array(
+            'attachment_id' => $attachment_id,
+            'person_id' => $person_id,
+            'label' => $label,
+            'source' => 'existing-media-adoption',
+        );
+    }
+
     private function get_person_portrait_import_queue_rows($args = array()) {
         global $wpdb;
 
@@ -10709,7 +10879,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
 
         $profile_path = trim((string) $profile_path);
-        $source_values = $profile_path !== '' ? array('tmdb-person-profile') : array('manual-batch-upload', 'tmdb-person-profile');
+        $source_values = $profile_path !== '' ? array('tmdb-person-profile') : array('existing-media-adoption', 'manual-batch-upload', 'tmdb-person-profile');
         $source_placeholders = implode(', ', array_fill(0, count($source_values), '%s'));
         $meta_conditions = array(
             "pm_person.meta_key = '_aat_person_imdb_id'",

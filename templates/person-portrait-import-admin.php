@@ -7,9 +7,13 @@ $message = isset($message) ? (string) $message : '';
 $message_type = isset($message_type) ? (string) $message_type : 'success';
 $queue_rows = isset($queue_rows) && is_array($queue_rows) ? $queue_rows : array();
 $queue_summary = isset($queue_summary) && is_array($queue_summary) ? $queue_summary : array();
+$adoption_rows = isset($adoption_rows) && is_array($adoption_rows) ? $adoption_rows : array();
+$adoption_summary = isset($adoption_summary) && is_array($adoption_summary) ? $adoption_summary : array();
 $selected_state = isset($selected_state) ? (string) $selected_state : 'candidate_external';
 $selected_limit = isset($selected_limit) ? intval($selected_limit) : 50;
 $selected_offset = isset($selected_offset) ? intval($selected_offset) : 0;
+$adoption_limit = isset($adoption_limit) ? intval($adoption_limit) : 24;
+$adoption_offset = isset($adoption_offset) ? intval($adoption_offset) : 0;
 $ids_raw = isset($ids_raw) ? (string) $ids_raw : '';
 $refresh_tmdb = !empty($refresh_tmdb);
 $tmdb_key_configured = !empty($tmdb_key_configured);
@@ -55,6 +59,98 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
         </div>
         <p><?php esc_html_e('The batch path never searches for images. It only imports approved JPEG files whose IMDb IDs match the verified CSV, then marks them as manual-batch-upload portraits.', 'academy-awards-table'); ?></p>
         <p><?php esc_html_e('Use coverage mode after imports to separate route-backed portraits, approved portrait IDs absent from source people, and imported-media/no-route cleanup rows. It reads tmdb_profile_results.csv Status=OK rows and does not import media.', 'academy-awards-table'); ?></p>
+    </section>
+
+    <section class="aat-admin-section">
+        <h2><?php esc_html_e('Existing PEOPLE adoption', 'academy-awards-table'); ?></h2>
+        <p><?php esc_html_e('Review already-uploaded PEOPLE folder images and connect one verified attachment to one route-backed Oscars person file. This writes existing-media-adoption metadata only; it does not import, fetch, rename, or move media.', 'academy-awards-table'); ?></p>
+        <?php if (!empty($adoption_summary['error'])) : ?>
+            <div class="notice notice-error inline">
+                <p><?php echo esc_html((string) $adoption_summary['error']); ?></p>
+            </div>
+        <?php else : ?>
+            <div class="aat-person-portrait-summary">
+                <span><?php echo esc_html(sprintf(__('PEOPLE attachments: %d', 'academy-awards-table'), intval($adoption_summary['folder_attachments'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Adoption candidates: %d', 'academy-awards-table'), intval($adoption_summary['adoption_total'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Duplicate candidate rows: %d', 'academy-awards-table'), intval($adoption_summary['duplicate_person_id_rows'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Showing: %d', 'academy-awards-table'), intval($adoption_summary['returned'] ?? count($adoption_rows)))); ?></span>
+            </div>
+        <?php endif; ?>
+
+        <form method="get" class="aat-person-portrait-filters aat-person-portrait-adoption-controls">
+            <input type="hidden" name="page" value="academy-awards-person-portraits" />
+            <input type="hidden" name="state" value="<?php echo esc_attr($selected_state); ?>" />
+            <input type="hidden" name="limit" value="<?php echo esc_attr((string) $selected_limit); ?>" />
+            <input type="hidden" name="offset" value="<?php echo esc_attr((string) $selected_offset); ?>" />
+            <label>
+                <span><?php esc_html_e('Adoption limit', 'academy-awards-table'); ?></span>
+                <input type="number" name="adoption_limit" value="<?php echo esc_attr((string) $adoption_limit); ?>" min="1" max="60" />
+            </label>
+            <label>
+                <span><?php esc_html_e('Adoption offset', 'academy-awards-table'); ?></span>
+                <input type="number" name="adoption_offset" value="<?php echo esc_attr((string) $adoption_offset); ?>" min="0" />
+            </label>
+            <button type="submit" class="button"><?php esc_html_e('Refresh adoption lane', 'academy-awards-table'); ?></button>
+        </form>
+
+        <?php if (empty($adoption_rows)) : ?>
+            <p class="aat-person-portrait-muted"><?php esc_html_e('No existing PEOPLE adoption candidates matched the current window.', 'academy-awards-table'); ?></p>
+        <?php else : ?>
+            <div class="aat-person-portrait-adoption-grid">
+                <?php foreach ($adoption_rows as $row) : ?>
+                    <?php
+                    $attachment_id = intval($row['attachment_id'] ?? 0);
+                    $person_id = (string) ($row['person_id'] ?? '');
+                    $label = (string) ($row['label'] ?? $person_id);
+                    $thumb_url = (string) ($row['thumb_url'] ?? '');
+                    $full_url = (string) ($row['full_url'] ?? '');
+                    $profile_url = (string) ($row['profile_url'] ?? '');
+                    $is_duplicate = !empty($row['duplicate_person_id']);
+                    ?>
+                    <article class="aat-person-portrait-adoption-card <?php echo $is_duplicate ? 'is-duplicate' : 'is-ready'; ?>">
+                        <div class="aat-person-portrait-adoption-media">
+                            <?php if ($thumb_url !== '') : ?>
+                                <img src="<?php echo esc_url($thumb_url); ?>" alt="" loading="lazy" />
+                            <?php else : ?>
+                                <span><?php esc_html_e('No image', 'academy-awards-table'); ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="aat-person-portrait-adoption-body">
+                            <span class="aat-person-portrait-state <?php echo $is_duplicate ? 'aat-person-portrait-state-needs_attention' : 'aat-person-portrait-state-ready'; ?>">
+                                <?php echo esc_html($is_duplicate ? __('Duplicate candidate', 'academy-awards-table') : __('Ready to adopt', 'academy-awards-table')); ?>
+                            </span>
+                            <h3><?php echo esc_html($label); ?></h3>
+                            <p><code><?php echo esc_html($person_id); ?></code> <span><?php echo esc_html(sprintf(__('Attachment #%d', 'academy-awards-table'), $attachment_id)); ?></span></p>
+                            <p class="aat-person-portrait-muted"><?php echo esc_html((string) ($row['post_title'] ?? '')); ?></p>
+                            <div class="aat-person-portrait-adoption-links">
+                                <?php if ($profile_url !== '') : ?>
+                                    <a href="<?php echo esc_url($profile_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Public file', 'academy-awards-table'); ?></a>
+                                <?php endif; ?>
+                                <?php if ($full_url !== '') : ?>
+                                    <a href="<?php echo esc_url($full_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Media image', 'academy-awards-table'); ?></a>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if ($is_duplicate) : ?>
+                                <p class="aat-person-portrait-muted"><?php esc_html_e('Manual review required before adoption because more than one PEOPLE image maps to this person ID.', 'academy-awards-table'); ?></p>
+                            <?php else : ?>
+                                <form method="post">
+                                    <?php wp_nonce_field('aat_existing_person_portrait_adopt', 'aat_existing_person_portrait_adopt_nonce'); ?>
+                                    <input type="hidden" name="attachment_id" value="<?php echo esc_attr((string) $attachment_id); ?>" />
+                                    <input type="hidden" name="person_id" value="<?php echo esc_attr($person_id); ?>" />
+                                    <label>
+                                        <span><?php esc_html_e('Private adoption note', 'academy-awards-table'); ?></span>
+                                        <textarea name="adoption_note" rows="2" placeholder="<?php esc_attr_e('Confirmed existing PEOPLE portrait.', 'academy-awards-table'); ?>"></textarea>
+                                    </label>
+                                    <button type="submit" class="button button-primary"><?php esc_html_e('Adopt existing portrait', 'academy-awards-table'); ?></button>
+                                    <code>existing-media-adoption</code>
+                                </form>
+                            <?php endif; ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </section>
 
     <section class="aat-admin-section">

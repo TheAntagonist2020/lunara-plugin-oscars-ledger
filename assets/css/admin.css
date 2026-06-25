@@ -350,6 +350,87 @@
     font-weight: 600;
 }
 
+.aat-person-portrait-adoption-controls {
+    margin-top: 16px;
+}
+
+.aat-person-portrait-adoption-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    margin-top: 18px;
+}
+
+.aat-person-portrait-adoption-card {
+    background: #fffdf7;
+    border: 1px solid #e2d7bd;
+    border-radius: 8px;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 96px minmax(0, 1fr);
+    padding: 14px;
+}
+
+.aat-person-portrait-adoption-card.is-duplicate {
+    background: #fff8eb;
+    border-color: #e6bf78;
+}
+
+.aat-person-portrait-adoption-card img {
+    display: block;
+    height: 144px;
+    object-fit: cover;
+    width: 96px;
+}
+
+.aat-person-portrait-adoption-media {
+    align-items: center;
+    background: #111923;
+    border-radius: 8px;
+    color: #eadbb3;
+    display: flex;
+    justify-content: center;
+    min-height: 144px;
+    overflow: hidden;
+}
+
+.aat-person-portrait-adoption-body {
+    min-width: 0;
+}
+
+.aat-person-portrait-adoption-body h3 {
+    font-size: 16px;
+    line-height: 1.2;
+    margin: 10px 0 6px;
+}
+
+.aat-person-portrait-adoption-body p {
+    margin: 6px 0;
+}
+
+.aat-person-portrait-adoption-body form {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.aat-person-portrait-adoption-body form label {
+    display: grid;
+    gap: 4px;
+    font-weight: 600;
+}
+
+.aat-person-portrait-adoption-body textarea {
+    width: 100%;
+}
+
+.aat-person-portrait-adoption-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+
 @media (max-width: 782px) {
     .aat-person-portrait-filters {
         grid-template-columns: 1fr;
@@ -357,6 +438,19 @@
 
     .aat-person-portrait-table {
         min-width: 780px;
+    }
+
+    .aat-person-portrait-adoption-card {
+        grid-template-columns: 78px minmax(0, 1fr);
+    }
+
+    .aat-person-portrait-adoption-card img {
+        height: 118px;
+        width: 78px;
+    }
+
+    .aat-person-portrait-adoption-media {
+        min-height: 118px;
     }
 }
 

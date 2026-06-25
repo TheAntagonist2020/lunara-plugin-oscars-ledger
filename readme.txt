@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.39
+Stable tag: 2.7.40
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.40 =
+* Added a private Existing PEOPLE adoption lane to `Academy Awards > Person Portrait Queue`.
+* Admins can adopt one reusable existing `nm...` filename portrait at a time as `existing-media-adoption` without fetching, importing, renaming, moving media, or mutating Oscar result data.
+* Duplicate reusable PEOPLE candidates remain review-only until manually resolved.
 
 = 2.7.39 =
 * Added a private read-only `wp aat profile-images existing-media-audit` reconciliation pass for the existing `PEOPLE` Media Library folder.
