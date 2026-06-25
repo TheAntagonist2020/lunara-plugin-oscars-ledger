@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.36
+ * Version: 2.7.37
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.36');
+define('AAT_VERSION', '2.7.37');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -398,6 +398,10 @@ class Academy_Awards_Table {
         add_action('wp_ajax_aat_posters_delete', array($this, 'ajax_posters_delete'));
         add_action('wp_ajax_aat_posters_sync_from_reviews', array($this, 'ajax_posters_sync_from_reviews'));
         add_action('wp_ajax_aat_posters_sync_from_apis', array($this, 'ajax_posters_sync_from_apis'));
+
+        if (defined('WP_CLI') && WP_CLI && class_exists('WP_CLI')) {
+            WP_CLI::add_command('aat profile-images', array($this, 'handle_profile_image_batch_cli'));
+        }
 
 
         // Activation hook
@@ -9078,6 +9082,558 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         return array_values($ids);
     }
 
+    /**
+     * WP-CLI command for Dalton-supplied person portrait batches.
+     *
+     * Usage:
+     * wp aat profile-images dry-run --source=/private/oscars-profile-images --results-csv=/private/tmdb_profile_results.csv --missing-csv=/private/profiles_missing.csv
+     * wp aat profile-images import --source=/private/oscars-profile-images --results-csv=/private/tmdb_profile_results.csv --missing-csv=/private/profiles_missing.csv --limit=100 --offset=0 --batch=oscars-profile-images-20260625
+     */
+    public function handle_profile_image_batch_cli($args, $assoc_args) {
+        if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI')) {
+            return;
+        }
+
+        $mode = isset($args[0]) ? sanitize_key((string) $args[0]) : 'dry-run';
+        if (!in_array($mode, array('dry-run', 'import'), true)) {
+            WP_CLI::error('Mode must be dry-run or import.');
+        }
+
+        $options = $this->normalize_profile_image_batch_cli_args($mode, is_array($assoc_args) ? $assoc_args : array());
+        if (is_wp_error($options)) {
+            WP_CLI::error($options->get_error_message());
+        }
+
+        $plan = $this->build_profile_image_batch_plan($options);
+        if (is_wp_error($plan)) {
+            WP_CLI::error($plan->get_error_message());
+        }
+
+        $summary = is_array($plan['summary'] ?? null) ? $plan['summary'] : array();
+        $rows = is_array($plan['rows'] ?? null) ? $plan['rows'] : array();
+
+        if ($mode === 'import') {
+            $processed = 0;
+            $imported = 0;
+            $skipped = 0;
+            $errors = array();
+
+            foreach ($rows as $row) {
+                $processed++;
+                $result = $this->import_manual_person_profile_image($row, (string) $options['batch']);
+                if (is_wp_error($result)) {
+                    $errors[] = sprintf('%s: %s', (string) ($row['person_id'] ?? ''), $result->get_error_message());
+                    continue;
+                }
+
+                $status = (string) ($result['status'] ?? '');
+                if ($status === 'imported') {
+                    $imported++;
+                } else {
+                    $skipped++;
+                }
+            }
+
+            $summary['processed'] = $processed;
+            $summary['imported'] = $imported;
+            $summary['skipped'] = intval($summary['skipped'] ?? 0) + $skipped;
+            $summary['errors'] = count($errors);
+            $this->profile_image_batch_cli_report($summary);
+
+            foreach ($errors as $error) {
+                WP_CLI::warning($error);
+            }
+
+            WP_CLI::success('Manual profile image batch import complete.');
+            return;
+        }
+
+        $summary['processed'] = 0;
+        $summary['imported'] = 0;
+        $summary['skipped'] = intval($summary['skipped'] ?? 0);
+        $summary['errors'] = intval($summary['errors'] ?? 0);
+        $this->profile_image_batch_cli_report($summary);
+        WP_CLI::success('Manual profile image batch dry-run complete.');
+    }
+
+    private function profile_image_batch_cli_report($summary) {
+        if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI')) {
+            return;
+        }
+
+        $ordered = array(
+            'mode',
+            'source',
+            'results_csv',
+            'missing_csv',
+            'batch',
+            'limit',
+            'offset',
+            'source_images',
+            'csv_approved',
+            'missing_ids',
+            'source_in_approved',
+            'source_in_missing',
+            'source_unknown',
+            'already_imported',
+            'importable',
+            'queued',
+            'processed',
+            'imported',
+            'skipped',
+            'errors',
+        );
+
+        foreach ($ordered as $key) {
+            if (array_key_exists($key, $summary)) {
+                WP_CLI::line($key . ': ' . (is_scalar($summary[$key]) ? (string) $summary[$key] : wp_json_encode($summary[$key])));
+            }
+        }
+    }
+
+    private function normalize_profile_image_batch_cli_args($mode, $assoc_args) {
+        $clean_path = function($value) {
+            return trim((string) $value, " \t\n\r\0\x0B\"'");
+        };
+
+        $source = isset($assoc_args['source']) ? $clean_path($assoc_args['source']) : '';
+        $results_csv = isset($assoc_args['results-csv']) ? $clean_path($assoc_args['results-csv']) : '';
+        $missing_csv = isset($assoc_args['missing-csv']) ? $clean_path($assoc_args['missing-csv']) : '';
+        $limit = isset($assoc_args['limit']) ? intval($assoc_args['limit']) : 100;
+        $offset = isset($assoc_args['offset']) ? intval($assoc_args['offset']) : 0;
+        $batch = isset($assoc_args['batch']) ? sanitize_key((string) $assoc_args['batch']) : '';
+
+        if ($source === '') {
+            return new WP_Error('aat_profile_batch_missing_source', 'Pass --source with an extracted image folder or the oscars-profile-images zip.');
+        }
+        if ($results_csv === '') {
+            return new WP_Error('aat_profile_batch_missing_results_csv', 'Pass --results-csv pointing at tmdb_profile_results.csv.');
+        }
+        if ($missing_csv === '') {
+            return new WP_Error('aat_profile_batch_missing_missing_csv', 'Pass --missing-csv pointing at profiles_missing.csv.');
+        }
+        if (!is_readable($results_csv)) {
+            return new WP_Error('aat_profile_batch_results_unreadable', 'The --results-csv file is not readable.');
+        }
+        if (!is_readable($missing_csv)) {
+            return new WP_Error('aat_profile_batch_missing_unreadable', 'The --missing-csv file is not readable.');
+        }
+        if (!is_readable($source)) {
+            return new WP_Error('aat_profile_batch_source_unreadable', 'The --source folder or zip is not readable.');
+        }
+
+        $limit = max(1, min(500, $limit));
+        $offset = max(0, $offset);
+        if ($batch === '') {
+            $batch = 'manual-profile-batch-' . gmdate('Ymd-His');
+        }
+
+        return array(
+            'mode' => $mode,
+            'source' => $source,
+            'results-csv' => $results_csv,
+            'missing-csv' => $missing_csv,
+            'limit' => $limit,
+            'offset' => $offset,
+            'batch' => $batch,
+        );
+    }
+
+    private function build_profile_image_batch_plan($options) {
+        $source = (string) ($options['source'] ?? '');
+        $results_csv = (string) ($options['results-csv'] ?? '');
+        $missing_csv = (string) ($options['missing-csv'] ?? '');
+        $limit = intval($options['limit'] ?? 100);
+        $offset = intval($options['offset'] ?? 0);
+
+        $results = $this->read_profile_image_batch_results_csv($results_csv);
+        if (is_wp_error($results)) {
+            return $results;
+        }
+
+        $profiles_missing = $this->read_profile_image_batch_missing_csv($missing_csv);
+        if (is_wp_error($profiles_missing)) {
+            return $profiles_missing;
+        }
+
+        $source_manifest = $this->read_profile_image_batch_source_manifest($source);
+        if (is_wp_error($source_manifest)) {
+            return $source_manifest;
+        }
+
+        ksort($source_manifest, SORT_NATURAL);
+
+        $summary = array(
+            'mode' => (string) ($options['mode'] ?? 'dry-run'),
+            'source' => $source,
+            'results_csv' => $results_csv,
+            'missing_csv' => $missing_csv,
+            'batch' => (string) ($options['batch'] ?? ''),
+            'limit' => $limit,
+            'offset' => $offset,
+            'source_images' => count($source_manifest),
+            'csv_approved' => count($results),
+            'missing_ids' => count($profiles_missing),
+            'source_in_approved' => 0,
+            'source_in_missing' => 0,
+            'source_unknown' => 0,
+            'already_imported' => 0,
+            'importable' => 0,
+            'queued' => 0,
+            'processed' => 0,
+            'imported' => 0,
+            'skipped' => 0,
+            'errors' => 0,
+        );
+
+        $rows = array();
+        foreach ($source_manifest as $person_id => $image) {
+            if (isset($profiles_missing[$person_id])) {
+                $summary['source_in_missing']++;
+                $summary['skipped']++;
+                continue;
+            }
+
+            if (!isset($results[$person_id])) {
+                $summary['source_unknown']++;
+                $summary['errors']++;
+                continue;
+            }
+
+            $summary['source_in_approved']++;
+            $approved = $results[$person_id];
+            $expected_file = strtolower((string) ($approved['image_file'] ?? ''));
+            $actual_file = strtolower((string) ($image['file_name'] ?? ''));
+            if ($expected_file !== '' && $actual_file !== '' && $expected_file !== $actual_file) {
+                $summary['errors']++;
+                continue;
+            }
+
+            $existing_attachment_id = $this->find_existing_person_portrait_attachment($person_id, '');
+            if ($existing_attachment_id > 0) {
+                $summary['already_imported']++;
+                $summary['skipped']++;
+                continue;
+            }
+
+            $summary['importable']++;
+            $rows[] = array_merge($image, array(
+                'person_id' => $person_id,
+                'expected_name' => (string) ($approved['expected_name'] ?? ''),
+                'tmdb_name' => (string) ($approved['tmdb_name'] ?? ''),
+                'tmdb_person_id' => intval($approved['tmdb_person_id'] ?? 0),
+                'profile_path' => (string) ($approved['profile_path'] ?? ''),
+                'image_file' => (string) ($approved['image_file'] ?? ''),
+                'status' => (string) ($approved['status'] ?? 'OK'),
+            ));
+        }
+
+        $queued = array_slice($rows, $offset, $limit);
+        $summary['queued'] = count($queued);
+
+        return array(
+            'summary' => $summary,
+            'rows' => $queued,
+        );
+    }
+
+    private function read_profile_image_batch_results_csv($path) {
+        $rows = $this->read_profile_image_batch_csv_rows($path);
+        if (is_wp_error($rows)) {
+            return $rows;
+        }
+
+        $approved = array();
+        foreach ($rows as $row) {
+            $person_id = strtolower(trim((string) ($row['NomineeId'] ?? '')));
+            if (!$this->is_imdb_name_entity_id($person_id)) {
+                continue;
+            }
+
+            $status = strtoupper(trim((string) ($row['Status'] ?? '')));
+            $image_file = trim((string) ($row['ImageFile'] ?? ''));
+            if ($status !== 'OK' || $image_file === '') {
+                continue;
+            }
+
+            $approved[$person_id] = array(
+                'person_id' => $person_id,
+                'expected_name' => trim((string) ($row['ExpectedName'] ?? '')),
+                'tmdb_name' => trim((string) ($row['TMDBName'] ?? '')),
+                'tmdb_person_id' => intval($row['TMDBPersonId'] ?? 0),
+                'profile_path' => trim((string) ($row['ProfilePath'] ?? '')),
+                'image_file' => sanitize_file_name($image_file),
+                'status' => 'OK',
+            );
+        }
+
+        return $approved;
+    }
+
+    private function read_profile_image_batch_missing_csv($path) {
+        $rows = $this->read_profile_image_batch_csv_rows($path);
+        if (is_wp_error($rows)) {
+            return $rows;
+        }
+
+        $profiles_missing = array();
+        foreach ($rows as $row) {
+            $person_id = strtolower(trim((string) ($row['NomineeId'] ?? '')));
+            if (!$this->is_imdb_name_entity_id($person_id)) {
+                continue;
+            }
+
+            $profiles_missing[$person_id] = array(
+                'person_id' => $person_id,
+                'expected_name' => trim((string) ($row['ExpectedName'] ?? '')),
+                'status' => strtoupper(trim((string) ($row['Status'] ?? 'NO_PHOTO'))),
+            );
+        }
+
+        return $profiles_missing;
+    }
+
+    private function read_profile_image_batch_csv_rows($path) {
+        $path = trim((string) $path, " \t\n\r\0\x0B\"'");
+        if ($path === '' || !is_readable($path)) {
+            return new WP_Error('aat_profile_batch_csv_unreadable', 'Profile image batch CSV is not readable.');
+        }
+
+        $handle = fopen($path, 'r');
+        if (!$handle) {
+            return new WP_Error('aat_profile_batch_csv_open_failed', 'Profile image batch CSV could not be opened.');
+        }
+
+        $headers = fgetcsv($handle);
+        if (!is_array($headers) || empty($headers)) {
+            fclose($handle);
+            return new WP_Error('aat_profile_batch_csv_headers_missing', 'Profile image batch CSV headers are missing.');
+        }
+        if (isset($headers[0])) {
+            $headers[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $headers[0]);
+        }
+
+        $rows = array();
+        while (($raw = fgetcsv($handle)) !== false) {
+            $row = array();
+            foreach ($headers as $index => $header) {
+                $row[(string) $header] = isset($raw[$index]) ? trim((string) $raw[$index]) : '';
+            }
+            $rows[] = $row;
+        }
+
+        fclose($handle);
+        return $rows;
+    }
+
+    private function read_profile_image_batch_source_manifest($source_path) {
+        $source_path = trim((string) $source_path, " \t\n\r\0\x0B\"'");
+        $allowed_extensions = array('.jpg', '.jpeg');
+        $manifest = array();
+
+        $add_file = function($file_name, $source_type, $path, $zip_path = '') use (&$manifest, $allowed_extensions) {
+            $file_name = sanitize_file_name((string) $file_name);
+            $extension = strtolower(strrchr($file_name, '.'));
+            if (!in_array($extension, $allowed_extensions, true)) {
+                return;
+            }
+
+            if (!preg_match('/(nm\d{7,9})/i', $file_name, $matches)) {
+                return;
+            }
+
+            $person_id = strtolower((string) $matches[1]);
+            if (!$this->is_imdb_name_entity_id($person_id)) {
+                return;
+            }
+
+            $manifest[$person_id] = array(
+                'person_id' => $person_id,
+                'source_type' => $source_type,
+                'source_path' => $path,
+                'zip_path' => $zip_path,
+                'file_name' => $file_name,
+            );
+        };
+
+        if (is_dir($source_path)) {
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($source_path, FilesystemIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $file) {
+                if (!$file instanceof SplFileInfo || !$file->isFile()) {
+                    continue;
+                }
+                $add_file($file->getFilename(), 'directory', $file->getPathname(), '');
+            }
+            return $manifest;
+        }
+
+        $lower_source = strtolower($source_path);
+        if (is_file($source_path) && substr($lower_source, -4) === '.zip') {
+            if (!class_exists('ZipArchive')) {
+                return new WP_Error('aat_profile_batch_zip_unavailable', 'ZipArchive is not available. Extract oscars-profile-images first and pass that folder as --source.');
+            }
+
+            $zip = new ZipArchive();
+            if ($zip->open($source_path) !== true) {
+                return new WP_Error('aat_profile_batch_zip_open_failed', 'The oscars-profile-images zip could not be opened.');
+            }
+
+            for ($index = 0; $index < $zip->numFiles; $index++) {
+                $stat = $zip->statIndex($index);
+                $entry = is_array($stat) ? (string) ($stat['name'] ?? '') : '';
+                if ($entry === '' || substr($entry, -1) === '/') {
+                    continue;
+                }
+                if (strpos(str_replace('\\', '/', $entry), 'oscars-profile-images/') === false) {
+                    continue;
+                }
+                $add_file(basename($entry), 'zip', $source_path, $entry);
+            }
+
+            $zip->close();
+            return $manifest;
+        }
+
+        return new WP_Error('aat_profile_batch_source_invalid', 'The --source value must be an extracted image folder or the oscars-profile-images zip.');
+    }
+
+    private function import_manual_person_profile_image($row, $batch_label) {
+        $person_id = strtolower(trim((string) ($row['person_id'] ?? '')));
+        if (!$this->is_imdb_name_entity_id($person_id)) {
+            return new WP_Error('aat_profile_batch_invalid_person_id', 'A valid IMDb person ID is required for manual profile image import.');
+        }
+
+        $existing_attachment_id = $this->find_existing_person_portrait_attachment($person_id, '');
+        if ($existing_attachment_id > 0) {
+            return array(
+                'status' => 'existing',
+                'attachment_id' => $existing_attachment_id,
+                'person_id' => $person_id,
+            );
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+        $tmp_file = $this->copy_profile_image_source_to_temp_file($row);
+        if (is_wp_error($tmp_file)) {
+            return $tmp_file;
+        }
+
+        $image_info = @getimagesize($tmp_file);
+        if (!is_array($image_info) || (string) ($image_info['mime'] ?? '') !== 'image/jpeg') {
+            @unlink($tmp_file);
+            return new WP_Error('aat_profile_batch_not_jpeg', 'Manual profile image is not a valid JPEG.');
+        }
+
+        $expected_name = trim((string) ($row['expected_name'] ?? ''));
+        if ($expected_name === '') {
+            $context = $this->get_person_context_for_imdb_id($person_id);
+            $expected_name = trim((string) ($context['name'] ?? ''));
+        }
+        if ($expected_name === '') {
+            $expected_name = trim((string) $this->get_entity_display_name('name', $person_id));
+        }
+        if ($expected_name === '') {
+            $expected_name = strtoupper($person_id);
+        }
+
+        $file_array = array(
+            'name' => sanitize_file_name($person_id . '-manual-profile.jpg'),
+            'tmp_name' => $tmp_file,
+        );
+
+        $attachment_id = media_handle_sideload($file_array, 0, sprintf(__('Portrait %s', 'academy-awards-table'), $person_id));
+        if (is_wp_error($attachment_id)) {
+            @unlink($tmp_file);
+            return $attachment_id;
+        }
+
+        $attachment_id = intval($attachment_id);
+        wp_update_post(array(
+            'ID' => $attachment_id,
+            'post_title' => $expected_name . ' portrait',
+            'post_excerpt' => sprintf(__('Verified manual batch portrait for %s.', 'academy-awards-table'), $expected_name),
+        ));
+
+        update_post_meta($attachment_id, '_wp_attachment_image_alt', $expected_name . ' portrait');
+        update_post_meta($attachment_id, '_aat_person_imdb_id', $person_id);
+        update_post_meta($attachment_id, '_aat_person_portrait_source', 'manual-batch-upload');
+        update_post_meta($attachment_id, '_aat_person_portrait_verified', '1');
+        update_post_meta($attachment_id, '_aat_person_portrait_batch', sanitize_key((string) $batch_label));
+        update_post_meta($attachment_id, '_aat_person_portrait_original_file', sanitize_file_name((string) ($row['file_name'] ?? '')));
+        update_post_meta($attachment_id, '_aat_tmdb_person_id', intval($row['tmdb_person_id'] ?? 0));
+        update_post_meta($attachment_id, '_aat_tmdb_profile_path', (string) ($row['profile_path'] ?? ''));
+
+        delete_transient('aat_person_profile_attachment_v2_' . $person_id);
+
+        return array(
+            'status' => 'imported',
+            'attachment_id' => $attachment_id,
+            'person_id' => $person_id,
+        );
+    }
+
+    private function copy_profile_image_source_to_temp_file($row) {
+        $source_type = (string) ($row['source_type'] ?? '');
+        $source_path = (string) ($row['source_path'] ?? '');
+        $file_name = sanitize_file_name((string) ($row['file_name'] ?? 'profile.jpg'));
+        $tmp_file = wp_tempnam($file_name);
+
+        if (!$tmp_file) {
+            return new WP_Error('aat_profile_batch_temp_failed', 'Could not create a temporary file for manual profile image import.');
+        }
+
+        if ($source_type === 'directory') {
+            if (!is_readable($source_path) || !copy($source_path, $tmp_file)) {
+                @unlink($tmp_file);
+                return new WP_Error('aat_profile_batch_copy_failed', 'Could not copy the manual profile image into a temporary file.');
+            }
+            return $tmp_file;
+        }
+
+        if ($source_type === 'zip') {
+            if (!class_exists('ZipArchive')) {
+                @unlink($tmp_file);
+                return new WP_Error('aat_profile_batch_zip_unavailable', 'ZipArchive is not available for manual profile image import.');
+            }
+
+            $zip_path = (string) ($row['zip_path'] ?? '');
+            $zip = new ZipArchive();
+            if ($zip->open($source_path) !== true) {
+                @unlink($tmp_file);
+                return new WP_Error('aat_profile_batch_zip_open_failed', 'The manual profile image zip could not be opened.');
+            }
+
+            $input = $zip->getStream($zip_path);
+            if (!$input) {
+                $zip->close();
+                @unlink($tmp_file);
+                return new WP_Error('aat_profile_batch_zip_entry_missing', 'The manual profile image zip entry could not be read.');
+            }
+
+            $output = fopen($tmp_file, 'wb');
+            if (!$output) {
+                fclose($input);
+                $zip->close();
+                @unlink($tmp_file);
+                return new WP_Error('aat_profile_batch_temp_open_failed', 'Could not open the temporary profile image for writing.');
+            }
+
+            stream_copy_to_stream($input, $output);
+            fclose($output);
+            fclose($input);
+            $zip->close();
+            return $tmp_file;
+        }
+
+        @unlink($tmp_file);
+        return new WP_Error('aat_profile_batch_unknown_source_type', 'Manual profile image source type is not supported.');
+    }
+
     private function get_person_portrait_import_queue_rows($args = array()) {
         global $wpdb;
 
@@ -9349,13 +9905,15 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
 
         $profile_path = trim((string) $profile_path);
+        $source_values = $profile_path !== '' ? array('tmdb-person-profile') : array('manual-batch-upload', 'tmdb-person-profile');
+        $source_placeholders = implode(', ', array_fill(0, count($source_values), '%s'));
         $meta_conditions = array(
             "pm_person.meta_key = '_aat_person_imdb_id'",
             "pm_person.meta_value = %s",
             "pm_source.meta_key = '_aat_person_portrait_source'",
-            "pm_source.meta_value = %s",
+            "pm_source.meta_value IN ({$source_placeholders})",
         );
-        $params = array($person_id, 'tmdb-person-profile');
+        $params = array_merge(array($person_id), $source_values);
 
         $profile_join = '';
         if ($profile_path !== '') {

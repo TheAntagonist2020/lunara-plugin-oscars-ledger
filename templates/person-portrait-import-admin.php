@@ -37,6 +37,18 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
     <?php endif; ?>
 
     <section class="aat-admin-section">
+        <h2><?php esc_html_e('Manual batch upload', 'academy-awards-table'); ?></h2>
+        <p><?php esc_html_e('For large Dalton-supplied portrait batches, use the private WP-CLI importer after uploading the reviewed image package and CSV manifests outside the public web root.', 'academy-awards-table'); ?></p>
+        <div class="aat-admin-note">
+            <code>wp aat profile-images dry-run --source=/private/oscars-profile-images --results-csv=/private/tmdb_profile_results.csv --missing-csv=/private/profiles_missing.csv</code>
+        </div>
+        <div class="aat-admin-note">
+            <code>wp aat profile-images import --source=/private/oscars-profile-images --results-csv=/private/tmdb_profile_results.csv --missing-csv=/private/profiles_missing.csv --limit=100 --offset=0 --batch=manual-batch-upload</code>
+        </div>
+        <p><?php esc_html_e('The batch path never searches for images. It only imports approved JPEG files whose IMDb IDs match the verified CSV, then marks them as manual-batch-upload portraits.', 'academy-awards-table'); ?></p>
+    </section>
+
+    <section class="aat-admin-section">
         <h2><?php esc_html_e('Queue Controls', 'academy-awards-table'); ?></h2>
         <form method="get" class="aat-person-portrait-filters">
             <input type="hidden" name="page" value="academy-awards-person-portraits" />

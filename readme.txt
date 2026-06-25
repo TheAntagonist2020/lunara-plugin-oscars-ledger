@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.36
+Stable tag: 2.7.37
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.37 =
+* Added a private WP-CLI manual batch importer for Dalton-supplied Oscars person portrait JPEGs.
+* The importer dry-runs against `tmdb_profile_results.csv` and `profiles_missing.csv`, imports only approved local files, and marks attachments with `manual-batch-upload` metadata.
+* Public person profile pages now recognize both manual batch portraits and legacy TMDb profile portraits through the same local portrait resolver.
 
 = 2.7.36 =
 * Added `Academy Awards > Person Portrait Queue`, a private Person Portrait Import Queue that imports one verified TMDb person profile image at a time.

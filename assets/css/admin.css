@@ -82,6 +82,21 @@
     color: #0a1520;
 }
 
+.aat-admin-note {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    margin: 12px 0;
+    padding: 12px 14px;
+}
+
+.aat-admin-note code {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre;
+}
+
 /* Import Section */
 .aat-import-area {
     border: 3px dashed #c9a961;
