@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.47
+ * Version: 2.7.48
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.47');
+define('AAT_VERSION', '2.7.48');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -9290,6 +9290,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
      * wp aat profile-images import --source=/private/oscars-profile-images --results-csv=/private/tmdb_profile_results.csv --missing-csv=/private/profiles_missing.csv --limit=100 --offset=0 --batch=oscars-profile-images-20260625
      * wp aat profile-images coverage --results-csv=/private/tmdb_profile_results.csv --batch=oscars-profile-images-20260625 --sample=25
      * wp aat profile-images existing-media-audit --folder=PEOPLE --sample=25 --output-csv=/private/people-media-reconciliation.csv
+     * wp aat profile-images person-credit-audit --category=sound-mixing --state=unresolved --sample=50 --output-csv=/private/person-credit-reconciliation.csv
      */
     public function handle_profile_image_batch_cli($args, $assoc_args) {
         if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI')) {
@@ -9297,8 +9298,27 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
 
         $mode = isset($args[0]) ? sanitize_key((string) $args[0]) : 'dry-run';
-        if (!in_array($mode, array('dry-run', 'import', 'coverage', 'existing-media-audit'), true)) {
-            WP_CLI::error('Mode must be dry-run, import, coverage, or existing-media-audit.');
+        if (!in_array($mode, array('dry-run', 'import', 'coverage', 'existing-media-audit', 'person-credit-audit'), true)) {
+            WP_CLI::error('Mode must be dry-run, import, coverage, existing-media-audit, or person-credit-audit.');
+        }
+
+        if ($mode === 'person-credit-audit') {
+            $options = $this->normalize_profile_image_person_credit_audit_cli_args(is_array($assoc_args) ? $assoc_args : array());
+            if (is_wp_error($options)) {
+                WP_CLI::error($options->get_error_message());
+            }
+
+            $audit = $this->build_profile_image_person_credit_audit($options);
+            if (is_wp_error($audit)) {
+                WP_CLI::error($audit->get_error_message());
+            }
+
+            $summary = is_array($audit['summary'] ?? null) ? $audit['summary'] : array();
+            $samples = is_array($audit['samples'] ?? null) ? $audit['samples'] : array();
+            $this->profile_image_batch_cli_report($summary);
+            $this->profile_image_person_credit_audit_cli_samples($samples);
+            WP_CLI::success('Person credit reconciliation audit complete.');
+            return;
         }
 
         if ($mode === 'existing-media-audit') {
@@ -9399,6 +9419,237 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $summary['errors'] = intval($summary['errors'] ?? 0);
         $this->profile_image_batch_cli_report($summary);
         WP_CLI::success('Manual profile image batch dry-run complete.');
+    }
+
+    private function normalize_profile_image_person_credit_audit_cli_args($assoc_args) {
+        $clean_path = function($value) {
+            return trim((string) $value, " \t\n\r\0\x0B\"'");
+        };
+
+        $category = isset($assoc_args['category']) ? sanitize_title((string) $assoc_args['category']) : '';
+        $sample = isset($assoc_args['sample']) ? intval($assoc_args['sample']) : 50;
+        $state = isset($assoc_args['state']) ? sanitize_key((string) $assoc_args['state']) : 'unresolved';
+        $output_csv = isset($assoc_args['output-csv']) ? $clean_path($assoc_args['output-csv']) : '';
+
+        if (!in_array($state, array('all', 'linked', 'unresolved'), true)) {
+            return new WP_Error('aat_person_credit_audit_bad_state', 'Pass --state=all, --state=linked, or --state=unresolved.');
+        }
+
+        if ($output_csv !== '') {
+            $dir = dirname($output_csv);
+            if ($dir === '' || !is_dir($dir) || !is_writable($dir)) {
+                return new WP_Error('person_credit_audit_output_not_private', 'The --output-csv directory must exist and be writable.');
+            }
+        }
+
+        return array(
+            'mode' => 'person-credit-audit',
+            'category' => $category,
+            'sample' => max(0, min(500, $sample)),
+            'state' => $state,
+            'output_csv' => $output_csv,
+        );
+    }
+
+    private function build_profile_image_person_credit_audit($options) {
+        global $wpdb;
+
+        $category = sanitize_title((string) ($options['category'] ?? ''));
+        $state_filter = sanitize_key((string) ($options['state'] ?? 'unresolved'));
+        if (!in_array($state_filter, array('all', 'linked', 'unresolved'), true)) {
+            $state_filter = 'unresolved';
+        }
+        $sample_limit = max(0, min(500, intval($options['sample'] ?? 50)));
+        $output_csv = (string) ($options['output_csv'] ?? '');
+
+        $table_name = $this->get_table_name();
+        $where = 'WHERE (TRIM(COALESCE(nominees, \'\')) <> \'\' OR TRIM(COALESCE(name, \'\')) <> \'\')';
+        $params = array();
+        $sql = "SELECT id, ceremony, year, canonical_category, category, film, name, nominees, nominee_ids, winner
+                FROM {$table_name}
+                {$where}
+                ORDER BY ceremony DESC, canonical_category ASC, film ASC, id ASC";
+        $rows = !empty($params)
+            ? $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A)
+            : $wpdb->get_results($sql, ARRAY_A);
+
+        if (!is_array($rows)) {
+            $rows = array();
+        }
+
+        $audit_rows = array();
+        $summary = array(
+            'mode' => 'person-credit-audit',
+            'category' => $category,
+            'state' => $state_filter,
+            'source_rows' => 0,
+            'credit_labels' => 0,
+            'person_credit_linked' => 0,
+            'person_credit_unresolved' => 0,
+            'missing_source_nominee_ids' => 0,
+            'label_id_mismatch' => 0,
+            'samples' => $sample_limit,
+            'output_csv' => $output_csv,
+        );
+
+        foreach ($rows as $source_row) {
+            $row_category = (string) ($source_row['canonical_category'] ?: ($source_row['category'] ?? ''));
+            if ($category !== '' && sanitize_title($row_category) !== $category) {
+                continue;
+            }
+            $summary['source_rows']++;
+
+            $source_value = trim((string) ($source_row['nominees'] ?? ''));
+            if ($source_value === '') {
+                $source_value = trim((string) ($source_row['name'] ?? ''));
+            }
+
+            $labels = $this->split_visible_person_credit_labels($source_value);
+            if (empty($labels)) {
+                continue;
+            }
+
+            $source_nominee_ids = $this->extract_entity_reference_ids((string) ($source_row['nominee_ids'] ?? ''));
+            foreach ($labels as $label_index => $credit_label) {
+                $credit_label = trim((string) $credit_label);
+                if ($credit_label === '') {
+                    continue;
+                }
+
+                $summary['credit_labels']++;
+                $link = $this->get_name_entity_link_by_label($credit_label);
+                $resolved_id = strtolower(trim((string) ($link['id'] ?? '')));
+                $has_link = $this->is_name_entity_id($resolved_id);
+                $row_state = $has_link ? 'person_credit_linked' : 'person_credit_unresolved';
+                $source_id_for_position = isset($source_nominee_ids[$label_index]) ? strtolower(trim((string) $source_nominee_ids[$label_index])) : '';
+                $has_source_ids = !empty($source_nominee_ids);
+                $mismatch = $has_source_ids && (!$this->is_name_entity_id($source_id_for_position) || ($has_link && $source_id_for_position !== $resolved_id));
+
+                if ($has_link) {
+                    $summary['person_credit_linked']++;
+                } else {
+                    $summary['person_credit_unresolved']++;
+                    if (!$has_source_ids) {
+                        $summary['missing_source_nominee_ids']++;
+                    }
+                }
+                if ($mismatch) {
+                    $summary['label_id_mismatch']++;
+                }
+
+                if ($state_filter === 'linked' && !$has_link) {
+                    continue;
+                }
+                if ($state_filter === 'unresolved' && $has_link) {
+                    continue;
+                }
+
+                $audit_rows[] = array(
+                    'source_award_id' => intval($source_row['id'] ?? 0),
+                    'ceremony' => intval($source_row['ceremony'] ?? 0),
+                    'year' => (string) ($source_row['year'] ?? ''),
+                    'category' => $row_category,
+                    'category_slug' => sanitize_title($row_category),
+                    'film' => (string) ($source_row['film'] ?? ''),
+                    'source_credit' => $source_value,
+                    'credit_label' => $credit_label,
+                    'label_index' => intval($label_index) + 1,
+                    'state' => $row_state,
+                    'resolved_id' => $resolved_id,
+                    'resolved_url' => $has_link ? (string) ($link['url'] ?? '') : '',
+                    'source_nominee_ids' => implode('|', $source_nominee_ids),
+                    'source_id_for_position' => $source_id_for_position,
+                    'missing_source_nominee_ids' => !$has_source_ids ? 1 : 0,
+                    'label_id_mismatch' => $mismatch ? 1 : 0,
+                    'winner' => !empty($source_row['winner']) ? 1 : 0,
+                );
+            }
+        }
+
+        if ($output_csv !== '') {
+            $csv_result = $this->write_profile_image_person_credit_audit_csv($output_csv, $audit_rows);
+            if (is_wp_error($csv_result)) {
+                return $csv_result;
+            }
+        }
+
+        return array(
+            'summary' => $summary,
+            'rows' => $audit_rows,
+            'samples' => $this->profile_image_person_credit_audit_sample_rows($audit_rows, $sample_limit),
+        );
+    }
+
+    private function profile_image_person_credit_audit_sample_rows($rows, $limit) {
+        $limit = max(0, min(500, intval($limit)));
+        if ($limit < 1 || empty($rows)) {
+            return array();
+        }
+
+        return array_slice(array_values($rows), 0, $limit);
+    }
+
+    private function profile_image_person_credit_audit_cli_samples($samples) {
+        if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI') || empty($samples)) {
+            return;
+        }
+
+        WP_CLI::line('person_credit_samples:');
+        foreach ($samples as $row) {
+            WP_CLI::line(sprintf(
+                '  - #%d | %s | %s | %s | %s | %s',
+                intval($row['source_award_id'] ?? 0),
+                (string) ($row['state'] ?? ''),
+                (string) ($row['category'] ?? ''),
+                (string) ($row['credit_label'] ?? ''),
+                (string) ($row['resolved_id'] ?? ''),
+                (string) ($row['source_nominee_ids'] ?? '')
+            ));
+        }
+    }
+
+    private function write_profile_image_person_credit_audit_csv($path, $rows) {
+        $path = trim((string) $path, " \t\n\r\0\x0B\"'");
+        if ($path === '') {
+            return true;
+        }
+
+        $handle = fopen($path, 'w');
+        if (!$handle) {
+            return new WP_Error('aat_person_credit_audit_csv_open_failed', 'Could not open --output-csv for writing.');
+        }
+
+        $fields = array(
+            'source_award_id',
+            'ceremony',
+            'year',
+            'category',
+            'category_slug',
+            'film',
+            'source_credit',
+            'credit_label',
+            'label_index',
+            'state',
+            'resolved_id',
+            'resolved_url',
+            'source_nominee_ids',
+            'source_id_for_position',
+            'missing_source_nominee_ids',
+            'label_id_mismatch',
+            'winner',
+        );
+
+        fputcsv($handle, $fields);
+        foreach ($rows as $row) {
+            $line = array();
+            foreach ($fields as $field) {
+                $line[] = isset($row[$field]) && is_scalar($row[$field]) ? (string) $row[$field] : '';
+            }
+            fputcsv($handle, $line);
+        }
+
+        fclose($handle);
+        return true;
     }
 
     private function normalize_profile_image_coverage_cli_args($assoc_args) {
@@ -10149,9 +10400,17 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             'folder_strategy',
             'folder_found',
             'all_media',
+            'category',
+            'state',
             'sample',
             'limit',
             'offset',
+            'source_rows',
+            'credit_labels',
+            'person_credit_linked',
+            'person_credit_unresolved',
+            'missing_source_nominee_ids',
+            'label_id_mismatch',
             'folder_attachments',
             'source_images',
             'csv_approved',

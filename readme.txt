@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.47
+Stable tag: 2.7.48
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.48 =
+* Added a private read-only `person-credit-audit` WP-CLI mode for unresolved person credit reconciliation.
+* The audit reports linked versus unresolved visible person credits, missing source nominee IDs, label/ID mismatches, and optional private CSV output before any source-row mutation.
 
 = 2.7.47 =
 * Fixed person profile route hydration for nominee-projection rows recovered from existing PEOPLE profile media.
