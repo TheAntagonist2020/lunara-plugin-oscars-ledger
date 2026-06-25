@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.41
+Stable tag: 2.7.42
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.42 =
+* Added a one-by-one typed-confirmation resolver for duplicate Existing PEOPLE portrait candidates.
+* Duplicate rows still stay blocked from the normal adoption button; admins must choose one attachment and type the exact IMDb person ID before metadata can be written.
+* The resolver rechecks the live duplicate group and writes only existing-media-adoption metadata for the selected attachment.
 
 = 2.7.41 =
 * Added a private duplicate-review view to the Existing PEOPLE adoption lane.

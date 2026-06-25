@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.41
+ * Version: 2.7.42
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.41');
+define('AAT_VERSION', '2.7.42');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -5870,7 +5870,29 @@ class Academy_Awards_Table {
         $message = '';
         $message_type = 'success';
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_existing_person_portrait_adopt_nonce'])) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_existing_person_portrait_duplicate_resolve_nonce'])) {
+            check_admin_referer('aat_existing_person_portrait_duplicate_resolve', 'aat_existing_person_portrait_duplicate_resolve_nonce');
+
+            $attachment_id = isset($_POST['attachment_id']) ? absint($_POST['attachment_id']) : 0;
+            $person_id = isset($_POST['person_id']) ? strtolower(trim(sanitize_text_field(wp_unslash($_POST['person_id'])))) : '';
+            $confirm_person_id = isset($_POST['duplicate_confirm_person_id']) ? strtolower(trim(sanitize_text_field(wp_unslash($_POST['duplicate_confirm_person_id'])))) : '';
+            $adoption_note = isset($_POST['adoption_note']) ? sanitize_textarea_field(wp_unslash($_POST['adoption_note'])) : '';
+            $adoption_result = $this->adopt_existing_person_portrait_attachment($attachment_id, $person_id, $adoption_note, array(
+                'allow_duplicate' => true,
+                'confirm_person_id' => $confirm_person_id,
+            ));
+
+            if (is_wp_error($adoption_result)) {
+                $message = $adoption_result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $message = sprintf(
+                    __('Resolved duplicate PEOPLE attachment #%1$d for %2$s as a verified local portrait.', 'academy-awards-table'),
+                    intval($adoption_result['attachment_id'] ?? 0),
+                    esc_html((string) ($adoption_result['person_id'] ?? $person_id))
+                );
+            }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_existing_person_portrait_adopt_nonce'])) {
             check_admin_referer('aat_existing_person_portrait_adopt', 'aat_existing_person_portrait_adopt_nonce');
 
             $attachment_id = isset($_POST['attachment_id']) ? absint($_POST['attachment_id']) : 0;
@@ -10596,10 +10618,13 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         );
     }
 
-    private function adopt_existing_person_portrait_attachment($attachment_id, $person_id, $note = '') {
+    private function adopt_existing_person_portrait_attachment($attachment_id, $person_id, $note = '', $options = array()) {
         $attachment_id = absint($attachment_id);
         $person_id = strtolower(trim((string) $person_id));
         $note = sanitize_textarea_field((string) $note);
+        $options = is_array($options) ? $options : array();
+        $allow_duplicate = !empty($options['allow_duplicate']);
+        $confirm_person_id = isset($options['confirm_person_id']) ? strtolower(trim(sanitize_text_field((string) $options['confirm_person_id']))) : '';
 
         if ($attachment_id <= 0) {
             return new WP_Error('aat_existing_portrait_missing_attachment', __('A valid attachment is required.', 'academy-awards-table'));
@@ -10635,8 +10660,9 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
 
         $matched_people_row = false;
-        if (is_array($audit['rows'] ?? null)) {
-            foreach ($audit['rows'] as $audit_row) {
+        $audit_rows = is_array($audit['rows'] ?? null) ? $audit['rows'] : array();
+        if (!empty($audit_rows)) {
+            foreach ($audit_rows as $audit_row) {
                 if (intval($audit_row['attachment_id'] ?? 0) !== $attachment_id) {
                     continue;
                 }
@@ -10654,7 +10680,40 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             return new WP_Error('aat_existing_portrait_not_candidate', __('The selected attachment is not a reusable candidate for that person.', 'academy-awards-table'));
         }
         if (!empty($row['duplicate_person_id'])) {
-            return new WP_Error('aat_existing_portrait_duplicate_candidate', __('Duplicate candidate rows require manual review before adoption.', 'academy-awards-table'));
+            if (!$allow_duplicate) {
+                return new WP_Error('aat_existing_portrait_duplicate_candidate', __('Duplicate candidate rows require manual review before adoption.', 'academy-awards-table'));
+            }
+            if ($confirm_person_id !== $person_id) {
+                return new WP_Error('aat_existing_portrait_duplicate_confirmation', __('Type the exact IMDb person ID to resolve a duplicate portrait group.', 'academy-awards-table'));
+            }
+
+            $duplicate_attachment_ids = array();
+            foreach ($audit_rows as $audit_row) {
+                $audit_person_id = strtolower(trim((string) ($audit_row['candidate_person_id'] ?? '')));
+                if ($audit_person_id !== $person_id) {
+                    continue;
+                }
+                if ((string) ($audit_row['state'] ?? '') !== 'reusable_nm_filename' || empty($audit_row['adoption_candidate'])) {
+                    continue;
+                }
+
+                $duplicate_attachment_id = intval($audit_row['attachment_id'] ?? 0);
+                if ($duplicate_attachment_id > 0) {
+                    $duplicate_attachment_ids[$duplicate_attachment_id] = true;
+                }
+            }
+
+            if (count($duplicate_attachment_ids) < 2 || empty($duplicate_attachment_ids[$attachment_id])) {
+                return new WP_Error('aat_existing_portrait_duplicate_group_mismatch', __('The selected attachment is not part of the current duplicate portrait group.', 'academy-awards-table'));
+            }
+
+            $duplicate_note = sprintf(
+                'Duplicate resolver confirmed %1$s; selected attachment #%2$d from %3$d PEOPLE candidates.',
+                $person_id,
+                $attachment_id,
+                count($duplicate_attachment_ids)
+            );
+            $note = trim($note) !== '' ? trim($note) . "\n" . $duplicate_note : $duplicate_note;
         }
 
         update_post_meta($attachment_id, '_aat_person_imdb_id', $person_id);

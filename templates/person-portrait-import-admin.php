@@ -181,6 +181,21 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                                         </div>
                                     </div>
                                 <?php endif; ?>
+                                <form method="post" class="aat-person-portrait-duplicate-resolver">
+                                    <?php wp_nonce_field('aat_existing_person_portrait_duplicate_resolve', 'aat_existing_person_portrait_duplicate_resolve_nonce'); ?>
+                                    <input type="hidden" name="attachment_id" value="<?php echo esc_attr((string) $attachment_id); ?>" />
+                                    <input type="hidden" name="person_id" value="<?php echo esc_attr($person_id); ?>" />
+                                    <label>
+                                        <span><?php echo esc_html(sprintf(__('Type %s to confirm this duplicate resolution', 'academy-awards-table'), $person_id)); ?></span>
+                                        <input type="text" name="duplicate_confirm_person_id" value="" placeholder="<?php echo esc_attr($person_id); ?>" autocomplete="off" />
+                                    </label>
+                                    <label>
+                                        <span><?php esc_html_e('Private resolver note', 'academy-awards-table'); ?></span>
+                                        <textarea name="adoption_note" rows="2" placeholder="<?php esc_attr_e('Confirmed best PEOPLE portrait from duplicate set.', 'academy-awards-table'); ?>"></textarea>
+                                    </label>
+                                    <button type="submit" class="button button-primary"><?php esc_html_e('Resolve duplicate with this attachment', 'academy-awards-table'); ?></button>
+                                    <code>typed-confirmation duplicate resolver</code>
+                                </form>
                             <?php else : ?>
                                 <form method="post">
                                     <?php wp_nonce_field('aat_existing_person_portrait_adopt', 'aat_existing_person_portrait_adopt_nonce'); ?>

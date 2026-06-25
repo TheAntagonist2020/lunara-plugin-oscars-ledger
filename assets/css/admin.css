@@ -424,6 +424,10 @@
     width: 100%;
 }
 
+.aat-person-portrait-adoption-body input[type="text"] {
+    width: 100%;
+}
+
 .aat-person-portrait-adoption-links {
     display: flex;
     flex-wrap: wrap;
@@ -483,6 +487,17 @@
     font-size: 11px;
     line-height: 1.25;
     overflow-wrap: anywhere;
+}
+
+.aat-person-portrait-duplicate-resolver {
+    background: #fff;
+    border: 1px solid #d9b66d;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.aat-person-portrait-duplicate-resolver code {
+    color: #6f4a00;
 }
 
 @media (max-width: 782px) {

@@ -51,12 +51,13 @@ $adopt_method = $method_slice($plugin, 'private function adopt_existing_person_p
 $existing_lookup_method = $method_slice($plugin, 'private function find_existing_person_portrait_attachment', 'public function get_poster_attachment_id_for_title');
 
 foreach (array(
-    'Version: 2.7.41',
-    "define('AAT_VERSION', '2.7.41')",
+    'Version: 2.7.42',
+    "define('AAT_VERSION', '2.7.42')",
     'get_existing_person_portrait_adoption_rows',
     'adopt_existing_person_portrait_attachment',
     'existing-media-adoption',
     'aat_existing_person_portrait_adopt',
+    'aat_existing_person_portrait_duplicate_resolve',
 ) as $needle) {
     $assert(strpos($plugin, $needle) !== false, "Plugin should expose existing portrait adoption marker: {$needle}");
 }
@@ -69,10 +70,13 @@ $assert($existing_lookup_method !== '', 'Existing portrait lookup method should 
 foreach (array(
     "current_user_can('manage_options')",
     "check_admin_referer('aat_existing_person_portrait_adopt'",
+    "check_admin_referer('aat_existing_person_portrait_duplicate_resolve'",
     'sanitize_text_field',
     'sanitize_key',
     'absint',
     'sanitize_textarea_field',
+    'duplicate_confirm_person_id',
+    "'allow_duplicate' => true",
 ) as $needle) {
     $assert(strpos($render_method, $needle) !== false, "Render method should protect and sanitize adoption POST: {$needle}");
 }
@@ -101,6 +105,12 @@ foreach (array(
     'wp_attachment_is_image',
     'build_profile_image_existing_media_audit_row',
     'duplicate_person_id',
+    '$allow_duplicate',
+    '$confirm_person_id',
+    'aat_existing_portrait_duplicate_candidate',
+    'aat_existing_portrait_duplicate_confirmation',
+    'aat_existing_portrait_duplicate_group_mismatch',
+    'Duplicate resolver confirmed',
     'adoption_candidate',
     "update_post_meta(\$attachment_id, '_aat_person_imdb_id'",
     "update_post_meta(\$attachment_id, '_aat_person_portrait_source', 'existing-media-adoption')",
@@ -129,6 +139,10 @@ foreach (array(
     'Duplicate review',
     'Competing PEOPLE images',
     'Manual review required',
+    'aat_existing_person_portrait_duplicate_resolve_nonce',
+    'duplicate_confirm_person_id',
+    'Resolve duplicate with this attachment',
+    'typed-confirmation duplicate resolver',
     'existing-media-adoption',
 ) as $needle) {
     $assert(strpos($template, $needle) !== false, "Admin template should render guarded existing-media adoption UI: {$needle}");
@@ -140,6 +154,7 @@ foreach (array(
     '.aat-person-portrait-adoption-card img',
     '.aat-person-portrait-duplicate-review',
     '.aat-person-portrait-duplicate-option',
+    '.aat-person-portrait-duplicate-resolver',
 ) as $needle) {
     $assert(strpos($admin_css, $needle) !== false, "Admin CSS should style existing portrait adoption lane: {$needle}");
 }
@@ -147,8 +162,9 @@ foreach (array(
 foreach (array(
     'Existing PEOPLE adoption',
     'duplicate-review',
+    'typed-confirmation resolver',
     'existing-media-adoption',
-    '2.7.41',
+    '2.7.42',
 ) as $needle) {
     $assert(strpos($docs . $spec, $needle) !== false, "Docs/spec should describe the existing PEOPLE adoption workflow: {$needle}");
 }
