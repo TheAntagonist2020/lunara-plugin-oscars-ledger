@@ -26,7 +26,7 @@ files: `academy-awards-table.php`, `README.md`, `readme.txt`, `G:\lunara-backups
 acceptance: Plugin reports the new version, docs mention existing-media adoption, and Theme Control Desk expects the same version.
 spec: `docs/staging/specs/2026-06-25-existing-portrait-adoption-queue.md#existing-portrait-adoption-queue`
 
-- [ ] T5: Verify and preserve continuity
+- [x] T5: Verify and preserve continuity
 goal: Run local checks, update continuity docs, commit, and push.
 files: `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\LUNARA_WORLD_CHANGELOG.md`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES\SESSION-LOG-2026-06-25.md`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES\LUNARA_WEBSITE_HANDOFF.md`
 acceptance: PHP lint, contract tests, `git diff --check`, continuity updates, and pushed commits complete.

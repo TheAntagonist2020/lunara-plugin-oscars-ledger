@@ -376,6 +376,11 @@
     border-color: #e6bf78;
 }
 
+.aat-person-portrait-adoption-card.is-manual {
+    background: #f9fafb;
+    border-color: #cbd5e1;
+}
+
 .aat-person-portrait-adoption-card img {
     display: block;
     height: 144px;
@@ -498,6 +503,48 @@
 
 .aat-person-portrait-duplicate-resolver code {
     color: #6f4a00;
+}
+
+.aat-person-portrait-manual-review {
+    background: #f8fafc;
+    border: 1px solid #d5dde8;
+    border-radius: 8px;
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px;
+}
+
+.aat-person-portrait-manual-review p {
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.aat-person-portrait-manual-review dl {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+}
+
+.aat-person-portrait-manual-review dl > div {
+    display: grid;
+    gap: 3px;
+}
+
+.aat-person-portrait-manual-review dt {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.aat-person-portrait-manual-review dd {
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+    margin: 0;
+    overflow-wrap: anywhere;
 }
 
 @media (max-width: 782px) {

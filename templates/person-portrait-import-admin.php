@@ -77,6 +77,7 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                 <span><?php echo esc_html(sprintf(__('Duplicate review: %d', 'academy-awards-table'), intval($adoption_summary['duplicate_adoption_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Duplicate people: %d', 'academy-awards-table'), intval($adoption_summary['duplicate_person_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Duplicate candidate rows: %d', 'academy-awards-table'), intval($adoption_summary['duplicate_person_id_rows'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Manual review rows: %d', 'academy-awards-table'), intval($adoption_summary['manual_review_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Showing: %d', 'academy-awards-table'), intval($adoption_summary['returned'] ?? count($adoption_rows)))); ?></span>
             </div>
         <?php endif; ?>
@@ -93,6 +94,7 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                         'all' => __('All candidates', 'academy-awards-table'),
                         'ready' => __('Ready only', 'academy-awards-table'),
                         'duplicates' => __('Duplicate review', 'academy-awards-table'),
+                        'manual' => __('Manual review', 'academy-awards-table'),
                     ) as $value => $label) : ?>
                         <option value="<?php echo esc_attr($value); ?>" <?php selected($adoption_view, $value); ?>><?php echo esc_html($label); ?></option>
                     <?php endforeach; ?>
@@ -121,11 +123,12 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                     $thumb_url = (string) ($row['thumb_url'] ?? '');
                     $full_url = (string) ($row['full_url'] ?? '');
                     $profile_url = (string) ($row['profile_url'] ?? '');
+                    $is_manual = !empty($row['manual_review']);
                     $is_duplicate = !empty($row['duplicate_person_id']);
                     $duplicate_group = isset($row['duplicate_group']) && is_array($row['duplicate_group']) ? $row['duplicate_group'] : array();
                     $duplicate_count = intval($row['duplicate_count'] ?? count($duplicate_group));
                     ?>
-                    <article class="aat-person-portrait-adoption-card <?php echo $is_duplicate ? 'is-duplicate' : 'is-ready'; ?>">
+                    <article class="aat-person-portrait-adoption-card <?php echo $is_manual ? 'is-manual' : ($is_duplicate ? 'is-duplicate' : 'is-ready'); ?>">
                         <div class="aat-person-portrait-adoption-media">
                             <?php if ($thumb_url !== '') : ?>
                                 <img src="<?php echo esc_url($thumb_url); ?>" alt="" loading="lazy" />
@@ -134,11 +137,16 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                             <?php endif; ?>
                         </div>
                         <div class="aat-person-portrait-adoption-body">
-                            <span class="aat-person-portrait-state <?php echo $is_duplicate ? 'aat-person-portrait-state-needs_attention' : 'aat-person-portrait-state-ready'; ?>">
-                                <?php echo esc_html($is_duplicate ? __('Duplicate candidate', 'academy-awards-table') : __('Ready to adopt', 'academy-awards-table')); ?>
+                            <span class="aat-person-portrait-state <?php echo ($is_duplicate || $is_manual) ? 'aat-person-portrait-state-needs_attention' : 'aat-person-portrait-state-ready'; ?>">
+                                <?php echo esc_html($is_manual ? __('Manual review needed', 'academy-awards-table') : ($is_duplicate ? __('Duplicate candidate', 'academy-awards-table') : __('Ready to adopt', 'academy-awards-table'))); ?>
                             </span>
                             <h3><?php echo esc_html($label); ?></h3>
-                            <p><code><?php echo esc_html($person_id); ?></code> <span><?php echo esc_html(sprintf(__('Attachment #%d', 'academy-awards-table'), $attachment_id)); ?></span></p>
+                            <p>
+                                <?php if ($person_id !== '') : ?>
+                                    <code><?php echo esc_html($person_id); ?></code>
+                                <?php endif; ?>
+                                <span><?php echo esc_html(sprintf(__('Attachment #%d', 'academy-awards-table'), $attachment_id)); ?></span>
+                            </p>
                             <?php if ($is_duplicate && $duplicate_count > 1) : ?>
                                 <p><strong><?php echo esc_html(sprintf(__('Duplicate set: %d PEOPLE images', 'academy-awards-table'), $duplicate_count)); ?></strong></p>
                             <?php endif; ?>
@@ -152,7 +160,26 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                                 <?php endif; ?>
                             </div>
 
-                            <?php if ($is_duplicate) : ?>
+                            <?php if ($is_manual) : ?>
+                                <div class="aat-person-portrait-manual-review">
+                                    <strong><?php esc_html_e('Read-only manual review', 'academy-awards-table'); ?></strong>
+                                    <p><?php esc_html_e('No safe IMDb person ID was detected for this PEOPLE image. Open the media image, inspect the filename/title/alt text, and keep it out of adoption until the person can be verified.', 'academy-awards-table'); ?></p>
+                                    <dl>
+                                        <div>
+                                            <dt><?php esc_html_e('Match strategy', 'academy-awards-table'); ?></dt>
+                                            <dd><?php echo esc_html((string) ($row['match_strategy'] ?? 'none')); ?></dd>
+                                        </div>
+                                        <div>
+                                            <dt><?php esc_html_e('Detected ID', 'academy-awards-table'); ?></dt>
+                                            <dd><?php echo esc_html((string) ($row['detected_person_id'] ?? '')); ?></dd>
+                                        </div>
+                                        <div>
+                                            <dt><?php esc_html_e('Explicit ID', 'academy-awards-table'); ?></dt>
+                                            <dd><?php echo esc_html((string) ($row['explicit_person_id'] ?? '')); ?></dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                            <?php elseif ($is_duplicate) : ?>
                                 <p class="aat-person-portrait-muted"><?php esc_html_e('Manual review required before adoption because more than one PEOPLE image maps to this person ID.', 'academy-awards-table'); ?></p>
                                 <?php if (!empty($duplicate_group)) : ?>
                                     <div class="aat-person-portrait-duplicate-review">

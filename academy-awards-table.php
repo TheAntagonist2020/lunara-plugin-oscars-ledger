@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.42
+ * Version: 2.7.43
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.42');
+define('AAT_VERSION', '2.7.43');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -5953,7 +5953,7 @@ class Academy_Awards_Table {
 
         $queue_rows = is_array($queue['rows'] ?? null) ? $queue['rows'] : array();
         $queue_summary = is_array($queue['summary'] ?? null) ? $queue['summary'] : array();
-        $allowed_adoption_views = array('all', 'ready', 'duplicates');
+        $allowed_adoption_views = array('all', 'ready', 'duplicates', 'manual');
         $adoption_view = isset($_GET['adoption_view']) ? sanitize_key(wp_unslash($_GET['adoption_view'])) : 'all';
         if (!in_array($adoption_view, $allowed_adoption_views, true)) {
             $adoption_view = 'all';
@@ -10502,7 +10502,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $offset = isset($args['offset']) ? intval($args['offset']) : 0;
         $offset = max(0, $offset);
         $view = isset($args['view']) ? sanitize_key((string) $args['view']) : 'all';
-        if (!in_array($view, array('all', 'ready', 'duplicates'), true)) {
+        if (!in_array($view, array('all', 'ready', 'duplicates', 'manual'), true)) {
             $view = 'all';
         }
 
@@ -10526,14 +10526,42 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $audit_rows = is_array($audit['rows'] ?? null) ? $audit['rows'] : array();
         $candidate_rows = array();
         foreach ($audit_rows as $row) {
-            if ((string) ($row['state'] ?? '') !== 'reusable_nm_filename') {
+            $row_state = (string) ($row['state'] ?? '');
+            $is_manual_review = $row_state === 'needs_manual_review';
+            if (!$is_manual_review && $row_state !== 'reusable_nm_filename') {
                 continue;
             }
-            if (empty($row['adoption_candidate'])) {
+            if (!$is_manual_review && empty($row['adoption_candidate'])) {
                 continue;
             }
 
             $attachment_id = intval($row['attachment_id'] ?? 0);
+            if ($is_manual_review) {
+                $label = trim((string) ($row['post_title'] ?? ''));
+                if ($label === '') {
+                    $label = trim(basename((string) ($row['attached_file'] ?? '')));
+                }
+                if ($label === '') {
+                    $label = sprintf(__('Attachment #%d', 'academy-awards-table'), $attachment_id);
+                }
+
+                $candidate_rows[] = array_merge($row, array(
+                    'attachment_id' => $attachment_id,
+                    'person_id' => '',
+                    'label' => $label,
+                    'thumb_url' => $attachment_id > 0 ? (string) wp_get_attachment_image_url($attachment_id, 'medium') : '',
+                    'full_url' => $attachment_id > 0 ? (string) wp_get_attachment_url($attachment_id) : '',
+                    'profile_url' => '',
+                    'match_strategy' => (string) ($row['match_strategy'] ?? 'none'),
+                    'detected_person_id' => (string) ($row['detected_person_id'] ?? ''),
+                    'explicit_person_id' => (string) ($row['explicit_person_id'] ?? ''),
+                    'state_label' => __('Manual review needed', 'academy-awards-table'),
+                    'manual_review' => 1,
+                    'manual_review_reason' => __('No safe IMDb person ID was detected for this PEOPLE image.', 'academy-awards-table'),
+                ));
+                continue;
+            }
+
             $person_id = strtolower(trim((string) ($row['candidate_person_id'] ?? '')));
             $label = trim((string) ($row['candidate_label'] ?? ''));
             if ($label === '') {
@@ -10575,11 +10603,15 @@ public function get_person_visual_package($nm_id, $size = 'large') {
 
         $ready_total = 0;
         $duplicate_total = 0;
+        $manual_review_total = 0;
         $duplicate_person_ids = array();
         $filtered_rows = array();
         foreach ($candidate_rows as $candidate_row) {
+            $is_manual = !empty($candidate_row['manual_review']);
             $is_duplicate = !empty($candidate_row['duplicate_person_id']);
-            if ($is_duplicate) {
+            if ($is_manual) {
+                $manual_review_total++;
+            } elseif ($is_duplicate) {
                 $duplicate_total++;
                 $person_id = (string) ($candidate_row['person_id'] ?? '');
                 if ($person_id !== '') {
@@ -10590,6 +10622,12 @@ public function get_person_visual_package($nm_id, $size = 'large') {
                 $ready_total++;
             }
 
+            if ($view === 'manual' && !$is_manual) {
+                continue;
+            }
+            if ($view !== 'manual' && $is_manual) {
+                continue;
+            }
             if ($view === 'ready' && $is_duplicate) {
                 continue;
             }
@@ -10603,11 +10641,12 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $paged_rows = array_slice($filtered_rows, $offset, $limit);
         $summary = is_array($audit['summary'] ?? null) ? $audit['summary'] : array();
         $summary['returned'] = count($paged_rows);
-        $summary['adoption_total'] = count($candidate_rows);
+        $summary['adoption_total'] = $ready_total + $duplicate_total;
         $summary['adoption_review_total'] = count($filtered_rows);
         $summary['ready_adoption_total'] = $ready_total;
         $summary['duplicate_adoption_total'] = $duplicate_total;
         $summary['duplicate_person_total'] = count($duplicate_person_ids);
+        $summary['manual_review_total'] = $manual_review_total;
         $summary['adoption_view'] = $view;
         $summary['adoption_limit'] = $limit;
         $summary['adoption_offset'] = $offset;

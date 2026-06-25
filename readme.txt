@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.42
+Stable tag: 2.7.43
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.43 =
+* Added a private read-only Manual review lane for unresolved Existing PEOPLE portrait rows.
+* Manual-review cards expose image/context fields for `needs_manual_review` rows without rendering adoption or duplicate resolver actions.
+* The clean adoption and typed duplicate-resolution paths remain separate from unresolved manual-review images.
 
 = 2.7.42 =
 * Added a one-by-one typed-confirmation resolver for duplicate Existing PEOPLE portrait candidates.

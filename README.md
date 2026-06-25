@@ -14,7 +14,7 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.42`.
+Current baseline: `2.7.43`.
 
 ## Current Public Surface
 
@@ -28,6 +28,7 @@ Current baseline: `2.7.42`.
 - The private existing media reconciliation audit scans the current `PEOPLE` Media Library folder before new imports, reporting already route-backed portraits, reusable `nm...` filename matches, likely name matches, duplicates, and manual-review rows without mutating attachments.
 - `Academy Awards > Person Portrait Queue` includes an Existing PEOPLE adoption lane that lets admins adopt one reusable `nm...` filename portrait at a time as `existing-media-adoption` without fetching, importing, renaming, or moving media.
 - The Existing PEOPLE lane now includes a duplicate-review view with competing attachment thumbnails for duplicate `nm...` filename matches, plus a one-by-one typed-confirmation resolver for choosing the correct attachment without enabling bulk duplicate adoption.
+- The Existing PEOPLE lane includes a read-only Manual review lane for `needs_manual_review` rows so unresolved PEOPLE images can be inspected without rendering adoption or duplicate resolver actions.
 - Ceremony pages include a Major Races proof module for Best Picture, Directing, Actor, and Actress before the complete ceremony ledger.
 - `Academy Awards > Ceremony Write-Ups` privately previews Dalton-authored DOCX ceremony guides, stages 98 draft rows, reviews one ceremony at a time, and renders only approved write-ups near the top of ceremony dossiers.
 - Ceremony Write-Ups includes private status filters, text search across staged copy/notes, and status counts so the 98-row editorial queue can be reviewed efficiently.
