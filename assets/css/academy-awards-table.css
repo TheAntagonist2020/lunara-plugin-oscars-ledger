@@ -924,6 +924,7 @@ body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is
     overflow: hidden;
     background: rgba(255,255,255,.04);
     text-decoration: none;
+    position: relative;
 }
 
 body .aat-container .aat-premium-category-dossier .aat-era-chapter-media {
@@ -931,6 +932,37 @@ body .aat-container .aat-premium-category-dossier .aat-era-chapter-media {
     min-height: 0 !important;
     max-width: 100% !important;
     aspect-ratio: 2 / 3 !important;
+}
+
+.aat-era-chapter-media-label {
+    position: absolute;
+    left: 7px;
+    bottom: 7px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    max-width: calc(100% - 14px);
+    padding: 4px 7px;
+    border: 1px solid rgba(255,255,255,.24);
+    border-radius: 999px;
+    background: rgba(3,10,18,.78);
+    color: rgba(244,239,227,.94);
+    font-size: .62rem;
+    line-height: 1;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.aat-era-chapter-media-label.is-winner {
+    border-color: rgba(201,169,97,.45);
+    color: var(--aat-gold-light);
+}
+
+body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-label {
+    position: absolute !important;
+    left: 7px !important;
+    bottom: 7px !important;
 }
 
 .aat-era-chapter-media img,

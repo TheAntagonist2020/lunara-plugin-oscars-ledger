@@ -2933,24 +2933,42 @@ get_header();
                             $era_visual_limit = (int) apply_filters('aat_category_era_visual_limit', 4, $canonical);
                             $era_visual_limit = max(1, min(4, $era_visual_limit));
                             if ($is_premium_category_dossier && !empty($decade_bucket['ceremonies']) && is_array($decade_bucket['ceremonies'])) {
-                                foreach ($decade_bucket['ceremonies'] as $era_ceremony_data) {
-                                    $era_winners = !empty($era_ceremony_data['winner_rows']) && is_array($era_ceremony_data['winner_rows']) ? $era_ceremony_data['winner_rows'] : array();
-                                    foreach ($era_winners as $era_winner) {
-                                        $era_film_id = strtolower(trim((string) ($era_winner['film_id'] ?? '')));
-                                        if ($era_film_id === '' || isset($era_seen_titles[$era_film_id])) {
-                                            continue;
-                                        }
-                                        $era_visual = $aat_get_visual_package($era_film_id, 'medium');
-                                        if (empty($era_visual['poster_html']) && empty($era_visual['poster_url']) && empty($era_visual['backdrop_url'])) {
-                                            continue;
-                                        }
-                                        $era_seen_titles[$era_film_id] = true;
-                                        $era_spotlights[] = array(
-                                            'entry'  => $aat_enrich_winner_entry_links($era_winner),
-                                            'visual' => $era_visual,
-                                        );
-                                        if (count($era_spotlights) >= $era_visual_limit) {
-                                            break 2;
+                                $era_visual_sources = array(
+                                    array(
+                                        'kind'  => 'winner',
+                                        'label' => __('Winner', 'academy-awards-table'),
+                                        'key'   => 'winner_rows',
+                                    ),
+                                    array(
+                                        'kind'  => 'nominee',
+                                        'label' => __('Nominee', 'academy-awards-table'),
+                                        'key'   => 'nominee_rows',
+                                    ),
+                                );
+
+                                foreach ($era_visual_sources as $era_visual_source) {
+                                    foreach ($decade_bucket['ceremonies'] as $era_ceremony_data) {
+                                        $era_source_key = (string) $era_visual_source['key'];
+                                        $era_visual_rows = !empty($era_ceremony_data[$era_source_key]) && is_array($era_ceremony_data[$era_source_key]) ? $era_ceremony_data[$era_source_key] : array();
+                                        foreach ($era_visual_rows as $era_visual_row) {
+                                            $era_film_id = strtolower(trim((string) ($era_visual_row['film_id'] ?? '')));
+                                            if ($era_film_id === '' || isset($era_seen_titles[$era_film_id])) {
+                                                continue;
+                                            }
+                                            $era_visual = $aat_get_visual_package($era_film_id, 'medium');
+                                            if (empty($era_visual['poster_html']) && empty($era_visual['poster_url']) && empty($era_visual['backdrop_url'])) {
+                                                continue;
+                                            }
+                                            $era_seen_titles[$era_film_id] = true;
+                                            $era_spotlights[] = array(
+                                                'entry'      => $aat_enrich_winner_entry_links($era_visual_row),
+                                                'visual'     => $era_visual,
+                                                'kind'       => sanitize_key((string) $era_visual_source['kind']),
+                                                'kind_label' => (string) $era_visual_source['label'],
+                                            );
+                                            if (count($era_spotlights) >= $era_visual_limit) {
+                                                break 3;
+                                            }
                                         }
                                     }
                                 }
@@ -2963,6 +2981,7 @@ get_header();
                                 $era_film_label = !empty($era_entry['film']) ? (string) $era_entry['film'] : (string) ($era_entry['primary_label'] ?? '');
                                 $era_film_url = !empty($era_entry['film_url']) ? (string) $era_entry['film_url'] : (!empty($era_entry['primary_url']) ? (string) $era_entry['primary_url'] : '');
                                 $era_backdrop_style = $aat_get_card_backdrop_style($era_visual['poster_url'] ?? '', $era_visual['backdrop_url'] ?? '');
+                                $era_visual_badge = !empty($era_spotlights[0]['kind']) && $era_spotlights[0]['kind'] === 'winner' ? __('Winner-led visuals', 'academy-awards-table') : __('Nominee field visuals', 'academy-awards-table');
                             ?>
                                 <article class="aat-era-chapter-visual is-visual-count-<?php echo esc_attr((string) $era_visual_count); ?><?php echo $era_backdrop_style !== '' ? ' aat-card-has-backdrop' : ''; ?>"<?php if ($era_backdrop_style !== '') : ?> style="<?php echo esc_attr($era_backdrop_style); ?>"<?php endif; ?>>
                                     <div class="aat-era-chapter-media-grid is-count-<?php echo esc_attr((string) $era_visual_count); ?><?php echo $era_visual_count === 1 ? ' is-single' : ''; ?>">
@@ -2971,18 +2990,21 @@ get_header();
                                             $era_strip_visual = $era_spotlight['visual'];
                                             $era_strip_label = !empty($era_strip_entry['film']) ? (string) $era_strip_entry['film'] : (string) ($era_strip_entry['primary_label'] ?? '');
                                             $era_strip_url = !empty($era_strip_entry['film_url']) ? (string) $era_strip_entry['film_url'] : (!empty($era_strip_entry['primary_url']) ? (string) $era_strip_entry['primary_url'] : '');
+                                            $era_strip_kind = !empty($era_spotlight['kind']) ? sanitize_key((string) $era_spotlight['kind']) : 'title';
+                                            $era_strip_kind_label = !empty($era_spotlight['kind_label']) ? (string) $era_spotlight['kind_label'] : __('Title', 'academy-awards-table');
                                         ?>
-                                            <a class="aat-era-chapter-media" href="<?php echo esc_url($era_strip_url !== '' ? $era_strip_url : $db_url); ?>" aria-label="<?php echo esc_attr($era_strip_label); ?>">
+                                            <a class="aat-era-chapter-media is-<?php echo esc_attr($era_strip_kind); ?>" href="<?php echo esc_url($era_strip_url !== '' ? $era_strip_url : $db_url); ?>" aria-label="<?php echo esc_attr($era_strip_label); ?>">
                                                 <?php if (!empty($era_strip_visual['poster_html'])) : ?>
                                                     <?php echo $era_strip_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                                 <?php elseif (!empty($era_strip_visual['poster_url'])) : ?>
                                                     <img src="<?php echo esc_url($era_strip_visual['poster_url']); ?>" alt="<?php echo esc_attr($era_strip_label); ?> poster" loading="lazy" decoding="async" />
                                                 <?php endif; ?>
+                                                <span class="aat-era-chapter-media-label is-<?php echo esc_attr($era_strip_kind); ?>"><?php echo esc_html($era_strip_kind_label); ?></span>
                                             </a>
                                         <?php endforeach; ?>
                                     </div>
                                     <div class="aat-era-chapter-copy">
-                                        <span class="aat-winner-badge"><?php echo esc_html__('Era Visuals', 'academy-awards-table'); ?></span>
+                                        <span class="aat-winner-badge"><?php echo esc_html($era_visual_badge); ?></span>
                                         <h4><?php echo $aat_render_hub_text_link($era_film_label, $era_film_url, 'aat-hub-inline-link aat-hub-inline-link-title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></h4>
                                         <p><?php echo esc_html(sprintf((string) $premium_category_profile['era_copy'], $decade_bucket['label'], $label)); ?></p>
                                     </div>
