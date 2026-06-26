@@ -2161,6 +2161,14 @@ get_header();
                     'title' => __('Costume Design Dossier', 'academy-awards-table'),
                     'subtitle' => __('The costume file: period worlds, character silhouettes, and the design campaigns that turned fabric into Oscar history.', 'academy-awards-table'),
                 ),
+                'ART DIRECTION' => array(
+                    'class' => 'aat-craft-dossier aat-art-direction-dossier',
+                    'title' => __('Art Direction Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The production design file: sets, architecture, studio craft, color, space, and the built worlds that turned Oscar history into lived-in cinema.', 'academy-awards-table'),
+                    'history_kicker' => __('Design Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Art Direction Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Art Direction run.', 'academy-awards-table'),
+                ),
                 'MAKEUP AND HAIRSTYLING' => array(
                     'class' => 'aat-craft-dossier aat-makeup-dossier',
                     'title' => __('Makeup and Hairstyling Dossier', 'academy-awards-table'),

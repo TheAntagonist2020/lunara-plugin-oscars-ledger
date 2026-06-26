@@ -48,6 +48,9 @@ $assert(strpos($hub_template, 'aat-sound-editing-dossier') !== false, 'Sound Edi
 $assert(strpos($hub_template, "'MAKEUP AND HAIRSTYLING' => array(") !== false, 'Makeup and Hairstyling should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Makeup and Hairstyling Dossier') !== false, 'Makeup and Hairstyling should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-makeup-dossier') !== false, 'Makeup and Hairstyling should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'ART DIRECTION' => array(") !== false, 'Art Direction should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Art Direction Dossier') !== false, 'Art Direction should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-art-direction-dossier') !== false, 'Art Direction should expose a route-scoped visual hook.');
 
 foreach (array(
     '.aat-generic-category-dossier',
