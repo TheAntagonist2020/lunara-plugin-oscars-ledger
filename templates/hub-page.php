@@ -2185,6 +2185,22 @@ get_header();
                     'history_title' => __('Art Direction Through the Eras', 'academy-awards-table'),
                     'era_copy' => __('A visual entry point into the %1$s Art Direction run.', 'academy-awards-table'),
                 ),
+                'ART DIRECTION (BLACK-AND-WHITE)' => array(
+                    'class' => 'aat-craft-dossier aat-art-direction-dossier aat-art-direction-monochrome-dossier',
+                    'title' => __('Black-and-White Art Direction Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The monochrome design file: studio architecture, shadow-built spaces, production craft, and the black-and-white worlds that made Oscar history feel tangible.', 'academy-awards-table'),
+                    'history_kicker' => __('Monochrome Design Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Black-and-White Art Direction Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s black-and-white Art Direction run.', 'academy-awards-table'),
+                ),
+                'ART DIRECTION (COLOR)' => array(
+                    'class' => 'aat-craft-dossier aat-art-direction-dossier aat-art-direction-color-dossier',
+                    'title' => __('Color Art Direction Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The color design file: painted worlds, studio spectacle, period architecture, and the Oscar races that tracked production design learning to build in color.', 'academy-awards-table'),
+                    'history_kicker' => __('Color Design Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Color Art Direction Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s color Art Direction run.', 'academy-awards-table'),
+                ),
                 'MAKEUP AND HAIRSTYLING' => array(
                     'class' => 'aat-craft-dossier aat-makeup-dossier',
                     'title' => __('Makeup and Hairstyling Dossier', 'academy-awards-table'),

@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.66
+Stable tag: 2.7.67
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.67 =
+* Promoted Black-and-White and Color Art Direction split routes to the premium Oscars category dossier system, extending the production-design route family without changing data or URLs.
 
 = 2.7.66 =
 * Promoted Black-and-White and Color Cinematography split routes to the premium Oscars category dossier system, completing the historical cinematography route family without changing data or URLs.
