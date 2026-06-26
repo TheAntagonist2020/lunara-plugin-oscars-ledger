@@ -31,6 +31,8 @@ $assert(strpos($plugin, 'public function get_name_entity_link_by_label($label)')
 $assert(strpos($hub_template, '$aat_build_person_link_items') !== false, 'Hub template should build linked person chip items.');
 $assert(strpos($hub_template, 'aat-inner-route-system') !== false, 'Category shell should expose the shared inner route system hook.');
 $assert(strpos($hub_template, 'aat-generic-category-dossier') !== false, 'Non-premium categories should have a dossier-grade hook.');
+$assert(strpos($hub_template, '$hub_id_breadcrumb_label') !== false, 'Hub breadcrumbs should use polished display labels instead of raw route IDs.');
+$assert(strpos($hub_template, '$hub_id_breadcrumb_label = $aat->format_category_display($breadcrumb_category);') !== false, 'Category breadcrumbs should resolve slugs into category display labels.');
 $assert(strpos($hub_template, 'aat-category-person-strip') !== false, 'Category rows should render a linked person/craft strip.');
 $assert(strpos($hub_template, 'aat-category-ceremony-row aat-ledger-card') !== false, 'All category ceremony rows should use ledger-card rhythm.');
 $assert(substr_count($hub_template, 'aat-dossier-command-band') >= 2, 'Premium and generic category headers should both render command bands.');

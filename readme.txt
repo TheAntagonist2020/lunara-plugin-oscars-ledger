@@ -65,6 +65,7 @@ Examples:
 
 = 2.7.69 =
 * Promoted Sound Recording and the legacy Song Score / Adaptation Score category routes to the premium Oscars category dossier system, extending historical music and sound route coverage without changing data or URLs.
+* Cleaned hub breadcrumbs so category routes show polished category labels instead of raw URL slugs.
 
 = 2.7.68 =
 * Promoted Black-and-White and Color Costume Design split routes to the premium Oscars category dossier system, completing another historical craft route family without changing data or URLs.

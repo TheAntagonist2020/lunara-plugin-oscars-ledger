@@ -819,6 +819,21 @@ if (in_array($hub, array('ceremonies','categories','about'), true)) {
     }
 }
 
+$hub_breadcrumb_label = ucfirst($hub);
+$hub_id_breadcrumb_label = $hub_id;
+if ($hub === 'category' && !empty($hub_id)) {
+    $breadcrumb_category = $aat->resolve_category_slug($hub_id);
+    if (!empty($breadcrumb_category)) {
+        $hub_id_breadcrumb_label = $aat->format_category_display($breadcrumb_category);
+    }
+} elseif ($hub === 'ceremony' && !empty($hub_id)) {
+    $hub_id_breadcrumb_label = sprintf(
+        /* translators: %s: Academy Awards ceremony number. */
+        __('%s Ceremony', 'academy-awards-table'),
+        $hub_id
+    );
+}
+
 get_header();
 ?>
 
@@ -827,10 +842,10 @@ get_header();
     <p class="aat-hub-breadcrumbs">
         <a href="<?php echo esc_url($db_url); ?>"><?php echo esc_html__('Oscar Ledger', 'academy-awards-table'); ?></a>
         <span class="aat-footer-sep">&rsaquo;</span>
-        <?php echo esc_html(ucfirst($hub)); ?>
-        <?php if (!empty($hub_id)) : ?>
+        <?php echo esc_html($hub_breadcrumb_label); ?>
+        <?php if (!empty($hub_id_breadcrumb_label)) : ?>
             <span class="aat-footer-sep">&rsaquo;</span>
-            <?php echo esc_html($hub_id); ?>
+            <?php echo esc_html($hub_id_breadcrumb_label); ?>
         <?php endif; ?>
     </p>
 
