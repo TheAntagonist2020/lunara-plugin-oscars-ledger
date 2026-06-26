@@ -2202,6 +2202,14 @@ get_header();
                     'title' => __('Animated Feature Dossier', 'academy-awards-table'),
                     'subtitle' => __('The animation file: studio eras, hand-drawn legacies, digital dominance, and every Oscar trail behind the feature race.', 'academy-awards-table'),
                 ),
+                'SHORT FILM (ANIMATED)' => array(
+                    'class' => 'aat-short-film-dossier aat-short-film-animated-dossier',
+                    'title' => __('Animated Short Film Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The animated short file: miniature worlds, studio experiments, hand-drawn breakthroughs, stop-motion craft, and the compact films that carried Oscar history frame by frame.', 'academy-awards-table'),
+                    'history_kicker' => __('Animated Shorts Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Animated Short Film Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Animated Short Film run.', 'academy-awards-table'),
+                ),
                 'DOCUMENTARY (FEATURE)' => array(
                     'class' => 'aat-feature-dossier aat-documentary-dossier',
                     'title' => __('Documentary Feature Dossier', 'academy-awards-table'),

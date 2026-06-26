@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.62
+Stable tag: 2.7.63
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.63 =
+* Promoted Animated Short Film to the premium Oscars category dossier system, adding a stronger shorts-route rhythm without changing data or URLs.
 
 = 2.7.62 =
 * Promoted Art Direction to the premium Oscars category dossier system, adding a stronger production-design route rhythm without changing data or URLs.
