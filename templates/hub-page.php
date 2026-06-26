@@ -2120,6 +2120,14 @@ get_header();
                     'title' => __('Best Director Dossier', 'academy-awards-table'),
                     'subtitle' => __('The director file: winners, nominated films, and the authorship trails that shaped Oscar history from studio craft to modern auteur campaigns.', 'academy-awards-table'),
                 ),
+                'ASSISTANT DIRECTOR' => array(
+                    'class' => 'aat-craft-dossier aat-early-craft-dossier aat-assistant-director-dossier',
+                    'title' => __('Assistant Director Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The early production file: unit managers, studio floor leadership, and the short-lived Oscar branch that briefly recognized the machinery behind directing.', 'academy-awards-table'),
+                    'history_kicker' => __('Studio Floor Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Assistant Director Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Assistant Director run.', 'academy-awards-table'),
+                ),
                 'ACTOR IN A LEADING ROLE' => array(
                     'class' => 'aat-acting-dossier aat-actor-dossier',
                     'title' => __('Best Actor Dossier', 'academy-awards-table'),
@@ -2291,6 +2299,14 @@ get_header();
                     'history_kicker' => __('Music Era Browser', 'academy-awards-table'),
                     'history_title' => __('Song Score and Adaptation Score Through the Eras', 'academy-awards-table'),
                     'era_copy' => __('A visual entry point into the %1$s Song Score and Adaptation Score run.', 'academy-awards-table'),
+                ),
+                'DANCE DIRECTION' => array(
+                    'class' => 'aat-music-dossier aat-early-craft-dossier aat-dance-direction-dossier',
+                    'title' => __('Dance Direction Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The musical staging file: choreographers, production numbers, specialty routines, and the brief Oscar branch that tracked screen dance as its own spectacle.', 'academy-awards-table'),
+                    'history_kicker' => __('Musical Staging Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Dance Direction Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Dance Direction run.', 'academy-awards-table'),
                 ),
                 'INTERNATIONAL FEATURE FILM' => array(
                     'class' => 'aat-feature-dossier aat-international-dossier',
