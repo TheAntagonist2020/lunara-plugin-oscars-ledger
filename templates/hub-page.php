@@ -2210,6 +2210,14 @@ get_header();
                     'history_title' => __('Animated Short Film Through the Eras', 'academy-awards-table'),
                     'era_copy' => __('A visual entry point into the %1$s Animated Short Film run.', 'academy-awards-table'),
                 ),
+                'SHORT FILM (LIVE ACTION)' => array(
+                    'class' => 'aat-short-film-dossier aat-short-film-live-action-dossier',
+                    'title' => __('Live Action Short Film Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The live-action short file: compact narratives, student breakthroughs, international discoveries, and the miniature dramatic forms that gave Oscar history its sharpest small-scale stories.', 'academy-awards-table'),
+                    'history_kicker' => __('Live Action Shorts Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Live Action Short Film Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Live Action Short Film run.', 'academy-awards-table'),
+                ),
                 'DOCUMENTARY (FEATURE)' => array(
                     'class' => 'aat-feature-dossier aat-documentary-dossier',
                     'title' => __('Documentary Feature Dossier', 'academy-awards-table'),

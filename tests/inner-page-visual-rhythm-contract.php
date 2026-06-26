@@ -54,6 +54,9 @@ $assert(strpos($hub_template, 'aat-art-direction-dossier') !== false, 'Art Direc
 $assert(strpos($hub_template, "'SHORT FILM (ANIMATED)' => array(") !== false, 'Animated Short Film should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Animated Short Film Dossier') !== false, 'Animated Short Film should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-short-film-animated-dossier') !== false, 'Animated Short Film should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'SHORT FILM (LIVE ACTION)' => array(") !== false, 'Live Action Short Film should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Live Action Short Film Dossier') !== false, 'Live Action Short Film should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-short-film-live-action-dossier') !== false, 'Live Action Short Film should expose a route-scoped visual hook.');
 
 foreach (array(
     '.aat-generic-category-dossier',
