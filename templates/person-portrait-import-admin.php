@@ -529,6 +529,8 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                 <span><?php echo esc_html(sprintf(__('Adoption candidates: %d', 'academy-awards-table'), intval($adoption_summary['adoption_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Non-duplicate: %d', 'academy-awards-table'), intval($adoption_summary['ready_adoption_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Needs hold review: %d', 'academy-awards-table'), intval($adoption_summary['existing_hold_review_total'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Needs source: %d', 'academy-awards-table'), intval($adoption_summary['existing_needs_source_total'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Wrong labels: %d', 'academy-awards-table'), intval($adoption_summary['existing_wrong_label_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Approved to adopt: %d', 'academy-awards-table'), intval($adoption_summary['existing_approved_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Duplicate review: %d', 'academy-awards-table'), intval($adoption_summary['duplicate_adoption_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Duplicate people: %d', 'academy-awards-table'), intval($adoption_summary['duplicate_person_total'] ?? 0))); ?></span>
@@ -550,6 +552,9 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                     <?php foreach (array(
                         'all' => __('All candidates', 'academy-awards-table'),
                         'hold_review' => __('Hold review', 'academy-awards-table'),
+                        'needs_review' => __('Needs initial review', 'academy-awards-table'),
+                        'needs_source' => __('Needs source', 'academy-awards-table'),
+                        'wrong_label' => __('Wrong labels', 'academy-awards-table'),
                         'approved' => __('Approved to adopt', 'academy-awards-table'),
                         'ready' => __('Non-duplicate candidates', 'academy-awards-table'),
                         'duplicates' => __('Duplicate review', 'academy-awards-table'),
@@ -595,8 +600,10 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                     $duplicate_group = isset($row['duplicate_group']) && is_array($row['duplicate_group']) ? $row['duplicate_group'] : array();
                     $duplicate_group_candidates = isset($row['duplicate_group_candidates']) && is_array($row['duplicate_group_candidates']) ? $row['duplicate_group_candidates'] : $duplicate_group;
                     $duplicate_count = intval($row['duplicate_count'] ?? count($duplicate_group));
+                    $card_state_class = $is_manual ? 'is-manual' : ($is_duplicate_group ? 'is-duplicate-group' : ($is_duplicate ? 'is-duplicate' : ($existing_review_is_approved ? 'is-approved' : 'is-review-hold')));
+                    $review_state_class = (!$is_manual && !$is_duplicate_group && !$is_duplicate) ? ' is-review-state-' . sanitize_html_class($existing_review_state) : '';
                     ?>
-                    <article class="aat-person-portrait-adoption-card <?php echo $is_manual ? 'is-manual' : ($is_duplicate_group ? 'is-duplicate-group' : ($is_duplicate ? 'is-duplicate' : ($existing_review_is_approved ? 'is-approved' : 'is-review-hold'))); ?>">
+                    <article class="aat-person-portrait-adoption-card <?php echo esc_attr($card_state_class . $review_state_class); ?>">
                         <div class="aat-person-portrait-adoption-media">
                             <?php if ($thumb_url !== '') : ?>
                                 <img src="<?php echo esc_url($thumb_url); ?>" alt="" loading="lazy" />
@@ -746,6 +753,11 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                                 <div class="aat-person-portrait-existing-review">
                                     <strong><?php esc_html_e('Existing PEOPLE hold review', 'academy-awards-table'); ?></strong>
                                     <p><?php esc_html_e('Save a private judgment first. Adoption opens only after this candidate is Approved To Adopt, and still requires the exact typed IMDb ID.', 'academy-awards-table'); ?></p>
+                                    <?php if ($existing_review_state === 'needs_better_source') : ?>
+                                        <p class="aat-person-portrait-existing-review-alert"><?php esc_html_e('Source needed: keep this held until an exact, externally verified portrait source is available.', 'academy-awards-table'); ?></p>
+                                    <?php elseif (in_array($existing_review_state, array('wrong_person_or_label', 'not_a_person'), true)) : ?>
+                                        <p class="aat-person-portrait-existing-review-alert"><?php esc_html_e('Do not adopt: this media item is marked as the wrong person, a label row, or not an individual portrait.', 'academy-awards-table'); ?></p>
+                                    <?php endif; ?>
                                     <?php if (!empty($existing_review['reviewed_at'])) : ?>
                                         <p class="aat-person-portrait-muted"><?php echo esc_html(sprintf(__('Last reviewed: %s', 'academy-awards-table'), (string) $existing_review['reviewed_at'])); ?></p>
                                     <?php endif; ?>

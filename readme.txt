@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.56
+Stable tag: 2.7.57
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.57 =
+* Added private Existing PEOPLE hold-review filters for Needs initial review, Needs source, and Wrong labels.
+* Added admin-only source-needed and do-not-adopt warnings so held portrait candidates stay visibly separated from adoption-ready rows.
 
 = 2.7.56 =
 * Added a private Existing PEOPLE Hold Review lane for non-duplicate reusable `nm...-profile` portrait candidates.

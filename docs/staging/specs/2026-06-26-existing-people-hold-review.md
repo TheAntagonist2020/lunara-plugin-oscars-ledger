@@ -8,6 +8,8 @@ contract: `Academy Awards > Person Portrait Queue` gets a private Existing PEOPL
 
 contract: normal Existing PEOPLE adoption becomes a two-step private workflow for non-duplicate candidates: review approval first, exact typed IMDb `nm...` confirmation second.
 
+contract: the private hold-review lane exposes review-state filters for initial review, source-needed rows, and wrong-label/not-person rows so source-gaps are operationally separate from adoption-ready rows.
+
 contract: duplicate-person rows remain in the existing duplicate-specific visual review path and are not handled by this lane.
 
 contract: public routes, public APIs, Oscar source rows, nominee/result rows, media files, attachment files, and person/title/ceremony URLs do not change.
@@ -32,7 +34,7 @@ failure: adoption of an unreviewed or non-approved candidate returns a specific 
 
 test: local PHP lint changed plugin/theme files.
 
-test: plugin contract test proves table/schema registration, allowed states, admin strings, adoption approval guard, and no import/network code in this workflow.
+test: plugin contract test proves table/schema registration, allowed states, admin strings, review-state filters, adoption approval guard, and no import/network code in this workflow.
 
 test: live WP-CLI verifier proves an unapproved ready candidate is blocked, metadata unchanged; then a review-approved proof verifies the candidate remains blocked without matching typed confirmation.
 
@@ -56,7 +58,7 @@ Theme alignment:
 
 - `G:\lunara-backups\work\lunara-theme-blocks-20260513-2300\inc\control-desk.php`
 
-Expected version bump: Oscars plugin `2.7.55 -> 2.7.56`.
+Expected version bump: Oscars plugin `2.7.56 -> 2.7.57` for hold-review filtering.
 
 Evidence target:
 

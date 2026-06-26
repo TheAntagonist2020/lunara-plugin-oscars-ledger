@@ -51,8 +51,8 @@ $adopt_method = $method_slice($plugin, 'private function adopt_existing_person_p
 $existing_lookup_method = $method_slice($plugin, 'private function find_existing_person_portrait_attachment', 'public function get_poster_attachment_id_for_title');
 
 foreach (array(
-    'Version: 2.7.56',
-    "define('AAT_VERSION', '2.7.56')",
+    'Version: 2.7.57',
+    "define('AAT_VERSION', '2.7.57')",
     'get_existing_person_portrait_adoption_rows',
     'adopt_existing_person_portrait_attachment',
     'existing-media-adoption',
@@ -170,7 +170,7 @@ foreach (array(
     'duplicate-review',
     'typed-confirmation resolver',
     'existing-media-adoption',
-    '2.7.56',
+    '2.7.57',
 ) as $needle) {
     $assert(strpos($docs . $spec, $needle) !== false, "Docs/spec should describe the existing PEOPLE adoption workflow: {$needle}");
 }

@@ -52,8 +52,8 @@ $adopt_method = $method_slice($plugin, 'private function adopt_existing_person_p
 $review_helpers = $method_slice($plugin, 'private function get_person_portrait_existing_review_states', 'private function get_existing_person_portrait_adoption_rows');
 
 foreach (array(
-    'Version: 2.7.56',
-    "define('AAT_VERSION', '2.7.56')",
+    'Version: 2.7.57',
+    "define('AAT_VERSION', '2.7.57')",
     'get_person_portrait_existing_reviews_table_name',
     'maybe_create_person_portrait_existing_reviews_table',
     'aat_person_portrait_existing_reviews',
@@ -96,6 +96,9 @@ foreach (array(
     "check_admin_referer('aat_existing_person_portrait_review'",
     'save_person_portrait_existing_review_record_from_request',
     "'hold_review'",
+    "'needs_review'",
+    "'needs_source'",
+    "'wrong_label'",
     "'approved'",
     'get_person_portrait_existing_review_states',
     'get_person_portrait_existing_issue_types',
@@ -107,10 +110,12 @@ foreach (array(
     'get_person_portrait_existing_review_records',
     'get_default_person_portrait_existing_review_record',
     'existing_review_counts',
+    'existing_needs_source_total',
+    'existing_wrong_label_total',
     'existing_hold_review_total',
     'existing_approved_total',
     'existing_review_is_approved',
-    "array('all', 'hold_review', 'approved', 'ready', 'duplicates', 'duplicate_groups', 'manual')",
+    "array('all', 'hold_review', 'needs_review', 'needs_source', 'wrong_label', 'approved', 'ready', 'duplicates', 'duplicate_groups', 'manual')",
 ) as $needle) {
     $assert(strpos($adoption_rows_method, $needle) !== false, "Adoption rows should merge private review state: {$needle}");
 }
@@ -137,6 +142,9 @@ foreach (array(
     'existing_review_issue_type',
     'existing_review_note',
     'Hold review',
+    'Needs source',
+    'Wrong labels',
+    'Source needed: keep this held until an exact, externally verified portrait source is available.',
     'Approved to adopt',
 ) as $needle) {
     $assert(strpos($template, $needle) !== false, "Template should render the private hold-review lane: {$needle}");
@@ -144,7 +152,10 @@ foreach (array(
 
 foreach (array(
     '.aat-person-portrait-adoption-card.is-review-hold',
+    '.aat-person-portrait-adoption-card.is-review-state-needs_better_source',
+    '.aat-person-portrait-adoption-card.is-review-state-wrong_person_or_label',
     '.aat-person-portrait-adoption-card.is-approved',
+    '.aat-person-portrait-existing-review-alert',
     '.aat-person-portrait-existing-review',
     '.aat-person-portrait-existing-review-form',
 ) as $needle) {
@@ -156,7 +167,7 @@ foreach (array(
     'wp_aat_person_portrait_existing_reviews',
     'Approved To Adopt',
     'aat_existing_portrait_review_required',
-    '2.7.56',
+    '2.7.57',
 ) as $needle) {
     $assert(strpos($docs . $spec . $plan, $needle) !== false, "Docs/spec/plan should describe hold-review workflow: {$needle}");
 }

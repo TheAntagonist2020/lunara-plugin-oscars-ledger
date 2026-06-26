@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.56
+ * Version: 2.7.57
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.56');
+define('AAT_VERSION', '2.7.57');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -6358,7 +6358,7 @@ class Academy_Awards_Table {
 
         $queue_rows = is_array($queue['rows'] ?? null) ? $queue['rows'] : array();
         $queue_summary = is_array($queue['summary'] ?? null) ? $queue['summary'] : array();
-        $allowed_adoption_views = array('all', 'hold_review', 'approved', 'ready', 'duplicates', 'duplicate_groups', 'manual');
+        $allowed_adoption_views = array('all', 'hold_review', 'needs_review', 'needs_source', 'wrong_label', 'approved', 'ready', 'duplicates', 'duplicate_groups', 'manual');
         $adoption_view = isset($_GET['adoption_view']) ? sanitize_key(wp_unslash($_GET['adoption_view'])) : 'all';
         if (!in_array($adoption_view, $allowed_adoption_views, true)) {
             $adoption_view = 'all';
@@ -13710,7 +13710,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $offset = isset($args['offset']) ? intval($args['offset']) : 0;
         $offset = max(0, $offset);
         $view = isset($args['view']) ? sanitize_key((string) $args['view']) : 'all';
-        if (!in_array($view, array('all', 'hold_review', 'approved', 'ready', 'duplicates', 'duplicate_groups', 'manual'), true)) {
+        if (!in_array($view, array('all', 'hold_review', 'needs_review', 'needs_source', 'wrong_label', 'approved', 'ready', 'duplicates', 'duplicate_groups', 'manual'), true)) {
             $view = 'all';
         }
 
@@ -13894,6 +13894,10 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             $is_duplicate = !empty($candidate_row['duplicate_person_id']);
             $is_existing_approved = !$is_manual && !$is_duplicate && !empty($candidate_row['existing_review_is_approved']);
             $is_existing_hold = !$is_manual && !$is_duplicate && !$is_existing_approved;
+            $existing_review_state = !$is_manual && !$is_duplicate ? (string) ($candidate_row['existing_review_state'] ?? 'needs_review') : '';
+            $is_existing_needs_review = $is_existing_hold && $existing_review_state === 'needs_review';
+            $is_existing_needs_source = $is_existing_hold && $existing_review_state === 'needs_better_source';
+            $is_existing_wrong_label = $is_existing_hold && in_array($existing_review_state, array('wrong_person_or_label', 'not_a_person'), true);
             if ($is_manual) {
                 $manual_review_total++;
             } elseif ($is_duplicate) {
@@ -13916,6 +13920,15 @@ public function get_person_visual_package($nm_id, $size = 'large') {
                 continue;
             }
             if ($view === 'hold_review' && !$is_existing_hold) {
+                continue;
+            }
+            if ($view === 'needs_review' && !$is_existing_needs_review) {
+                continue;
+            }
+            if ($view === 'needs_source' && !$is_existing_needs_source) {
+                continue;
+            }
+            if ($view === 'wrong_label' && !$is_existing_wrong_label) {
                 continue;
             }
             if ($view === 'approved' && !$is_existing_approved) {
@@ -13951,6 +13964,9 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $summary['existing_hold_review_total'] = $existing_hold_total;
         $summary['existing_approved_total'] = $existing_approved_total;
         $summary['existing_review_counts'] = $existing_review_counts;
+        $summary['existing_needs_review_total'] = intval($existing_review_counts['needs_review'] ?? 0);
+        $summary['existing_needs_source_total'] = intval($existing_review_counts['needs_better_source'] ?? 0);
+        $summary['existing_wrong_label_total'] = intval($existing_review_counts['wrong_person_or_label'] ?? 0) + intval($existing_review_counts['not_a_person'] ?? 0);
         $summary['duplicate_adoption_total'] = $duplicate_total;
         $summary['duplicate_person_total'] = count($duplicate_person_ids);
         $summary['duplicate_group_review_total'] = count($duplicate_group_review_rows);

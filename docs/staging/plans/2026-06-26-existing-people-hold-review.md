@@ -31,3 +31,9 @@ spec: `docs/staging/specs/2026-06-26-existing-people-hold-review.md`
   files: `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\LUNARA_WORLD_CHANGELOG.md`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES\SESSION-LOG-2026-06-25.md`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES\LUNARA_WEBSITE_HANDOFF.md`
   acceptance: live WP-CLI verifier returns blocked-unapproved and metadata-unchanged; public smoke returns `200` with no private leakage.
   spec: `docs/staging/specs/2026-06-26-existing-people-hold-review.md#decisions`
+
+- [x] T6: Add operational hold-review filters
+  goal: Split non-duplicate Existing PEOPLE hold rows into Needs initial review, Needs source, and Wrong labels admin views.
+  files: `G:\lunara-backups\work\academy-awards-table-optimized-ceremony-depth\academy-awards-table.php`, `G:\lunara-backups\work\academy-awards-table-optimized-ceremony-depth\templates\person-portrait-import-admin.php`, `G:\lunara-backups\work\academy-awards-table-optimized-ceremony-depth\assets\css\admin.css`, `G:\lunara-backups\work\academy-awards-table-optimized-ceremony-depth\tests\existing-people-hold-review-contract.php`
+  acceptance: `php tests\existing-people-hold-review-contract.php`
+  spec: `docs/staging/specs/2026-06-26-existing-people-hold-review.md#decisions`
