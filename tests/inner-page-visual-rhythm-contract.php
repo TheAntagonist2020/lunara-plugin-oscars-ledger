@@ -199,6 +199,11 @@ $assert(strpos($hub_template, 'aat-era-chapter-media-label') !== false, 'Premium
 $assert(strpos($hub_template, '$category_scale_class =') !== false, 'Premium category pages should compute a route-scale class from category depth.');
 $assert(strpos($hub_template, 'aat-category-scale-marathon') !== false, 'Long-running category pages should expose a marathon scale hook.');
 $assert(strpos($hub_template, 'is-count-<?php echo esc_attr((string) $era_visual_count); ?>') !== false, 'Era media grids should expose verified visual-count hooks.');
+$assert(strpos($hub_template, '$ceremony_race_highlight_cards') !== false, 'Ceremony pages should build verified major-race visual highlight cards.');
+$assert(strpos($hub_template, 'aat-ceremony-race-highlights') !== false, 'Ceremony pages should render a race-highlights visual briefing strip.');
+$assert(strpos($hub_template, 'aat-ceremony-race-strip') !== false, 'Ceremony pages should render major-race cards inside a bounded strip.');
+$assert(strpos($hub_template, 'aat-ceremony-race-card') !== false, 'Ceremony race highlights should expose card-level hooks.');
+$assert(strpos($hub_template, 'is-major-race') !== false, 'Ceremony race highlight cards should identify major-race cards.');
 $assert(strpos($entity_template, '$profile_dossier_cards') !== false, 'Oscar entity pages should build profile dossier cards.');
 $assert(strpos($entity_template, 'aat-profile-dossier-strip') !== false, 'Oscar entity pages should render a profile dossier strip.');
 $assert(strpos($entity_template, 'aat-profile-dossier-track') !== false, 'Oscar entity pages should render a bounded dossier track.');
@@ -211,6 +216,10 @@ $assert(strpos($css, '.aat-category-scale-brief') !== false, 'Brief category dos
 $assert(strpos($css, '.aat-category-scale-marathon') !== false, 'Long-running category dossiers should receive denser ledger-card sizing.');
 $assert(strpos($css, '.aat-era-chapter-media-grid.is-count-4') !== false, 'Era poster grids should resize intentionally when four verified visuals exist.');
 $assert(strpos($css, '.aat-era-chapter-media-label') !== false, 'Era visual source labels should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-race-highlights') !== false, 'Ceremony race-highlights strip should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-race-strip') !== false, 'Ceremony race-highlights strip should have a public layout rule.');
+$assert(strpos($css, '.aat-ceremony-race-card') !== false, 'Ceremony race-highlight cards should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-race-media') !== false, 'Ceremony race-highlight media chambers should be explicitly sized.');
 $assert(strpos($css, '.aat-profile-dossier-strip') !== false, 'Profile dossier strip should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-track') !== false, 'Profile dossier track should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-card.has-no-media') !== false, 'Profile dossier text-led cards should have deliberate styling.');

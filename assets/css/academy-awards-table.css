@@ -6791,6 +6791,162 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     line-height: .82;
 }
 
+.aat-ceremony-race-highlights {
+    display: grid;
+    gap: 18px;
+    min-width: 0;
+    padding: clamp(18px, 2.8vw, 30px);
+    border: 1px solid rgba(201,169,97,.2);
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 84% 8%, rgba(201,169,97,.14), transparent 30%),
+        linear-gradient(135deg, rgba(255,255,255,.052), rgba(255,255,255,.014)),
+        rgba(6,15,26,.66);
+    overflow: hidden;
+}
+
+.aat-ceremony-race-highlights-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px 20px;
+    align-items: end;
+    min-width: 0;
+}
+
+.aat-ceremony-race-highlights-head h2 {
+    margin: 0;
+    max-width: 17ch;
+    color: var(--aat-white);
+    font-size: clamp(1.75rem, 3vw, 3rem);
+    line-height: 1.03;
+    text-wrap: balance;
+}
+
+.aat-ceremony-race-highlights-head .aat-hub-copy {
+    margin: 8px 0 0;
+    max-width: 62ch;
+}
+
+.aat-ceremony-race-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    min-width: 0;
+}
+
+.aat-ceremony-race-card {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-width: 0;
+    border: 1px solid rgba(201,169,97,.18);
+    border-radius: 14px;
+    background:
+        linear-gradient(180deg, rgba(8,18,29,.34), rgba(2,8,15,.94)),
+        rgba(6,15,26,.84);
+    box-shadow: 0 18px 38px rgba(0,0,0,.2);
+    overflow: hidden;
+}
+
+.aat-ceremony-race-card.aat-card-has-backdrop::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--aat-card-backdrop);
+    background-size: cover;
+    background-position: center;
+    opacity: .16;
+    filter: saturate(.72) contrast(1.08);
+    transform: scale(1.04);
+}
+
+.aat-ceremony-race-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.aat-ceremony-race-card.is-best-picture {
+    border-color: rgba(201,169,97,.3);
+}
+
+.aat-ceremony-race-media {
+    display: block;
+    aspect-ratio: 3 / 4;
+    min-height: 0;
+    background: rgba(2,8,15,.58);
+    overflow: hidden;
+}
+
+.aat-ceremony-race-media img,
+.aat-ceremony-race-media .aat-filmography-poster,
+.aat-ceremony-race-media .aat-hub-spotlight-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.aat-ceremony-race-body {
+    display: grid;
+    align-content: start;
+    gap: 9px;
+    min-width: 0;
+    padding: 14px;
+}
+
+.aat-ceremony-race-meta,
+.aat-ceremony-race-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    min-width: 0;
+}
+
+.aat-ceremony-race-meta {
+    justify-content: space-between;
+}
+
+.aat-ceremony-race-category,
+.aat-ceremony-race-meta span {
+    color: var(--aat-gold-light);
+    font-size: .64rem;
+    font-weight: 900;
+    letter-spacing: .11em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.aat-ceremony-race-card h3 {
+    margin: 0;
+    color: var(--aat-white);
+    font-size: clamp(1.02rem, 1.35vw, 1.24rem);
+    line-height: 1.08;
+    text-wrap: balance;
+}
+
+.aat-ceremony-race-card p {
+    margin: 0;
+    color: rgba(255,255,255,.66);
+    font-size: .8rem;
+    line-height: 1.38;
+}
+
+.aat-ceremony-race-actions {
+    padding-top: 2px;
+}
+
+.aat-ceremony-race-actions .aat-hub-card-action {
+    padding: 6px 9px;
+    font-size: .62rem;
+}
+
+.aat-ceremony-race-actions .aat-hub-card-action.is-review {
+    border-color: rgba(201,169,97,.32);
+    background: rgba(201,169,97,.12);
+    color: var(--aat-gold);
+}
+
 .aat-ceremony-thesis {
     display: grid;
     grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
@@ -7140,9 +7296,14 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     }
 
     .aat-ceremony-editorial-writeup,
+    .aat-ceremony-race-highlights-head,
     .aat-ceremony-thesis,
     .aat-major-race-briefing {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .aat-ceremony-race-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .aat-ceremony-dossier .aat-hub-metric-grid {
@@ -7185,6 +7346,10 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     .aat-ceremony-editorial-writeup,
     .aat-ceremony-editorial-heading,
     .aat-ceremony-editorial-body,
+    .aat-ceremony-race-highlights,
+    .aat-ceremony-race-highlights-head,
+    .aat-ceremony-race-card,
+    .aat-ceremony-race-body,
     .aat-ceremony-thesis,
     .aat-major-race-briefing,
     .aat-major-race-briefing-card,
@@ -7221,6 +7386,10 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     .aat-ceremony-dossier .aat-ceremony-editorial-writeup .aat-hub-copy,
     .aat-ceremony-dossier .aat-ceremony-editorial-body,
     .aat-ceremony-dossier .aat-ceremony-editorial-body p,
+    .aat-ceremony-dossier .aat-ceremony-race-highlights-head h2,
+    .aat-ceremony-dossier .aat-ceremony-race-highlights-head .aat-hub-copy,
+    .aat-ceremony-dossier .aat-ceremony-race-card h3,
+    .aat-ceremony-dossier .aat-ceremony-race-card p,
     .aat-ceremony-dossier .aat-ceremony-thesis h2,
     .aat-ceremony-dossier .aat-ceremony-thesis .aat-hub-copy,
     .aat-ceremony-dossier .aat-major-race-briefing-card h3,
@@ -7252,6 +7421,7 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
 
     .aat-ceremony-command-band,
     .aat-ceremony-editorial-writeup,
+    .aat-ceremony-race-highlights-head,
     .aat-ceremony-dossier .aat-hub-metric-grid,
     .aat-ceremony-thesis,
     .aat-ceremony-thesis-stats,
@@ -7266,6 +7436,28 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     .aat-major-race-card.is-best-picture .aat-major-race-nominee-list,
     .aat-ceremony-dossier .aat-ceremony-ballot-row {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .aat-ceremony-race-highlights {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .aat-ceremony-race-strip {
+        display: flex;
+        gap: 12px;
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        padding: 2px 2px 12px;
+        scroll-padding-inline: 2px;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .aat-ceremony-race-card {
+        flex: 0 0 min(76vw, 286px);
+        scroll-snap-align: start;
     }
 
     .aat-ceremony-major-races {

@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.78
+Stable tag: 2.7.79
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.79 =
+* Added a verified Race Highlights strip near the top of ceremony dossier pages for Best Picture, Directing, Actor, and Actress.
+* Kept the strip media-safe by rendering only existing title visual packages and preserving the existing thesis, major-races, and full-ledger flow.
 
 = 2.7.78 =
 * Added a profile dossier strip to Oscar title, person, and company pages so deep-click routes surface key results and related films before the full ledger stretch.

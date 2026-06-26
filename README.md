@@ -14,10 +14,11 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.78`.
+Current baseline: `2.7.79`.
 
 ## Current Public Surface
 
+- Ceremony pages now carry a verified Race Highlights strip near the dossier top, using existing title visuals for Best Picture, Directing, Actor, and Actress before the thesis/ledger flow continues.
 - Ceremony pages include a data-derived Ceremony Thesis layer with critical-path navigation and compact major-race briefing cards.
 - Title, person, and company profile pages now include a dossier strip near the top, giving deep Oscar pages a denser visual path into key results and related films before the full ledger continues.
 - All current bundled Oscar category routes now resolve through the premium dossier system, including Casting, Dramatic Picture Directing, Comedy Picture Directing, and Unique and Artistic Picture.

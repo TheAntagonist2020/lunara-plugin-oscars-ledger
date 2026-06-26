@@ -1104,6 +1104,7 @@ get_header();
             $ceremony_major_completed_count = 0;
             $ceremony_major_reviewed_titles = array();
             $ceremony_major_category_links = array();
+            $ceremony_race_highlight_cards = array();
 
             foreach ($ceremony_major_race_groups as $briefing_group) {
                 $briefing_category = trim((string) ($briefing_group['category'] ?? ''));
@@ -1155,6 +1156,37 @@ get_header();
                     'review_count'    => $briefing_review_count,
                     'is_complete'     => !empty($briefing_winner_rows),
                 );
+
+                $highlight_row = !empty($briefing_winner_row)
+                    ? $briefing_winner_row
+                    : (!empty($briefing_rows[0]) ? $aat_enrich_winner_entry_links($briefing_rows[0]) : array());
+                $highlight_title_ids = $aat_extract_title_ids($highlight_row);
+                $highlight_title_id = !empty($highlight_title_ids[0]) ? (string) $highlight_title_ids[0] : '';
+                $highlight_visual = $highlight_title_id !== '' ? $aat_get_visual_package($highlight_title_id, 'medium_large') : array();
+
+                if ($highlight_title_id !== '' && (!empty($highlight_visual['poster_html']) || !empty($highlight_visual['poster_url']))) {
+                    $highlight_primary_label = trim((string) ($highlight_row['primary_label'] ?? (!empty($highlight_row) ? $aat_winner_primary($highlight_row) : '')));
+                    $highlight_primary_url = !empty($highlight_row['primary_url']) ? (string) $highlight_row['primary_url'] : '';
+                    $highlight_secondary_label = trim((string) ($highlight_row['secondary_label'] ?? (!empty($highlight_row) ? $aat_winner_secondary($highlight_row) : '')));
+
+                    if ($highlight_primary_label !== '') {
+                        $ceremony_race_highlight_cards[] = array(
+                            'category'        => $briefing_category,
+                            'category_key'    => $briefing_category_key,
+                            'label'           => $briefing_label,
+                            'category_url'    => $briefing_url,
+                            'ledger_url'      => $ceremony_ballot_full_url . '#ceremony-category-' . sanitize_title($briefing_category),
+                            'field_count'     => count($briefing_rows),
+                            'title_id'        => $highlight_title_id,
+                            'primary_label'   => $highlight_primary_label,
+                            'primary_url'     => $highlight_primary_url,
+                            'secondary_label' => $highlight_secondary_label,
+                            'review_url'      => !empty($ceremony_review_map[$highlight_title_id]) ? (string) $ceremony_review_map[$highlight_title_id] : '',
+                            'visual'          => $highlight_visual,
+                            'is_complete'     => !empty($briefing_winner_rows),
+                        );
+                    }
+                }
             }
 
             $ceremony_major_review_total = count($ceremony_major_reviewed_titles);
@@ -1325,6 +1357,66 @@ get_header();
                 </div>
                 <div class="aat-ceremony-editorial-body aat-ceremony-guide-copy">
                     <?php echo wp_kses_post(wpautop(esc_html($ceremony_editorial_body))); ?>
+                </div>
+            </section>
+        <?php endif; ?>
+
+        <?php if (!empty($ceremony_race_highlight_cards)) : ?>
+            <section class="aat-hub-section aat-ceremony-race-highlights" aria-label="<?php echo esc_attr__('Ceremony race highlights', 'academy-awards-table'); ?>">
+                <div class="aat-ceremony-race-highlights-head">
+                    <div>
+                        <p class="aat-hub-kicker"><?php echo esc_html__('Race Highlights', 'academy-awards-table'); ?></p>
+                        <h2><?php echo esc_html__('The four-race visual briefing', 'academy-awards-table'); ?></h2>
+                        <p class="aat-hub-copy"><?php echo esc_html__('Picture, Director, Actor, and Actress get a quick visual read before the ceremony file opens into the full ledger.', 'academy-awards-table'); ?></p>
+                    </div>
+                    <a class="aat-hub-card-action" href="<?php echo esc_url($ceremony_ballot_full_url); ?>"><?php echo esc_html__('Open Full Ballot', 'academy-awards-table'); ?></a>
+                </div>
+                <div class="aat-ceremony-race-strip" aria-label="<?php echo esc_attr__('Major race visual cards', 'academy-awards-table'); ?>">
+                    <?php foreach ($ceremony_race_highlight_cards as $race_highlight_card) :
+                        $race_visual = !empty($race_highlight_card['visual']) && is_array($race_highlight_card['visual']) ? $race_highlight_card['visual'] : array();
+                        $race_backdrop_style = $aat_get_card_backdrop_style($race_visual['poster_url'] ?? '', $race_visual['backdrop_url'] ?? '');
+                        $race_title_url = !empty($race_highlight_card['primary_url']) ? (string) $race_highlight_card['primary_url'] : (string) $race_highlight_card['ledger_url'];
+                        $race_card_classes = array(
+                            'aat-ceremony-race-card',
+                            'is-major-race',
+                            !empty($race_highlight_card['is_complete']) ? 'is-complete' : 'is-field',
+                            'is-' . sanitize_html_class(strtolower(str_replace(' ', '-', (string) $race_highlight_card['category_key']))),
+                        );
+                        if (strtoupper((string) $race_highlight_card['category_key']) === 'BEST PICTURE') {
+                            $race_card_classes[] = 'is-best-picture';
+                        }
+                        if ($race_backdrop_style !== '') {
+                            $race_card_classes[] = 'aat-card-has-backdrop';
+                        }
+                    ?>
+                        <article class="<?php echo esc_attr(implode(' ', array_filter($race_card_classes))); ?>"<?php echo $race_backdrop_style !== '' ? ' style="' . esc_attr($race_backdrop_style) . '"' : ''; ?>>
+                            <a class="aat-ceremony-race-media" href="<?php echo esc_url($race_title_url); ?>">
+                                <?php if (!empty($race_visual['poster_html'])) : ?>
+                                    <?php echo $race_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                <?php else : ?>
+                                    <img class="aat-ceremony-race-poster" src="<?php echo esc_url($race_visual['poster_url']); ?>" alt="<?php echo esc_attr(sprintf(__('%s poster', 'academy-awards-table'), (string) $race_highlight_card['primary_label'])); ?>" loading="lazy" decoding="async" />
+                                <?php endif; ?>
+                            </a>
+                            <div class="aat-ceremony-race-body">
+                                <div class="aat-ceremony-race-meta">
+                                    <?php echo $aat_render_hub_text_link((string) $race_highlight_card['label'], (string) $race_highlight_card['category_url'], 'aat-ceremony-race-category aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                    <span><?php echo esc_html(!empty($race_highlight_card['is_complete']) ? __('Winner', 'academy-awards-table') : __('Field', 'academy-awards-table')); ?></span>
+                                </div>
+                                <h3>
+                                    <?php echo $aat_render_hub_text_link((string) $race_highlight_card['primary_label'], $race_title_url, 'aat-hub-inline-link aat-hub-inline-link-title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                </h3>
+                                <?php if (!empty($race_highlight_card['secondary_label'])) : ?>
+                                    <p><?php echo esc_html($race_highlight_card['secondary_label']); ?></p>
+                                <?php endif; ?>
+                                <div class="aat-ceremony-race-actions">
+                                    <a class="aat-hub-card-action" href="<?php echo esc_url($race_highlight_card['ledger_url']); ?>"><?php echo esc_html__('Race Ledger', 'academy-awards-table'); ?></a>
+                                    <?php if (!empty($race_highlight_card['review_url'])) : ?>
+                                        <a class="aat-hub-card-action is-review" href="<?php echo esc_url($race_highlight_card['review_url']); ?>"><?php echo esc_html__('Lunara Review', 'academy-awards-table'); ?></a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
                 </div>
             </section>
         <?php endif; ?>
