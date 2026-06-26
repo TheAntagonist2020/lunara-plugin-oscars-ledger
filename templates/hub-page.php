@@ -2161,6 +2161,14 @@ get_header();
                     'title' => __('Costume Design Dossier', 'academy-awards-table'),
                     'subtitle' => __('The costume file: period worlds, character silhouettes, and the design campaigns that turned fabric into Oscar history.', 'academy-awards-table'),
                 ),
+                'MAKEUP AND HAIRSTYLING' => array(
+                    'class' => 'aat-craft-dossier aat-makeup-dossier',
+                    'title' => __('Makeup and Hairstyling Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The transformation file: prosthetics, hair, aging, creature work, beauty, and the craft races that turned faces into Oscar history.', 'academy-awards-table'),
+                    'history_kicker' => __('Transformation Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Makeup and Hairstyling Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Makeup and Hairstyling run.', 'academy-awards-table'),
+                ),
                 'VISUAL EFFECTS' => array(
                     'class' => 'aat-craft-dossier aat-effects-dossier',
                     'title' => __('Visual Effects Dossier', 'academy-awards-table'),

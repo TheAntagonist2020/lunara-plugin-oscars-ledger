@@ -49,8 +49,8 @@ $import_method = $method_slice($plugin, 'private function import_tmdb_person_pro
 $existing_method = $method_slice($plugin, 'private function find_existing_person_portrait_attachment', 'public function get_poster_attachment_id_for_title');
 
 foreach (array(
-    "Version: 2.7.60",
-    "define('AAT_VERSION', '2.7.60')",
+    "Version: 2.7.61",
+    "define('AAT_VERSION', '2.7.61')",
     "'academy-awards-person-portraits'",
     'render_person_portrait_import_admin_page',
     'person-portrait-import-admin.php',
@@ -142,7 +142,7 @@ foreach (array(
 foreach (array(
     'Person Portrait Import Queue',
     'one verified TMDb person profile image at a time',
-    '2.7.60',
+    '2.7.61',
 ) as $needle) {
     $assert(strpos($readme, $needle) !== false, "Docs should describe the portrait import queue: {$needle}");
 }
