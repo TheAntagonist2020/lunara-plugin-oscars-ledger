@@ -2135,6 +2135,22 @@ get_header();
                     'title' => __('Cinematography Dossier', 'academy-awards-table'),
                     'subtitle' => __('The image-making ledger: winning visual languages, photographed worlds, and the films that defined how Oscar saw the movies.', 'academy-awards-table'),
                 ),
+                'CINEMATOGRAPHY (BLACK-AND-WHITE)' => array(
+                    'class' => 'aat-craft-dossier aat-cinematography-dossier aat-cinematography-monochrome-dossier',
+                    'title' => __('Black-and-White Cinematography Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The black-and-white image file: shadow, contrast, texture, studio craft, and the photographed worlds that gave early Oscar history its visual grammar.', 'academy-awards-table'),
+                    'history_kicker' => __('Monochrome Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Black-and-White Cinematography Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s black-and-white cinematography run.', 'academy-awards-table'),
+                ),
+                'CINEMATOGRAPHY (COLOR)' => array(
+                    'class' => 'aat-craft-dossier aat-cinematography-dossier aat-cinematography-color-dossier',
+                    'title' => __('Color Cinematography Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The color image file: saturation, light, spectacle, painterly design, and the Oscar races that tracked Hollywood learning to see in color.', 'academy-awards-table'),
+                    'history_kicker' => __('Color Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Color Cinematography Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s color cinematography run.', 'academy-awards-table'),
+                ),
                 'FILM EDITING' => array(
                     'class' => 'aat-craft-dossier aat-editing-dossier',
                     'title' => __('Film Editing Dossier', 'academy-awards-table'),

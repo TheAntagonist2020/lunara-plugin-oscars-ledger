@@ -60,6 +60,12 @@ $assert(strpos($hub_template, 'aat-short-film-live-action-dossier') !== false, '
 $assert(strpos($hub_template, "'DOCUMENTARY (SHORT SUBJECT)' => array(") !== false, 'Documentary Short Subject should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Documentary Short Subject Dossier') !== false, 'Documentary Short Subject should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-documentary-short-dossier') !== false, 'Documentary Short Subject should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'CINEMATOGRAPHY (BLACK-AND-WHITE)' => array(") !== false, 'Black-and-White Cinematography should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Black-and-White Cinematography Dossier') !== false, 'Black-and-White Cinematography should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-cinematography-monochrome-dossier') !== false, 'Black-and-White Cinematography should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'CINEMATOGRAPHY (COLOR)' => array(") !== false, 'Color Cinematography should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Color Cinematography Dossier') !== false, 'Color Cinematography should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-cinematography-color-dossier') !== false, 'Color Cinematography should expose a route-scoped visual hook.');
 
 foreach (array(
     '.aat-generic-category-dossier',
