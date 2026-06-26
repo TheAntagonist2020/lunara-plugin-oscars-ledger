@@ -2177,6 +2177,22 @@ get_header();
                     'title' => __('Costume Design Dossier', 'academy-awards-table'),
                     'subtitle' => __('The costume file: period worlds, character silhouettes, and the design campaigns that turned fabric into Oscar history.', 'academy-awards-table'),
                 ),
+                'COSTUME DESIGN (BLACK-AND-WHITE)' => array(
+                    'class' => 'aat-craft-dossier aat-costume-dossier aat-costume-monochrome-dossier',
+                    'title' => __('Black-and-White Costume Design Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The monochrome costume file: silhouettes, texture, tailoring, period craft, and the black-and-white wardrobes that shaped Oscar history without color doing the work.', 'academy-awards-table'),
+                    'history_kicker' => __('Monochrome Costume Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Black-and-White Costume Design Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s black-and-white Costume Design run.', 'academy-awards-table'),
+                ),
+                'COSTUME DESIGN (COLOR)' => array(
+                    'class' => 'aat-craft-dossier aat-costume-dossier aat-costume-color-dossier',
+                    'title' => __('Color Costume Design Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The color costume file: palette, period spectacle, character architecture, and the Oscar races where wardrobe becomes a loud visual argument.', 'academy-awards-table'),
+                    'history_kicker' => __('Color Costume Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Color Costume Design Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s color Costume Design run.', 'academy-awards-table'),
+                ),
                 'ART DIRECTION' => array(
                     'class' => 'aat-craft-dossier aat-art-direction-dossier',
                     'title' => __('Art Direction Dossier', 'academy-awards-table'),

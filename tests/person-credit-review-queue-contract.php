@@ -57,8 +57,8 @@ $queue = $method_slice($plugin, 'private function get_person_credit_review_queue
 $admin = $method_slice($plugin, 'public function render_person_portrait_import_admin_page', 'public function render_omdb_audit_admin_page');
 
 foreach (array(
-    'Version: 2.7.67',
-    "define('AAT_VERSION', '2.7.67')",
+    'Version: 2.7.68',
+    "define('AAT_VERSION', '2.7.68')",
     'get_person_credit_reviews_table_name',
     'maybe_create_person_credit_reviews_table',
     'wp_aat_person_credit_reviews',
@@ -215,7 +215,7 @@ foreach (array(
     'deferred correction',
     'one-row',
     'source correction',
-    '2.7.67',
+    '2.7.68',
 ) as $needle) {
     $assert(stripos($docs, $needle) !== false, "Docs/spec should describe the private review queue: {$needle}");
 }
