@@ -6212,6 +6212,14 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
         padding: 16px !important;
     }
 
+    body .aat-container .aat-premium-category-dossier .aat-dossier-hero .aat-hub-title {
+        max-width: 100% !important;
+        font-size: clamp(2.2rem, 11vw, 3rem) !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        hyphens: none !important;
+    }
+
     .aat-container .aat-premium-category-dossier .aat-hub-title,
     .aat-container .aat-premium-category-dossier .aat-section-title,
     .aat-container .aat-premium-category-dossier .aat-hub-subtitle,
