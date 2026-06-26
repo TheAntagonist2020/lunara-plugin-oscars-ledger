@@ -4,7 +4,7 @@ spec: `docs/staging/specs/2026-06-26-company-studio-credit-resolver.md`
 
 contract: Build a private, plugin-owned resolver lane for Sound Mixing source rows whose visible credits are companies, studios, studio departments, or source gaps rather than individual people. Keep the existing `nm...` person resolver untouched.
 
-baseline: Oscars plugin `2.7.52`; person credit full-row resolver is live and verified. Company routes such as `/oscars/company/co0050868/`, `/oscars/company/co0028775/`, and `/oscars/company/co0007143/` already return public company profiles without sampled private marker leakage.
+baseline: Oscars plugin `2.7.54`; person credit full-row resolver is live and verified. Company routes such as `/oscars/company/co0050868/`, `/oscars/company/co0028775/`, and `/oscars/company/co0007143/` already return public company profiles without sampled private marker leakage.
 
 ## T1 Schema And State Contract
 
@@ -13,6 +13,8 @@ goal: Add the plugin-owned table and state helpers for company/studio row review
 files:
 
 - `academy-awards-table.php`
+- `templates/person-portrait-import-admin.php`
+- `assets/css/admin.css`
 
 acceptance:
 
@@ -66,8 +68,8 @@ files:
 
 acceptance:
 
-- Preview re-fetches the source row and shows current labels, current `nominee_ids`, proposed IDs, entity kind, and exact final `nominee_ids` string.
-- Validation rejects `nm...` IDs, fake department IDs, blank `Ready To Apply` company slots, stale labels, stale category, slot-count mismatch, unchanged rows, and missing typed confirmation.
+- Preview re-fetches the source row and shows current labels, current `nominee_ids`, proposed IDs, entity kind, route-backed company links, and exact final `nominee_ids` string.
+- Validation rejects `nm...` IDs, fake department IDs, non-route-backed company IDs, blank `Ready To Apply` company slots, stale labels, stale category, slot-count mismatch, unchanged rows, and missing typed confirmation.
 - Validation preserves the renderer slot-pairing contract: visible label slot `n` links to ID slot `n`.
 - No mutation occurs during preview-only mode.
 

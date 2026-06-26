@@ -16,6 +16,7 @@ $person_credit_row_review_states = isset($person_credit_row_review_states) && is
 $person_credit_review_filter_labels = isset($person_credit_review_filter_labels) && is_array($person_credit_review_filter_labels) ? $person_credit_review_filter_labels : array();
 $company_credit_rows = isset($company_credit_rows) && is_array($company_credit_rows) ? $company_credit_rows : array();
 $company_credit_summary = isset($company_credit_summary) && is_array($company_credit_summary) ? $company_credit_summary : array();
+$company_credit_preview_result = isset($company_credit_preview_result) && is_array($company_credit_preview_result) ? $company_credit_preview_result : array();
 $company_credit_review_states = isset($company_credit_review_states) && is_array($company_credit_review_states) ? $company_credit_review_states : array();
 $company_credit_review_filter_labels = isset($company_credit_review_filter_labels) && is_array($company_credit_review_filter_labels) ? $company_credit_review_filter_labels : array();
 $company_credit_entity_kinds = isset($company_credit_entity_kinds) && is_array($company_credit_entity_kinds) ? $company_credit_entity_kinds : array();
@@ -378,6 +379,13 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                     $stored_entity_kind = (string) ($row['stored_entity_kind'] ?? ($row['entity_kind'] ?? 'source_gap'));
                     $review_state = (string) ($row['review_state'] ?? 'needs_review');
                     $row_state_class = 'aat-company-credit-state-' . sanitize_html_class($review_state);
+                    $row_preview = array();
+                    if (
+                        !empty($company_credit_preview_result) &&
+                        intval($company_credit_preview_result['source_award_id'] ?? 0) === intval($row['source_award_id'] ?? 0)
+                    ) {
+                        $row_preview = $company_credit_preview_result;
+                    }
                     ?>
                     <article class="aat-person-portrait-adoption-card aat-company-credit-review-card">
                         <div class="aat-person-portrait-adoption-body">
@@ -454,6 +462,53 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                                 <?php endif; ?>
                                 <button type="submit" class="button button-primary"><?php esc_html_e('Save company/studio review', 'academy-awards-table'); ?></button>
                             </form>
+                            <div class="aat-company-credit-preview-gate">
+                                <form method="post" class="aat-company-credit-preview-form">
+                                    <?php wp_nonce_field('aat_company_credit_row_preview', 'aat_company_credit_row_preview_nonce'); ?>
+                                    <input type="hidden" name="aat_company_credit_row_preview_source_award_id" value="<?php echo esc_attr((string) ($row['source_award_id'] ?? 0)); ?>" />
+                                    <label>
+                                        <span><?php esc_html_e('Preview confirmation', 'academy-awards-table'); ?></span>
+                                        <input type="text" name="aat_company_credit_row_preview_confirm_source_id" value="" placeholder="<?php echo esc_attr((string) ($row['source_award_id'] ?? '')); ?>" />
+                                    </label>
+                                    <button type="submit" class="button"><?php esc_html_e('Preview validation only', 'academy-awards-table'); ?></button>
+                                </form>
+                                <?php if (!empty($row_preview)) : ?>
+                                    <?php
+                                    $preview_ready = !empty($row_preview['ready']);
+                                    $preview_state_class = $preview_ready ? 'is-ready' : 'is-blocked';
+                                    $slot_previews = isset($row_preview['slot_previews']) && is_array($row_preview['slot_previews']) ? $row_preview['slot_previews'] : array();
+                                    ?>
+                                    <div class="aat-company-credit-preview <?php echo esc_attr($preview_state_class); ?>">
+                                        <span><?php echo esc_html((string) ($row_preview['state'] ?? 'preview')); ?></span>
+                                        <p><?php echo esc_html((string) ($row_preview['message'] ?? '')); ?></p>
+                                        <dl>
+                                            <div>
+                                                <dt><?php esc_html_e('Current nominee_ids', 'academy-awards-table'); ?></dt>
+                                                <dd><code><?php echo esc_html((string) ($row_preview['current_nominee_ids'] ?? '')); ?></code></dd>
+                                            </div>
+                                            <div>
+                                                <dt><?php esc_html_e('Preview nominee_ids', 'academy-awards-table'); ?></dt>
+                                                <dd><code><?php echo esc_html((string) ($row_preview['new_nominee_ids'] ?? '')); ?></code></dd>
+                                            </div>
+                                        </dl>
+                                        <?php if (!empty($slot_previews)) : ?>
+                                            <ol class="aat-company-credit-preview-slots">
+                                                <?php foreach ($slot_previews as $slot_preview) : ?>
+                                                    <li>
+                                                        <span><?php echo esc_html((string) ($slot_preview['label'] ?? '')); ?></span>
+                                                        <code><?php echo esc_html((string) ($slot_preview['proposed_id'] ?? '')); ?></code>
+                                                        <?php if (!empty($slot_preview['company_url'])) : ?>
+                                                            <a href="<?php echo esc_url((string) $slot_preview['company_url']); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html((string) ($slot_preview['company_label'] ?? $slot_preview['proposed_id'])); ?></a>
+                                                        <?php else : ?>
+                                                            <span><?php echo esc_html((string) ($slot_preview['company_label'] ?? '')); ?></span>
+                                                        <?php endif; ?>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ol>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </article>
                 <?php endforeach; ?>

@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.53
+ * Version: 2.7.54
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.53');
+define('AAT_VERSION', '2.7.54');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -6083,6 +6083,7 @@ class Academy_Awards_Table {
 
         $message = '';
         $message_type = 'success';
+        $company_credit_preview_result = array();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_poster_api_settings_nonce'])) {
             check_admin_referer('aat_poster_api_settings', 'aat_poster_api_settings_nonce');
@@ -6169,6 +6170,24 @@ class Academy_Awards_Table {
                 $message_type = 'error';
             } else {
                 $message = __('Company/studio credit review saved. Source nominee_ids remain unchanged; this lane is annotation-only.', 'academy-awards-table');
+            }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_company_credit_row_preview_nonce'])) {
+            check_admin_referer('aat_company_credit_row_preview', 'aat_company_credit_row_preview_nonce');
+
+            $company_credit_preview_result = $this->build_company_credit_row_preview_from_request($_POST);
+
+            if (is_wp_error($company_credit_preview_result)) {
+                $message = $company_credit_preview_result->get_error_message();
+                $message_type = 'error';
+                $company_credit_preview_result = array();
+            } elseif (empty($company_credit_preview_result['ready'])) {
+                $message = (string) ($company_credit_preview_result['message'] ?? __('Company/studio preview is not ready.', 'academy-awards-table'));
+                $message_type = 'error';
+            } else {
+                $message = sprintf(
+                    __('Company/studio preview validated for award row #%1$d. No source rows were changed.', 'academy-awards-table'),
+                    intval($company_credit_preview_result['source_award_id'] ?? 0)
+                );
             }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_person_credit_source_correction_nonce'])) {
             check_admin_referer('aat_person_credit_source_correction', 'aat_person_credit_source_correction_nonce');
@@ -10724,6 +10743,205 @@ public function get_person_visual_package($nm_id, $size = 'large') {
             'correction_note' => $note,
             'reviewer_user_id' => get_current_user_id(),
         ));
+    }
+
+    private function company_credit_company_id_has_public_profile($company_id) {
+        $company_id = strtolower(trim((string) $company_id));
+        if (!$this->is_company_entity_id($company_id)) {
+            return false;
+        }
+
+        $label = trim((string) $this->get_entity_display_name('company', $company_id));
+        if ($label !== '') {
+            return true;
+        }
+
+        $rows = $this->get_entity_rows('company', $company_id);
+        return is_array($rows) && !empty($rows);
+    }
+
+    private function build_company_credit_row_preview_from_request($request) {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error('aat_company_credit_row_preview_forbidden', __('You do not have permission to preview company/studio credit rows.', 'academy-awards-table'));
+        }
+
+        $source_award_id = absint($request['aat_company_credit_row_preview_source_award_id'] ?? 0);
+        $typed_confirmation = isset($request['aat_company_credit_row_preview_confirm_source_id'])
+            ? sanitize_text_field(wp_unslash($request['aat_company_credit_row_preview_confirm_source_id']))
+            : '';
+        $records = $this->get_company_credit_row_review_records_for_source_ids(array($source_award_id));
+        $review = isset($records[$source_award_id])
+            ? $records[$source_award_id]
+            : $this->get_default_company_credit_row_review_record($source_award_id, 'source_gap');
+
+        return $this->build_company_credit_row_preview($source_award_id, $review, $typed_confirmation);
+    }
+
+    private function build_company_credit_row_preview($source_award_id, $review, $typed_confirmation = '') {
+        $source_award_id = absint($source_award_id);
+        $preview = array(
+            'ready' => false,
+            'state' => 'blocked',
+            'message' => __('Save a company/studio review before previewing a source-row change.', 'academy-awards-table'),
+            'source_award_id' => $source_award_id,
+            'labels' => array(),
+            'current_nominee_ids' => '',
+            'new_nominee_ids' => '',
+            'visible_label_count' => 0,
+            'review_state' => '',
+            'entity_kind' => '',
+            'proposed_slots' => array(),
+            'slot_previews' => array(),
+            'display_label_override' => '',
+            'required_confirmation' => $source_award_id > 0 ? (string) $source_award_id : '',
+            'typed_confirmation' => trim((string) $typed_confirmation),
+        );
+
+        if ($source_award_id <= 0) {
+            $preview['state'] = 'bad_source';
+            $preview['message'] = __('Invalid source award row.', 'academy-awards-table');
+            return $preview;
+        }
+
+        $source_row = $this->get_person_credit_source_award_row($source_award_id);
+        if (empty($source_row)) {
+            $preview['state'] = 'missing_source';
+            $preview['message'] = __('The source award row could not be reloaded; no company/studio preview is available.', 'academy-awards-table');
+            return $preview;
+        }
+
+        $labels = $this->get_person_credit_source_row_visible_labels($source_row);
+        $preview['labels'] = $labels;
+        $preview['visible_label_count'] = count($labels);
+        if (empty($labels)) {
+            $preview['state'] = 'missing_labels';
+            $preview['message'] = __('The source award row no longer has visible company/studio credit labels.', 'academy-awards-table');
+            return $preview;
+        }
+
+        $current_nominee_ids = $this->parse_company_credit_row_nominee_id_slots($source_row['nominee_ids'] ?? '', false);
+        $preview['current_nominee_ids'] = implode('|', $current_nominee_ids);
+        $preview['display_label_override'] = (string) ($review['display_label_override'] ?? '');
+
+        if (empty($review['is_reviewed'])) {
+            return $preview;
+        }
+
+        $stored_category = sanitize_title((string) ($review['category_slug'] ?? ''));
+        $current_category = $this->get_person_credit_source_row_category_slug($source_row);
+        if ($stored_category !== '' && $stored_category !== $current_category) {
+            $preview['state'] = 'category_mismatch';
+            $preview['message'] = __('The source category changed after this company/studio review was saved; refresh before previewing.', 'academy-awards-table');
+            return $preview;
+        }
+
+        $stored_labels = isset($review['credit_label_list']) && is_array($review['credit_label_list'])
+            ? $review['credit_label_list']
+            : $this->unpack_company_credit_row_labels($review['credit_labels'] ?? '');
+        if (!empty($stored_labels) && $this->normalize_person_credit_label_list_for_compare($stored_labels) !== $this->normalize_person_credit_label_list_for_compare($labels)) {
+            $preview['state'] = 'label_mismatch';
+            $preview['message'] = __('The visible source credit labels changed after this company/studio review was saved; refresh before previewing.', 'academy-awards-table');
+            return $preview;
+        }
+
+        $review_state = $this->sanitize_company_credit_row_review_state($review['review_state'] ?? '');
+        $entity_kind = $this->sanitize_company_credit_entity_kind($review['entity_kind'] ?? '');
+        $preview['review_state'] = $review_state;
+        $preview['entity_kind'] = $entity_kind;
+
+        if ($review_state === 'applied') {
+            $preview['state'] = 'applied';
+            $preview['message'] = __('This company/studio review is already marked applied.', 'academy-awards-table');
+            return $preview;
+        }
+
+        if ($entity_kind !== 'company') {
+            $preview['state'] = 'not_company';
+            $preview['message'] = __('Preview validation is enabled only for true company/studio rows. Department, mixed, source-gap, person, and slot-mismatch rows stay review-only.', 'academy-awards-table');
+            return $preview;
+        }
+
+        if ($review_state !== 'ready_to_apply') {
+            $preview['state'] = 'not_ready_state';
+            $preview['message'] = __('Set the company/studio review state to Ready To Apply before running preview validation.', 'academy-awards-table');
+            return $preview;
+        }
+
+        $proposed_slots = isset($review['proposed_nominee_id_slots']) && is_array($review['proposed_nominee_id_slots'])
+            ? array_map('strval', $review['proposed_nominee_id_slots'])
+            : $this->parse_company_credit_row_nominee_id_slots($review['proposed_nominee_ids'] ?? '', true);
+        $preview['proposed_slots'] = $proposed_slots;
+        if (empty($proposed_slots)) {
+            $preview['state'] = 'missing_proposal';
+            $preview['message'] = __('Add ordered IMDb co IDs before previewing a company/studio row.', 'academy-awards-table');
+            return $preview;
+        }
+
+        $validation = $this->validate_company_credit_row_nominee_id_slots($proposed_slots, false);
+        if (is_wp_error($validation)) {
+            $preview['state'] = 'bad_proposal';
+            $preview['message'] = $validation->get_error_message();
+            return $preview;
+        }
+
+        if (count($proposed_slots) !== count($labels)) {
+            $preview['state'] = 'count_mismatch';
+            $preview['message'] = sprintf(
+                __('The proposed company ID count (%1$d) must match the visible credit label count (%2$d). This protects slot-by-slot public links.', 'academy-awards-table'),
+                count($proposed_slots),
+                count($labels)
+            );
+            return $preview;
+        }
+
+        $slot_previews = array();
+        foreach ($proposed_slots as $index => $company_id) {
+            $company_id = strtolower(trim((string) $company_id));
+            $company_label = trim((string) $this->get_entity_display_name('company', $company_id));
+            if ($company_label === '') {
+                $company_label = strtoupper($company_id);
+            }
+            if (!$this->company_credit_company_id_has_public_profile($company_id)) {
+                $preview['state'] = 'unknown_company';
+                $preview['message'] = sprintf(
+                    __('Company ID slot %1$d (%2$s) does not resolve to a route-backed public Oscars company profile yet.', 'academy-awards-table'),
+                    intval($index) + 1,
+                    $company_id
+                );
+                return $preview;
+            }
+
+            $slot_previews[] = array(
+                'label' => (string) ($labels[$index] ?? ''),
+                'current_id' => (string) ($current_nominee_ids[$index] ?? ''),
+                'proposed_id' => $company_id,
+                'company_label' => $company_label,
+                'company_url' => $this->build_entity_url_from_id($company_id),
+            );
+        }
+
+        $new_nominee_ids = implode('|', $proposed_slots);
+        $preview['new_nominee_ids'] = $new_nominee_ids;
+        $preview['slot_previews'] = $slot_previews;
+        if ($new_nominee_ids === $preview['current_nominee_ids']) {
+            $preview['state'] = 'unchanged';
+            $preview['message'] = __('This source row already has the proposed ordered company nominee_ids.', 'academy-awards-table');
+            return $preview;
+        }
+
+        if ((string) $preview['typed_confirmation'] !== (string) $preview['required_confirmation']) {
+            $preview['state'] = 'confirmation_missing';
+            $preview['message'] = sprintf(
+                __('Type source award row ID %s to run preview validation for this company/studio row.', 'academy-awards-table'),
+                (string) $preview['required_confirmation']
+            );
+            return $preview;
+        }
+
+        $preview['ready'] = true;
+        $preview['state'] = 'ready';
+        $preview['message'] = __('Preview validated. This would update only the ordered nominee_ids string, but no source rows were changed in this preview-only gate.', 'academy-awards-table');
+        return $preview;
     }
 
     private function get_company_credit_row_review_records_for_source_ids($source_award_ids) {

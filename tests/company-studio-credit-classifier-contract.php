@@ -55,10 +55,10 @@ $classifier = $method_slice($plugin, 'private function normalize_profile_image_c
 $review_storage = $method_slice($plugin, 'private function get_company_credit_review_filter_labels', 'private function get_person_credit_review_states');
 
 foreach (array(
-    'Version: 2.7.53',
-    "define('AAT_VERSION', '2.7.53')",
-    'Stable tag: 2.7.53',
-    'Current baseline: `2.7.53`',
+    'Version: 2.7.54',
+    "define('AAT_VERSION', '2.7.54')",
+    'Stable tag: 2.7.54',
+    'Current baseline: `2.7.54`',
     'company/studio credit resolver',
 ) as $needle) {
     $assert(stripos($plugin . $docs, $needle) !== false, "Version/docs marker should exist: {$needle}");
@@ -171,10 +171,17 @@ foreach (array(
     'sanitize_company_credit_entity_filter',
     'replace_company_credit_row_review_record',
     'save_company_credit_row_review_record_from_request',
+    'company_credit_company_id_has_public_profile',
+    'build_company_credit_row_preview_from_request',
+    'build_company_credit_row_preview',
     'get_company_credit_row_review_records_for_source_ids',
     'get_default_company_credit_row_review_record',
     'get_company_credit_review_queue_rows',
     'display_label_override',
+    'required_confirmation',
+    'confirmation_missing',
+    'unknown_company',
+    'route-backed',
     'validate_company_credit_row_nominee_id_slots',
     '$wpdb->replace',
     'maybe_create_company_credit_row_reviews_table',
@@ -205,8 +212,12 @@ foreach (array(
     'aat_company_credit_row_proposed_nominee_ids',
     'aat_company_credit_row_display_label_override',
     'aat_company_credit_row_review_note',
+    'aat_company_credit_row_preview_nonce',
+    'aat_company_credit_row_preview_source_award_id',
+    'aat_company_credit_row_preview_confirm_source_id',
     'Company / Studio Credits',
     'Save company/studio review',
+    'Preview validation only',
 ) as $needle) {
     $assert(strpos($template, $needle) !== false, "Admin template should render private company/studio review controls: {$needle}");
 }
@@ -216,16 +227,23 @@ foreach (array(
     'aat-company-credit-review-grid',
     'aat-company-credit-review-card',
     'aat-company-credit-slots',
+    'aat-company-credit-preview-gate',
+    'aat-company-credit-preview-form',
+    'aat-company-credit-preview-slots',
 ) as $needle) {
     $assert(strpos($template . $admin_css, $needle) !== false, "Admin CSS/template should style company/studio review lane: {$needle}");
 }
 
 $assert(strpos($plugin . $template, 'aat_company_credit_row_apply') === false, 'Company/studio lane must not expose an apply path yet.');
+$assert(strpos($plugin . $template, 'check_admin_referer(\'aat_company_credit_row_preview\'') !== false, 'Company/studio preview should be nonce protected.');
+$assert(strpos($review_storage, '$wpdb->update') === false, 'Company/studio preview/review storage must not update source Oscar rows.');
 
 foreach (array(
     'company-credit-audit',
     'wp_aat_company_credit_row_reviews',
     'Company / Studio Credits',
+    'preview-only validation',
+    'non-route-backed company IDs',
     'slot-pairing',
     'read-only classifier',
     'no source mutation',

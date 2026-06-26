@@ -14,7 +14,7 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.53`.
+Current baseline: `2.7.54`.
 
 ## Current Public Surface
 
@@ -27,7 +27,8 @@ Current baseline: `2.7.53`.
 - The private `wp aat profile-images person-credit-stage` command validates Dalton-reviewed Batch CSVs, dry-runs by default, and writes only `wp_aat_person_credit_reviews` annotations when rerun with `--commit`.
 - Reviewed single-credit person rows can now be corrected one at a time from the private Person Portrait Queue after an exact IMDb ID confirmation, updating only that award row's `nominee_ids` and rebuilding Oscars reporting tables.
 - Multi-credit person rows now have a private full-row resolver inside the Person Portrait Queue, storing ordered source-row review proposals in `wp_aat_person_credit_row_reviews` and applying only after label/count validation plus exact source-row confirmation.
-- The company/studio credit resolver now starts with a private `wp_aat_company_credit_row_reviews` storage contract, read-only `wp aat profile-images company-credit-audit` classifier, and `Company / Studio Credits` admin review lane for Sound Mixing company, department, mixed, source-gap, and slot-pairing rows before any source mutation.
+- The company/studio credit resolver now starts with a private `wp_aat_company_credit_row_reviews` storage contract, read-only `wp aat profile-images company-credit-audit` classifier, `Company / Studio Credits` admin review lane, and preview-only validation gate for Sound Mixing company, department, mixed, source-gap, and slot-pairing rows before any source mutation.
+- Company/studio preview validation re-fetches the source row, checks stale category/labels, rejects non-`co...` or non-route-backed company IDs, enforces visible-label/proposed-ID slot parity, requires typed source-row confirmation, and still leaves source `nominee_ids` unchanged.
 - Person profile files now expose honest visual-source states for local portraits, TMDb portraits, and no-portrait cases; contextual title art is barred from the person portrait chamber.
 - A dry-run nominee portrait batch audit can use Dalton's nominee CSV roster to review all person image states safely before any import or Media Library mutation.
 - `Academy Awards > Person Portrait Queue` imports one verified TMDb person profile image at a time, marks the attachment with plugin-owned person portrait metadata, and keeps title/backdrop art barred from person portraits.
