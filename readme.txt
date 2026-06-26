@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.58
+Stable tag: 2.7.59
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.59 =
+* Promoted Sound Mixing to the premium Oscars category dossier system, giving the route a richer command-band and era-ledger presentation without changing data or URLs.
 
 = 2.7.58 =
 * Kept department-style technical credits text-led on public Oscars routes so Sound Department labels do not auto-resolve into false company/person links.

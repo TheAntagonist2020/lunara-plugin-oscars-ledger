@@ -39,6 +39,9 @@ $assert(strpos($hub_template, '$aat_person_history_action_meta') !== false, 'His
 $assert(strpos($hub_template, "__('Company History', 'academy-awards-table')") !== false, 'Company history links should not be rendered as Person History.');
 $assert(strpos($hub_template, "'company-history'") !== false, 'Company history actions should expose a scoped action kind.');
 $assert(strpos($hub_template, 'aat-department-credit-label') !== false, 'Department-style credit text should receive a deliberate public presentation hook.');
+$assert(strpos($hub_template, "'SOUND MIXING' => array(") !== false, 'Sound Mixing should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Sound Mixing Dossier') !== false, 'Sound Mixing should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-sound-mixing-dossier') !== false, 'Sound Mixing should expose a route-scoped visual hook.');
 
 foreach (array(
     '.aat-generic-category-dossier',

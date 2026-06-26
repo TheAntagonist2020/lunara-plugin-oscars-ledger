@@ -2140,6 +2140,14 @@ get_header();
                     'title' => __('Film Editing Dossier', 'academy-awards-table'),
                     'subtitle' => __('The cutting-room file: pacing, structure, momentum, and the invisible craft behind the Academy winning edits.', 'academy-awards-table'),
                 ),
+                'SOUND MIXING' => array(
+                    'class' => 'aat-craft-dossier aat-sound-mixing-dossier',
+                    'title' => __('Sound Mixing Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The sound file: credited mixers, department records, studio-era traces, and the sonic craft trail behind Oscar history.', 'academy-awards-table'),
+                    'history_kicker' => __('Sound Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Sound Mixing Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Sound Mixing run.', 'academy-awards-table'),
+                ),
                 'COSTUME DESIGN' => array(
                     'class' => 'aat-craft-dossier aat-costume-dossier',
                     'title' => __('Costume Design Dossier', 'academy-awards-table'),
