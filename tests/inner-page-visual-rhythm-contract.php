@@ -29,6 +29,8 @@ $css = $source['assets/css/academy-awards-table.css'];
 
 $assert(strpos($plugin, 'public function get_name_entity_link_by_label($label)') !== false, 'Plugin should expose a label-to-name-entity resolver.');
 $assert(strpos($plugin, "'MUSIC (Original Song Score or Adaptation Score)' => 'Song Score and Adaptation Score'") !== false, 'Legacy song-score category should expose a polished display label.');
+$assert(strpos($plugin, "'WRITING (Original Story)' => 'Original Story'") !== false, 'Original Story category should expose a polished display label.');
+$assert(strpos($plugin, "'WRITING (Title Writing)' => 'Title Writing'") !== false, 'Title Writing category should expose a polished display label.');
 $assert(strpos($hub_template, '$aat_build_person_link_items') !== false, 'Hub template should build linked person chip items.');
 $assert(strpos($hub_template, 'aat-inner-route-system') !== false, 'Category shell should expose the shared inner route system hook.');
 $assert(strpos($hub_template, 'aat-generic-category-dossier') !== false, 'Non-premium categories should have a dossier-grade hook.');
@@ -89,6 +91,12 @@ $assert(strpos($hub_template, 'aat-cinematography-color-dossier') !== false, 'Co
 $assert(strpos($hub_template, "'MUSIC (ORIGINAL SONG SCORE OR ADAPTATION SCORE)' => array(") !== false, 'Song Score and Adaptation Score should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Song Score and Adaptation Score Dossier') !== false, 'Song Score and Adaptation Score should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-music-adaptation-score-dossier') !== false, 'Song Score and Adaptation Score should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'WRITING (ORIGINAL STORY)' => array(") !== false, 'Original Story should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Original Story Dossier') !== false, 'Original Story should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-writing-original-story-dossier') !== false, 'Original Story should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'WRITING (TITLE WRITING)' => array(") !== false, 'Title Writing should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Title Writing Dossier') !== false, 'Title Writing should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-writing-title-writing-dossier') !== false, 'Title Writing should expose a route-scoped visual hook.');
 
 foreach (array(
     '.aat-generic-category-dossier',

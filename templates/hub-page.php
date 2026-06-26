@@ -2150,6 +2150,22 @@ get_header();
                     'title' => __('Adapted Screenplay Dossier', 'academy-awards-table'),
                     'subtitle' => __('The adaptation file: books, plays, articles, lives, sequels, and source material transformed into Oscar-winning screen stories.', 'academy-awards-table'),
                 ),
+                'WRITING (ORIGINAL STORY)' => array(
+                    'class' => 'aat-writing-dossier aat-writing-original-story-dossier',
+                    'title' => __('Original Story Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The original story file: studio-era ideas, credited writers, and the pre-screenplay Oscar trail that shaped narrative awards before the modern category settled.', 'academy-awards-table'),
+                    'history_kicker' => __('Story Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Original Story Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Original Story run.', 'academy-awards-table'),
+                ),
+                'WRITING (TITLE WRITING)' => array(
+                    'class' => 'aat-writing-dossier aat-writing-title-writing-dossier',
+                    'title' => __('Title Writing Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The one-year title-writing file: a preserved early-cinema writing branch that keeps the first Oscar ledger from flattening into a footnote.', 'academy-awards-table'),
+                    'history_kicker' => __('Early Writing Browser', 'academy-awards-table'),
+                    'history_title' => __('Title Writing in the Early Ledger', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Title Writing record.', 'academy-awards-table'),
+                ),
                 'CINEMATOGRAPHY' => array(
                     'class' => 'aat-craft-dossier aat-cinematography-dossier',
                     'title' => __('Cinematography Dossier', 'academy-awards-table'),
