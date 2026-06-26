@@ -5,6 +5,7 @@ $root = dirname(__DIR__);
 $files = array(
     'academy-awards-table.php',
     'templates/hub-page.php',
+    'templates/entity-page.php',
     'assets/css/academy-awards-table.css',
 );
 
@@ -25,6 +26,7 @@ foreach ($files as $relative_path) {
 
 $plugin = $source['academy-awards-table.php'];
 $hub_template = $source['templates/hub-page.php'];
+$entity_template = $source['templates/entity-page.php'];
 $css = $source['assets/css/academy-awards-table.css'];
 
 $premium_map_start = strpos($hub_template, '$premium_category_profiles = array(');
@@ -197,12 +199,22 @@ $assert(strpos($hub_template, 'aat-era-chapter-media-label') !== false, 'Premium
 $assert(strpos($hub_template, '$category_scale_class =') !== false, 'Premium category pages should compute a route-scale class from category depth.');
 $assert(strpos($hub_template, 'aat-category-scale-marathon') !== false, 'Long-running category pages should expose a marathon scale hook.');
 $assert(strpos($hub_template, 'is-count-<?php echo esc_attr((string) $era_visual_count); ?>') !== false, 'Era media grids should expose verified visual-count hooks.');
+$assert(strpos($entity_template, '$profile_dossier_cards') !== false, 'Oscar entity pages should build profile dossier cards.');
+$assert(strpos($entity_template, 'aat-profile-dossier-strip') !== false, 'Oscar entity pages should render a profile dossier strip.');
+$assert(strpos($entity_template, 'aat-profile-dossier-track') !== false, 'Oscar entity pages should render a bounded dossier track.');
+$assert(strpos($entity_template, 'is-title-touchpoint') !== false, 'Title entity pages should expose result-card touchpoints.');
+$assert(strpos($entity_template, 'is-film-touchpoint') !== false, 'Person and company entity pages should expose related-film touchpoints.');
+$assert(strpos($entity_template, 'has-no-media') !== false, 'Profile dossier cards should render intentional text-led states when media is unavailable.');
 $assert(strpos($css, '.aat-era-chapter-media-grid') !== false, 'Premium category era poster grid should be styled in the public stylesheet.');
 $assert(strpos($css, 'grid-template-columns: repeat(4, minmax(0, 1fr))') !== false, 'Premium category era poster grid should become a dense mobile strip.');
 $assert(strpos($css, '.aat-category-scale-brief') !== false, 'Brief category dossiers should receive scaled-down spacing and command cards.');
 $assert(strpos($css, '.aat-category-scale-marathon') !== false, 'Long-running category dossiers should receive denser ledger-card sizing.');
 $assert(strpos($css, '.aat-era-chapter-media-grid.is-count-4') !== false, 'Era poster grids should resize intentionally when four verified visuals exist.');
 $assert(strpos($css, '.aat-era-chapter-media-label') !== false, 'Era visual source labels should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-profile-dossier-strip') !== false, 'Profile dossier strip should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-profile-dossier-track') !== false, 'Profile dossier track should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-profile-dossier-card.has-no-media') !== false, 'Profile dossier text-led cards should have deliberate styling.');
+$assert(strpos($css, 'scroll-snap-type: x proximity') !== false, 'Profile dossier mobile track should remain horizontally contained.');
 
 foreach (array(
     '.aat-generic-category-dossier',

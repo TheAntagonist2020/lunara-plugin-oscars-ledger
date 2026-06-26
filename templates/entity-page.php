@@ -645,6 +645,136 @@ if ($entity !== 'title' && !empty($distinct_films)) {
     }
 }
 
+$profile_dossier_cards = array();
+$profile_dossier_seen = array();
+$profile_dossier_limit = (int) apply_filters('aat_entity_profile_dossier_limit', 6, $entity, $id);
+$profile_dossier_limit = max(3, min(8, $profile_dossier_limit));
+
+$add_profile_dossier_card = function($card) use (&$profile_dossier_cards, &$profile_dossier_seen, $profile_dossier_limit) {
+    if (count($profile_dossier_cards) >= $profile_dossier_limit) {
+        return;
+    }
+
+    $key = trim((string) ($card['key'] ?? ''));
+    if ($key === '') {
+        $key = md5((string) wp_json_encode($card));
+    }
+    if (isset($profile_dossier_seen[$key])) {
+        return;
+    }
+
+    $profile_dossier_seen[$key] = true;
+    $profile_dossier_cards[] = $card;
+};
+
+$build_profile_dossier_media = function($visual_package, $visual_label, $media_class = 'aat-profile-dossier-image') {
+    $visual_package = is_array($visual_package) ? $visual_package : array();
+    $visual_label = trim((string) $visual_label);
+    if (!empty($visual_package['poster_html'])) {
+        return (string) $visual_package['poster_html'];
+    }
+    if (!empty($visual_package['portrait_url'])) {
+        return '<img class="' . esc_attr($media_class) . '" src="' . esc_url($visual_package['portrait_url']) . '" alt="' . esc_attr($visual_label !== '' ? sprintf(__('%s portrait', 'academy-awards-table'), $visual_label) : __('Portrait', 'academy-awards-table')) . '" loading="lazy" decoding="async" />';
+    }
+    if (!empty($visual_package['poster_url'])) {
+        return '<img class="' . esc_attr($media_class) . '" src="' . esc_url($visual_package['poster_url']) . '" alt="' . esc_attr($visual_label !== '' ? sprintf(__('%s poster', 'academy-awards-table'), $visual_label) : __('Poster', 'academy-awards-table')) . '" loading="lazy" decoding="async" />';
+    }
+    if (!empty($visual_package['backdrop_url'])) {
+        return '<img class="' . esc_attr($media_class) . '" src="' . esc_url($visual_package['backdrop_url']) . '" alt="' . esc_attr($visual_label !== '' ? $visual_label : __('Oscar profile image', 'academy-awards-table')) . '" loading="lazy" decoding="async" />';
+    }
+    if (!empty($visual_package['fallback_html'])) {
+        return (string) $visual_package['fallback_html'];
+    }
+
+    return '';
+};
+
+if ($entity === 'title' && is_array($rows)) {
+    $title_visual_package = is_array($visual) ? $visual : array();
+    $title_dossier_media = $build_profile_dossier_media($title_visual_package, $label ? $label : strtoupper($id));
+    $title_dossier_style = $get_visual_backdrop_style($title_visual_package, array('prefer_poster' => true, 'position' => 'center top'));
+    $title_dossier_index = 0;
+    foreach ($rows as $dossier_row) {
+        $dossier_ceremony = intval($dossier_row['ceremony'] ?? 0);
+        $dossier_year = trim((string) ($dossier_row['year'] ?? ''));
+        $dossier_category = trim((string) ($dossier_row['canonical_category'] ?? $dossier_row['category'] ?? ''));
+        $dossier_category_label = $dossier_category !== '' ? $format_category($dossier_category) : __('Oscar Result', 'academy-awards-table');
+        $dossier_is_winner = (!empty($dossier_row['winner']) && (int) $dossier_row['winner'] === 1);
+        $dossier_url = $dossier_category !== '' ? $aat->get_category_url($dossier_category) : '';
+        if ($dossier_url === '' && $dossier_ceremony > 0) {
+            $dossier_url = $build_ceremony_url($dossier_ceremony);
+        }
+        $dossier_meta = array();
+        if ($dossier_year !== '') {
+            $dossier_meta[] = $dossier_year;
+        }
+        if ($dossier_ceremony > 0) {
+            $dossier_meta[] = sprintf(__('%s ceremony', 'academy-awards-table'), $ordinal($dossier_ceremony));
+        }
+        $current_title_dossier_media = $title_dossier_index === 0 ? $title_dossier_media : '';
+
+        $add_profile_dossier_card(array(
+            'key' => 'title-' . $dossier_ceremony . '-' . $dossier_category,
+            'kind' => 'title-touchpoint',
+            'classes' => array('is-title-touchpoint', $current_title_dossier_media !== '' ? 'has-media' : 'has-no-media', $title_dossier_style !== '' ? 'aat-card-has-backdrop' : ''),
+            'url' => $dossier_url,
+            'style' => $title_dossier_style,
+            'media_html' => $current_title_dossier_media,
+            'kicker' => $dossier_is_winner ? __('Winner', 'academy-awards-table') : __('Nominee', 'academy-awards-table'),
+            'title' => $dossier_category_label,
+            'meta' => implode(' / ', $dossier_meta),
+            'body' => $dossier_is_winner
+                ? __('A winning ledger stop in this title profile.', 'academy-awards-table')
+                : __('A nominated ledger stop in this title profile.', 'academy-awards-table'),
+            'tags' => array_filter(array($dossier_is_winner ? __('Winner', 'academy-awards-table') : __('Nominee', 'academy-awards-table'), $dossier_year)),
+        ));
+        $title_dossier_index++;
+    }
+} elseif ($entity !== 'title' && !empty($distinct_films)) {
+    foreach ($distinct_films as $dossier_film_id => $dossier_film_stats) {
+        $dossier_film_label = $get_title_label($dossier_film_id);
+        if ($dossier_film_label === '') {
+            $dossier_film_label = strtoupper((string) $dossier_film_id);
+        }
+        $dossier_film_visual = $get_title_visual($dossier_film_id, 'medium_large');
+        $dossier_film_media = $build_profile_dossier_media($dossier_film_visual, $dossier_film_label);
+        $dossier_film_style = $get_visual_backdrop_style($dossier_film_visual, array('prefer_poster' => true, 'position' => 'center top'));
+        $dossier_film_nominations = intval($dossier_film_stats['nominations'] ?? 0);
+        $dossier_film_wins = intval($dossier_film_stats['wins'] ?? 0);
+        $dossier_film_categories = is_array($dossier_film_stats['categories'] ?? null) ? count($dossier_film_stats['categories']) : 0;
+        $dossier_film_year = trim((string) ($dossier_film_stats['latest_year'] ?? ''));
+        $dossier_film_meta = array();
+        if ($dossier_film_year !== '') {
+            $dossier_film_meta[] = $dossier_film_year;
+        }
+        if ($dossier_film_categories > 0) {
+            $dossier_film_meta[] = sprintf(_n('%s category', '%s categories', $dossier_film_categories, 'academy-awards-table'), number_format_i18n($dossier_film_categories));
+        }
+
+        $add_profile_dossier_card(array(
+            'key' => 'film-' . $dossier_film_id,
+            'kind' => 'film-touchpoint',
+            'classes' => array('is-film-touchpoint', $dossier_film_media !== '' ? 'has-media' : 'has-no-media', $dossier_film_style !== '' ? 'aat-card-has-backdrop' : ''),
+            'url' => $build_entity_url($dossier_film_id),
+            'style' => $dossier_film_style,
+            'media_html' => $dossier_film_media,
+            'kicker' => $dossier_film_wins > 0 ? __('Winning Film', 'academy-awards-table') : __('Nominated Film', 'academy-awards-table'),
+            'title' => $dossier_film_label,
+            'meta' => implode(' / ', $dossier_film_meta),
+            'body' => sprintf(
+                _n('%1$s nomination and %2$s win attached to this profile file.', '%1$s nominations and %2$s wins attached to this profile file.', $dossier_film_nominations, 'academy-awards-table'),
+                number_format_i18n($dossier_film_nominations),
+                number_format_i18n($dossier_film_wins)
+            ),
+            'tags' => array_filter(array(
+                sprintf(_n('%s nomination', '%s nominations', $dossier_film_nominations, 'academy-awards-table'), number_format_i18n($dossier_film_nominations)),
+                $dossier_film_wins > 0 ? sprintf(_n('%s win', '%s wins', $dossier_film_wins, 'academy-awards-table'), number_format_i18n($dossier_film_wins)) : '',
+                $dossier_film_year,
+            )),
+        ));
+    }
+}
+
 get_header();
 ?>
 <div class="aat-container aat-entity-page aat-profile-file <?php echo esc_attr($profile_file_class); ?>">
@@ -830,6 +960,68 @@ get_header();
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
+        </section>
+    <?php endif; ?>
+
+    <?php if (!empty($profile_dossier_cards)) : ?>
+        <?php
+        $profile_dossier_title = $entity === 'title'
+            ? __('Title Oscar Path', 'academy-awards-table')
+            : __('Profile Dossier', 'academy-awards-table');
+        $profile_dossier_description = $entity === 'title'
+            ? __('A tighter pass through the Oscar results that shape this title file before the full ledger opens below.', 'academy-awards-table')
+            : __('The films and results that keep this profile connected to the wider Oscar Ledger.', 'academy-awards-table');
+        ?>
+        <section class="aat-profile-dossier-strip" aria-label="<?php echo esc_attr($profile_dossier_title); ?>">
+            <div class="aat-section-head aat-profile-dossier-head">
+                <div>
+                    <p class="aat-profile-dossier-kicker"><?php echo esc_html__('Dossier Strip', 'academy-awards-table'); ?></p>
+                    <h2 class="aat-section-title"><?php echo esc_html($profile_dossier_title); ?></h2>
+                </div>
+                <p class="aat-section-description"><?php echo esc_html($profile_dossier_description); ?></p>
+            </div>
+
+            <div class="aat-profile-dossier-track">
+                <?php foreach ($profile_dossier_cards as $profile_dossier_card) : ?>
+                    <?php
+                    $profile_card_classes = array_filter(array_merge(array('aat-profile-dossier-card'), (array) ($profile_dossier_card['classes'] ?? array())));
+                    $profile_card_url = trim((string) ($profile_dossier_card['url'] ?? ''));
+                    $profile_card_style = trim((string) ($profile_dossier_card['style'] ?? ''));
+                    $profile_card_media_html = (string) ($profile_dossier_card['media_html'] ?? '');
+                    $profile_card_tags = array_values(array_filter((array) ($profile_dossier_card['tags'] ?? array()), 'strlen'));
+                    ?>
+                    <article class="<?php echo esc_attr(implode(' ', $profile_card_classes)); ?>"<?php if ($profile_card_style !== '') : ?> style="<?php echo esc_attr($profile_card_style); ?>"<?php endif; ?>>
+                        <?php if ($profile_card_media_html !== '') : ?>
+                            <a class="aat-profile-dossier-media" href="<?php echo esc_url($profile_card_url !== '' ? $profile_card_url : '#oscar-history'); ?>">
+                                <?php echo $profile_card_media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                            </a>
+                        <?php endif; ?>
+                        <div class="aat-profile-dossier-body">
+                            <p class="aat-profile-dossier-label"><?php echo esc_html($profile_dossier_card['kicker'] ?? ''); ?></p>
+                            <h3 class="aat-profile-dossier-title">
+                                <?php if ($profile_card_url !== '') : ?>
+                                    <a href="<?php echo esc_url($profile_card_url); ?>"><?php echo esc_html($profile_dossier_card['title'] ?? ''); ?></a>
+                                <?php else : ?>
+                                    <?php echo esc_html($profile_dossier_card['title'] ?? ''); ?>
+                                <?php endif; ?>
+                            </h3>
+                            <?php if (!empty($profile_dossier_card['meta'])) : ?>
+                                <p class="aat-profile-dossier-meta"><?php echo esc_html($profile_dossier_card['meta']); ?></p>
+                            <?php endif; ?>
+                            <?php if (!empty($profile_dossier_card['body'])) : ?>
+                                <p class="aat-profile-dossier-copy"><?php echo esc_html($profile_dossier_card['body']); ?></p>
+                            <?php endif; ?>
+                            <?php if (!empty($profile_card_tags)) : ?>
+                                <div class="aat-profile-dossier-tags" aria-label="<?php esc_attr_e('Profile dossier markers', 'academy-awards-table'); ?>">
+                                    <?php foreach (array_slice($profile_card_tags, 0, 3) as $profile_card_tag) : ?>
+                                        <span class="aat-profile-dossier-badge"><?php echo esc_html($profile_card_tag); ?></span>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
         </section>
     <?php endif; ?>
 

@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.77
+Stable tag: 2.7.78
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.78 =
+* Added a profile dossier strip to Oscar title, person, and company pages so deep-click routes surface key results and related films before the full ledger stretch.
+* Kept the strip media-safe by using existing verified visual packages and rendering intentional text-led cards when no public image is available.
 
 = 2.7.77 =
 * Filled premium category era-browser poster chambers from verified nominee title visuals after winner visuals are exhausted.
