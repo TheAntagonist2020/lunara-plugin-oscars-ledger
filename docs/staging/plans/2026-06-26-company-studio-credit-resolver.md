@@ -89,6 +89,12 @@ acceptance:
 - Reporting rebuild and relevant award cache clearing are invoked after a successful apply.
 - Department, mixed, source-gap, and slot-mismatch rows cannot apply.
 
+current checkpoint:
+
+- 2026-06-26 live classifier samples found no true company row requiring mutation: sampled company rows already had ordered `co...` IDs and no slot mismatches.
+- Keep T5 paused unless a true company row with missing or incorrect `co...` IDs is found.
+- Department rows remain text-led and must not be forced through a fake company/person apply path.
+
 ## T6 Public Route Verification
 
 goal: Confirm the applied row renders as credible public company credit without corrupting person pages or leaking admin metadata.
