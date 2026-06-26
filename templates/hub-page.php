@@ -2115,10 +2115,37 @@ get_header();
                     'history_title' => __('Best Picture Through the Eras', 'academy-awards-table'),
                     'era_copy' => __('A visual entry point into the %1$s Best Picture run.', 'academy-awards-table'),
                 ),
+                'UNIQUE AND ARTISTIC PICTURE' => array(
+                    'class' => 'aat-feature-dossier aat-early-picture-dossier aat-unique-artistic-picture-dossier',
+                    'kicker' => __('First Ceremony Picture File', 'academy-awards-table'),
+                    'title' => __('Unique and Artistic Picture Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The parallel first-ceremony picture honor: a preserved early Academy branch that keeps Sunrise, Fox, and the artistic-picture experiment visible beside the later Best Picture line.', 'academy-awards-table'),
+                    'history_kicker' => __('First Ceremony Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Unique and Artistic Picture in the Early Ledger', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Unique and Artistic Picture record.', 'academy-awards-table'),
+                ),
                 'DIRECTING' => array(
                     'class' => 'aat-directing-dossier',
                     'title' => __('Best Director Dossier', 'academy-awards-table'),
                     'subtitle' => __('The director file: winners, nominated films, and the authorship trails that shaped Oscar history from studio craft to modern auteur campaigns.', 'academy-awards-table'),
+                ),
+                'DIRECTING (DRAMATIC PICTURE)' => array(
+                    'class' => 'aat-directing-dossier aat-early-directing-dossier aat-directing-dramatic-picture-dossier',
+                    'kicker' => __('First Ceremony Directing File', 'academy-awards-table'),
+                    'title' => __('Dramatic Picture Directing Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The first Academy directing branch for dramatic pictures: a short-lived but essential authorship lane before the category collapsed into a single Best Director history.', 'academy-awards-table'),
+                    'history_kicker' => __('First Ceremony Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Dramatic Picture Directing in the Early Ledger', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Dramatic Picture Directing record.', 'academy-awards-table'),
+                ),
+                'DIRECTING (COMEDY PICTURE)' => array(
+                    'class' => 'aat-directing-dossier aat-early-directing-dossier aat-directing-comedy-picture-dossier',
+                    'kicker' => __('First Ceremony Directing File', 'academy-awards-table'),
+                    'title' => __('Comedy Picture Directing Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The first Academy directing branch for comedy pictures: a tiny but revealing route into how the earliest Oscar ledger separated tonal craft before the modern directing race took shape.', 'academy-awards-table'),
+                    'history_kicker' => __('First Ceremony Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Comedy Picture Directing in the Early Ledger', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Comedy Picture Directing record.', 'academy-awards-table'),
                 ),
                 'ASSISTANT DIRECTOR' => array(
                     'class' => 'aat-craft-dossier aat-early-craft-dossier aat-assistant-director-dossier',
@@ -2147,6 +2174,15 @@ get_header();
                     'class' => 'aat-acting-dossier aat-supporting-actress-dossier',
                     'title' => __('Best Supporting Actress Dossier', 'academy-awards-table'),
                     'subtitle' => __('The supporting actress file: breakthrough performances, veteran coronations, and the ceremony trails that give the category its shape.', 'academy-awards-table'),
+                ),
+                'CASTING' => array(
+                    'class' => 'aat-craft-dossier aat-production-dossier aat-casting-dossier',
+                    'kicker' => __('Oscar Casting File', 'academy-awards-table'),
+                    'title' => __('Casting Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The Academy\'s newest competitive craft branch: casting directors, ensemble architecture, and the long-overdue recognition of how movies find the faces that define them.', 'academy-awards-table'),
+                    'history_kicker' => __('Casting Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Casting Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Casting run.', 'academy-awards-table'),
                 ),
                 'WRITING (ORIGINAL SCREENPLAY)' => array(
                     'class' => 'aat-writing-dossier',
@@ -2626,15 +2662,17 @@ get_header();
                 body .aat-container .aat-premium-category-dossier .aat-dossier-command-band{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;align-self:center!important;min-width:0!important}
                 body .aat-container .aat-premium-category-dossier .aat-dossier-command-card{display:grid!important;align-content:end!important;gap:8px!important;min-height:118px!important;padding:18px!important;border:1px solid rgba(201,169,97,.2)!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.018)),rgba(6,15,26,.7)!important}
                 body .aat-container .aat-premium-category-dossier .aat-dossier-command-card.is-latest{grid-column:1/-1!important;min-height:148px!important}
-                body .aat-container .aat-premium-category-dossier .aat-era-chapter-visual{display:grid!important;grid-template-columns:minmax(96px,148px) minmax(0,1fr)!important;gap:18px!important;margin:0 0 18px!important;padding:14px!important}
-                body .aat-container .aat-premium-category-dossier .aat-era-chapter-media{display:block!important;min-height:188px!important;max-width:148px!important;aspect-ratio:2/3!important}
+                body .aat-container .aat-premium-category-dossier .aat-era-chapter-visual{display:grid!important;grid-template-columns:minmax(174px,260px) minmax(0,1fr)!important;gap:18px!important;margin:0 0 18px!important;padding:14px!important}
+                body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;align-self:stretch!important;max-width:260px!important}
+                body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-single{grid-template-columns:minmax(0,148px)!important;max-width:148px!important}
+                body .aat-container .aat-premium-category-dossier .aat-era-chapter-media{display:block!important;min-height:0!important;max-width:100%!important;aspect-ratio:2/3!important}
                 body .aat-container .aat-premium-category-dossier .aat-ledger-card{display:grid!important;grid-template-columns:minmax(136px,.26fr) minmax(0,1fr)!important;gap:16px!important}
                 body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-history-actions{display:flex!important;flex-wrap:wrap!important;gap:6px!important;margin-top:8px!important;padding-top:8px!important}
                 body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-winner-circle-action{width:auto!important;min-height:30px!important;padding:6px 10px!important;flex:0 1 auto!important}
                 @media(max-width:900px){body .aat-container .aat-premium-category-dossier .aat-dossier-hero{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card{grid-template-columns:minmax(110px,.3fr) minmax(0,1fr)!important}}
                 @media(max-width:620px){body .aat-container .aat-premium-category-dossier .aat-dossier-hero .aat-hub-title{max-width:100%!important;font-size:clamp(2.2rem,11vw,3rem)!important;overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important}}
                 @media(max-width:620px){body .aat-container .aat-premium-category-dossier.aat-archive-specials-dossier .aat-dossier-hero .aat-hub-title,body .aat-container .aat-premium-category-dossier.aat-scitech-dossier .aat-dossier-hero .aat-hub-title{max-width:100%!important;font-size:clamp(1.9rem,9vw,2.55rem)!important;line-height:1.04!important;text-wrap:balance!important}}
-                @media(max-width:620px){body .aat-container .aat-category-dossier.aat-premium-category-dossier{width:min(100%,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;margin-left:auto!important;margin-right:auto!important;overflow-x:hidden!important}body .aat-container .aat-premium-category-dossier .aat-dossier-command-band,body .aat-container .aat-premium-category-dossier .aat-era-chapter-visual,body .aat-container .aat-premium-category-dossier .aat-ledger-card{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-premium-category-dossier .aat-dossier-hero{width:100%!important;padding:16px!important}body .aat-container .aat-premium-category-dossier .aat-dossier-hero .aat-hub-subtitle{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-dossier-command-card,body .aat-container .aat-premium-category-dossier .aat-dossier-command-card.is-latest{min-height:0!important;padding:15px!important}body .aat-container .aat-premium-category-dossier .aat-dossier-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;max-width:100%!important}body .aat-container .aat-premium-category-dossier .aat-dossier-actions .aat-btn{width:100%!important;min-width:0!important;max-width:100%!important;justify-content:center!important}body .aat-container .aat-premium-category-dossier .aat-era-chapter-media{min-height:0!important;max-width:158px!important;aspect-ratio:2/3!important}body .aat-container .aat-premium-category-dossier .aat-era-chapter-copy h4,body .aat-container .aat-premium-category-dossier .aat-era-chapter-copy p{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card{padding:12px!important;gap:10px!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-ceremony-meta{display:grid!important;justify-content:start!important;gap:4px!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-history-title,body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-history-meta,body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-history-detail{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-winner-circle-action{min-height:28px!important;padding:5px 9px!important;font-size:.63rem!important}}
+                @media(max-width:620px){body .aat-container .aat-category-dossier.aat-premium-category-dossier{width:min(100%,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;margin-left:auto!important;margin-right:auto!important;overflow-x:hidden!important}body .aat-container .aat-premium-category-dossier .aat-dossier-command-band,body .aat-container .aat-premium-category-dossier .aat-era-chapter-visual,body .aat-container .aat-premium-category-dossier .aat-ledger-card{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-premium-category-dossier .aat-dossier-hero{width:100%!important;padding:16px!important}body .aat-container .aat-premium-category-dossier .aat-dossier-hero .aat-hub-subtitle{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-dossier-command-card,body .aat-container .aat-premium-category-dossier .aat-dossier-command-card.is-latest{min-height:0!important;padding:15px!important}body .aat-container .aat-premium-category-dossier .aat-dossier-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;max-width:100%!important}body .aat-container .aat-premium-category-dossier .aat-dossier-actions .aat-btn{width:100%!important;min-width:0!important;max-width:100%!important;justify-content:center!important}body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;max-width:100%!important}body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-single{grid-template-columns:minmax(0,158px)!important;max-width:158px!important}body .aat-container .aat-premium-category-dossier .aat-era-chapter-media{min-height:0!important;max-width:100%!important;aspect-ratio:2/3!important}body .aat-container .aat-premium-category-dossier .aat-era-chapter-copy h4,body .aat-container .aat-premium-category-dossier .aat-era-chapter-copy p{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card{padding:12px!important;gap:10px!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-ceremony-meta{display:grid!important;justify-content:start!important;gap:4px!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-history-title,body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-history-meta,body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-category-history-detail{max-width:29ch!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-winner-circle-action{min-height:28px!important;padding:5px 9px!important;font-size:.63rem!important}}
                 @media(max-width:620px){body .aat-container .aat-premium-category-dossier .aat-section-title{max-width:100%!important;font-size:clamp(1.46rem,8vw,1.92rem)!important;line-height:1.12!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-card{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;max-width:100%!important;min-height:0!important;padding:12px!important;gap:12px!important}body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-media-link,body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-media{display:block!important;width:min(100%,148px)!important;max-width:148px!important;min-height:0!important;aspect-ratio:2/3!important}body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-body,body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-title,body .aat-container .aat-premium-category-dossier .aat-hub-spotlight-meta,body .aat-container .aat-premium-category-dossier .aat-hub-chip-stack,body .aat-container .aat-premium-category-dossier .aat-hub-chip{min-width:0!important;max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;text-wrap:auto!important}body .aat-container .aat-premium-category-dossier .aat-hub-chip,body .aat-container .aat-premium-category-dossier .aat-winner-circle-action{justify-content:center!important;text-align:center!important;white-space:normal!important}}
             </style>
         <?php endif; ?>
@@ -2863,45 +2901,60 @@ get_header();
                             <h3 class="aat-decade-heading"><?php echo esc_html($decade_bucket['label']); ?></h3>
 
                             <?php
-                            $era_spotlight = array();
+                            $era_spotlights = array();
+                            $era_seen_titles = array();
+                            $era_visual_limit = (int) apply_filters('aat_category_era_visual_limit', 4, $canonical);
+                            $era_visual_limit = max(1, min(4, $era_visual_limit));
                             if ($is_premium_category_dossier && !empty($decade_bucket['ceremonies']) && is_array($decade_bucket['ceremonies'])) {
                                 foreach ($decade_bucket['ceremonies'] as $era_ceremony_data) {
                                     $era_winners = !empty($era_ceremony_data['winner_rows']) && is_array($era_ceremony_data['winner_rows']) ? $era_ceremony_data['winner_rows'] : array();
                                     foreach ($era_winners as $era_winner) {
                                         $era_film_id = strtolower(trim((string) ($era_winner['film_id'] ?? '')));
-                                        if ($era_film_id === '') {
+                                        if ($era_film_id === '' || isset($era_seen_titles[$era_film_id])) {
                                             continue;
                                         }
-                                        $era_visual = method_exists($aat, 'get_title_visual_package') ? $aat->get_title_visual_package($era_film_id, 'medium') : array();
+                                        $era_visual = $aat_get_visual_package($era_film_id, 'medium');
                                         if (empty($era_visual['poster_html']) && empty($era_visual['poster_url']) && empty($era_visual['backdrop_url'])) {
                                             continue;
                                         }
-                                        $era_spotlight = array(
+                                        $era_seen_titles[$era_film_id] = true;
+                                        $era_spotlights[] = array(
                                             'entry'  => $aat_enrich_winner_entry_links($era_winner),
                                             'visual' => $era_visual,
                                         );
-                                        break 2;
+                                        if (count($era_spotlights) >= $era_visual_limit) {
+                                            break 2;
+                                        }
                                     }
                                 }
                             }
                             ?>
-                            <?php if (!empty($era_spotlight)) :
-                                $era_entry = $era_spotlight['entry'];
-                                $era_visual = $era_spotlight['visual'];
+                            <?php if (!empty($era_spotlights)) :
+                                $era_entry = $era_spotlights[0]['entry'];
+                                $era_visual = $era_spotlights[0]['visual'];
                                 $era_film_label = !empty($era_entry['film']) ? (string) $era_entry['film'] : (string) ($era_entry['primary_label'] ?? '');
                                 $era_film_url = !empty($era_entry['film_url']) ? (string) $era_entry['film_url'] : (!empty($era_entry['primary_url']) ? (string) $era_entry['primary_url'] : '');
                                 $era_backdrop_style = $aat_get_card_backdrop_style($era_visual['poster_url'] ?? '', $era_visual['backdrop_url'] ?? '');
                             ?>
                                 <article class="aat-era-chapter-visual<?php echo $era_backdrop_style !== '' ? ' aat-card-has-backdrop' : ''; ?>"<?php if ($era_backdrop_style !== '') : ?> style="<?php echo esc_attr($era_backdrop_style); ?>"<?php endif; ?>>
-                                    <a class="aat-era-chapter-media" href="<?php echo esc_url($era_film_url !== '' ? $era_film_url : $db_url); ?>">
-                                        <?php if (!empty($era_visual['poster_html'])) : ?>
-                                            <?php echo $era_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                                        <?php elseif (!empty($era_visual['poster_url'])) : ?>
-                                            <img src="<?php echo esc_url($era_visual['poster_url']); ?>" alt="<?php echo esc_attr($era_film_label); ?> poster" loading="lazy" decoding="async" />
-                                        <?php endif; ?>
-                                    </a>
+                                    <div class="aat-era-chapter-media-grid<?php echo count($era_spotlights) === 1 ? ' is-single' : ''; ?>">
+                                        <?php foreach ($era_spotlights as $era_spotlight) :
+                                            $era_strip_entry = $era_spotlight['entry'];
+                                            $era_strip_visual = $era_spotlight['visual'];
+                                            $era_strip_label = !empty($era_strip_entry['film']) ? (string) $era_strip_entry['film'] : (string) ($era_strip_entry['primary_label'] ?? '');
+                                            $era_strip_url = !empty($era_strip_entry['film_url']) ? (string) $era_strip_entry['film_url'] : (!empty($era_strip_entry['primary_url']) ? (string) $era_strip_entry['primary_url'] : '');
+                                        ?>
+                                            <a class="aat-era-chapter-media" href="<?php echo esc_url($era_strip_url !== '' ? $era_strip_url : $db_url); ?>" aria-label="<?php echo esc_attr($era_strip_label); ?>">
+                                                <?php if (!empty($era_strip_visual['poster_html'])) : ?>
+                                                    <?php echo $era_strip_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                                <?php elseif (!empty($era_strip_visual['poster_url'])) : ?>
+                                                    <img src="<?php echo esc_url($era_strip_visual['poster_url']); ?>" alt="<?php echo esc_attr($era_strip_label); ?> poster" loading="lazy" decoding="async" />
+                                                <?php endif; ?>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
                                     <div class="aat-era-chapter-copy">
-                                        <span class="aat-winner-badge"><?php echo esc_html__('Era Marker', 'academy-awards-table'); ?></span>
+                                        <span class="aat-winner-badge"><?php echo esc_html__('Era Visuals', 'academy-awards-table'); ?></span>
                                         <h4><?php echo $aat_render_hub_text_link($era_film_label, $era_film_url, 'aat-hub-inline-link aat-hub-inline-link-title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></h4>
                                         <p><?php echo esc_html(sprintf((string) $premium_category_profile['era_copy'], $decade_bucket['label'], $label)); ?></p>
                                     </div>

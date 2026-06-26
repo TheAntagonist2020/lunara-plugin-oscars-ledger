@@ -871,7 +871,7 @@ body .aat-container .aat-premium-category-dossier .aat-era-browser {
 
 .aat-era-chapter-visual {
     display: grid;
-    grid-template-columns: minmax(96px, 148px) minmax(0, 1fr);
+    grid-template-columns: minmax(174px, 260px) minmax(0, 1fr);
     gap: 18px;
     align-items: stretch;
     margin: 0 0 18px;
@@ -885,15 +885,41 @@ body .aat-container .aat-premium-category-dossier .aat-era-browser {
 
 body .aat-container .aat-premium-category-dossier .aat-era-chapter-visual {
     display: grid !important;
-    grid-template-columns: minmax(96px, 148px) minmax(0, 1fr) !important;
+    grid-template-columns: minmax(174px, 260px) minmax(0, 1fr) !important;
     gap: 18px !important;
     margin: 0 0 18px !important;
     padding: 14px !important;
 }
 
+.aat-era-chapter-media-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    align-self: stretch;
+    max-width: 260px;
+}
+
+body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    align-self: stretch !important;
+    max-width: 260px !important;
+}
+
+.aat-era-chapter-media-grid.is-single {
+    grid-template-columns: minmax(0, 148px);
+    max-width: 148px;
+}
+
+body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-single {
+    grid-template-columns: minmax(0, 148px) !important;
+    max-width: 148px !important;
+}
+
 .aat-era-chapter-media {
     display: block;
-    min-height: 188px;
+    min-height: 0;
     border-radius: 8px;
     overflow: hidden;
     background: rgba(255,255,255,.04);
@@ -902,8 +928,8 @@ body .aat-container .aat-premium-category-dossier .aat-era-chapter-visual {
 
 body .aat-container .aat-premium-category-dossier .aat-era-chapter-media {
     display: block !important;
-    min-height: 188px !important;
-    max-width: 148px !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
     aspect-ratio: 2 / 3 !important;
 }
 
@@ -1134,15 +1160,35 @@ body .aat-container .aat-premium-category-dossier .aat-ledger-card {
         padding: 14px;
     }
 
+    .aat-era-chapter-media-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        max-width: 100%;
+    }
+
+    body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        max-width: 100% !important;
+    }
+
+    .aat-era-chapter-media-grid.is-single {
+        grid-template-columns: minmax(0, 158px);
+        max-width: 158px;
+    }
+
+    body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-single {
+        grid-template-columns: minmax(0, 158px) !important;
+        max-width: 158px !important;
+    }
+
     .aat-era-chapter-media {
         min-height: 0;
-        max-width: 158px;
+        max-width: 100%;
         aspect-ratio: 2 / 3;
     }
 
     body .aat-container .aat-premium-category-dossier .aat-era-chapter-media {
         min-height: 0 !important;
-        max-width: 158px !important;
+        max-width: 100% !important;
         aspect-ratio: 2 / 3 !important;
     }
 

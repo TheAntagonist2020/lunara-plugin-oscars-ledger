@@ -27,8 +27,44 @@ $plugin = $source['academy-awards-table.php'];
 $hub_template = $source['templates/hub-page.php'];
 $css = $source['assets/css/academy-awards-table.css'];
 
+$premium_map_start = strpos($hub_template, '$premium_category_profiles = array(');
+$premium_map_end = $premium_map_start !== false ? strpos($hub_template, '$premium_category_profile = isset', $premium_map_start) : false;
+$premium_map_source = ($premium_map_start !== false && $premium_map_end !== false)
+    ? substr($hub_template, $premium_map_start, $premium_map_end - $premium_map_start)
+    : '';
+
+$premium_profile_keys = array();
+if ($premium_map_source !== '') {
+    preg_match_all("/^\\s*'([^']+)'\\s*=>\\s*array\\(/m", $premium_map_source, $premium_matches);
+    $premium_profile_keys = array_fill_keys(array_map('strtoupper', $premium_matches[1] ?? array()), true);
+}
+
+$bundled_category_keys = array();
+$csv_path = $root . '/data/oscars.csv';
+$csv = fopen($csv_path, 'r');
+if ($csv) {
+    $headers = fgetcsv($csv, 0, "\t");
+    $canonical_index = is_array($headers) ? array_search('CanonicalCategory', $headers, true) : false;
+    if ($canonical_index !== false) {
+        while (($row = fgetcsv($csv, 0, "\t")) !== false) {
+            $canonical = strtoupper(trim((string) ($row[$canonical_index] ?? '')));
+            if ($canonical !== '') {
+                $bundled_category_keys[$canonical] = true;
+            }
+        }
+    }
+    fclose($csv);
+}
+
+$missing_premium_profiles = array_values(array_diff(array_keys($bundled_category_keys), array_keys($premium_profile_keys)));
+sort($missing_premium_profiles);
+
 $assert(strpos($plugin, 'public function get_name_entity_link_by_label($label)') !== false, 'Plugin should expose a label-to-name-entity resolver.');
 $assert(strpos($plugin, "'MUSIC (Original Song Score or Adaptation Score)' => 'Song Score and Adaptation Score'") !== false, 'Legacy song-score category should expose a polished display label.');
+$assert(strpos($plugin, "'CASTING' => 'Casting'") !== false, 'Casting should expose a polished display label.');
+$assert(strpos($plugin, "'DIRECTING (Dramatic Picture)' => 'Dramatic Picture Directing'") !== false, 'Dramatic Picture Directing should expose a polished display label.');
+$assert(strpos($plugin, "'DIRECTING (Comedy Picture)' => 'Comedy Picture Directing'") !== false, 'Comedy Picture Directing should expose a polished display label.');
+$assert(strpos($plugin, "'UNIQUE AND ARTISTIC PICTURE' => 'Unique and Artistic Picture'") !== false, 'Unique and Artistic Picture should expose a polished display label.');
 $assert(strpos($plugin, "'ASSISTANT DIRECTOR' => 'Assistant Director'") !== false, 'Assistant Director should expose a polished display label.');
 $assert(strpos($plugin, "'DANCE DIRECTION' => 'Dance Direction'") !== false, 'Dance Direction should expose a polished display label.');
 $assert(strpos($plugin, "'HONORARY AWARD' => 'Honorary Award'") !== false, 'Honorary Award should expose a polished display label.');
@@ -117,6 +153,18 @@ $assert(strpos($hub_template, 'aat-cinematography-color-dossier') !== false, 'Co
 $assert(strpos($hub_template, "'MUSIC (ORIGINAL SONG SCORE OR ADAPTATION SCORE)' => array(") !== false, 'Song Score and Adaptation Score should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Song Score and Adaptation Score Dossier') !== false, 'Song Score and Adaptation Score should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-music-adaptation-score-dossier') !== false, 'Song Score and Adaptation Score should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'CASTING' => array(") !== false, 'Casting should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Casting Dossier') !== false, 'Casting should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-casting-dossier') !== false, 'Casting should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'DIRECTING (DRAMATIC PICTURE)' => array(") !== false, 'Dramatic Picture Directing should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Dramatic Picture Directing Dossier') !== false, 'Dramatic Picture Directing should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-directing-dramatic-picture-dossier') !== false, 'Dramatic Picture Directing should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'DIRECTING (COMEDY PICTURE)' => array(") !== false, 'Comedy Picture Directing should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Comedy Picture Directing Dossier') !== false, 'Comedy Picture Directing should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-directing-comedy-picture-dossier') !== false, 'Comedy Picture Directing should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'UNIQUE AND ARTISTIC PICTURE' => array(") !== false, 'Unique and Artistic Picture should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Unique and Artistic Picture Dossier') !== false, 'Unique and Artistic Picture should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-unique-artistic-picture-dossier') !== false, 'Unique and Artistic Picture should expose a route-scoped visual hook.');
 $assert(strpos($hub_template, "'WRITING (ORIGINAL STORY)' => array(") !== false, 'Original Story should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Original Story Dossier') !== false, 'Original Story should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-writing-original-story-dossier') !== false, 'Original Story should expose a route-scoped visual hook.');
@@ -138,6 +186,13 @@ $assert(strpos($hub_template, 'aat-short-subject-one-reel-dossier') !== false, '
 $assert(strpos($hub_template, "'SHORT SUBJECT (TWO-REEL)' => array(") !== false, 'Two-reel Short Subject should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Two-reel Short Subject Dossier') !== false, 'Two-reel Short Subject should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-short-subject-two-reel-dossier') !== false, 'Two-reel Short Subject should expose a route-scoped visual hook.');
+$assert(count($bundled_category_keys) >= 60, 'Bundled Oscars CSV should expose the canonical category set.');
+$assert(count($missing_premium_profiles) === 0, 'Every bundled category should resolve to a premium dossier profile. Missing: ' . implode(', ', $missing_premium_profiles));
+$assert(strpos($hub_template, 'aat_category_era_visual_limit') !== false, 'Premium category era browser should expose a bounded visual-density filter.');
+$assert(strpos($hub_template, 'aat-era-chapter-media-grid') !== false, 'Premium category era browser should render verified visuals as a poster grid.');
+$assert(strpos($hub_template, 'count($era_spotlights) >= $era_visual_limit') !== false, 'Premium category era browser should collect more than one verified visual when available.');
+$assert(strpos($css, '.aat-era-chapter-media-grid') !== false, 'Premium category era poster grid should be styled in the public stylesheet.');
+$assert(strpos($css, 'grid-template-columns: repeat(4, minmax(0, 1fr))') !== false, 'Premium category era poster grid should become a dense mobile strip.');
 
 foreach (array(
     '.aat-generic-category-dossier',
