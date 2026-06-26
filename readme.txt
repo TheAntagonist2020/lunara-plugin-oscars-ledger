@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.52
+Stable tag: 2.7.53
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,12 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.53 =
+* Added the private company/studio credit resolver foundation for Sound Mixing source rows that are not safe person-credit rows.
+* Added `wp_aat_company_credit_row_reviews` and a read-only `company-credit-audit` classifier for company, department, mixed, source-gap, and slot-pairing review buckets.
+* Added a private `Company / Studio Credits` admin review lane for saving one row's review state, entity kind, proposed `co...` IDs, display override, and correction note without mutating source Oscar rows.
+* The first pass performs no source mutation; `co...` apply behavior remains deferred until private review and validation are complete.
 
 = 2.7.52 =
 * Added a private full-row person-credit resolver for multi-credit Oscar source rows.

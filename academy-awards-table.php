@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.52
+ * Version: 2.7.53
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.52');
+define('AAT_VERSION', '2.7.53');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -62,6 +62,11 @@ class Academy_Awards_Table {
     private function get_person_credit_row_reviews_table_name() {
         global $wpdb;
         return $wpdb->prefix . 'aat_person_credit_row_reviews';
+    }
+
+    private function get_company_credit_row_reviews_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_company_credit_row_reviews';
     }
 
     private function get_omdb_poster_reviews_table_name() {
@@ -341,6 +346,40 @@ class Academy_Awards_Table {
         dbDelta($sql_reviews);
     }
 
+    private function maybe_create_company_credit_row_reviews_table($charset_collate = '') {
+        global $wpdb;
+
+        if ($charset_collate === '') {
+            $charset_collate = $wpdb->get_charset_collate();
+            if (stripos($charset_collate, 'latin1') !== false) {
+                $charset_collate = 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
+            }
+        }
+
+        $reviews_table = $this->get_company_credit_row_reviews_table_name();
+        $sql_reviews = "CREATE TABLE IF NOT EXISTS $reviews_table (
+            source_award_id mediumint(9) unsigned NOT NULL,
+            category_slug varchar(191) NOT NULL DEFAULT '',
+            credit_labels text,
+            review_state varchar(32) NOT NULL DEFAULT 'needs_review',
+            entity_kind varchar(32) NOT NULL DEFAULT 'source_gap',
+            proposed_nominee_ids text,
+            display_label_override text,
+            correction_note text,
+            reviewer_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
+            reviewed_at datetime DEFAULT NULL,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (source_award_id),
+            KEY review_state (review_state),
+            KEY entity_kind (entity_kind),
+            KEY category_slug (category_slug),
+            KEY reviewed_at (reviewed_at)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql_reviews);
+    }
+
     private function maybe_create_omdb_reviews_table($charset_collate = '') {
         global $wpdb;
 
@@ -568,6 +607,7 @@ class Academy_Awards_Table {
         $this->maybe_create_reporting_tables($charset_collate);
         $this->maybe_create_person_credit_reviews_table($charset_collate);
         $this->maybe_create_person_credit_row_reviews_table($charset_collate);
+        $this->maybe_create_company_credit_row_reviews_table($charset_collate);
         $this->maybe_create_omdb_reviews_table($charset_collate);
         $this->maybe_create_omdb_poster_reviews_table($charset_collate);
         $this->maybe_create_ceremony_writeups_table($charset_collate);
@@ -590,6 +630,7 @@ class Academy_Awards_Table {
         // Ensure lightweight annotation tables even if a historical db_version is ahead of the plugin version.
         $this->maybe_create_person_credit_reviews_table();
         $this->maybe_create_person_credit_row_reviews_table();
+        $this->maybe_create_company_credit_row_reviews_table();
         $this->maybe_create_omdb_reviews_table();
         $this->maybe_create_omdb_poster_reviews_table();
         $this->maybe_create_ceremony_writeups_table();
@@ -680,6 +721,7 @@ class Academy_Awards_Table {
         $this->maybe_create_reporting_tables($charset_collate);
         $this->maybe_create_person_credit_reviews_table($charset_collate);
         $this->maybe_create_person_credit_row_reviews_table($charset_collate);
+        $this->maybe_create_company_credit_row_reviews_table($charset_collate);
         $this->maybe_create_omdb_reviews_table($charset_collate);
         $this->maybe_create_omdb_poster_reviews_table($charset_collate);
         $this->maybe_create_ceremony_writeups_table($charset_collate);
@@ -6117,6 +6159,17 @@ class Academy_Awards_Table {
             } else {
                 $message = __('Full-row person-credit review saved. Source nominee_ids remain unchanged until the guarded apply step is confirmed.', 'academy-awards-table');
             }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_company_credit_row_review_nonce'])) {
+            check_admin_referer('aat_company_credit_row_review', 'aat_company_credit_row_review_nonce');
+
+            $company_row_review_result = $this->save_company_credit_row_review_record_from_request($_POST);
+
+            if (is_wp_error($company_row_review_result)) {
+                $message = $company_row_review_result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $message = __('Company/studio credit review saved. Source nominee_ids remain unchanged; this lane is annotation-only.', 'academy-awards-table');
+            }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_person_credit_source_correction_nonce'])) {
             check_admin_referer('aat_person_credit_source_correction', 'aat_person_credit_source_correction_nonce');
 
@@ -6252,9 +6305,20 @@ class Academy_Awards_Table {
         $person_credit_limit = max(1, min(100, $person_credit_limit));
         $person_credit_offset = isset($_GET['person_credit_offset']) ? intval($_GET['person_credit_offset']) : 0;
         $person_credit_offset = max(0, $person_credit_offset);
+        $company_credit_category = isset($_GET['company_credit_category']) ? sanitize_title(wp_unslash($_GET['company_credit_category'])) : 'sound-mixing';
+        $company_credit_review_state = isset($_GET['company_credit_review_state']) ? sanitize_key(wp_unslash($_GET['company_credit_review_state'])) : 'all';
+        $company_credit_entity_kind = isset($_GET['company_credit_entity_kind']) ? sanitize_key(wp_unslash($_GET['company_credit_entity_kind'])) : 'all';
+        $company_credit_limit = isset($_GET['company_credit_limit']) ? intval($_GET['company_credit_limit']) : 25;
+        $company_credit_limit = max(1, min(100, $company_credit_limit));
+        $company_credit_offset = isset($_GET['company_credit_offset']) ? intval($_GET['company_credit_offset']) : 0;
+        $company_credit_offset = max(0, $company_credit_offset);
         $person_credit_review_states = $this->get_person_credit_review_states();
         $person_credit_row_review_states = $this->get_person_credit_row_review_states();
         $person_credit_review_filter_labels = $this->get_person_credit_review_filter_labels();
+        $company_credit_review_states = $this->get_company_credit_row_review_states();
+        $company_credit_review_filter_labels = $this->get_company_credit_review_filter_labels();
+        $company_credit_entity_kinds = $this->get_company_credit_entity_kinds();
+        $company_credit_entity_filter_labels = $this->get_company_credit_entity_filter_labels();
         $person_credit_queue = $this->get_person_credit_review_queue_rows(array(
             'category' => $person_credit_category,
             'review_state' => $person_credit_review_state,
@@ -6263,6 +6327,15 @@ class Academy_Awards_Table {
         ));
         $person_credit_rows = is_array($person_credit_queue['rows'] ?? null) ? $person_credit_queue['rows'] : array();
         $person_credit_summary = is_array($person_credit_queue['summary'] ?? null) ? $person_credit_queue['summary'] : array();
+        $company_credit_queue = $this->get_company_credit_review_queue_rows(array(
+            'category' => $company_credit_category,
+            'review_state' => $company_credit_review_state,
+            'entity_kind' => $company_credit_entity_kind,
+            'limit' => $company_credit_limit,
+            'offset' => $company_credit_offset,
+        ));
+        $company_credit_rows = is_array($company_credit_queue['rows'] ?? null) ? $company_credit_queue['rows'] : array();
+        $company_credit_summary = is_array($company_credit_queue['summary'] ?? null) ? $company_credit_queue['summary'] : array();
         $tmdb_key_configured = $this->get_tmdb_api_key() !== '';
 
         include AAT_PLUGIN_DIR . 'templates/person-portrait-import-admin.php';
@@ -9441,6 +9514,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
      * wp aat profile-images coverage --results-csv=/private/tmdb_profile_results.csv --batch=oscars-profile-images-20260625 --sample=25
      * wp aat profile-images existing-media-audit --folder=PEOPLE --sample=25 --output-csv=/private/people-media-reconciliation.csv
      * wp aat profile-images person-credit-audit --category=sound-mixing --state=unresolved --sample=50 --output-csv=/private/person-credit-reconciliation.csv
+     * wp aat profile-images company-credit-audit --category=sound-mixing --state=all --sample=80 --output-csv=/private/company-credit-reconciliation.csv
      * wp aat profile-images person-credit-stage --input-csv=/private/person-credit-batch-01.csv
      * wp aat profile-images person-credit-stage --input-csv=/private/person-credit-batch-01.csv --commit
      */
@@ -9450,8 +9524,27 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
 
         $mode = isset($args[0]) ? sanitize_key((string) $args[0]) : 'dry-run';
-        if (!in_array($mode, array('dry-run', 'import', 'coverage', 'existing-media-audit', 'person-credit-audit', 'person-credit-stage'), true)) {
-            WP_CLI::error('Mode must be dry-run, import, coverage, existing-media-audit, person-credit-audit, or person-credit-stage.');
+        if (!in_array($mode, array('dry-run', 'import', 'coverage', 'existing-media-audit', 'person-credit-audit', 'company-credit-audit', 'person-credit-stage'), true)) {
+            WP_CLI::error('Mode must be dry-run, import, coverage, existing-media-audit, person-credit-audit, company-credit-audit, or person-credit-stage.');
+        }
+
+        if ($mode === 'company-credit-audit') {
+            $options = $this->normalize_profile_image_company_credit_audit_cli_args(is_array($assoc_args) ? $assoc_args : array());
+            if (is_wp_error($options)) {
+                WP_CLI::error($options->get_error_message());
+            }
+
+            $audit = $this->build_profile_image_company_credit_audit($options);
+            if (is_wp_error($audit)) {
+                WP_CLI::error($audit->get_error_message());
+            }
+
+            $summary = is_array($audit['summary'] ?? null) ? $audit['summary'] : array();
+            $samples = is_array($audit['samples'] ?? null) ? $audit['samples'] : array();
+            $this->profile_image_batch_cli_report($summary);
+            $this->profile_image_company_credit_audit_cli_samples($samples);
+            WP_CLI::success('Company and studio credit classifier audit complete.');
+            return;
         }
 
         if ($mode === 'person-credit-stage') {
@@ -10119,6 +10212,700 @@ public function get_person_visual_package($nm_id, $size = 'large') {
 
         fclose($handle);
         return true;
+    }
+
+    private function normalize_profile_image_company_credit_audit_cli_args($assoc_args) {
+        $clean_path = function($value) {
+            return trim((string) $value, " \t\n\r\0\x0B\"'");
+        };
+
+        $category = isset($assoc_args['category']) ? sanitize_title((string) $assoc_args['category']) : '';
+        $sample = isset($assoc_args['sample']) ? intval($assoc_args['sample']) : 80;
+        $state = isset($assoc_args['state']) ? sanitize_key((string) $assoc_args['state']) : 'all';
+        $output_csv = isset($assoc_args['output-csv']) ? $clean_path($assoc_args['output-csv']) : '';
+        $allowed_states = array('all', 'company', 'department', 'mixed', 'source_gap', 'person', 'slot_mismatch');
+
+        if (!in_array($state, $allowed_states, true)) {
+            return new WP_Error('aat_company_credit_audit_bad_state', 'Pass --state as one of: ' . implode(', ', $allowed_states) . '.');
+        }
+
+        if ($output_csv !== '') {
+            $dir = dirname($output_csv);
+            if ($dir === '' || !is_dir($dir) || !is_writable($dir)) {
+                return new WP_Error('company_credit_audit_output_not_private', 'The --output-csv directory must exist and be writable.');
+            }
+        }
+
+        return array(
+            'mode' => 'company-credit-audit',
+            'category' => $category,
+            'sample' => max(0, min(500, $sample)),
+            'state' => $state,
+            'output_csv' => $output_csv,
+        );
+    }
+
+    private function parse_company_credit_row_nominee_id_slots($raw_ids, $preserve_empty = true) {
+        $raw_ids = str_replace(array("\r\n", "\r"), "\n", (string) $raw_ids);
+        $raw_ids = trim($raw_ids);
+        if ($raw_ids === '') {
+            return array();
+        }
+
+        if (strpos($raw_ids, "\n") !== false) {
+            $parts = explode("\n", $raw_ids);
+        } elseif (strpos($raw_ids, '|') !== false) {
+            $parts = explode('|', $raw_ids);
+        } else {
+            $parts = preg_split('/\s*,\s*/', $raw_ids);
+        }
+
+        $slots = array();
+        foreach ((array) $parts as $part) {
+            $part = strtolower(trim(sanitize_text_field((string) $part)));
+            if ($part === '') {
+                if ($preserve_empty) {
+                    $slots[] = '';
+                }
+                continue;
+            }
+
+            $slots[] = $part;
+        }
+
+        return $slots;
+    }
+
+    private function validate_company_credit_row_nominee_id_slots($nominee_ids, $allow_blank = true) {
+        foreach ((array) $nominee_ids as $index => $nominee_id) {
+            $nominee_id = strtolower(trim((string) $nominee_id));
+            if ($nominee_id === '' && $allow_blank) {
+                continue;
+            }
+
+            if (!$this->is_company_entity_id($nominee_id)) {
+                return new WP_Error(
+                    'aat_company_credit_row_bad_company_id',
+                    sprintf(
+                        __('Nominee ID slot %1$d must be a valid IMDb co ID%2$s.', 'academy-awards-table'),
+                        intval($index) + 1,
+                        $allow_blank ? __(' or blank', 'academy-awards-table') : ''
+                    )
+                );
+            }
+        }
+
+        return true;
+    }
+
+    private function get_company_credit_row_review_states() {
+        return array(
+            'needs_review' => __('Needs Review', 'academy-awards-table'),
+            'ready_to_apply' => __('Ready To Apply', 'academy-awards-table'),
+            'department_label_only' => __('Department Label Only', 'academy-awards-table'),
+            'source_gap' => __('Source Gap', 'academy-awards-table'),
+            'applied' => __('Applied', 'academy-awards-table'),
+            'ignore_accept' => __('Ignore / Accept', 'academy-awards-table'),
+        );
+    }
+
+    private function sanitize_company_credit_row_review_state($state) {
+        $state = sanitize_key((string) $state);
+        $states = $this->get_company_credit_row_review_states();
+        return isset($states[$state]) ? $state : 'needs_review';
+    }
+
+    private function get_company_credit_entity_kinds() {
+        return array(
+            'company' => __('Company / Studio', 'academy-awards-table'),
+            'department' => __('Department Label Only', 'academy-awards-table'),
+            'mixed' => __('Mixed Company / Department', 'academy-awards-table'),
+            'source_gap' => __('Source Gap', 'academy-awards-table'),
+            'person' => __('Person Credit', 'academy-awards-table'),
+            'slot_mismatch' => __('Slot Mismatch', 'academy-awards-table'),
+        );
+    }
+
+    private function sanitize_company_credit_entity_kind($kind) {
+        $kind = sanitize_key((string) $kind);
+        $kinds = $this->get_company_credit_entity_kinds();
+        return isset($kinds[$kind]) ? $kind : 'source_gap';
+    }
+
+    private function company_credit_label_has_department_signal($label) {
+        $label = strtolower((string) $label);
+        return (bool) preg_match('/\b(?:department|dept|sound department|recording department|studio sound department|sound staff|sound unit)\b/', $label);
+    }
+
+    private function company_credit_label_has_company_signal($label) {
+        $label = strtolower((string) $label);
+        return (bool) preg_match('/\b(?:company|companies|corp|corporation|inc|ltd|limited|llc|studio|studios|pictures|picture|production|productions|entertainment|films|cinema|columbia|fox|metro-goldwyn-mayer|mgm|universal|warner bros|warner brothers|paramount|rko|united artists|seven arts|shepperton|goldwyn|rca|republic)\b/', $label);
+    }
+
+    private function classify_company_credit_source_row($source_row) {
+        $labels = $this->get_person_credit_source_row_visible_labels($source_row);
+        $source_nominee_id_slots = $this->parse_company_credit_row_nominee_id_slots($source_row['nominee_ids'] ?? '', false);
+        $source_ids = array_values(array_filter(array_map('trim', $source_nominee_id_slots), 'strlen'));
+
+        $department_labels = 0;
+        $company_labels = 0;
+        $person_link_labels = 0;
+        foreach ($labels as $label) {
+            if ($this->company_credit_label_has_department_signal($label)) {
+                $department_labels++;
+            }
+            if ($this->company_credit_label_has_company_signal($label)) {
+                $company_labels++;
+            }
+
+            $link = $this->get_name_entity_link_by_label($label);
+            if ($this->is_name_entity_id(strtolower(trim((string) ($link['id'] ?? ''))))) {
+                $person_link_labels++;
+            }
+        }
+
+        $company_ids = array();
+        $person_ids = array();
+        $title_ids = array();
+        $other_ids = array();
+        foreach ($source_ids as $source_id) {
+            $source_id = strtolower(trim((string) $source_id));
+            if ($this->is_company_entity_id($source_id)) {
+                $company_ids[] = $source_id;
+            } elseif ($this->is_name_entity_id($source_id)) {
+                $person_ids[] = $source_id;
+            } elseif ($this->is_title_entity_id($source_id)) {
+                $title_ids[] = $source_id;
+            } else {
+                $other_ids[] = $source_id;
+            }
+        }
+
+        $label_count = count($labels);
+        $source_id_count = count($source_ids);
+        $has_department = $department_labels > 0;
+        $has_company = $company_labels > 0 || !empty($company_ids);
+        $slot_mismatch = ($has_company || $has_department) && $source_id_count > 0 && $label_count !== $source_id_count;
+
+        if ($has_department && $department_labels === $label_count) {
+            $entity_kind = 'department';
+        } elseif ($has_department && $has_company) {
+            $entity_kind = 'mixed';
+        } elseif ($has_department) {
+            $entity_kind = 'department';
+        } elseif ($has_company) {
+            $entity_kind = 'company';
+        } elseif (!empty($person_ids) || $person_link_labels > 0) {
+            $entity_kind = 'person';
+        } else {
+            $entity_kind = 'source_gap';
+        }
+
+        if ($entity_kind === 'company' && (!empty($person_ids) || !empty($title_ids) || !empty($other_ids))) {
+            $entity_kind = 'mixed';
+        }
+
+        return array(
+            'entity_kind' => $entity_kind,
+            'labels' => $labels,
+            'label_count' => $label_count,
+            'source_nominee_ids' => implode('|', $source_ids),
+            'source_id_count' => $source_id_count,
+            'company_id_count' => count($company_ids),
+            'person_id_count' => count($person_ids),
+            'title_id_count' => count($title_ids),
+            'department_label_count' => $department_labels,
+            'company_label_count' => $company_labels,
+            'person_link_label_count' => $person_link_labels,
+            'slot_mismatch' => $slot_mismatch ? 1 : 0,
+        );
+    }
+
+    private function build_profile_image_company_credit_audit($options) {
+        global $wpdb;
+
+        $category = sanitize_title((string) ($options['category'] ?? ''));
+        $state_filter = sanitize_key((string) ($options['state'] ?? 'all'));
+        $allowed_states = array('all', 'company', 'department', 'mixed', 'source_gap', 'person', 'slot_mismatch');
+        if (!in_array($state_filter, $allowed_states, true)) {
+            $state_filter = 'all';
+        }
+        $sample_limit = max(0, min(500, intval($options['sample'] ?? 80)));
+        $output_csv = (string) ($options['output_csv'] ?? '');
+
+        $table_name = $this->get_table_name();
+        $sql = "SELECT id, ceremony, year, canonical_category, category, film, name, nominees, nominee_ids, winner
+                FROM {$table_name}
+                WHERE (TRIM(COALESCE(nominees, '')) <> '' OR TRIM(COALESCE(name, '')) <> '')
+                ORDER BY ceremony DESC, canonical_category ASC, film ASC, id ASC";
+        $rows = $wpdb->get_results($sql, ARRAY_A);
+        if (!is_array($rows)) {
+            $rows = array();
+        }
+
+        $summary = array(
+            'mode' => 'company-credit-audit',
+            'category' => $category,
+            'state' => $state_filter,
+            'source_rows' => 0,
+            'candidate_rows' => 0,
+            'company' => 0,
+            'department' => 0,
+            'mixed' => 0,
+            'source_gap' => 0,
+            'person' => 0,
+            'slot_mismatch' => 0,
+            'missing_source_nominee_ids' => 0,
+            'label_id_mismatch' => 0,
+            'samples' => $sample_limit,
+            'output_csv' => $output_csv,
+        );
+        $audit_rows = array();
+
+        foreach ($rows as $source_row) {
+            $row_category = (string) ($source_row['canonical_category'] ?: ($source_row['category'] ?? ''));
+            if ($category !== '' && sanitize_title($row_category) !== $category) {
+                continue;
+            }
+
+            $summary['source_rows']++;
+            $classification = $this->classify_company_credit_source_row($source_row);
+            if (empty($classification['labels'])) {
+                continue;
+            }
+
+            $summary['candidate_rows']++;
+            $entity_kind = (string) ($classification['entity_kind'] ?? 'source_gap');
+            $slot_mismatch = !empty($classification['slot_mismatch']);
+            if (isset($summary[$entity_kind])) {
+                $summary[$entity_kind]++;
+            }
+            if ($slot_mismatch) {
+                $summary['slot_mismatch']++;
+                $summary['label_id_mismatch']++;
+            }
+            if (intval($classification['source_id_count'] ?? 0) < 1) {
+                $summary['missing_source_nominee_ids']++;
+            }
+
+            if ($state_filter !== 'all' && $state_filter !== $entity_kind && !($state_filter === 'slot_mismatch' && $slot_mismatch)) {
+                continue;
+            }
+
+            $audit_rows[] = array(
+                'source_award_id' => intval($source_row['id'] ?? 0),
+                'ceremony' => intval($source_row['ceremony'] ?? 0),
+                'year' => (string) ($source_row['year'] ?? ''),
+                'category' => $row_category,
+                'category_slug' => sanitize_title($row_category),
+                'film' => (string) ($source_row['film'] ?? ''),
+                'source_credit' => trim((string) (($source_row['nominees'] ?? '') ?: ($source_row['name'] ?? ''))),
+                'credit_labels' => implode('|', (array) ($classification['labels'] ?? array())),
+                'entity_kind' => $entity_kind,
+                'source_nominee_ids' => (string) ($classification['source_nominee_ids'] ?? ''),
+                'label_count' => intval($classification['label_count'] ?? 0),
+                'source_id_count' => intval($classification['source_id_count'] ?? 0),
+                'company_id_count' => intval($classification['company_id_count'] ?? 0),
+                'person_id_count' => intval($classification['person_id_count'] ?? 0),
+                'department_label_count' => intval($classification['department_label_count'] ?? 0),
+                'company_label_count' => intval($classification['company_label_count'] ?? 0),
+                'slot_mismatch' => $slot_mismatch ? 1 : 0,
+                'winner' => !empty($source_row['winner']) ? 1 : 0,
+            );
+        }
+
+        if ($output_csv !== '') {
+            $csv_result = $this->write_profile_image_company_credit_audit_csv($output_csv, $audit_rows);
+            if (is_wp_error($csv_result)) {
+                return $csv_result;
+            }
+        }
+
+        return array(
+            'summary' => $summary,
+            'rows' => $audit_rows,
+            'samples' => array_slice(array_values($audit_rows), 0, $sample_limit),
+        );
+    }
+
+    private function profile_image_company_credit_audit_cli_samples($samples) {
+        if (!defined('WP_CLI') || !WP_CLI || !class_exists('WP_CLI') || empty($samples)) {
+            return;
+        }
+
+        WP_CLI::line('company_credit_samples:');
+        foreach ($samples as $row) {
+            WP_CLI::line(sprintf(
+                '  - #%d | %s | labels=%d ids=%d mismatch=%d | %s | %s',
+                intval($row['source_award_id'] ?? 0),
+                (string) ($row['entity_kind'] ?? ''),
+                intval($row['label_count'] ?? 0),
+                intval($row['source_id_count'] ?? 0),
+                intval($row['slot_mismatch'] ?? 0),
+                (string) ($row['credit_labels'] ?? ''),
+                (string) ($row['source_nominee_ids'] ?? '')
+            ));
+        }
+    }
+
+    private function write_profile_image_company_credit_audit_csv($path, $rows) {
+        $path = trim((string) $path, " \t\n\r\0\x0B\"'");
+        if ($path === '') {
+            return true;
+        }
+
+        $handle = fopen($path, 'w');
+        if (!$handle) {
+            return new WP_Error('aat_company_credit_audit_csv_open_failed', 'Could not open --output-csv for writing.');
+        }
+
+        $fields = array(
+            'source_award_id',
+            'ceremony',
+            'year',
+            'category',
+            'category_slug',
+            'film',
+            'source_credit',
+            'credit_labels',
+            'entity_kind',
+            'source_nominee_ids',
+            'label_count',
+            'source_id_count',
+            'company_id_count',
+            'person_id_count',
+            'department_label_count',
+            'company_label_count',
+            'slot_mismatch',
+            'winner',
+        );
+
+        fputcsv($handle, $fields);
+        foreach ($rows as $row) {
+            $line = array();
+            foreach ($fields as $field) {
+                $line[] = isset($row[$field]) && is_scalar($row[$field]) ? (string) $row[$field] : '';
+            }
+            fputcsv($handle, $line);
+        }
+
+        fclose($handle);
+        return true;
+    }
+
+    private function get_company_credit_review_filter_labels() {
+        return array_merge(
+            array(
+                'all' => __('All Review States', 'academy-awards-table'),
+                'unreviewed' => __('Unreviewed', 'academy-awards-table'),
+            ),
+            $this->get_company_credit_row_review_states()
+        );
+    }
+
+    private function sanitize_company_credit_review_filter($filter) {
+        $filter = sanitize_key((string) $filter);
+        $labels = $this->get_company_credit_review_filter_labels();
+        return isset($labels[$filter]) ? $filter : 'all';
+    }
+
+    private function get_company_credit_entity_filter_labels() {
+        return array_merge(
+            array(
+                'all' => __('All Entity Kinds', 'academy-awards-table'),
+            ),
+            $this->get_company_credit_entity_kinds()
+        );
+    }
+
+    private function sanitize_company_credit_entity_filter($filter) {
+        $filter = sanitize_key((string) $filter);
+        $labels = $this->get_company_credit_entity_filter_labels();
+        return isset($labels[$filter]) ? $filter : 'all';
+    }
+
+    private function pack_company_credit_row_labels($labels) {
+        return $this->pack_person_credit_row_labels($labels);
+    }
+
+    private function unpack_company_credit_row_labels($labels) {
+        return $this->unpack_person_credit_row_labels($labels);
+    }
+
+    private function replace_company_credit_row_review_record($args) {
+        $source_award_id = absint($args['source_award_id'] ?? 0);
+        if ($source_award_id <= 0) {
+            return new WP_Error('aat_company_credit_row_review_bad_source', __('Invalid source award row for company/studio review.', 'academy-awards-table'));
+        }
+
+        $state = $this->sanitize_company_credit_row_review_state($args['review_state'] ?? '');
+        $entity_kind = $this->sanitize_company_credit_entity_kind($args['entity_kind'] ?? '');
+        $category_slug = sanitize_title((string) ($args['category_slug'] ?? ''));
+        $credit_labels = isset($args['credit_labels']) && is_array($args['credit_labels'])
+            ? $this->pack_company_credit_row_labels($args['credit_labels'])
+            : sanitize_textarea_field((string) ($args['credit_labels'] ?? ''));
+        $proposed_slots = isset($args['proposed_nominee_ids']) && is_array($args['proposed_nominee_ids'])
+            ? array_map('strval', $args['proposed_nominee_ids'])
+            : $this->parse_company_credit_row_nominee_id_slots($args['proposed_nominee_ids'] ?? '', true);
+        $validation = $this->validate_company_credit_row_nominee_id_slots($proposed_slots, true);
+        if (is_wp_error($validation)) {
+            return $validation;
+        }
+
+        $display_label_override = sanitize_textarea_field((string) ($args['display_label_override'] ?? ''));
+        $note = sanitize_textarea_field((string) ($args['correction_note'] ?? ''));
+        $reviewer_user_id = absint($args['reviewer_user_id'] ?? get_current_user_id());
+        $now = current_time('mysql');
+
+        global $wpdb;
+        $table = $this->get_company_credit_row_reviews_table_name();
+        $this->maybe_create_company_credit_row_reviews_table();
+
+        $result = $wpdb->replace(
+            $table,
+            array(
+                'source_award_id' => $source_award_id,
+                'category_slug' => $category_slug,
+                'credit_labels' => $credit_labels,
+                'review_state' => $state,
+                'entity_kind' => $entity_kind,
+                'proposed_nominee_ids' => implode('|', $proposed_slots),
+                'display_label_override' => $display_label_override,
+                'correction_note' => $note,
+                'reviewer_user_id' => $reviewer_user_id,
+                'reviewed_at' => $now,
+                'updated_at' => $now,
+            ),
+            array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s')
+        );
+
+        if ($result === false) {
+            return new WP_Error('aat_company_credit_row_review_save_failed', __('Could not save the company/studio credit review.', 'academy-awards-table'));
+        }
+
+        return true;
+    }
+
+    private function save_company_credit_row_review_record_from_request($request) {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error('aat_company_credit_row_review_forbidden', __('You do not have permission to save company/studio credit reviews.', 'academy-awards-table'));
+        }
+
+        $source_award_id = absint($request['aat_company_credit_row_source_award_id'] ?? 0);
+        $source_row = $this->get_person_credit_source_award_row($source_award_id);
+        if (empty($source_row)) {
+            return new WP_Error('aat_company_credit_row_review_missing_source', __('The source award row could not be reloaded.', 'academy-awards-table'));
+        }
+
+        $labels = $this->get_person_credit_source_row_visible_labels($source_row);
+        if (empty($labels)) {
+            return new WP_Error('aat_company_credit_row_review_missing_labels', __('The source award row no longer has visible company/studio credit labels.', 'academy-awards-table'));
+        }
+
+        $classification = $this->classify_company_credit_source_row($source_row);
+        $proposed_nominee_ids = isset($request['aat_company_credit_row_proposed_nominee_ids'])
+            ? wp_unslash($request['aat_company_credit_row_proposed_nominee_ids'])
+            : '';
+        $display_label_override = isset($request['aat_company_credit_row_display_label_override'])
+            ? sanitize_textarea_field(wp_unslash($request['aat_company_credit_row_display_label_override']))
+            : '';
+        $note = isset($request['aat_company_credit_row_review_note'])
+            ? sanitize_textarea_field(wp_unslash($request['aat_company_credit_row_review_note']))
+            : '';
+
+        return $this->replace_company_credit_row_review_record(array(
+            'source_award_id' => $source_award_id,
+            'category_slug' => $this->get_person_credit_source_row_category_slug($source_row),
+            'credit_labels' => $labels,
+            'review_state' => $request['aat_company_credit_row_review_state'] ?? '',
+            'entity_kind' => $request['aat_company_credit_row_entity_kind'] ?? ($classification['entity_kind'] ?? ''),
+            'proposed_nominee_ids' => $proposed_nominee_ids,
+            'display_label_override' => $display_label_override,
+            'correction_note' => $note,
+            'reviewer_user_id' => get_current_user_id(),
+        ));
+    }
+
+    private function get_company_credit_row_review_records_for_source_ids($source_award_ids) {
+        global $wpdb;
+
+        $ids = array();
+        foreach ((array) $source_award_ids as $source_award_id) {
+            $source_award_id = absint($source_award_id);
+            if ($source_award_id > 0) {
+                $ids[$source_award_id] = true;
+            }
+        }
+
+        if (empty($ids)) {
+            return array();
+        }
+
+        $table = $this->get_company_credit_row_reviews_table_name();
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        if ($exists !== $table) {
+            return array();
+        }
+
+        $ids = array_keys($ids);
+        $placeholders = implode(', ', array_fill(0, count($ids), '%d'));
+        $sql = $wpdb->prepare(
+            "SELECT source_award_id, category_slug, credit_labels, review_state, entity_kind, proposed_nominee_ids, display_label_override, correction_note, reviewer_user_id, reviewed_at, updated_at FROM $table WHERE source_award_id IN ($placeholders)",
+            $ids
+        );
+        $rows = $wpdb->get_results($sql, ARRAY_A);
+        if (!is_array($rows)) {
+            return array();
+        }
+
+        $states = $this->get_company_credit_row_review_states();
+        $entity_kinds = $this->get_company_credit_entity_kinds();
+        $out = array();
+        foreach ($rows as $row) {
+            $source_award_id = absint($row['source_award_id'] ?? 0);
+            if ($source_award_id <= 0) {
+                continue;
+            }
+
+            $state = $this->sanitize_company_credit_row_review_state($row['review_state'] ?? '');
+            $entity_kind = $this->sanitize_company_credit_entity_kind($row['entity_kind'] ?? '');
+            $out[$source_award_id] = array(
+                'source_award_id' => $source_award_id,
+                'category_slug' => sanitize_title((string) ($row['category_slug'] ?? '')),
+                'credit_labels' => (string) ($row['credit_labels'] ?? ''),
+                'credit_label_list' => $this->unpack_company_credit_row_labels($row['credit_labels'] ?? ''),
+                'review_state' => $state,
+                'review_state_label' => $states[$state] ?? $states['needs_review'],
+                'entity_kind' => $entity_kind,
+                'entity_kind_label' => $entity_kinds[$entity_kind] ?? $entity_kinds['source_gap'],
+                'proposed_nominee_ids' => (string) ($row['proposed_nominee_ids'] ?? ''),
+                'proposed_nominee_id_slots' => $this->parse_company_credit_row_nominee_id_slots($row['proposed_nominee_ids'] ?? '', true),
+                'display_label_override' => (string) ($row['display_label_override'] ?? ''),
+                'correction_note' => (string) ($row['correction_note'] ?? ''),
+                'reviewer_user_id' => (int) ($row['reviewer_user_id'] ?? 0),
+                'reviewed_at' => (string) ($row['reviewed_at'] ?? ''),
+                'updated_at' => (string) ($row['updated_at'] ?? ''),
+                'is_reviewed' => true,
+            );
+        }
+
+        return $out;
+    }
+
+    private function get_default_company_credit_row_review_record($source_award_id, $entity_kind = 'source_gap') {
+        $states = $this->get_company_credit_row_review_states();
+        $entity_kinds = $this->get_company_credit_entity_kinds();
+        $entity_kind = $this->sanitize_company_credit_entity_kind($entity_kind);
+
+        return array(
+            'source_award_id' => absint($source_award_id),
+            'category_slug' => '',
+            'credit_labels' => '',
+            'credit_label_list' => array(),
+            'review_state' => 'needs_review',
+            'review_state_label' => $states['needs_review'],
+            'entity_kind' => $entity_kind,
+            'entity_kind_label' => $entity_kinds[$entity_kind] ?? $entity_kinds['source_gap'],
+            'proposed_nominee_ids' => '',
+            'proposed_nominee_id_slots' => array(),
+            'display_label_override' => '',
+            'correction_note' => '',
+            'reviewer_user_id' => 0,
+            'reviewed_at' => '',
+            'updated_at' => '',
+            'is_reviewed' => false,
+        );
+    }
+
+    private function get_company_credit_review_queue_rows($options = array()) {
+        $category = isset($options['category']) ? sanitize_title((string) $options['category']) : 'sound-mixing';
+        $review_filter = $this->sanitize_company_credit_review_filter($options['review_state'] ?? 'all');
+        $entity_filter = $this->sanitize_company_credit_entity_filter($options['entity_kind'] ?? 'all');
+        $limit = isset($options['limit']) ? intval($options['limit']) : 25;
+        $limit = max(1, min(100, $limit));
+        $offset = isset($options['offset']) ? intval($options['offset']) : 0;
+        $offset = max(0, $offset);
+
+        $audit = $this->build_profile_image_company_credit_audit(array(
+            'category' => $category,
+            'state' => 'all',
+            'sample' => 0,
+            'output_csv' => '',
+        ));
+
+        if (is_wp_error($audit)) {
+            return array(
+                'rows' => array(),
+                'summary' => array(
+                    'error' => $audit->get_error_message(),
+                    'category' => $category,
+                    'company_credit_review_filter' => $review_filter,
+                    'company_credit_entity_filter' => $entity_filter,
+                    'limit' => $limit,
+                    'offset' => $offset,
+                ),
+            );
+        }
+
+        $audit_rows = is_array($audit['rows'] ?? null) ? $audit['rows'] : array();
+        $source_award_ids = array();
+        foreach ($audit_rows as $audit_row) {
+            $source_award_id = absint($audit_row['source_award_id'] ?? 0);
+            if ($source_award_id > 0) {
+                $source_award_ids[] = $source_award_id;
+            }
+        }
+
+        $review_records = $this->get_company_credit_row_review_records_for_source_ids($source_award_ids);
+        $entity_labels = $this->get_company_credit_entity_kinds();
+        $filtered_rows = array();
+        foreach ($audit_rows as $audit_row) {
+            $source_award_id = absint($audit_row['source_award_id'] ?? 0);
+            $classifier_kind = $this->sanitize_company_credit_entity_kind($audit_row['entity_kind'] ?? '');
+            if ($entity_filter !== 'all' && $entity_filter !== $classifier_kind && !($entity_filter === 'slot_mismatch' && !empty($audit_row['slot_mismatch']))) {
+                continue;
+            }
+
+            $review = isset($review_records[$source_award_id])
+                ? $review_records[$source_award_id]
+                : $this->get_default_company_credit_row_review_record($source_award_id, $classifier_kind);
+
+            if ($review_filter === 'unreviewed' && !empty($review['is_reviewed'])) {
+                continue;
+            }
+            if ($review_filter !== 'all' && $review_filter !== 'unreviewed' && (string) ($review['review_state'] ?? '') !== $review_filter) {
+                continue;
+            }
+
+            $label_list = $this->unpack_company_credit_row_labels((string) ($audit_row['credit_labels'] ?? ''));
+            $audit_row['credit_label_list'] = $label_list;
+            $audit_row['review'] = $review;
+            $audit_row['review_state'] = (string) ($review['review_state'] ?? 'needs_review');
+            $audit_row['review_state_label'] = (string) ($review['review_state_label'] ?? '');
+            $audit_row['stored_entity_kind'] = (string) ($review['entity_kind'] ?? $classifier_kind);
+            $audit_row['stored_entity_kind_label'] = (string) ($review['entity_kind_label'] ?? ($entity_labels[$classifier_kind] ?? ''));
+            $audit_row['entity_kind_label'] = (string) ($entity_labels[$classifier_kind] ?? '');
+            $audit_row['proposed_nominee_ids'] = (string) ($review['proposed_nominee_ids'] ?? '');
+            $audit_row['display_label_override'] = (string) ($review['display_label_override'] ?? '');
+            $audit_row['correction_note'] = (string) ($review['correction_note'] ?? '');
+            $audit_row['is_reviewed'] = !empty($review['is_reviewed']);
+            $filtered_rows[] = $audit_row;
+        }
+
+        $summary = is_array($audit['summary'] ?? null) ? $audit['summary'] : array();
+        $summary['category'] = $category;
+        $summary['company_credit_review_filter'] = $review_filter;
+        $summary['company_credit_entity_filter'] = $entity_filter;
+        $summary['reviewed_total'] = count($review_records);
+        $summary['filtered_total'] = count($filtered_rows);
+        $summary['returned'] = min($limit, max(0, count($filtered_rows) - $offset));
+        $summary['limit'] = $limit;
+        $summary['offset'] = $offset;
+
+        return array(
+            'rows' => array_slice($filtered_rows, $offset, $limit),
+            'summary' => $summary,
+        );
     }
 
     private function get_person_credit_review_states() {

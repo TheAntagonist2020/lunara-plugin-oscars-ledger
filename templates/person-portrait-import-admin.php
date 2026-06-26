@@ -14,6 +14,12 @@ $person_credit_summary = isset($person_credit_summary) && is_array($person_credi
 $person_credit_review_states = isset($person_credit_review_states) && is_array($person_credit_review_states) ? $person_credit_review_states : array();
 $person_credit_row_review_states = isset($person_credit_row_review_states) && is_array($person_credit_row_review_states) ? $person_credit_row_review_states : array();
 $person_credit_review_filter_labels = isset($person_credit_review_filter_labels) && is_array($person_credit_review_filter_labels) ? $person_credit_review_filter_labels : array();
+$company_credit_rows = isset($company_credit_rows) && is_array($company_credit_rows) ? $company_credit_rows : array();
+$company_credit_summary = isset($company_credit_summary) && is_array($company_credit_summary) ? $company_credit_summary : array();
+$company_credit_review_states = isset($company_credit_review_states) && is_array($company_credit_review_states) ? $company_credit_review_states : array();
+$company_credit_review_filter_labels = isset($company_credit_review_filter_labels) && is_array($company_credit_review_filter_labels) ? $company_credit_review_filter_labels : array();
+$company_credit_entity_kinds = isset($company_credit_entity_kinds) && is_array($company_credit_entity_kinds) ? $company_credit_entity_kinds : array();
+$company_credit_entity_filter_labels = isset($company_credit_entity_filter_labels) && is_array($company_credit_entity_filter_labels) ? $company_credit_entity_filter_labels : array();
 $selected_state = isset($selected_state) ? (string) $selected_state : 'candidate_external';
 $selected_limit = isset($selected_limit) ? intval($selected_limit) : 50;
 $selected_offset = isset($selected_offset) ? intval($selected_offset) : 0;
@@ -24,6 +30,11 @@ $person_credit_category = isset($person_credit_category) ? (string) $person_cred
 $person_credit_review_state = isset($person_credit_review_state) ? (string) $person_credit_review_state : 'all';
 $person_credit_limit = isset($person_credit_limit) ? intval($person_credit_limit) : 25;
 $person_credit_offset = isset($person_credit_offset) ? intval($person_credit_offset) : 0;
+$company_credit_category = isset($company_credit_category) ? (string) $company_credit_category : 'sound-mixing';
+$company_credit_review_state = isset($company_credit_review_state) ? (string) $company_credit_review_state : 'all';
+$company_credit_entity_kind = isset($company_credit_entity_kind) ? (string) $company_credit_entity_kind : 'all';
+$company_credit_limit = isset($company_credit_limit) ? intval($company_credit_limit) : 25;
+$company_credit_offset = isset($company_credit_offset) ? intval($company_credit_offset) : 0;
 $ids_raw = isset($ids_raw) ? (string) $ids_raw : '';
 $refresh_tmdb = !empty($refresh_tmdb);
 $tmdb_key_configured = !empty($tmdb_key_configured);
@@ -288,6 +299,161 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                                     <?php endif; ?>
                                 </div>
                             <?php endif; ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </section>
+
+    <section class="aat-admin-section aat-company-credit-review">
+        <h2><?php esc_html_e('Company / Studio Credits', 'academy-awards-table'); ?></h2>
+        <p><?php esc_html_e('Review studio, company, and department-style Oscar credit rows as private annotations before any future source-row repair exists. This queue accepts only IMDb co IDs in proposed slots and does not edit award results, nominees, media, or public routes.', 'academy-awards-table'); ?></p>
+        <div class="aat-admin-note">
+            <code>wp aat profile-images company-credit-audit --category=sound-mixing --state=all --sample=80 --output-csv=/private/company-credit-reconciliation.csv</code>
+        </div>
+
+        <?php if (!empty($company_credit_summary['error'])) : ?>
+            <div class="notice notice-error inline">
+                <p><?php echo esc_html((string) $company_credit_summary['error']); ?></p>
+            </div>
+        <?php else : ?>
+            <div class="aat-person-portrait-summary aat-company-credit-summary">
+                <span><?php echo esc_html(sprintf(__('Source rows: %d', 'academy-awards-table'), intval($company_credit_summary['source_rows'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Candidate rows: %d', 'academy-awards-table'), intval($company_credit_summary['candidate_rows'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Companies: %d', 'academy-awards-table'), intval($company_credit_summary['company'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Departments: %d', 'academy-awards-table'), intval($company_credit_summary['department'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Mixed: %d', 'academy-awards-table'), intval($company_credit_summary['mixed'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Slot mismatches: %d', 'academy-awards-table'), intval($company_credit_summary['slot_mismatch'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Saved reviews in window: %d', 'academy-awards-table'), intval($company_credit_summary['reviewed_total'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Showing: %d', 'academy-awards-table'), intval($company_credit_summary['returned'] ?? count($company_credit_rows)))); ?></span>
+            </div>
+        <?php endif; ?>
+
+        <form method="get" class="aat-person-portrait-filters aat-company-credit-review-controls">
+            <input type="hidden" name="page" value="academy-awards-person-portraits" />
+            <input type="hidden" name="state" value="<?php echo esc_attr($selected_state); ?>" />
+            <input type="hidden" name="limit" value="<?php echo esc_attr((string) $selected_limit); ?>" />
+            <input type="hidden" name="offset" value="<?php echo esc_attr((string) $selected_offset); ?>" />
+            <label>
+                <span><?php esc_html_e('Category slug', 'academy-awards-table'); ?></span>
+                <input type="text" name="company_credit_category" value="<?php echo esc_attr($company_credit_category); ?>" />
+            </label>
+            <label>
+                <span><?php esc_html_e('Review state', 'academy-awards-table'); ?></span>
+                <select name="company_credit_review_state">
+                    <?php foreach ($company_credit_review_filter_labels as $value => $label) : ?>
+                        <option value="<?php echo esc_attr($value); ?>" <?php selected($company_credit_review_state, $value); ?>><?php echo esc_html($label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>
+                <span><?php esc_html_e('Entity kind', 'academy-awards-table'); ?></span>
+                <select name="company_credit_entity_kind">
+                    <?php foreach ($company_credit_entity_filter_labels as $value => $label) : ?>
+                        <option value="<?php echo esc_attr($value); ?>" <?php selected($company_credit_entity_kind, $value); ?>><?php echo esc_html($label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>
+                <span><?php esc_html_e('Limit', 'academy-awards-table'); ?></span>
+                <input type="number" name="company_credit_limit" value="<?php echo esc_attr((string) $company_credit_limit); ?>" min="1" max="100" />
+            </label>
+            <label>
+                <span><?php esc_html_e('Offset', 'academy-awards-table'); ?></span>
+                <input type="number" name="company_credit_offset" value="<?php echo esc_attr((string) $company_credit_offset); ?>" min="0" />
+            </label>
+            <button type="submit" class="button"><?php esc_html_e('Refresh company/studio review', 'academy-awards-table'); ?></button>
+        </form>
+
+        <?php if (empty($company_credit_rows)) : ?>
+            <p class="aat-person-portrait-muted"><?php esc_html_e('No company or studio credit rows matched the current review window.', 'academy-awards-table'); ?></p>
+        <?php else : ?>
+            <div class="aat-person-portrait-adoption-grid aat-company-credit-review-grid">
+                <?php foreach ($company_credit_rows as $row) : ?>
+                    <?php
+                    $review = isset($row['review']) && is_array($row['review']) ? $row['review'] : array();
+                    $label_list = isset($row['credit_label_list']) && is_array($row['credit_label_list']) ? $row['credit_label_list'] : array();
+                    $source_ids = array_values(array_filter(array_map('trim', explode('|', (string) ($row['source_nominee_ids'] ?? ''))), 'strlen'));
+                    $stored_entity_kind = (string) ($row['stored_entity_kind'] ?? ($row['entity_kind'] ?? 'source_gap'));
+                    $review_state = (string) ($row['review_state'] ?? 'needs_review');
+                    $row_state_class = 'aat-company-credit-state-' . sanitize_html_class($review_state);
+                    ?>
+                    <article class="aat-person-portrait-adoption-card aat-company-credit-review-card">
+                        <div class="aat-person-portrait-adoption-body">
+                            <span class="aat-person-portrait-state <?php echo esc_attr($row_state_class); ?>">
+                                <?php echo esc_html((string) ($row['review_state_label'] ?? __('Needs Review', 'academy-awards-table'))); ?>
+                            </span>
+                            <h3><?php echo esc_html((string) ($row['film'] ?? __('Unknown film', 'academy-awards-table'))); ?></h3>
+                            <p>
+                                <code><?php echo esc_html(sprintf('#%d', intval($row['source_award_id'] ?? 0))); ?></code>
+                                <span><?php echo esc_html((string) ($row['entity_kind_label'] ?? '')); ?></span>
+                                <span><?php echo esc_html((string) ($row['category'] ?? '')); ?></span>
+                            </p>
+                            <dl>
+                                <div>
+                                    <dt><?php esc_html_e('Ceremony', 'academy-awards-table'); ?></dt>
+                                    <dd><?php echo esc_html((string) ($row['ceremony'] ?? '')); ?></dd>
+                                </div>
+                                <div>
+                                    <dt><?php esc_html_e('Year', 'academy-awards-table'); ?></dt>
+                                    <dd><?php echo esc_html((string) ($row['year'] ?? '')); ?></dd>
+                                </div>
+                                <div>
+                                    <dt><?php esc_html_e('Current nominee_ids', 'academy-awards-table'); ?></dt>
+                                    <dd><code><?php echo esc_html((string) ($row['source_nominee_ids'] ?? '')); ?></code></dd>
+                                </div>
+                                <div>
+                                    <dt><?php esc_html_e('Classifier', 'academy-awards-table'); ?></dt>
+                                    <dd><?php echo esc_html(sprintf(__('labels=%1$d ids=%2$d mismatch=%3$d', 'academy-awards-table'), intval($row['label_count'] ?? 0), intval($row['source_id_count'] ?? 0), intval($row['slot_mismatch'] ?? 0))); ?></dd>
+                                </div>
+                            </dl>
+                            <?php if (!empty($label_list)) : ?>
+                                <ol class="aat-company-credit-slots">
+                                    <?php foreach ($label_list as $slot_index => $slot_label) : ?>
+                                        <li>
+                                            <span><?php echo esc_html((string) $slot_label); ?></span>
+                                            <code><?php echo esc_html((string) ($source_ids[$slot_index] ?? 'blank')); ?></code>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ol>
+                            <?php endif; ?>
+                            <form method="post" class="aat-company-credit-review-form">
+                                <?php wp_nonce_field('aat_company_credit_row_review', 'aat_company_credit_row_review_nonce'); ?>
+                                <input type="hidden" name="aat_company_credit_row_source_award_id" value="<?php echo esc_attr((string) ($row['source_award_id'] ?? 0)); ?>" />
+                                <label>
+                                    <span><?php esc_html_e('Review state', 'academy-awards-table'); ?></span>
+                                    <select name="aat_company_credit_row_review_state">
+                                        <?php foreach ($company_credit_review_states as $value => $label) : ?>
+                                            <option value="<?php echo esc_attr($value); ?>" <?php selected($review_state, $value); ?>><?php echo esc_html($label); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span><?php esc_html_e('Entity kind', 'academy-awards-table'); ?></span>
+                                    <select name="aat_company_credit_row_entity_kind">
+                                        <?php foreach ($company_credit_entity_kinds as $value => $label) : ?>
+                                            <option value="<?php echo esc_attr($value); ?>" <?php selected($stored_entity_kind, $value); ?>><?php echo esc_html($label); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span><?php esc_html_e('Proposed ordered co IDs', 'academy-awards-table'); ?></span>
+                                    <textarea name="aat_company_credit_row_proposed_nominee_ids" rows="<?php echo esc_attr((string) max(3, min(8, count($label_list)))); ?>" placeholder="co0000000|co0000001"><?php echo esc_textarea((string) ($review['proposed_nominee_ids'] ?? '')); ?></textarea>
+                                </label>
+                                <label>
+                                    <span><?php esc_html_e('Display label override', 'academy-awards-table'); ?></span>
+                                    <textarea name="aat_company_credit_row_display_label_override" rows="2"><?php echo esc_textarea((string) ($review['display_label_override'] ?? '')); ?></textarea>
+                                </label>
+                                <label>
+                                    <span><?php esc_html_e('Private company/studio note', 'academy-awards-table'); ?></span>
+                                    <textarea name="aat_company_credit_row_review_note" rows="3"><?php echo esc_textarea((string) ($review['correction_note'] ?? '')); ?></textarea>
+                                </label>
+                                <?php if (!empty($review['updated_at'])) : ?>
+                                    <p class="aat-company-credit-reviewed-at"><?php echo esc_html(sprintf(__('Last reviewed: %s', 'academy-awards-table'), (string) $review['updated_at'])); ?></p>
+                                <?php endif; ?>
+                                <button type="submit" class="button button-primary"><?php esc_html_e('Save company/studio review', 'academy-awards-table'); ?></button>
+                            </form>
                         </div>
                     </article>
                 <?php endforeach; ?>

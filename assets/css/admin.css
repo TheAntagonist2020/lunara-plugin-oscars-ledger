@@ -553,6 +553,83 @@
     margin: 0;
 }
 
+.aat-company-credit-review {
+    border-top: 4px solid #1d3f62;
+}
+
+.aat-company-credit-summary span {
+    background: #f4f7fb;
+    border-color: #cad7e5;
+}
+
+.aat-company-credit-review-grid {
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+}
+
+.aat-company-credit-review-card {
+    border-color: #c7d4e2;
+}
+
+.aat-company-credit-review-card h3 {
+    color: #0b1722;
+}
+
+.aat-company-credit-state-needs_review,
+.aat-company-credit-state-ready_to_apply,
+.aat-company-credit-state-department_label_only,
+.aat-company-credit-state-source_gap,
+.aat-company-credit-state-applied,
+.aat-company-credit-state-ignore_accept {
+    background: #edf4fb;
+    color: #163a59;
+}
+
+.aat-company-credit-slots {
+    background: #f8fafc;
+    border: 1px solid #d8e1eb;
+    border-radius: 8px;
+    display: grid;
+    gap: 6px;
+    margin: 10px 0 0;
+    padding: 10px 10px 10px 28px;
+}
+
+.aat-company-credit-slots li {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) minmax(92px, auto);
+}
+
+.aat-company-credit-slots span {
+    min-width: 0;
+}
+
+.aat-company-credit-review-form {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.aat-company-credit-review-form label {
+    display: grid;
+    gap: 4px;
+}
+
+.aat-company-credit-review-form label span {
+    color: #3f4e5d;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.aat-company-credit-reviewed-at {
+    color: #596673;
+    font-size: 12px;
+    margin: 0;
+}
+
 .aat-person-portrait-adoption-links {
     display: flex;
     flex-wrap: wrap;
