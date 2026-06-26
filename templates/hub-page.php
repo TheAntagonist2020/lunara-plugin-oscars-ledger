@@ -2148,6 +2148,14 @@ get_header();
                     'history_title' => __('Sound Mixing Through the Eras', 'academy-awards-table'),
                     'era_copy' => __('A visual entry point into the %1$s Sound Mixing run.', 'academy-awards-table'),
                 ),
+                'SOUND EDITING' => array(
+                    'class' => 'aat-craft-dossier aat-sound-editing-dossier',
+                    'title' => __('Sound Editing Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The editorial sound file: effects, design, cutting, sonic architecture, and the craft races that made Oscar history audible.', 'academy-awards-table'),
+                    'history_kicker' => __('Sound Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Sound Editing Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Sound Editing run.', 'academy-awards-table'),
+                ),
                 'COSTUME DESIGN' => array(
                     'class' => 'aat-craft-dossier aat-costume-dossier',
                     'title' => __('Costume Design Dossier', 'academy-awards-table'),

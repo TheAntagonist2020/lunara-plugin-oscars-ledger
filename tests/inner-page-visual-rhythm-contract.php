@@ -42,6 +42,9 @@ $assert(strpos($hub_template, 'aat-department-credit-label') !== false, 'Departm
 $assert(strpos($hub_template, "'SOUND MIXING' => array(") !== false, 'Sound Mixing should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Sound Mixing Dossier') !== false, 'Sound Mixing should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-sound-mixing-dossier') !== false, 'Sound Mixing should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'SOUND EDITING' => array(") !== false, 'Sound Editing should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Sound Editing Dossier') !== false, 'Sound Editing should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-sound-editing-dossier') !== false, 'Sound Editing should expose a route-scoped visual hook.');
 
 foreach (array(
     '.aat-generic-category-dossier',
