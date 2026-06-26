@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.54
+ * Version: 2.7.55
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.54');
+define('AAT_VERSION', '2.7.55');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -6245,8 +6245,12 @@ class Academy_Awards_Table {
 
             $attachment_id = isset($_POST['attachment_id']) ? absint($_POST['attachment_id']) : 0;
             $person_id = isset($_POST['person_id']) ? strtolower(trim(sanitize_text_field(wp_unslash($_POST['person_id'])))) : '';
+            $confirm_person_id = isset($_POST['existing_confirm_person_id']) ? strtolower(trim(sanitize_text_field(wp_unslash($_POST['existing_confirm_person_id'])))) : '';
             $adoption_note = isset($_POST['adoption_note']) ? sanitize_textarea_field(wp_unslash($_POST['adoption_note'])) : '';
-            $adoption_result = $this->adopt_existing_person_portrait_attachment($attachment_id, $person_id, $adoption_note);
+            $adoption_result = $this->adopt_existing_person_portrait_attachment($attachment_id, $person_id, $adoption_note, array(
+                'require_confirmation' => true,
+                'confirm_person_id' => $confirm_person_id,
+            ));
 
             if (is_wp_error($adoption_result)) {
                 $message = $adoption_result->get_error_message();
@@ -13610,6 +13614,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $note = sanitize_textarea_field((string) $note);
         $options = is_array($options) ? $options : array();
         $allow_duplicate = !empty($options['allow_duplicate']);
+        $require_confirmation = !empty($options['require_confirmation']);
         $confirm_person_id = isset($options['confirm_person_id']) ? strtolower(trim(sanitize_text_field((string) $options['confirm_person_id']))) : '';
 
         if ($attachment_id <= 0) {
@@ -13700,6 +13705,9 @@ public function get_person_visual_package($nm_id, $size = 'large') {
                 count($duplicate_attachment_ids)
             );
             $note = trim($note) !== '' ? trim($note) . "\n" . $duplicate_note : $duplicate_note;
+        }
+        if (empty($row['duplicate_person_id']) && $require_confirmation && $confirm_person_id !== $person_id) {
+            return new WP_Error('aat_existing_portrait_confirmation', __('Type the exact IMDb person ID to adopt this existing portrait.', 'academy-awards-table'));
         }
 
         update_post_meta($attachment_id, '_aat_person_imdb_id', $person_id);

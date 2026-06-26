@@ -51,8 +51,8 @@ $adopt_method = $method_slice($plugin, 'private function adopt_existing_person_p
 $existing_lookup_method = $method_slice($plugin, 'private function find_existing_person_portrait_attachment', 'public function get_poster_attachment_id_for_title');
 
 foreach (array(
-    'Version: 2.7.54',
-    "define('AAT_VERSION', '2.7.54')",
+    'Version: 2.7.55',
+    "define('AAT_VERSION', '2.7.55')",
     'get_existing_person_portrait_adoption_rows',
     'adopt_existing_person_portrait_attachment',
     'existing-media-adoption',
@@ -75,6 +75,8 @@ foreach (array(
     'sanitize_key',
     'absint',
     'sanitize_textarea_field',
+    'existing_confirm_person_id',
+    "'require_confirmation' => true",
     'duplicate_confirm_person_id',
     "'allow_duplicate' => true",
 ) as $needle) {
@@ -106,7 +108,9 @@ foreach (array(
     'build_profile_image_existing_media_audit_row',
     'duplicate_person_id',
     '$allow_duplicate',
+    '$require_confirmation',
     '$confirm_person_id',
+    'aat_existing_portrait_confirmation',
     'aat_existing_portrait_duplicate_candidate',
     'aat_existing_portrait_duplicate_confirmation',
     'aat_existing_portrait_duplicate_group_mismatch',
@@ -139,6 +143,8 @@ foreach (array(
     'Duplicate review',
     'Competing PEOPLE images',
     'Manual review required',
+    'existing_confirm_person_id',
+    'confirm this existing portrait adoption',
     'aat_existing_person_portrait_duplicate_resolve_nonce',
     'duplicate_confirm_person_id',
     'Resolve duplicate with this attachment',
@@ -164,7 +170,7 @@ foreach (array(
     'duplicate-review',
     'typed-confirmation resolver',
     'existing-media-adoption',
-    '2.7.54',
+    '2.7.55',
 ) as $needle) {
     $assert(strpos($docs . $spec, $needle) !== false, "Docs/spec should describe the existing PEOPLE adoption workflow: {$needle}");
 }

@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.54
+Stable tag: 2.7.55
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.55 =
+* Existing PEOPLE ready adoption now requires the exact IMDb `nm...` ID to be typed before the private admin POST can write portrait metadata.
+* This keeps the remaining post-bulk hold bucket from being adopted through an accidental click while preserving duplicate resolver safeguards.
 
 = 2.7.54 =
 * Added preview-only validation for reviewed company/studio credit rows before any source mutation exists.

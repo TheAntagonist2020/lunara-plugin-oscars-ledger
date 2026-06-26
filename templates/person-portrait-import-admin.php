@@ -738,6 +738,10 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                                     <input type="hidden" name="attachment_id" value="<?php echo esc_attr((string) $attachment_id); ?>" />
                                     <input type="hidden" name="person_id" value="<?php echo esc_attr($person_id); ?>" />
                                     <label>
+                                        <span><?php echo esc_html(sprintf(__('Type %s to confirm this existing portrait adoption', 'academy-awards-table'), $person_id)); ?></span>
+                                        <input type="text" name="existing_confirm_person_id" value="" placeholder="<?php echo esc_attr($person_id); ?>" autocomplete="off" />
+                                    </label>
+                                    <label>
                                         <span><?php esc_html_e('Private adoption note', 'academy-awards-table'); ?></span>
                                         <textarea name="adoption_note" rows="2" placeholder="<?php esc_attr_e('Confirmed existing PEOPLE portrait.', 'academy-awards-table'); ?>"></textarea>
                                     </label>
