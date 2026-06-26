@@ -2164,6 +2164,14 @@ get_header();
                     'history_title' => __('Sound Mixing Through the Eras', 'academy-awards-table'),
                     'era_copy' => __('A visual entry point into the %1$s Sound Mixing run.', 'academy-awards-table'),
                 ),
+                'SOUND RECORDING' => array(
+                    'class' => 'aat-craft-dossier aat-sound-recording-dossier',
+                    'title' => __('Sound Recording Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The early sound file: recording departments, studio craft, credited sound crews, and the Academy trail before the category settled into its later forms.', 'academy-awards-table'),
+                    'history_kicker' => __('Recording Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Sound Recording Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Sound Recording run.', 'academy-awards-table'),
+                ),
                 'SOUND EDITING' => array(
                     'class' => 'aat-craft-dossier aat-sound-editing-dossier',
                     'title' => __('Sound Editing Dossier', 'academy-awards-table'),
@@ -2239,6 +2247,14 @@ get_header();
                     'class' => 'aat-music-dossier',
                     'title' => __('Original Song Dossier', 'academy-awards-table'),
                     'subtitle' => __('The song ledger: movie music as campaign engine, cultural memory, and Oscar-night signature.', 'academy-awards-table'),
+                ),
+                'MUSIC (ORIGINAL SONG SCORE OR ADAPTATION SCORE)' => array(
+                    'class' => 'aat-music-dossier aat-music-adaptation-score-dossier',
+                    'title' => __('Song Score and Adaptation Score Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The legacy music file: adapted scores, song scores, musical arrangements, and the transitional Oscar races where film music became its own spectacle.', 'academy-awards-table'),
+                    'history_kicker' => __('Music Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Song Score and Adaptation Score Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Song Score and Adaptation Score run.', 'academy-awards-table'),
                 ),
                 'INTERNATIONAL FEATURE FILM' => array(
                     'class' => 'aat-feature-dossier aat-international-dossier',

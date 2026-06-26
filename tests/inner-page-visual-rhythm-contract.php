@@ -42,6 +42,9 @@ $assert(strpos($hub_template, 'aat-department-credit-label') !== false, 'Departm
 $assert(strpos($hub_template, "'SOUND MIXING' => array(") !== false, 'Sound Mixing should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Sound Mixing Dossier') !== false, 'Sound Mixing should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-sound-mixing-dossier') !== false, 'Sound Mixing should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'SOUND RECORDING' => array(") !== false, 'Sound Recording should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Sound Recording Dossier') !== false, 'Sound Recording should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-sound-recording-dossier') !== false, 'Sound Recording should expose a route-scoped visual hook.');
 $assert(strpos($hub_template, "'SOUND EDITING' => array(") !== false, 'Sound Editing should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Sound Editing Dossier') !== false, 'Sound Editing should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-sound-editing-dossier') !== false, 'Sound Editing should expose a route-scoped visual hook.');
@@ -78,6 +81,9 @@ $assert(strpos($hub_template, 'aat-cinematography-monochrome-dossier') !== false
 $assert(strpos($hub_template, "'CINEMATOGRAPHY (COLOR)' => array(") !== false, 'Color Cinematography should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Color Cinematography Dossier') !== false, 'Color Cinematography should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-cinematography-color-dossier') !== false, 'Color Cinematography should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'MUSIC (ORIGINAL SONG SCORE OR ADAPTATION SCORE)' => array(") !== false, 'Song Score and Adaptation Score should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Song Score and Adaptation Score Dossier') !== false, 'Song Score and Adaptation Score should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-music-adaptation-score-dossier') !== false, 'Song Score and Adaptation Score should expose a route-scoped visual hook.');
 
 foreach (array(
     '.aat-generic-category-dossier',
