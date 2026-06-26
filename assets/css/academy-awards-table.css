@@ -686,6 +686,21 @@ body .aat-container .aat-premium-category-dossier .aat-dossier-hero .aat-hub-tit
     text-transform: none !important;
 }
 
+body .aat-container .aat-premium-category-dossier.aat-archive-specials-dossier .aat-dossier-hero .aat-hub-title {
+    font-size: clamp(2.15rem, 4vw, 4.1rem) !important;
+    line-height: 1.02 !important;
+    max-width: min(100%, 14.5ch) !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none !important;
+    text-wrap: balance !important;
+}
+
+body .aat-container .aat-premium-category-dossier.aat-scitech-dossier .aat-dossier-hero .aat-hub-title {
+    font-size: clamp(2rem, 3.4vw, 3.5rem) !important;
+    max-width: min(100%, 18ch) !important;
+}
+
 .aat-dossier-hero .aat-hub-subtitle {
     margin: 0;
     max-width: 62ch;
@@ -1053,6 +1068,14 @@ body .aat-container .aat-premium-category-dossier .aat-ledger-card {
     .aat-dossier-hero .aat-hub-title {
         max-width: 10ch;
         font-size: clamp(2.15rem, 11vw, 3.15rem);
+    }
+
+    body .aat-container .aat-premium-category-dossier.aat-archive-specials-dossier .aat-dossier-hero .aat-hub-title,
+    body .aat-container .aat-premium-category-dossier.aat-scitech-dossier .aat-dossier-hero .aat-hub-title {
+        max-width: 100% !important;
+        font-size: clamp(1.9rem, 9vw, 2.55rem) !important;
+        line-height: 1.04 !important;
+        text-wrap: balance !important;
     }
 
     .aat-dossier-command-band,
