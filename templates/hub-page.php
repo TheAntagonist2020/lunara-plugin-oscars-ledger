@@ -830,7 +830,7 @@ if ($hub === 'category' && !empty($hub_id)) {
     $hub_id_breadcrumb_label = sprintf(
         /* translators: %s: Academy Awards ceremony number. */
         __('%s Ceremony', 'academy-awards-table'),
-        $hub_id
+        $aat->ordinal((int) $hub_id)
     );
 }
 
