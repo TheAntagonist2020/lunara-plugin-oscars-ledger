@@ -34,12 +34,19 @@ $assert(strpos($hub_template, 'aat-generic-category-dossier') !== false, 'Non-pr
 $assert(strpos($hub_template, 'aat-category-person-strip') !== false, 'Category rows should render a linked person/craft strip.');
 $assert(strpos($hub_template, 'aat-category-ceremony-row aat-ledger-card') !== false, 'All category ceremony rows should use ledger-card rhythm.');
 $assert(substr_count($hub_template, 'aat-dossier-command-band') >= 2, 'Premium and generic category headers should both render command bands.');
+$assert(strpos($hub_template, '$aat_is_department_credit_label') !== false, 'Department-style technical credits should be detected before label fallback linking.');
+$assert(strpos($hub_template, '$aat_person_history_action_meta') !== false, 'History actions should resolve company/person/producer labels from the target route.');
+$assert(strpos($hub_template, "__('Company History', 'academy-awards-table')") !== false, 'Company history links should not be rendered as Person History.');
+$assert(strpos($hub_template, "'company-history'") !== false, 'Company history actions should expose a scoped action kind.');
+$assert(strpos($hub_template, 'aat-department-credit-label') !== false, 'Department-style credit text should receive a deliberate public presentation hook.');
 
 foreach (array(
     '.aat-generic-category-dossier',
     '.aat-category-person-strip',
     '.aat-category-person-chip',
     '.aat-inner-route-system',
+    '.aat-department-credit-label',
+    '.aat-winner-circle-action.is-kind-company-history',
     '@media (max-width: 700px)',
 ) as $needle) {
     $assert(strpos($css, $needle) !== false, "CSS should define {$needle}.");

@@ -168,7 +168,52 @@ $aat_normalize_comparable_name = function($value) {
     return trim((string) $value);
 };
 
-$aat_resolve_entry_name_link = function($entry) use ($aat_build_entity_url, $aat_clean_nominee_label, $aat_normalize_comparable_name) {
+$aat_is_department_credit_label = function($value) use ($aat_normalize_comparable_name) {
+    $normalized = $aat_normalize_comparable_name($value);
+    if ($normalized === '') {
+        return false;
+    }
+
+    return (bool) preg_match('/\b(?:studio sound department|sound department|sound dept|sound recording department)\b/', $normalized);
+};
+
+$aat_entity_url_kind = function($url) {
+    $url = trim((string) $url);
+    if ($url === '') {
+        return '';
+    }
+
+    $path = (string) parse_url($url, PHP_URL_PATH);
+    if (preg_match('~/oscars/company/~i', $path)) {
+        return 'company';
+    }
+    if (preg_match('~/oscars/name/~i', $path)) {
+        return 'person';
+    }
+    if (preg_match('~/oscars/title/~i', $path)) {
+        return 'film';
+    }
+
+    return '';
+};
+
+$aat_person_history_action_meta = function($history_url, $category) use ($aat_entity_url_kind) {
+    $category = strtoupper(trim((string) $category));
+
+    if ($aat_entity_url_kind($history_url) === 'company') {
+        return array(
+            'label' => __('Company History', 'academy-awards-table'),
+            'kind'  => 'company-history',
+        );
+    }
+
+    return array(
+        'label' => ($category === 'BEST PICTURE') ? __('Producer History', 'academy-awards-table') : __('Person History', 'academy-awards-table'),
+        'kind'  => ($category === 'BEST PICTURE') ? 'producer-history' : 'person-history',
+    );
+};
+
+$aat_resolve_entry_name_link = function($entry) use ($aat_build_entity_url, $aat_clean_nominee_label, $aat_normalize_comparable_name, $aat_is_department_credit_label) {
     $explicit_name = $aat_clean_nominee_label($entry['name'] ?? '');
     $nominee_value = trim((string) ($entry['nominees'] ?? ''));
     $nominee_ids = trim((string) ($entry['nominee_ids'] ?? ''));
@@ -176,6 +221,13 @@ $aat_resolve_entry_name_link = function($entry) use ($aat_build_entity_url, $aat
         return $aat_clean_nominee_label($part);
     }, explode('|', $nominee_value)), 'strlen'));
     $id_parts = array_values(array_filter(array_map('trim', explode('|', $nominee_ids)), 'strlen'));
+
+    if ($aat_is_department_credit_label($explicit_name) || (count($nominee_parts) === 1 && $aat_is_department_credit_label($nominee_parts[0]))) {
+        return array(
+            'label' => $explicit_name !== '' ? $explicit_name : (string) ($nominee_parts[0] ?? ''),
+            'url' => '',
+        );
+    }
 
     if ($explicit_name === '' && count($nominee_parts) === 1 && count($id_parts) === 1) {
         return array(
@@ -263,7 +315,7 @@ $aat_enrich_winner_entry_links = function($entry) use ($aat, $aat_winner_primary
     return $entry;
 };
 
-$aat_build_person_link_items = function($entry) use ($aat, $aat_clean_nominee_label, $aat_build_entity_url) {
+$aat_build_person_link_items = function($entry) use ($aat, $aat_clean_nominee_label, $aat_build_entity_url, $aat_is_department_credit_label) {
     $entry = is_array($entry) ? $entry : array();
     $split_credit_labels = function($value) use ($aat_clean_nominee_label) {
         $value = trim((string) $value);
@@ -295,6 +347,10 @@ $aat_build_person_link_items = function($entry) use ($aat, $aat_clean_nominee_la
     foreach ($labels as $index => $label) {
         $label = trim((string) $label);
         if ($label === '') {
+            continue;
+        }
+
+        if ($aat_is_department_credit_label($label)) {
             continue;
         }
 
@@ -348,7 +404,7 @@ $aat_render_hub_text_link = function($label, $url = '', $class = '') {
     return '<span class="' . esc_attr($class_attr) . '">' . esc_html($label) . '</span>';
 };
 
-$aat_render_pipe_links = function($value_list, $id_list = '', $class = 'aat-hub-inline-link') use ($aat, $aat_build_entity_url, $aat_clean_nominee_label) {
+$aat_render_pipe_links = function($value_list, $id_list = '', $class = 'aat-hub-inline-link') use ($aat, $aat_build_entity_url, $aat_clean_nominee_label, $aat_is_department_credit_label) {
     $raw_value_list = (string) $value_list;
     $values = array_values(array_filter(array_map(function($part) use ($aat_clean_nominee_label) {
         return $aat_clean_nominee_label($part);
@@ -370,8 +426,9 @@ $aat_render_pipe_links = function($value_list, $id_list = '', $class = 'aat-hub-
 
     $out = array();
     foreach ($values as $index => $value) {
-        $url = isset($ids[$index]) ? $aat_build_entity_url($ids[$index]) : '';
-        if ($url === '' && method_exists($aat, 'get_name_entity_link_by_label')) {
+        $is_department_credit = $aat_is_department_credit_label($value);
+        $url = (!$is_department_credit && isset($ids[$index])) ? $aat_build_entity_url($ids[$index]) : '';
+        if (!$is_department_credit && $url === '' && method_exists($aat, 'get_name_entity_link_by_label')) {
             $resolved = $aat->get_name_entity_link_by_label($value);
             if (!empty($resolved['url'])) {
                 $url = (string) $resolved['url'];
@@ -383,14 +440,15 @@ $aat_render_pipe_links = function($value_list, $id_list = '', $class = 'aat-hub-
         if ($url !== '') {
             $out[] = '<a class="' . esc_attr($class) . '" href="' . esc_url($url) . '">' . esc_html($value) . '</a>';
         } else {
-            $out[] = '<span class="' . esc_attr($class) . '">' . esc_html($value) . '</span>';
+            $span_class = trim((string) $class . ($is_department_credit ? ' aat-department-credit-label' : ''));
+            $out[] = '<span class="' . esc_attr($span_class) . '">' . esc_html($value) . '</span>';
         }
     }
 
     return implode('<span class="aat-meta-sep" aria-hidden="true">&middot;</span>', $out);
 };
 
-$aat_build_winner_actions = function($entry, $category_url = '', $ceremony_url = '') {
+$aat_build_winner_actions = function($entry, $category_url = '', $ceremony_url = '') use ($aat_person_history_action_meta) {
     $entry = is_array($entry) ? $entry : array();
     $category = strtoupper(trim((string) ($entry['canonical_category'] ?? '')));
     $film_url = trim((string) ($entry['film_url'] ?? ''));
@@ -491,9 +549,8 @@ $aat_build_winner_actions = function($entry, $category_url = '', $ceremony_url =
     }
 
     if ($person_history_url !== '' && $person_history_url !== $person_url) {
-        $person_history_label = ($category === 'BEST PICTURE') ? __('Producer History', 'academy-awards-table') : __('Person History', 'academy-awards-table');
-        $person_history_kind = ($category === 'BEST PICTURE') ? 'producer-history' : 'person-history';
-        $add_action($person_history_label, $person_history_url, $person_history_kind);
+        $person_history_meta = $aat_person_history_action_meta($person_history_url, $category);
+        $add_action($person_history_meta['label'], $person_history_url, $person_history_meta['kind']);
     }
 
     return $actions;
@@ -1543,8 +1600,9 @@ get_header();
                         $feature_backdrop_style = $aat_get_card_backdrop_style($feature_visual['poster_url'] ?? '', $feature_visual['backdrop_url'] ?? '');
                         $feature_film_history_url = !empty($feature_row['film_history_url']) ? (string) $feature_row['film_history_url'] : '';
                         $feature_person_history_url = !empty($feature_row['person_history_url']) ? (string) $feature_row['person_history_url'] : '';
-                        $feature_person_history_label = $major_category_key === 'BEST PICTURE' ? __('Producer History', 'academy-awards-table') : __('Person History', 'academy-awards-table');
-                        $feature_person_history_kind = $major_category_key === 'BEST PICTURE' ? 'producer-history' : 'person-history';
+                        $feature_person_history_meta = $aat_person_history_action_meta($feature_person_history_url, $major_category_key);
+                        $feature_person_history_label = $feature_person_history_meta['label'];
+                        $feature_person_history_kind = $feature_person_history_meta['kind'];
                         $major_card_classes = array('aat-major-race-card');
                         if ($major_category_key === 'BEST PICTURE') {
                             $major_card_classes[] = 'is-best-picture';
@@ -1725,8 +1783,9 @@ get_header();
                                     $row_film_url = !empty($ballot_row['film_url']) ? (string) $ballot_row['film_url'] : ($row_primary_title_id !== '' ? $aat_build_entity_url($row_primary_title_id) : '');
                                     $row_film_history_url = !empty($ballot_row['film_history_url']) ? (string) $ballot_row['film_history_url'] : ($row_film_url !== '' ? $aat_entity_section_url($row_film_url, 'oscar-history') : '');
                                     $row_person_history_url = !empty($ballot_row['person_history_url']) ? (string) $ballot_row['person_history_url'] : '';
-                                    $row_person_history_label = strtoupper((string) ($ballot_row['canonical_category'] ?? '')) === 'BEST PICTURE' ? __('Producer History', 'academy-awards-table') : __('Person History', 'academy-awards-table');
-                                    $row_person_history_kind = strtoupper((string) ($ballot_row['canonical_category'] ?? '')) === 'BEST PICTURE' ? 'producer-history' : 'person-history';
+                                    $row_person_history_meta = $aat_person_history_action_meta($row_person_history_url, $ballot_row['canonical_category'] ?? '');
+                                    $row_person_history_label = $row_person_history_meta['label'];
+                                    $row_person_history_kind = $row_person_history_meta['kind'];
                                     $row_review_url = ($row_primary_title_id !== '' && !empty($ceremony_review_map[$row_primary_title_id])) ? (string) $ceremony_review_map[$row_primary_title_id] : '';
                                 ?>
                                     <article class="aat-ceremony-ballot-row<?php echo $is_row_winner ? ' is-winner' : ''; ?>">
@@ -2531,10 +2590,12 @@ get_header();
                                                             );
                                                         }
                                                         if (!empty($nominee_row['person_history_url'])) {
+                                                            $nominee_history_url = (string) $nominee_row['person_history_url'];
+                                                            $nominee_history_meta = $aat_person_history_action_meta($nominee_history_url, $nominee_row['canonical_category'] ?? '');
                                                             $nominee_deep_links[] = array(
-                                                                'label' => strtoupper((string) ($nominee_row['canonical_category'] ?? '')) === 'BEST PICTURE' ? __('Producer History', 'academy-awards-table') : __('Person History', 'academy-awards-table'),
-                                                                'url' => (string) $nominee_row['person_history_url'],
-                                                                'kind' => strtoupper((string) ($nominee_row['canonical_category'] ?? '')) === 'BEST PICTURE' ? 'producer-history' : 'person-history',
+                                                                'label' => $nominee_history_meta['label'],
+                                                                'url' => $nominee_history_url,
+                                                                'kind' => $nominee_history_meta['kind'],
                                                             );
                                                         }
                                                     ?>

@@ -484,6 +484,11 @@ body.aat-shell-page aside[data-type="type-2"] {
     color: var(--aat-gold-light);
 }
 
+.aat-department-credit-label {
+    color: var(--aat-light-gray);
+    font-style: italic;
+}
+
 .aat-hub-actions {
     margin-top: 18px;
     display: flex;
@@ -1508,7 +1513,8 @@ body .aat-container .aat-premium-category-dossier .aat-ledger-card {
 }
 .aat-winner-circle-action.is-kind-film-history,
 .aat-winner-circle-action.is-kind-person-history,
-.aat-winner-circle-action.is-kind-producer-history {
+.aat-winner-circle-action.is-kind-producer-history,
+.aat-winner-circle-action.is-kind-company-history {
     border-color: rgba(114,172,166,.34);
     background: rgba(114,172,166,.08);
     color: #d7f0ec;
@@ -1518,7 +1524,9 @@ body .aat-container .aat-premium-category-dossier .aat-ledger-card {
 .aat-winner-circle-action.is-kind-person-history:hover,
 .aat-winner-circle-action.is-kind-person-history:focus,
 .aat-winner-circle-action.is-kind-producer-history:hover,
-.aat-winner-circle-action.is-kind-producer-history:focus {
+.aat-winner-circle-action.is-kind-producer-history:focus,
+.aat-winner-circle-action.is-kind-company-history:hover,
+.aat-winner-circle-action.is-kind-company-history:focus {
     border-color: rgba(114,172,166,.54);
     background: rgba(114,172,166,.16);
     color: #ffffff;

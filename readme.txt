@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.57
+Stable tag: 2.7.58
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.58 =
+* Kept department-style technical credits text-led on public Oscars routes so Sound Department labels do not auto-resolve into false company/person links.
+* Added Company History action labels for true company/studio history links instead of presenting company routes as Person History.
 
 = 2.7.57 =
 * Added private Existing PEOPLE hold-review filters for Needs initial review, Needs source, and Wrong labels.
