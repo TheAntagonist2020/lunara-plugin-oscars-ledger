@@ -31,6 +31,10 @@ $assert(strpos($plugin, 'public function get_name_entity_link_by_label($label)')
 $assert(strpos($plugin, "'MUSIC (Original Song Score or Adaptation Score)' => 'Song Score and Adaptation Score'") !== false, 'Legacy song-score category should expose a polished display label.');
 $assert(strpos($plugin, "'ASSISTANT DIRECTOR' => 'Assistant Director'") !== false, 'Assistant Director should expose a polished display label.');
 $assert(strpos($plugin, "'DANCE DIRECTION' => 'Dance Direction'") !== false, 'Dance Direction should expose a polished display label.');
+$assert(strpos($plugin, "'HONORARY AWARD' => 'Honorary Award'") !== false, 'Honorary Award should expose a polished display label.');
+$assert(strpos($plugin, "'SPECIAL ACHIEVEMENT AWARD (Visual Effects)' => 'Special Achievement Award: Visual Effects'") !== false, 'Special Achievement Award visual-effects branch should expose a polished display label.');
+$assert(strpos($plugin, "'SCIENTIFIC AND TECHNICAL AWARD (Technical Achievement Award)' => 'Scientific and Technical Award: Technical Achievement Award'") !== false, 'Technical Achievement Award should expose a polished display label.');
+$assert(strpos($plugin, "'SCIENTIFIC OR TECHNICAL AWARD (Class I)' => 'Scientific or Technical Award: Class I'") !== false, 'Class I SciTech award should expose a polished display label.');
 $assert(strpos($plugin, "'WRITING (Original Story)' => 'Original Story'") !== false, 'Original Story category should expose a polished display label.');
 $assert(strpos($plugin, "'WRITING (Title Writing)' => 'Title Writing'") !== false, 'Title Writing category should expose a polished display label.');
 $assert(strpos($plugin, "'SHORT SUBJECT (Comedy)' => 'Comedy Short Subject'") !== false, 'Comedy Short Subject should expose a polished display label.');
@@ -68,6 +72,15 @@ $assert(strpos($hub_template, 'aat-assistant-director-dossier') !== false, 'Assi
 $assert(strpos($hub_template, "'DANCE DIRECTION' => array(") !== false, 'Dance Direction should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Dance Direction Dossier') !== false, 'Dance Direction should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-dance-direction-dossier') !== false, 'Dance Direction should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, 'aat-archive-specials-dossier') !== false, 'Archive-specials routes should expose a shared visual-system hook.');
+$assert(strpos($hub_template, "'HONORARY AWARD' => array(") !== false, 'Honorary Award should be promoted into the archive-specials dossier map.');
+$assert(strpos($hub_template, 'Honorary Award Dossier') !== false, 'Honorary Award should have an archive-specials dossier heading.');
+$assert(strpos($hub_template, 'aat-honorary-award-dossier') !== false, 'Honorary Award should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'SCIENTIFIC AND TECHNICAL AWARD (TECHNICAL ACHIEVEMENT AWARD)' => array(") !== false, 'Technical Achievement Award should be promoted into the archive-specials dossier map.');
+$assert(strpos($hub_template, 'Scientific and Technical Award: Technical Achievement Award Dossier') !== false, 'Technical Achievement Award should have an archive-specials dossier heading.');
+$assert(strpos($hub_template, 'aat-scitech-technical-achievement-dossier') !== false, 'Technical Achievement Award should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'SPECIAL ACHIEVEMENT AWARD (VISUAL EFFECTS)' => array(") !== false, 'Special Achievement Visual Effects should be promoted into the archive-specials dossier map.');
+$assert(strpos($hub_template, 'aat-special-achievement-visual-effects-dossier') !== false, 'Special Achievement Visual Effects should expose a route-scoped visual hook.');
 $assert(strpos($hub_template, "'COSTUME DESIGN (BLACK-AND-WHITE)' => array(") !== false, 'Black-and-White Costume Design should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Black-and-White Costume Design Dossier') !== false, 'Black-and-White Costume Design should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-costume-monochrome-dossier') !== false, 'Black-and-White Costume Design should expose a route-scoped visual hook.');

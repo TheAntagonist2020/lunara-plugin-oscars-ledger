@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.72
+ * Version: 2.7.73
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.72');
+define('AAT_VERSION', '2.7.73');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -5471,6 +5471,27 @@ class Academy_Awards_Table {
             'DIRECTING' => 'Best Director',
             'ASSISTANT DIRECTOR' => 'Assistant Director',
             'DANCE DIRECTION' => 'Dance Direction',
+            'SPECIAL AWARD' => 'Special Award',
+            'HONORARY AWARD' => 'Honorary Award',
+            'SPECIAL ACHIEVEMENT AWARD' => 'Special Achievement Award',
+            'SPECIAL ACHIEVEMENT AWARD (Sound Editing)' => 'Special Achievement Award: Sound Editing',
+            'SPECIAL ACHIEVEMENT AWARD (Sound Effects Editing)' => 'Special Achievement Award: Sound Effects Editing',
+            'SPECIAL ACHIEVEMENT AWARD (Sound Effects)' => 'Special Achievement Award: Sound Effects',
+            'SPECIAL ACHIEVEMENT AWARD (Visual Effects)' => 'Special Achievement Award: Visual Effects',
+            'SPECIAL FOREIGN LANGUAGE FILM AWARD' => 'Special Foreign Language Film Award',
+            'IRVING G. THALBERG MEMORIAL AWARD' => 'Irving G. Thalberg Memorial Award',
+            'JEAN HERSHOLT HUMANITARIAN AWARD' => 'Jean Hersholt Humanitarian Award',
+            'GORDON E. SAWYER AWARD' => 'Gordon E. Sawyer Award',
+            'JOHN A. BONNER MEDAL OF COMMENDATION' => 'John A. Bonner Medal of Commendation',
+            'MEDAL OF COMMENDATION' => 'Medal of Commendation',
+            'AWARD OF COMMENDATION' => 'Award of Commendation',
+            'SCIENTIFIC OR TECHNICAL AWARD (Class I)' => 'Scientific or Technical Award: Class I',
+            'SCIENTIFIC OR TECHNICAL AWARD (Class II)' => 'Scientific or Technical Award: Class II',
+            'SCIENTIFIC OR TECHNICAL AWARD (Class III)' => 'Scientific or Technical Award: Class III',
+            'SCIENTIFIC AND TECHNICAL AWARD (Academy Award of Merit)' => 'Scientific and Technical Award: Academy Award of Merit',
+            'SCIENTIFIC AND TECHNICAL AWARD (Scientific and Engineering Award)' => 'Scientific and Technical Award: Scientific and Engineering Award',
+            'SCIENTIFIC AND TECHNICAL AWARD (Technical Achievement Award)' => 'Scientific and Technical Award: Technical Achievement Award',
+            'SCIENTIFIC AND TECHNICAL AWARD (Special Award)' => 'Scientific and Technical Award: Special Award',
             'WRITING (Original Story)' => 'Original Story',
             'WRITING (Title Writing)' => 'Title Writing',
             'SHORT SUBJECT (Comedy)' => 'Comedy Short Subject',

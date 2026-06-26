@@ -14,12 +14,13 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.72`.
+Current baseline: `2.7.73`.
 
 ## Current Public Surface
 
 - Ceremony pages include a data-derived Ceremony Thesis layer with critical-path navigation and compact major-race briefing cards.
 - Generic Oscar category pages now use dossier-grade route framing with command-band summaries, denser ledger-card rows, and linked craft/person credit chips where the person entity can be resolved.
+- Archive-specials category routes now include a shared premium dossier system for Honorary, Special, Commendation, and SciTech award families, keeping atypical Oscar honors curated instead of generic.
 - Assistant Director and Dance Direction now include premium dossier treatment as early-craft curiosity branches, preserving their short-lived historical specificity while keeping URLs and data untouched.
 - Early Short Subject branches now include premium dossier treatment for Comedy, Novelty, Color, One-reel, and Two-reel routes, preserving historical category specificity while keeping URLs and data untouched.
 - Legacy Writing routes now include premium dossier treatment for Original Story and Title Writing, preserving their early-Oscar specificity while keeping URLs and data untouched.

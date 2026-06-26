@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.72
+Stable tag: 2.7.73
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.73 =
+* Added a shared archive-specials dossier system for Honorary, Special, Commendation, and SciTech Oscar category routes so atypical Academy honors render as curated archive surfaces without changing data or URLs.
 
 = 2.7.72 =
 * Promoted Assistant Director and Dance Direction into the premium Oscars category dossier system, giving the early-craft curiosity routes a stronger historical presentation without changing data or URLs.
