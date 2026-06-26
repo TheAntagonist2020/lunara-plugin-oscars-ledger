@@ -49,8 +49,8 @@ $adoption_rows_method = $method_slice($plugin, 'private function get_existing_pe
 $adopt_method = $method_slice($plugin, 'private function adopt_existing_person_portrait_attachment', 'private function get_person_portrait_import_queue_rows');
 
 foreach (array(
-    'Version: 2.7.51',
-    "define('AAT_VERSION', '2.7.51')",
+    'Version: 2.7.52',
+    "define('AAT_VERSION', '2.7.52')",
     'duplicate_groups',
     'duplicate_group_review_total',
     'duplicate_group_review',
@@ -107,7 +107,7 @@ foreach (array(
     'Duplicate groups',
     'duplicate-group review',
     'typed-confirmation',
-    '2.7.51',
+    '2.7.52',
 ) as $needle) {
     $assert(strpos($docs . $spec, $needle) !== false, "Docs/spec should describe grouped duplicate review: {$needle}");
 }

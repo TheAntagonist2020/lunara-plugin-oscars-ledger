@@ -494,6 +494,65 @@
     margin-top: 2px;
 }
 
+.aat-person-credit-full-row-resolver {
+    background: #f8fafc;
+    border: 1px solid #ccd5df;
+    border-radius: 8px;
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 12px;
+}
+
+.aat-person-credit-full-row-resolver.is-ready {
+    background: #f1fbf7;
+    border-color: #62c994;
+}
+
+.aat-person-credit-full-row-resolver strong {
+    color: #0a1520;
+}
+
+.aat-person-credit-full-row-resolver p {
+    margin: 0;
+}
+
+.aat-person-credit-full-row-slots {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding-left: 18px;
+}
+
+.aat-person-credit-full-row-slots li {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) minmax(92px, auto);
+}
+
+.aat-person-credit-full-row-slots span {
+    min-width: 0;
+}
+
+.aat-person-credit-full-row-resolver dl {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+}
+
+.aat-person-credit-full-row-resolver dt {
+    color: #646970;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.aat-person-credit-full-row-resolver dd {
+    margin: 0;
+}
+
 .aat-person-portrait-adoption-links {
     display: flex;
     flex-wrap: wrap;

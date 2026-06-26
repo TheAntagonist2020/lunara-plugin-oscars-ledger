@@ -12,6 +12,7 @@ $adoption_summary = isset($adoption_summary) && is_array($adoption_summary) ? $a
 $person_credit_rows = isset($person_credit_rows) && is_array($person_credit_rows) ? $person_credit_rows : array();
 $person_credit_summary = isset($person_credit_summary) && is_array($person_credit_summary) ? $person_credit_summary : array();
 $person_credit_review_states = isset($person_credit_review_states) && is_array($person_credit_review_states) ? $person_credit_review_states : array();
+$person_credit_row_review_states = isset($person_credit_row_review_states) && is_array($person_credit_row_review_states) ? $person_credit_row_review_states : array();
 $person_credit_review_filter_labels = isset($person_credit_review_filter_labels) && is_array($person_credit_review_filter_labels) ? $person_credit_review_filter_labels : array();
 $selected_state = isset($selected_state) ? (string) $selected_state : 'candidate_external';
 $selected_limit = isset($selected_limit) ? intval($selected_limit) : 50;
@@ -89,6 +90,7 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                 <span><?php echo esc_html(sprintf(__('Missing source IDs: %d', 'academy-awards-table'), intval($person_credit_summary['missing_source_nominee_ids'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Label/ID mismatches: %d', 'academy-awards-table'), intval($person_credit_summary['label_id_mismatch'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Saved reviews in window: %d', 'academy-awards-table'), intval($person_credit_summary['reviewed_total'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Full-row reviews in window: %d', 'academy-awards-table'), intval($person_credit_summary['row_reviewed_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Showing: %d', 'academy-awards-table'), intval($person_credit_summary['returned'] ?? count($person_credit_rows)))); ?></span>
             </div>
         <?php endif; ?>
@@ -134,6 +136,12 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                     $source_nominee_ids = (string) ($row['source_nominee_ids'] ?? '');
                     $source_correction_preview = isset($row['source_correction_preview']) && is_array($row['source_correction_preview']) ? $row['source_correction_preview'] : array();
                     $source_correction_ready = !empty($source_correction_preview['ready']);
+                    $full_row_review = isset($row['full_row_review']) && is_array($row['full_row_review']) ? $row['full_row_review'] : array();
+                    $full_row_preview = isset($row['full_row_preview']) && is_array($row['full_row_preview']) ? $row['full_row_preview'] : array();
+                    $full_row_ready = !empty($full_row_preview['ready']);
+                    $full_row_labels = isset($full_row_preview['labels']) && is_array($full_row_preview['labels']) ? $full_row_preview['labels'] : array();
+                    $full_row_current_ids = array_values(array_filter(array_map('trim', explode('|', (string) ($full_row_preview['current_nominee_ids'] ?? ''))), 'strlen'));
+                    $full_row_show = count($full_row_labels) > 1 || !empty($full_row_review['is_reviewed']);
                     ?>
                     <article class="aat-person-portrait-adoption-card aat-person-credit-review-card">
                         <div class="aat-person-portrait-adoption-body">
@@ -214,6 +222,68 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                                                 <input type="text" name="aat_person_credit_source_confirm_person_id" value="" placeholder="<?php echo esc_attr((string) ($source_correction_preview['proposed_person_id'] ?? 'nm0000000')); ?>" autocomplete="off" />
                                             </label>
                                             <button type="submit" class="button button-secondary"><?php esc_html_e('Apply one-row source correction', 'academy-awards-table'); ?></button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                            <?php if ($full_row_show) : ?>
+                                <div class="aat-person-credit-full-row-resolver <?php echo $full_row_ready ? 'is-ready' : 'is-blocked'; ?>">
+                                    <strong><?php esc_html_e('Full-row resolver', 'academy-awards-table'); ?></strong>
+                                    <p><?php echo esc_html((string) ($full_row_preview['message'] ?? __('Save a full-row review before applying any row-level correction.', 'academy-awards-table'))); ?></p>
+                                    <?php if (!empty($full_row_labels)) : ?>
+                                        <ol class="aat-person-credit-full-row-slots">
+                                            <?php foreach ($full_row_labels as $slot_index => $slot_label) : ?>
+                                                <li>
+                                                    <span><?php echo esc_html((string) $slot_label); ?></span>
+                                                    <code><?php echo esc_html((string) ($full_row_current_ids[$slot_index] ?? 'blank')); ?></code>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ol>
+                                    <?php endif; ?>
+                                    <form method="post" class="aat-person-credit-full-row-form">
+                                        <?php wp_nonce_field('aat_person_credit_row_review', 'aat_person_credit_row_review_nonce'); ?>
+                                        <input type="hidden" name="aat_person_credit_row_source_award_id" value="<?php echo esc_attr((string) ($row['source_award_id'] ?? 0)); ?>" />
+                                        <label>
+                                            <span><?php esc_html_e('Full-row state', 'academy-awards-table'); ?></span>
+                                            <select name="aat_person_credit_row_review_state">
+                                                <?php foreach ($person_credit_row_review_states as $value => $label) : ?>
+                                                    <option value="<?php echo esc_attr($value); ?>" <?php selected((string) ($full_row_review['review_state'] ?? 'needs_review'), $value); ?>><?php echo esc_html($label); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </label>
+                                        <label>
+                                            <span><?php esc_html_e('Ordered nominee_ids', 'academy-awards-table'); ?></span>
+                                            <textarea name="aat_person_credit_row_proposed_nominee_ids" rows="<?php echo esc_attr((string) max(3, min(8, count($full_row_labels)))); ?>" placeholder="nm0000000|nm0000001"><?php echo esc_textarea((string) ($full_row_review['proposed_nominee_ids'] ?? '')); ?></textarea>
+                                        </label>
+                                        <label>
+                                            <span><?php esc_html_e('Private full-row note', 'academy-awards-table'); ?></span>
+                                            <textarea name="aat_person_credit_row_review_note" rows="3"><?php echo esc_textarea((string) ($full_row_review['correction_note'] ?? '')); ?></textarea>
+                                        </label>
+                                        <button type="submit" class="button button-primary"><?php esc_html_e('Save full-row review', 'academy-awards-table'); ?></button>
+                                    </form>
+                                    <?php if ($full_row_ready) : ?>
+                                        <dl>
+                                            <div>
+                                                <dt><?php esc_html_e('Current nominee_ids', 'academy-awards-table'); ?></dt>
+                                                <dd><code><?php echo esc_html((string) ($full_row_preview['current_nominee_ids'] ?? '')); ?></code></dd>
+                                            </div>
+                                            <div>
+                                                <dt><?php esc_html_e('New nominee_ids', 'academy-awards-table'); ?></dt>
+                                                <dd><code><?php echo esc_html((string) ($full_row_preview['new_nominee_ids'] ?? '')); ?></code></dd>
+                                            </div>
+                                        </dl>
+                                        <form method="post" class="aat-person-credit-full-row-apply-form">
+                                            <?php wp_nonce_field('aat_person_credit_row_apply', 'aat_person_credit_row_apply_nonce'); ?>
+                                            <input type="hidden" name="aat_person_credit_row_apply_source_award_id" value="<?php echo esc_attr((string) ($row['source_award_id'] ?? 0)); ?>" />
+                                            <label class="aat-person-credit-source-correction-confirm">
+                                                <input type="checkbox" name="aat_person_credit_row_apply_confirm" value="1" />
+                                                <span><?php esc_html_e('I confirm this updates only this award row source nominee_ids.', 'academy-awards-table'); ?></span>
+                                            </label>
+                                            <label>
+                                                <span><?php esc_html_e('Type exact award row number', 'academy-awards-table'); ?></span>
+                                                <input type="text" name="aat_person_credit_row_apply_confirm_source_award_id" value="" placeholder="<?php echo esc_attr((string) ($row['source_award_id'] ?? 0)); ?>" autocomplete="off" />
+                                            </label>
+                                            <button type="submit" class="button button-secondary"><?php esc_html_e('Apply full-row source correction', 'academy-awards-table'); ?></button>
                                         </form>
                                     <?php endif; ?>
                                 </div>

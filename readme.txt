@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.51
+Stable tag: 2.7.52
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.52 =
+* Added a private full-row person-credit resolver for multi-credit Oscar source rows.
+* Full-row reviews store ordered nominee ID proposals in `wp_aat_person_credit_row_reviews` without mutating Oscar rows.
+* Applying a full-row correction requires Ready To Apply state, exact visible-label/ID count matching, a checkbox, and typed source award row confirmation.
 
 = 2.7.51 =
 * Added a private one-row person-credit source correction action inside `Academy Awards > Person Portrait Queue`.
