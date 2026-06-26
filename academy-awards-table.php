@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.55
+ * Version: 2.7.56
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.55');
+define('AAT_VERSION', '2.7.56');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -67,6 +67,11 @@ class Academy_Awards_Table {
     private function get_company_credit_row_reviews_table_name() {
         global $wpdb;
         return $wpdb->prefix . 'aat_company_credit_row_reviews';
+    }
+
+    private function get_person_portrait_existing_reviews_table_name() {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_person_portrait_existing_reviews';
     }
 
     private function get_omdb_poster_reviews_table_name() {
@@ -380,6 +385,40 @@ class Academy_Awards_Table {
         dbDelta($sql_reviews);
     }
 
+    private function maybe_create_person_portrait_existing_reviews_table($charset_collate = '') {
+        global $wpdb;
+
+        if ($charset_collate === '') {
+            $charset_collate = $wpdb->get_charset_collate();
+            if (stripos($charset_collate, 'latin1') !== false) {
+                $charset_collate = 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
+            }
+        }
+
+        $reviews_table = $this->get_person_portrait_existing_reviews_table_name();
+        $sql_reviews = "CREATE TABLE IF NOT EXISTS $reviews_table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            attachment_id bigint(20) unsigned NOT NULL DEFAULT 0,
+            candidate_person_id varchar(32) NOT NULL DEFAULT '',
+            review_state varchar(32) NOT NULL DEFAULT 'needs_review',
+            issue_type varchar(32) NOT NULL DEFAULT 'none',
+            correction_note text,
+            reviewer_user_id bigint(20) unsigned NOT NULL DEFAULT 0,
+            reviewed_at datetime DEFAULT NULL,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY attachment_person (attachment_id, candidate_person_id),
+            KEY attachment_id (attachment_id),
+            KEY candidate_person_id (candidate_person_id),
+            KEY review_state (review_state),
+            KEY issue_type (issue_type),
+            KEY reviewed_at (reviewed_at)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql_reviews);
+    }
+
     private function maybe_create_omdb_reviews_table($charset_collate = '') {
         global $wpdb;
 
@@ -608,6 +647,7 @@ class Academy_Awards_Table {
         $this->maybe_create_person_credit_reviews_table($charset_collate);
         $this->maybe_create_person_credit_row_reviews_table($charset_collate);
         $this->maybe_create_company_credit_row_reviews_table($charset_collate);
+        $this->maybe_create_person_portrait_existing_reviews_table($charset_collate);
         $this->maybe_create_omdb_reviews_table($charset_collate);
         $this->maybe_create_omdb_poster_reviews_table($charset_collate);
         $this->maybe_create_ceremony_writeups_table($charset_collate);
@@ -631,6 +671,7 @@ class Academy_Awards_Table {
         $this->maybe_create_person_credit_reviews_table();
         $this->maybe_create_person_credit_row_reviews_table();
         $this->maybe_create_company_credit_row_reviews_table();
+        $this->maybe_create_person_portrait_existing_reviews_table();
         $this->maybe_create_omdb_reviews_table();
         $this->maybe_create_omdb_poster_reviews_table();
         $this->maybe_create_ceremony_writeups_table();
@@ -722,6 +763,7 @@ class Academy_Awards_Table {
         $this->maybe_create_person_credit_reviews_table($charset_collate);
         $this->maybe_create_person_credit_row_reviews_table($charset_collate);
         $this->maybe_create_company_credit_row_reviews_table($charset_collate);
+        $this->maybe_create_person_portrait_existing_reviews_table($charset_collate);
         $this->maybe_create_omdb_reviews_table($charset_collate);
         $this->maybe_create_omdb_poster_reviews_table($charset_collate);
         $this->maybe_create_ceremony_writeups_table($charset_collate);
@@ -6240,6 +6282,17 @@ class Academy_Awards_Table {
                     esc_html((string) ($adoption_result['person_id'] ?? $person_id))
                 );
             }
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_existing_person_portrait_review_nonce'])) {
+            check_admin_referer('aat_existing_person_portrait_review', 'aat_existing_person_portrait_review_nonce');
+
+            $existing_review_result = $this->save_person_portrait_existing_review_record_from_request($_POST);
+
+            if (is_wp_error($existing_review_result)) {
+                $message = $existing_review_result->get_error_message();
+                $message_type = 'error';
+            } else {
+                $message = __('Existing PEOPLE portrait review saved. Adoption still requires Approved To Adopt plus exact typed IMDb confirmation.', 'academy-awards-table');
+            }
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aat_existing_person_portrait_adopt_nonce'])) {
             check_admin_referer('aat_existing_person_portrait_adopt', 'aat_existing_person_portrait_adopt_nonce');
 
@@ -6305,7 +6358,7 @@ class Academy_Awards_Table {
 
         $queue_rows = is_array($queue['rows'] ?? null) ? $queue['rows'] : array();
         $queue_summary = is_array($queue['summary'] ?? null) ? $queue['summary'] : array();
-        $allowed_adoption_views = array('all', 'ready', 'duplicates', 'duplicate_groups', 'manual');
+        $allowed_adoption_views = array('all', 'hold_review', 'approved', 'ready', 'duplicates', 'duplicate_groups', 'manual');
         $adoption_view = isset($_GET['adoption_view']) ? sanitize_key(wp_unslash($_GET['adoption_view'])) : 'all';
         if (!in_array($adoption_view, $allowed_adoption_views, true)) {
             $adoption_view = 'all';
@@ -6338,6 +6391,8 @@ class Academy_Awards_Table {
         $person_credit_review_states = $this->get_person_credit_review_states();
         $person_credit_row_review_states = $this->get_person_credit_row_review_states();
         $person_credit_review_filter_labels = $this->get_person_credit_review_filter_labels();
+        $person_portrait_existing_review_states = $this->get_person_portrait_existing_review_states();
+        $person_portrait_existing_issue_types = $this->get_person_portrait_existing_issue_types();
         $company_credit_review_states = $this->get_company_credit_row_review_states();
         $company_credit_review_filter_labels = $this->get_company_credit_review_filter_labels();
         $company_credit_entity_kinds = $this->get_company_credit_entity_kinds();
@@ -13408,13 +13463,254 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         return new WP_Error('aat_profile_batch_unknown_source_type', 'Manual profile image source type is not supported.');
     }
 
+    private function get_person_portrait_existing_review_states() {
+        return array(
+            'needs_review' => __('Needs Review', 'academy-awards-table'),
+            'approved_to_adopt' => __('Approved To Adopt', 'academy-awards-table'),
+            'wrong_person_or_label' => __('Wrong Person Or Label', 'academy-awards-table'),
+            'not_a_person' => __('Not A Person', 'academy-awards-table'),
+            'needs_better_source' => __('Needs Better Source', 'academy-awards-table'),
+            'reject_ignore' => __('Reject / Ignore', 'academy-awards-table'),
+            'resolved' => __('Resolved', 'academy-awards-table'),
+        );
+    }
+
+    private function sanitize_person_portrait_existing_review_state($state) {
+        $state = sanitize_key((string) $state);
+        $states = $this->get_person_portrait_existing_review_states();
+        return isset($states[$state]) ? $state : 'needs_review';
+    }
+
+    private function get_person_portrait_existing_issue_types() {
+        return array(
+            'none' => __('None', 'academy-awards-table'),
+            'missing_expected_name' => __('Missing Expected Name', 'academy-awards-table'),
+            'expected_label_mismatch' => __('Expected Label Mismatch', 'academy-awards-table'),
+            'expected_source_gap' => __('Expected Source Gap', 'academy-awards-table'),
+            'suspicious_label' => __('Suspicious Label', 'academy-awards-table'),
+            'manual_note' => __('Manual Note', 'academy-awards-table'),
+        );
+    }
+
+    private function sanitize_person_portrait_existing_issue_type($issue_type) {
+        $issue_type = sanitize_key((string) $issue_type);
+        $issue_types = $this->get_person_portrait_existing_issue_types();
+        return isset($issue_types[$issue_type]) ? $issue_type : 'none';
+    }
+
+    private function get_person_portrait_existing_review_key($attachment_id, $person_id) {
+        return absint($attachment_id) . '|' . strtolower(trim((string) $person_id));
+    }
+
+    private function get_default_person_portrait_existing_review_record($attachment_id, $person_id) {
+        $states = $this->get_person_portrait_existing_review_states();
+        $issue_types = $this->get_person_portrait_existing_issue_types();
+        return array(
+            'attachment_id' => absint($attachment_id),
+            'candidate_person_id' => strtolower(trim((string) $person_id)),
+            'review_state' => 'needs_review',
+            'review_state_label' => $states['needs_review'],
+            'issue_type' => 'none',
+            'issue_type_label' => $issue_types['none'],
+            'correction_note' => '',
+            'reviewer_user_id' => 0,
+            'reviewed_at' => '',
+            'updated_at' => '',
+            'is_reviewed' => false,
+            'is_approved' => false,
+        );
+    }
+
+    private function get_person_portrait_existing_review_records($pairs) {
+        global $wpdb;
+
+        $attachment_ids = array();
+        $person_ids = array();
+        foreach ((array) $pairs as $pair) {
+            $attachment_id = absint($pair['attachment_id'] ?? 0);
+            $person_id = strtolower(trim((string) ($pair['person_id'] ?? '')));
+            if ($attachment_id > 0 && $this->is_imdb_name_entity_id($person_id)) {
+                $attachment_ids[$attachment_id] = true;
+                $person_ids[$person_id] = true;
+            }
+        }
+
+        if (empty($attachment_ids) || empty($person_ids)) {
+            return array();
+        }
+
+        $table = $this->get_person_portrait_existing_reviews_table_name();
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        if ($exists !== $table) {
+            return array();
+        }
+
+        $attachment_ids = array_keys($attachment_ids);
+        $person_ids = array_keys($person_ids);
+        $attachment_placeholders = implode(', ', array_fill(0, count($attachment_ids), '%d'));
+        $person_placeholders = implode(', ', array_fill(0, count($person_ids), '%s'));
+        $sql = $wpdb->prepare(
+            "SELECT attachment_id, candidate_person_id, review_state, issue_type, correction_note, reviewer_user_id, reviewed_at, updated_at FROM $table WHERE attachment_id IN ($attachment_placeholders) AND candidate_person_id IN ($person_placeholders)",
+            array_merge($attachment_ids, $person_ids)
+        );
+        $rows = $wpdb->get_results($sql, ARRAY_A);
+        if (!is_array($rows)) {
+            return array();
+        }
+
+        $states = $this->get_person_portrait_existing_review_states();
+        $issue_types = $this->get_person_portrait_existing_issue_types();
+        $records = array();
+        foreach ($rows as $row) {
+            $attachment_id = absint($row['attachment_id'] ?? 0);
+            $person_id = strtolower(trim((string) ($row['candidate_person_id'] ?? '')));
+            if ($attachment_id <= 0 || !$this->is_imdb_name_entity_id($person_id)) {
+                continue;
+            }
+
+            $state = $this->sanitize_person_portrait_existing_review_state($row['review_state'] ?? '');
+            $issue_type = $this->sanitize_person_portrait_existing_issue_type($row['issue_type'] ?? '');
+            $records[$this->get_person_portrait_existing_review_key($attachment_id, $person_id)] = array(
+                'attachment_id' => $attachment_id,
+                'candidate_person_id' => $person_id,
+                'review_state' => $state,
+                'review_state_label' => $states[$state] ?? $states['needs_review'],
+                'issue_type' => $issue_type,
+                'issue_type_label' => $issue_types[$issue_type] ?? $issue_types['none'],
+                'correction_note' => (string) ($row['correction_note'] ?? ''),
+                'reviewer_user_id' => (int) ($row['reviewer_user_id'] ?? 0),
+                'reviewed_at' => (string) ($row['reviewed_at'] ?? ''),
+                'updated_at' => (string) ($row['updated_at'] ?? ''),
+                'is_reviewed' => true,
+                'is_approved' => $state === 'approved_to_adopt',
+            );
+        }
+
+        return $records;
+    }
+
+    private function get_current_existing_person_portrait_candidate_row($attachment_id, $person_id) {
+        $attachment_id = absint($attachment_id);
+        $person_id = strtolower(trim((string) $person_id));
+
+        if ($attachment_id <= 0) {
+            return new WP_Error('aat_existing_portrait_review_missing_attachment', __('A valid attachment is required for existing portrait review.', 'academy-awards-table'));
+        }
+        if (!$this->is_imdb_name_entity_id($person_id)) {
+            return new WP_Error('aat_existing_portrait_review_bad_person_id', __('A valid IMDb person ID is required for existing portrait review.', 'academy-awards-table'));
+        }
+        if (get_post_type($attachment_id) !== 'attachment' || !wp_attachment_is_image($attachment_id)) {
+            return new WP_Error('aat_existing_portrait_review_not_image', __('The selected attachment is not an image attachment.', 'academy-awards-table'));
+        }
+
+        $audit = $this->build_profile_image_existing_media_audit(array(
+            'folder' => 'PEOPLE',
+            'sample' => 0,
+            'all_media' => 0,
+            'output_csv' => '',
+            'state' => 'reusable_nm_filename',
+        ));
+        if (is_wp_error($audit)) {
+            return new WP_Error('aat_existing_portrait_review_audit_unavailable', $audit->get_error_message());
+        }
+
+        foreach ((array) ($audit['rows'] ?? array()) as $row) {
+            if (intval($row['attachment_id'] ?? 0) !== $attachment_id) {
+                continue;
+            }
+            if (strtolower(trim((string) ($row['candidate_person_id'] ?? ''))) !== $person_id || empty($row['adoption_candidate'])) {
+                return new WP_Error('aat_existing_portrait_review_stale_candidate', __('This PEOPLE attachment no longer matches the submitted person candidate.', 'academy-awards-table'));
+            }
+
+            return $row;
+        }
+
+        return new WP_Error('aat_existing_portrait_review_missing_candidate', __('This PEOPLE attachment is no longer present in the reusable candidate audit.', 'academy-awards-table'));
+    }
+
+    private function replace_person_portrait_existing_review_record($args) {
+        $attachment_id = absint($args['attachment_id'] ?? 0);
+        $person_id = strtolower(trim((string) ($args['candidate_person_id'] ?? '')));
+        if ($attachment_id <= 0 || !$this->is_imdb_name_entity_id($person_id)) {
+            return new WP_Error('aat_existing_portrait_review_bad_key', __('Existing portrait review requires an attachment and IMDb person ID.', 'academy-awards-table'));
+        }
+
+        $states = $this->get_person_portrait_existing_review_states();
+        $state = sanitize_key((string) ($args['review_state'] ?? ''));
+        if (!isset($states[$state])) {
+            return new WP_Error('aat_existing_portrait_review_bad_state', __('Choose a supported existing PEOPLE portrait review state.', 'academy-awards-table'));
+        }
+
+        $issue_types = $this->get_person_portrait_existing_issue_types();
+        $issue_type = sanitize_key((string) ($args['issue_type'] ?? ''));
+        if (!isset($issue_types[$issue_type])) {
+            return new WP_Error('aat_existing_portrait_review_bad_issue_type', __('Choose a supported existing PEOPLE portrait issue type.', 'academy-awards-table'));
+        }
+
+        $note = sanitize_textarea_field((string) ($args['correction_note'] ?? ''));
+        $reviewer_user_id = absint($args['reviewer_user_id'] ?? get_current_user_id());
+        $now = current_time('mysql');
+
+        global $wpdb;
+        $table = $this->get_person_portrait_existing_reviews_table_name();
+        $this->maybe_create_person_portrait_existing_reviews_table();
+
+        $result = $wpdb->replace(
+            $table,
+            array(
+                'attachment_id' => $attachment_id,
+                'candidate_person_id' => $person_id,
+                'review_state' => $state,
+                'issue_type' => $issue_type,
+                'correction_note' => $note,
+                'reviewer_user_id' => $reviewer_user_id,
+                'reviewed_at' => $now,
+                'updated_at' => $now,
+            ),
+            array('%d', '%s', '%s', '%s', '%s', '%d', '%s', '%s')
+        );
+
+        if ($result === false) {
+            return new WP_Error('aat_existing_portrait_review_save_failed', __('Could not save the existing PEOPLE portrait review.', 'academy-awards-table'));
+        }
+
+        return true;
+    }
+
+    private function save_person_portrait_existing_review_record_from_request($request) {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error('aat_existing_portrait_review_forbidden', __('You do not have permission to save existing PEOPLE portrait reviews.', 'academy-awards-table'));
+        }
+
+        $attachment_id = isset($request['existing_review_attachment_id']) ? absint($request['existing_review_attachment_id']) : 0;
+        $person_id = isset($request['existing_review_person_id']) ? strtolower(trim(sanitize_text_field(wp_unslash($request['existing_review_person_id'])))) : '';
+        $candidate_row = $this->get_current_existing_person_portrait_candidate_row($attachment_id, $person_id);
+        if (is_wp_error($candidate_row)) {
+            return $candidate_row;
+        }
+        if (!empty($candidate_row['duplicate_person_id'])) {
+            return new WP_Error('aat_existing_portrait_review_duplicate_candidate', __('Duplicate PEOPLE portrait candidates must stay in duplicate-specific visual review.', 'academy-awards-table'));
+        }
+
+        $note = isset($request['existing_review_note']) ? sanitize_textarea_field(wp_unslash($request['existing_review_note'])) : '';
+
+        return $this->replace_person_portrait_existing_review_record(array(
+            'attachment_id' => $attachment_id,
+            'candidate_person_id' => $person_id,
+            'review_state' => $request['existing_review_state'] ?? '',
+            'issue_type' => $request['existing_review_issue_type'] ?? '',
+            'correction_note' => $note,
+            'reviewer_user_id' => get_current_user_id(),
+        ));
+    }
+
     private function get_existing_person_portrait_adoption_rows($args = array()) {
         $limit = isset($args['limit']) ? intval($args['limit']) : 24;
         $limit = max(1, min(60, $limit));
         $offset = isset($args['offset']) ? intval($args['offset']) : 0;
         $offset = max(0, $offset);
         $view = isset($args['view']) ? sanitize_key((string) $args['view']) : 'all';
-        if (!in_array($view, array('all', 'ready', 'duplicates', 'duplicate_groups', 'manual'), true)) {
+        if (!in_array($view, array('all', 'hold_review', 'approved', 'ready', 'duplicates', 'duplicate_groups', 'manual'), true)) {
             $view = 'all';
         }
 
@@ -13543,14 +13839,61 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
         $duplicate_group_review_rows = array_values($duplicate_group_review_rows_map);
 
+        $review_pairs = array();
+        foreach ($candidate_rows as $candidate_row) {
+            if (!empty($candidate_row['manual_review']) || !empty($candidate_row['duplicate_person_id'])) {
+                continue;
+            }
+
+            $candidate_attachment_id = intval($candidate_row['attachment_id'] ?? 0);
+            $candidate_person_id = strtolower(trim((string) ($candidate_row['person_id'] ?? '')));
+            if ($candidate_attachment_id > 0 && $this->is_imdb_name_entity_id($candidate_person_id)) {
+                $review_pairs[] = array(
+                    'attachment_id' => $candidate_attachment_id,
+                    'person_id' => $candidate_person_id,
+                );
+            }
+        }
+        $existing_review_records = $this->get_person_portrait_existing_review_records($review_pairs);
+        $existing_review_states = $this->get_person_portrait_existing_review_states();
+        $existing_review_counts = array();
+        foreach (array_keys($existing_review_states) as $state_key) {
+            $existing_review_counts[$state_key] = 0;
+        }
+
+        foreach ($candidate_rows as $index => $candidate_row) {
+            if (!empty($candidate_row['manual_review']) || !empty($candidate_row['duplicate_person_id'])) {
+                continue;
+            }
+
+            $candidate_attachment_id = intval($candidate_row['attachment_id'] ?? 0);
+            $candidate_person_id = strtolower(trim((string) ($candidate_row['person_id'] ?? '')));
+            $review_key = $this->get_person_portrait_existing_review_key($candidate_attachment_id, $candidate_person_id);
+            $review = $existing_review_records[$review_key] ?? $this->get_default_person_portrait_existing_review_record($candidate_attachment_id, $candidate_person_id);
+            $candidate_rows[$index]['existing_review'] = $review;
+            $candidate_rows[$index]['existing_review_state'] = (string) ($review['review_state'] ?? 'needs_review');
+            $candidate_rows[$index]['existing_review_state_label'] = (string) ($review['review_state_label'] ?? ($existing_review_states['needs_review'] ?? 'Needs Review'));
+            $candidate_rows[$index]['existing_review_issue_type'] = (string) ($review['issue_type'] ?? 'none');
+            $candidate_rows[$index]['existing_review_is_approved'] = !empty($review['is_approved']);
+
+            $review_state_key = (string) ($review['review_state'] ?? 'needs_review');
+            if (isset($existing_review_counts[$review_state_key])) {
+                $existing_review_counts[$review_state_key]++;
+            }
+        }
+
         $ready_total = 0;
         $duplicate_total = 0;
         $manual_review_total = 0;
+        $existing_hold_total = 0;
+        $existing_approved_total = 0;
         $duplicate_person_ids = array();
         $filtered_rows = array();
         foreach ($candidate_rows as $candidate_row) {
             $is_manual = !empty($candidate_row['manual_review']);
             $is_duplicate = !empty($candidate_row['duplicate_person_id']);
+            $is_existing_approved = !$is_manual && !$is_duplicate && !empty($candidate_row['existing_review_is_approved']);
+            $is_existing_hold = !$is_manual && !$is_duplicate && !$is_existing_approved;
             if ($is_manual) {
                 $manual_review_total++;
             } elseif ($is_duplicate) {
@@ -13562,9 +13905,20 @@ public function get_person_visual_package($nm_id, $size = 'large') {
                 }
             } else {
                 $ready_total++;
+                if ($is_existing_approved) {
+                    $existing_approved_total++;
+                } else {
+                    $existing_hold_total++;
+                }
             }
 
             if ($view === 'duplicate_groups') {
+                continue;
+            }
+            if ($view === 'hold_review' && !$is_existing_hold) {
+                continue;
+            }
+            if ($view === 'approved' && !$is_existing_approved) {
                 continue;
             }
             if ($view === 'manual' && !$is_manual) {
@@ -13594,6 +13948,9 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         $summary['adoption_total'] = $ready_total + $duplicate_total;
         $summary['adoption_review_total'] = count($filtered_rows);
         $summary['ready_adoption_total'] = $ready_total;
+        $summary['existing_hold_review_total'] = $existing_hold_total;
+        $summary['existing_approved_total'] = $existing_approved_total;
+        $summary['existing_review_counts'] = $existing_review_counts;
         $summary['duplicate_adoption_total'] = $duplicate_total;
         $summary['duplicate_person_total'] = count($duplicate_person_ids);
         $summary['duplicate_group_review_total'] = count($duplicate_group_review_rows);
@@ -13705,6 +14062,17 @@ public function get_person_visual_package($nm_id, $size = 'large') {
                 count($duplicate_attachment_ids)
             );
             $note = trim($note) !== '' ? trim($note) . "\n" . $duplicate_note : $duplicate_note;
+        }
+        if (empty($row['duplicate_person_id'])) {
+            $review_records = $this->get_person_portrait_existing_review_records(array(array(
+                'attachment_id' => $attachment_id,
+                'person_id' => $person_id,
+            )));
+            $review_key = $this->get_person_portrait_existing_review_key($attachment_id, $person_id);
+            $review = $review_records[$review_key] ?? $this->get_default_person_portrait_existing_review_record($attachment_id, $person_id);
+            if (empty($review['is_approved'])) {
+                return new WP_Error('aat_existing_portrait_review_required', __('Approve this existing PEOPLE portrait review before adoption.', 'academy-awards-table'));
+            }
         }
         if (empty($row['duplicate_person_id']) && $require_confirmation && $confirm_person_id !== $person_id) {
             return new WP_Error('aat_existing_portrait_confirmation', __('Type the exact IMDb person ID to adopt this existing portrait.', 'academy-awards-table'));

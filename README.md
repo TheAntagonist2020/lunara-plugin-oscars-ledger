@@ -14,7 +14,7 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.55`.
+Current baseline: `2.7.56`.
 
 ## Current Public Surface
 
@@ -37,6 +37,7 @@ Current baseline: `2.7.55`.
 - The private existing media reconciliation audit scans the current `PEOPLE` Media Library folder before new imports, reporting already route-backed portraits, reusable `nm...` filename matches, likely name matches, duplicates, and manual-review rows without mutating attachments.
 - `Academy Awards > Person Portrait Queue` includes an Existing PEOPLE adoption lane that lets admins adopt one reusable `nm...` filename portrait at a time as `existing-media-adoption` without fetching, importing, renaming, or moving media.
 - Existing PEOPLE ready adoption now requires typed `nm...` confirmation before the admin POST can write portrait metadata, matching the duplicate resolver's defensive rhythm.
+- Existing PEOPLE non-duplicate candidates now require a private hold review saved as `Approved To Adopt` before the exact typed IMDb confirmation can unlock adoption.
 - The Existing PEOPLE lane now includes a duplicate-review view with competing attachment thumbnails for duplicate `nm...` filename matches, plus a one-by-one typed-confirmation resolver for choosing the correct attachment without enabling bulk duplicate adoption.
 - The Existing PEOPLE lane now includes a grouped duplicate-review view so duplicate candidates can be judged one person at a time while keeping typed-confirmation resolver writes per attachment.
 - The Existing PEOPLE lane includes a read-only Manual review lane for `needs_manual_review` rows so unresolved PEOPLE images can be inspected without rendering adoption or duplicate resolver actions.

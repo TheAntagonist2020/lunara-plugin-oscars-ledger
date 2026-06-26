@@ -386,6 +386,16 @@
     border-color: #cbd5e1;
 }
 
+.aat-person-portrait-adoption-card.is-review-hold {
+    background: #fffdf7;
+    border-color: #d9a441;
+}
+
+.aat-person-portrait-adoption-card.is-approved {
+    background: #f4fbf2;
+    border-color: #7ad278;
+}
+
 .aat-person-portrait-adoption-card img {
     display: block;
     height: 144px;
@@ -436,6 +446,33 @@
 
 .aat-person-portrait-adoption-body input[type="text"] {
     width: 100%;
+}
+
+.aat-person-portrait-existing-review {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 12px;
+}
+
+.aat-person-portrait-adoption-card.is-approved .aat-person-portrait-existing-review {
+    background: #f4fbf2;
+    border-color: #7ad278;
+}
+
+.aat-person-portrait-existing-review strong {
+    color: #0a1520;
+}
+
+.aat-person-portrait-existing-review p {
+    margin: 0;
+}
+
+.aat-person-portrait-existing-review-form select {
+    max-width: 100%;
 }
 
 .aat-person-credit-source-correction {

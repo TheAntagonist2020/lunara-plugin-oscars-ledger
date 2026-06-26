@@ -527,7 +527,9 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
             <div class="aat-person-portrait-summary">
                 <span><?php echo esc_html(sprintf(__('PEOPLE attachments: %d', 'academy-awards-table'), intval($adoption_summary['folder_attachments'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Adoption candidates: %d', 'academy-awards-table'), intval($adoption_summary['adoption_total'] ?? 0))); ?></span>
-                <span><?php echo esc_html(sprintf(__('Ready: %d', 'academy-awards-table'), intval($adoption_summary['ready_adoption_total'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Non-duplicate: %d', 'academy-awards-table'), intval($adoption_summary['ready_adoption_total'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Needs hold review: %d', 'academy-awards-table'), intval($adoption_summary['existing_hold_review_total'] ?? 0))); ?></span>
+                <span><?php echo esc_html(sprintf(__('Approved to adopt: %d', 'academy-awards-table'), intval($adoption_summary['existing_approved_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Duplicate review: %d', 'academy-awards-table'), intval($adoption_summary['duplicate_adoption_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Duplicate people: %d', 'academy-awards-table'), intval($adoption_summary['duplicate_person_total'] ?? 0))); ?></span>
                 <span><?php echo esc_html(sprintf(__('Duplicate groups: %d', 'academy-awards-table'), intval($adoption_summary['duplicate_group_review_total'] ?? 0))); ?></span>
@@ -547,7 +549,9 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                 <select name="adoption_view">
                     <?php foreach (array(
                         'all' => __('All candidates', 'academy-awards-table'),
-                        'ready' => __('Ready only', 'academy-awards-table'),
+                        'hold_review' => __('Hold review', 'academy-awards-table'),
+                        'approved' => __('Approved to adopt', 'academy-awards-table'),
+                        'ready' => __('Non-duplicate candidates', 'academy-awards-table'),
                         'duplicates' => __('Duplicate review', 'academy-awards-table'),
                         'duplicate_groups' => __('Duplicate groups', 'academy-awards-table'),
                         'manual' => __('Manual review', 'academy-awards-table'),
@@ -582,11 +586,17 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                     $is_manual = !empty($row['manual_review']);
                     $is_duplicate_group = !empty($row['duplicate_group_review']);
                     $is_duplicate = !empty($row['duplicate_person_id']);
+                    $existing_review = isset($row['existing_review']) && is_array($row['existing_review']) ? $row['existing_review'] : array();
+                    $existing_review_state = (string) ($row['existing_review_state'] ?? ($existing_review['review_state'] ?? 'needs_review'));
+                    $existing_review_state_label = (string) ($row['existing_review_state_label'] ?? ($existing_review['review_state_label'] ?? __('Needs Review', 'academy-awards-table')));
+                    $existing_review_issue_type = (string) ($row['existing_review_issue_type'] ?? ($existing_review['issue_type'] ?? 'none'));
+                    $existing_review_note = (string) ($existing_review['correction_note'] ?? '');
+                    $existing_review_is_approved = !empty($row['existing_review_is_approved']);
                     $duplicate_group = isset($row['duplicate_group']) && is_array($row['duplicate_group']) ? $row['duplicate_group'] : array();
                     $duplicate_group_candidates = isset($row['duplicate_group_candidates']) && is_array($row['duplicate_group_candidates']) ? $row['duplicate_group_candidates'] : $duplicate_group;
                     $duplicate_count = intval($row['duplicate_count'] ?? count($duplicate_group));
                     ?>
-                    <article class="aat-person-portrait-adoption-card <?php echo $is_manual ? 'is-manual' : ($is_duplicate_group ? 'is-duplicate-group' : ($is_duplicate ? 'is-duplicate' : 'is-ready')); ?>">
+                    <article class="aat-person-portrait-adoption-card <?php echo $is_manual ? 'is-manual' : ($is_duplicate_group ? 'is-duplicate-group' : ($is_duplicate ? 'is-duplicate' : ($existing_review_is_approved ? 'is-approved' : 'is-review-hold'))); ?>">
                         <div class="aat-person-portrait-adoption-media">
                             <?php if ($thumb_url !== '') : ?>
                                 <img src="<?php echo esc_url($thumb_url); ?>" alt="" loading="lazy" />
@@ -596,7 +606,7 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                         </div>
                         <div class="aat-person-portrait-adoption-body">
                             <span class="aat-person-portrait-state <?php echo ($is_duplicate || $is_manual) ? 'aat-person-portrait-state-needs_attention' : 'aat-person-portrait-state-ready'; ?>">
-                                <?php echo esc_html($is_manual ? __('Manual review needed', 'academy-awards-table') : ($is_duplicate_group ? __('Duplicate group review', 'academy-awards-table') : ($is_duplicate ? __('Duplicate candidate', 'academy-awards-table') : __('Ready to adopt', 'academy-awards-table')))); ?>
+                                <?php echo esc_html($is_manual ? __('Manual review needed', 'academy-awards-table') : ($is_duplicate_group ? __('Duplicate group review', 'academy-awards-table') : ($is_duplicate ? __('Duplicate candidate', 'academy-awards-table') : $existing_review_state_label))); ?>
                             </span>
                             <h3><?php echo esc_html($label); ?></h3>
                             <p>
@@ -733,21 +743,58 @@ $tmdb_key_configured = !empty($tmdb_key_configured);
                                     <code>typed-confirmation duplicate resolver</code>
                                 </form>
                             <?php else : ?>
-                                <form method="post">
-                                    <?php wp_nonce_field('aat_existing_person_portrait_adopt', 'aat_existing_person_portrait_adopt_nonce'); ?>
-                                    <input type="hidden" name="attachment_id" value="<?php echo esc_attr((string) $attachment_id); ?>" />
-                                    <input type="hidden" name="person_id" value="<?php echo esc_attr($person_id); ?>" />
-                                    <label>
-                                        <span><?php echo esc_html(sprintf(__('Type %s to confirm this existing portrait adoption', 'academy-awards-table'), $person_id)); ?></span>
-                                        <input type="text" name="existing_confirm_person_id" value="" placeholder="<?php echo esc_attr($person_id); ?>" autocomplete="off" />
-                                    </label>
-                                    <label>
-                                        <span><?php esc_html_e('Private adoption note', 'academy-awards-table'); ?></span>
-                                        <textarea name="adoption_note" rows="2" placeholder="<?php esc_attr_e('Confirmed existing PEOPLE portrait.', 'academy-awards-table'); ?>"></textarea>
-                                    </label>
-                                    <button type="submit" class="button button-primary"><?php esc_html_e('Adopt existing portrait', 'academy-awards-table'); ?></button>
-                                    <code>existing-media-adoption</code>
-                                </form>
+                                <div class="aat-person-portrait-existing-review">
+                                    <strong><?php esc_html_e('Existing PEOPLE hold review', 'academy-awards-table'); ?></strong>
+                                    <p><?php esc_html_e('Save a private judgment first. Adoption opens only after this candidate is Approved To Adopt, and still requires the exact typed IMDb ID.', 'academy-awards-table'); ?></p>
+                                    <?php if (!empty($existing_review['reviewed_at'])) : ?>
+                                        <p class="aat-person-portrait-muted"><?php echo esc_html(sprintf(__('Last reviewed: %s', 'academy-awards-table'), (string) $existing_review['reviewed_at'])); ?></p>
+                                    <?php endif; ?>
+                                    <form method="post" class="aat-person-portrait-existing-review-form">
+                                        <?php wp_nonce_field('aat_existing_person_portrait_review', 'aat_existing_person_portrait_review_nonce'); ?>
+                                        <input type="hidden" name="existing_review_attachment_id" value="<?php echo esc_attr((string) $attachment_id); ?>" />
+                                        <input type="hidden" name="existing_review_person_id" value="<?php echo esc_attr($person_id); ?>" />
+                                        <label>
+                                            <span><?php esc_html_e('Review state', 'academy-awards-table'); ?></span>
+                                            <select name="existing_review_state">
+                                                <?php foreach ($person_portrait_existing_review_states as $state_key => $state_label) : ?>
+                                                    <option value="<?php echo esc_attr($state_key); ?>" <?php selected($existing_review_state, $state_key); ?>><?php echo esc_html($state_label); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </label>
+                                        <label>
+                                            <span><?php esc_html_e('Issue type', 'academy-awards-table'); ?></span>
+                                            <select name="existing_review_issue_type">
+                                                <?php foreach ($person_portrait_existing_issue_types as $issue_key => $issue_label) : ?>
+                                                    <option value="<?php echo esc_attr($issue_key); ?>" <?php selected($existing_review_issue_type, $issue_key); ?>><?php echo esc_html($issue_label); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </label>
+                                        <label>
+                                            <span><?php esc_html_e('Private review note', 'academy-awards-table'); ?></span>
+                                            <textarea name="existing_review_note" rows="2" placeholder="<?php esc_attr_e('Explain the judgment before approving or rejecting this candidate.', 'academy-awards-table'); ?>"><?php echo esc_textarea($existing_review_note); ?></textarea>
+                                        </label>
+                                        <button type="submit" class="button"><?php esc_html_e('Save hold review', 'academy-awards-table'); ?></button>
+                                    </form>
+                                </div>
+                                <?php if ($existing_review_is_approved) : ?>
+                                    <form method="post">
+                                        <?php wp_nonce_field('aat_existing_person_portrait_adopt', 'aat_existing_person_portrait_adopt_nonce'); ?>
+                                        <input type="hidden" name="attachment_id" value="<?php echo esc_attr((string) $attachment_id); ?>" />
+                                        <input type="hidden" name="person_id" value="<?php echo esc_attr($person_id); ?>" />
+                                        <label>
+                                            <span><?php echo esc_html(sprintf(__('Type %s to confirm this existing portrait adoption', 'academy-awards-table'), $person_id)); ?></span>
+                                            <input type="text" name="existing_confirm_person_id" value="" placeholder="<?php echo esc_attr($person_id); ?>" autocomplete="off" />
+                                        </label>
+                                        <label>
+                                            <span><?php esc_html_e('Private adoption note', 'academy-awards-table'); ?></span>
+                                            <textarea name="adoption_note" rows="2" placeholder="<?php esc_attr_e('Confirmed existing PEOPLE portrait.', 'academy-awards-table'); ?>"></textarea>
+                                        </label>
+                                        <button type="submit" class="button button-primary"><?php esc_html_e('Adopt existing portrait', 'academy-awards-table'); ?></button>
+                                        <code>existing-media-adoption</code>
+                                    </form>
+                                <?php else : ?>
+                                    <p class="aat-person-portrait-muted"><?php esc_html_e('Adoption locked until this private review is saved as Approved To Adopt.', 'academy-awards-table'); ?></p>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </article>

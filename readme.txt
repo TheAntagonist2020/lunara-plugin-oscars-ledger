@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.55
+Stable tag: 2.7.56
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.56 =
+* Added a private Existing PEOPLE Hold Review lane for non-duplicate reusable `nm...-profile` portrait candidates.
+* Normal Existing PEOPLE adoption now requires an `Approved To Adopt` review state before the exact typed IMDb confirmation can write portrait metadata.
+* Review rows are stored in `wp_aat_person_portrait_existing_reviews`; Oscar rows, media files, public routes, and duplicate resolver behavior are unchanged.
 
 = 2.7.55 =
 * Existing PEOPLE ready adoption now requires the exact IMDb `nm...` ID to be typed before the private admin POST can write portrait metadata.
