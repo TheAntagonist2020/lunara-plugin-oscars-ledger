@@ -31,6 +31,11 @@ $assert(strpos($plugin, 'public function get_name_entity_link_by_label($label)')
 $assert(strpos($plugin, "'MUSIC (Original Song Score or Adaptation Score)' => 'Song Score and Adaptation Score'") !== false, 'Legacy song-score category should expose a polished display label.');
 $assert(strpos($plugin, "'WRITING (Original Story)' => 'Original Story'") !== false, 'Original Story category should expose a polished display label.');
 $assert(strpos($plugin, "'WRITING (Title Writing)' => 'Title Writing'") !== false, 'Title Writing category should expose a polished display label.');
+$assert(strpos($plugin, "'SHORT SUBJECT (Comedy)' => 'Comedy Short Subject'") !== false, 'Comedy Short Subject should expose a polished display label.');
+$assert(strpos($plugin, "'SHORT SUBJECT (Novelty)' => 'Novelty Short Subject'") !== false, 'Novelty Short Subject should expose a polished display label.');
+$assert(strpos($plugin, "'SHORT SUBJECT (Color)' => 'Color Short Subject'") !== false, 'Color Short Subject should expose a polished display label.');
+$assert(strpos($plugin, "'SHORT SUBJECT (One-reel)' => 'One-reel Short Subject'") !== false, 'One-reel Short Subject should expose a polished display label.');
+$assert(strpos($plugin, "'SHORT SUBJECT (Two-reel)' => 'Two-reel Short Subject'") !== false, 'Two-reel Short Subject should expose a polished display label.');
 $assert(strpos($hub_template, '$aat_build_person_link_items') !== false, 'Hub template should build linked person chip items.');
 $assert(strpos($hub_template, 'aat-inner-route-system') !== false, 'Category shell should expose the shared inner route system hook.');
 $assert(strpos($hub_template, 'aat-generic-category-dossier') !== false, 'Non-premium categories should have a dossier-grade hook.');
@@ -97,6 +102,21 @@ $assert(strpos($hub_template, 'aat-writing-original-story-dossier') !== false, '
 $assert(strpos($hub_template, "'WRITING (TITLE WRITING)' => array(") !== false, 'Title Writing should be promoted into the premium category dossier map.');
 $assert(strpos($hub_template, 'Title Writing Dossier') !== false, 'Title Writing should have a premium dossier heading.');
 $assert(strpos($hub_template, 'aat-writing-title-writing-dossier') !== false, 'Title Writing should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'SHORT SUBJECT (COMEDY)' => array(") !== false, 'Comedy Short Subject should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Comedy Short Subject Dossier') !== false, 'Comedy Short Subject should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-short-subject-comedy-dossier') !== false, 'Comedy Short Subject should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'SHORT SUBJECT (NOVELTY)' => array(") !== false, 'Novelty Short Subject should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Novelty Short Subject Dossier') !== false, 'Novelty Short Subject should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-short-subject-novelty-dossier') !== false, 'Novelty Short Subject should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'SHORT SUBJECT (COLOR)' => array(") !== false, 'Color Short Subject should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Color Short Subject Dossier') !== false, 'Color Short Subject should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-short-subject-color-dossier') !== false, 'Color Short Subject should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'SHORT SUBJECT (ONE-REEL)' => array(") !== false, 'One-reel Short Subject should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'One-reel Short Subject Dossier') !== false, 'One-reel Short Subject should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-short-subject-one-reel-dossier') !== false, 'One-reel Short Subject should expose a route-scoped visual hook.');
+$assert(strpos($hub_template, "'SHORT SUBJECT (TWO-REEL)' => array(") !== false, 'Two-reel Short Subject should be promoted into the premium category dossier map.');
+$assert(strpos($hub_template, 'Two-reel Short Subject Dossier') !== false, 'Two-reel Short Subject should have a premium dossier heading.');
+$assert(strpos($hub_template, 'aat-short-subject-two-reel-dossier') !== false, 'Two-reel Short Subject should expose a route-scoped visual hook.');
 
 foreach (array(
     '.aat-generic-category-dossier',

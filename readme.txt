@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.70
+Stable tag: 2.7.71
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.71 =
+* Promoted early Short Subject category routes for Comedy, Novelty, Color, One-reel, and Two-reel into the premium Oscars category dossier system, extending the short-form route family without changing data or URLs.
 
 = 2.7.70 =
 * Promoted the legacy Original Story and Title Writing category routes to the premium Oscars category dossier system, extending early Writing route coverage without changing data or URLs.
