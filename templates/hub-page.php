@@ -390,7 +390,7 @@ $aat_build_person_link_items = function($entry) use ($aat, $aat_clean_nominee_la
     return $items;
 };
 
-$aat_render_hub_text_link = function($label, $url = '', $class = '') {
+$aat_render_hub_text_link = function($label, $url = '', $class = '') use ($aat_is_department_credit_label) {
     $label = trim((string) $label);
     if ($label === '') {
         return '';
@@ -399,6 +399,10 @@ $aat_render_hub_text_link = function($label, $url = '', $class = '') {
     $class_attr = trim((string) $class);
     if ($url !== '') {
         return '<a class="' . esc_attr($class_attr) . '" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+    }
+
+    if ($aat_is_department_credit_label($label)) {
+        $class_attr = trim($class_attr . ' aat-department-credit-label');
     }
 
     return '<span class="' . esc_attr($class_attr) . '">' . esc_html($label) . '</span>';
