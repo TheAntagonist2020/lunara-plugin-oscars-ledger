@@ -32,7 +32,8 @@ $assert(strpos($hub_template, '$aat_build_person_link_items') !== false, 'Hub te
 $assert(strpos($hub_template, 'aat-inner-route-system') !== false, 'Category shell should expose the shared inner route system hook.');
 $assert(strpos($hub_template, 'aat-generic-category-dossier') !== false, 'Non-premium categories should have a dossier-grade hook.');
 $assert(strpos($hub_template, '$hub_id_breadcrumb_label') !== false, 'Hub breadcrumbs should use polished display labels instead of raw route IDs.');
-$assert(strpos($hub_template, '$hub_id_breadcrumb_label = $aat->format_category_display($breadcrumb_category);') !== false, 'Category breadcrumbs should resolve slugs into category display labels.');
+$assert(strpos($hub_template, '$aat_humanize_category_label') !== false, 'Hub template should humanize all-caps category labels.');
+$assert(strpos($hub_template, '$hub_id_breadcrumb_label = $aat_humanize_category_label($aat->format_category_display($breadcrumb_category));') !== false, 'Category breadcrumbs should resolve slugs into humanized category display labels.');
 $assert(strpos($hub_template, '$aat->ordinal((int) $hub_id)') !== false, 'Ceremony breadcrumbs should render ordinal ceremony labels.');
 $assert(strpos($hub_template, 'aat-category-person-strip') !== false, 'Category rows should render a linked person/craft strip.');
 $assert(strpos($hub_template, 'aat-category-ceremony-row aat-ledger-card') !== false, 'All category ceremony rows should use ledger-card rhythm.');

@@ -821,10 +821,23 @@ if (in_array($hub, array('ceremonies','categories','about'), true)) {
 
 $hub_breadcrumb_label = ucfirst($hub);
 $hub_id_breadcrumb_label = $hub_id;
+$aat_humanize_category_label = function ($category_label) {
+    $category_label = (string) $category_label;
+    if ($category_label !== '' && strtoupper($category_label) === $category_label) {
+        $category_label = ucwords(strtolower($category_label));
+        $category_label = str_replace(
+            array(' And ', ' Of ', ' In ', ' For '),
+            array(' and ', ' of ', ' in ', ' for '),
+            $category_label
+        );
+    }
+
+    return $category_label;
+};
 if ($hub === 'category' && !empty($hub_id)) {
     $breadcrumb_category = $aat->resolve_category_slug($hub_id);
     if (!empty($breadcrumb_category)) {
-        $hub_id_breadcrumb_label = $aat->format_category_display($breadcrumb_category);
+        $hub_id_breadcrumb_label = $aat_humanize_category_label($aat->format_category_display($breadcrumb_category));
     }
 } elseif ($hub === 'ceremony' && !empty($hub_id)) {
     $hub_id_breadcrumb_label = sprintf(
@@ -2075,15 +2088,7 @@ get_header();
             }
 
             $label = $aat->format_category_display($canonical);
-            $category_heading_label = $label;
-            if ($category_heading_label !== '' && strtoupper($category_heading_label) === $category_heading_label) {
-                $category_heading_label = ucwords(strtolower($category_heading_label));
-                $category_heading_label = str_replace(
-                    array(' And ', ' Of ', ' In ', ' For '),
-                    array(' and ', ' of ', ' in ', ' for '),
-                    $category_heading_label
-                );
-            }
+            $category_heading_label = $aat_humanize_category_label($label);
             $category_summary = method_exists($aat, 'get_category_summary') ? $aat->get_category_summary($canonical) : array();
             $noms = intval($category_summary['nominations'] ?? 0);
             $wins = intval($category_summary['wins'] ?? 0);
