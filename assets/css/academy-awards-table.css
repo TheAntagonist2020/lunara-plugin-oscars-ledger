@@ -1044,6 +1044,80 @@ body .aat-container .aat-premium-category-dossier .aat-ledger-card {
     grid-column: 2;
 }
 
+/* Category dossier dynamic sizing: keep every category scaled to its actual depth. */
+body .aat-container .aat-premium-category-dossier.aat-category-scale-brief {
+    gap: clamp(16px, 2.2vw, 26px) !important;
+}
+
+body .aat-container .aat-premium-category-dossier.aat-category-scale-brief .aat-dossier-hero {
+    padding: clamp(20px, 3vw, 34px) !important;
+}
+
+body .aat-container .aat-premium-category-dossier.aat-category-scale-brief .aat-dossier-command-card {
+    min-height: 96px !important;
+}
+
+body .aat-container .aat-premium-category-dossier.aat-category-scale-brief .aat-dossier-command-card.is-latest {
+    min-height: 124px !important;
+}
+
+body .aat-container .aat-premium-category-dossier.aat-category-scale-compact .aat-dossier-command-card {
+    min-height: 106px !important;
+}
+
+body .aat-container .aat-premium-category-dossier.aat-category-scale-marathon {
+    gap: clamp(18px, 2.4vw, 28px) !important;
+}
+
+body .aat-container .aat-premium-category-dossier.aat-category-scale-marathon .aat-era-chapter {
+    margin-top: clamp(18px, 3vw, 34px) !important;
+    padding: clamp(14px, 2vw, 22px) !important;
+}
+
+body .aat-container .aat-premium-category-dossier.aat-category-scale-marathon .aat-decade-ceremonies {
+    gap: 10px !important;
+}
+
+body .aat-container .aat-premium-category-dossier.aat-category-scale-marathon .aat-ledger-card {
+    grid-template-columns: minmax(96px, .2fr) minmax(0, 1fr) !important;
+    gap: 12px !important;
+    padding: 13px !important;
+}
+
+body .aat-container .aat-premium-category-dossier.aat-category-scale-marathon .aat-category-history-title {
+    font-size: clamp(1.05rem, 1.3vw, 1.32rem) !important;
+}
+
+body .aat-container .aat-premium-category-dossier .aat-era-chapter-visual {
+    grid-template-columns: minmax(220px, min(46vw, 520px)) minmax(0, 1fr) !important;
+}
+
+body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid {
+    width: 100% !important;
+    justify-self: start !important;
+    max-width: 520px !important;
+}
+
+body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-count-1 {
+    grid-template-columns: minmax(0, 190px) !important;
+    max-width: 190px !important;
+}
+
+body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-count-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    max-width: 340px !important;
+}
+
+body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-count-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    max-width: 420px !important;
+}
+
+body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-count-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    max-width: 520px !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .aat-dossier-hero::before {
         background-position: 0 0;
@@ -1190,6 +1264,30 @@ body .aat-container .aat-premium-category-dossier .aat-ledger-card {
         min-height: 0 !important;
         max-width: 100% !important;
         aspect-ratio: 2 / 3 !important;
+    }
+
+    body .aat-container .aat-premium-category-dossier.aat-category-scale-marathon .aat-ledger-card,
+    body .aat-container .aat-premium-category-dossier.aat-category-scale-brief .aat-ledger-card {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-count-1 {
+        max-width: 190px !important;
+    }
+
+    body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-count-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        max-width: min(100%, 340px) !important;
+    }
+
+    body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-count-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        max-width: 100% !important;
+    }
+
+    body .aat-container .aat-premium-category-dossier .aat-era-chapter-media-grid.is-count-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        max-width: 100% !important;
     }
 
     .aat-ledger-card .aat-nominee-trail {

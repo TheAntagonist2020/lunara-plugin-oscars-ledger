@@ -14,14 +14,14 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.75`.
+Current baseline: `2.7.76`.
 
 ## Current Public Surface
 
 - Ceremony pages include a data-derived Ceremony Thesis layer with critical-path navigation and compact major-race briefing cards.
 - All current bundled Oscar category routes now resolve through the premium dossier system, including Casting, Dramatic Picture Directing, Comedy Picture Directing, and Unique and Artistic Picture.
 - The category dossier contract now checks the bundled canonical category set against the premium profile map so future data additions cannot quietly fall back to generic route framing.
-- Category era browsers remain visual-first and now gather up to four verified title visual packages per decade, rendering a compact poster grid when enough trustworthy art exists while still suppressing empty chambers; the next Oscars image pass should focus on broader poster-density coverage.
+- Category pages now scale themselves by route depth: brief, compact, standard, and marathon categories use different spacing/ledger density, while era browsers resize poster grids based on one, two, three, or four verified visuals.
 - Generic Oscar category pages now use dossier-grade route framing with command-band summaries, denser ledger-card rows, and linked craft/person credit chips where the person entity can be resolved.
 - Archive-specials dossier hero titles now use a scoped long-title fit so Honorary, Special, Commendation, and SciTech pages keep premium typography without awkward desktop or mobile word breaks.
 - Archive-specials category routes now include a shared premium dossier system for Honorary, Special, Commendation, and SciTech award families, keeping atypical Oscar honors curated instead of generic.

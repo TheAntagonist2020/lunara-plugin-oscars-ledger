@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.75
+Stable tag: 2.7.76
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.76 =
+* Added category-depth scale hooks so brief, compact, standard, and marathon Oscar category dossiers size themselves intentionally.
+* Resized premium category era-browser poster grids by verified visual count, giving richer decades larger visual lanes while keeping single-poster decades controlled.
+* Tightened long-running category ledger density so large category histories feel more dynamic and less like static archival stretches.
 
 = 2.7.75 =
 * Completed premium dossier coverage for every current bundled Oscar category route, including Casting, Dramatic Picture Directing, Comedy Picture Directing, and Unique and Artistic Picture.

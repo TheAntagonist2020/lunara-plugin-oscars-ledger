@@ -191,8 +191,14 @@ $assert(count($missing_premium_profiles) === 0, 'Every bundled category should r
 $assert(strpos($hub_template, 'aat_category_era_visual_limit') !== false, 'Premium category era browser should expose a bounded visual-density filter.');
 $assert(strpos($hub_template, 'aat-era-chapter-media-grid') !== false, 'Premium category era browser should render verified visuals as a poster grid.');
 $assert(strpos($hub_template, 'count($era_spotlights) >= $era_visual_limit') !== false, 'Premium category era browser should collect more than one verified visual when available.');
+$assert(strpos($hub_template, '$category_scale_class =') !== false, 'Premium category pages should compute a route-scale class from category depth.');
+$assert(strpos($hub_template, 'aat-category-scale-marathon') !== false, 'Long-running category pages should expose a marathon scale hook.');
+$assert(strpos($hub_template, 'is-count-<?php echo esc_attr((string) $era_visual_count); ?>') !== false, 'Era media grids should expose verified visual-count hooks.');
 $assert(strpos($css, '.aat-era-chapter-media-grid') !== false, 'Premium category era poster grid should be styled in the public stylesheet.');
 $assert(strpos($css, 'grid-template-columns: repeat(4, minmax(0, 1fr))') !== false, 'Premium category era poster grid should become a dense mobile strip.');
+$assert(strpos($css, '.aat-category-scale-brief') !== false, 'Brief category dossiers should receive scaled-down spacing and command cards.');
+$assert(strpos($css, '.aat-category-scale-marathon') !== false, 'Long-running category dossiers should receive denser ledger-card sizing.');
+$assert(strpos($css, '.aat-era-chapter-media-grid.is-count-4') !== false, 'Era poster grids should resize intentionally when four verified visuals exist.');
 
 foreach (array(
     '.aat-generic-category-dossier',
