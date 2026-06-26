@@ -5469,6 +5469,7 @@ class Academy_Awards_Table {
             'ACTRESS IN A SUPPORTING ROLE' => 'Best Supporting Actress',
             'BEST PICTURE' => 'Best Picture',
             'DIRECTING' => 'Best Director',
+            'MUSIC (Original Song Score or Adaptation Score)' => 'Song Score and Adaptation Score',
         );
         if (isset($map[$cat])) {
             return $map[$cat];
