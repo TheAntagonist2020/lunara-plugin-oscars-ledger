@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.79
+Stable tag: 2.7.80
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.80 =
+* Added a byte-exact ceremony write-up text guard that repairs common double-encoded UTF-8 mojibake before public rendering.
+* Extended the ceremony write-up contract so smart apostrophes, quotation marks, em dashes, nonbreaking hyphens, and accented names stay clean after database decoding.
 
 = 2.7.79 =
 * Added a verified Race Highlights strip near the top of ceremony dossier pages for Best Picture, Directing, Actor, and Actress.

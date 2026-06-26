@@ -49,6 +49,10 @@ $assert(AAT_Ceremony_Writeups::normalize_public_text($body_with_cp1252_apostroph
 $assert(preg_match('//u', AAT_Ceremony_Writeups::normalize_public_text($body_with_cp1252_apostrophe)) === 1, 'Normalized public text should be valid UTF-8.');
 $body_with_nonbreaking_hyphen = 'long‑awaited Best Director Oscar';
 $assert(AAT_Ceremony_Writeups::decode_database_text('long?awaited Best Director Oscar', bin2hex($body_with_nonbreaking_hyphen)) === $body_with_nonbreaking_hyphen, 'Database text decoder should prefer UTF-8 hex bytes over connection-converted text.');
+$body_with_common_mojibake = 'Paul Thomas Anderson' . hex2bin('C3A2E282ACE284A2') . 's long' . hex2bin('C3A2E282ACE28098') . 'awaited win ' . hex2bin('C3A2E282ACE2809D') . ' ' . hex2bin('C3A2E282ACC593') . 'Sinners' . hex2bin('C3A2E282ACC29D') . ' and Ren' . hex2bin('C383C2A9') . 'e Zellweger.';
+$body_with_common_mojibake_expected = 'Paul Thomas Anderson’s long‑awaited win — “Sinners” and Renée Zellweger.';
+$assert(AAT_Ceremony_Writeups::normalize_public_text($body_with_common_mojibake) === $body_with_common_mojibake_expected, 'Public text normalizer should repair common UTF-8 mojibake sequences.');
+$assert(AAT_Ceremony_Writeups::decode_database_text('Paul Thomas Anderson?s long?awaited win', bin2hex($body_with_common_mojibake)) === $body_with_common_mojibake_expected, 'Database text decoder should repair mojibake from hex bytes before rendering.');
 
 $plugin_source = file_get_contents($root . '/academy-awards-table.php');
 $approved_start = strpos($plugin_source, 'public function get_approved_ceremony_writeup');

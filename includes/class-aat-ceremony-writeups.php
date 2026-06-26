@@ -77,7 +77,40 @@ if (!class_exists('AAT_Ceremony_Writeups')) {
                 }
             }
 
+            $text = self::repair_common_mojibake($text);
+
             return self::normalize_text($text);
+        }
+
+        private static function repair_common_mojibake($text) {
+            $text = (string) $text;
+            if ($text === '') {
+                return '';
+            }
+
+            static $replacements = null;
+            if ($replacements === null) {
+                $pairs = array(
+                    'C3A2E282ACE284A2' => 'E28099',
+                    'C3A2E282ACC593'   => 'E2809C',
+                    'C3A2E282ACC29D'   => 'E2809D',
+                    'C3A2E282ACE2809D' => 'E28094',
+                    'C3A2E282ACE28098' => 'E28091',
+                    'C383C2A9'         => 'C3A9',
+                    'C382C2A0'         => 'C2A0',
+                );
+
+                $replacements = array();
+                foreach ($pairs as $bad_hex => $good_hex) {
+                    $bad = hex2bin($bad_hex);
+                    $good = hex2bin($good_hex);
+                    if (is_string($bad) && is_string($good)) {
+                        $replacements[$bad] = $good;
+                    }
+                }
+            }
+
+            return str_replace(array_keys($replacements), array_values($replacements), $text);
         }
 
         public static function decode_database_text($value, $hex_value = '') {
