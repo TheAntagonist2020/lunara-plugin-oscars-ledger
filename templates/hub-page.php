@@ -2223,6 +2223,14 @@ get_header();
                     'title' => __('Documentary Feature Dossier', 'academy-awards-table'),
                     'subtitle' => __('The documentary feature file: nonfiction filmmaking, public memory, and the Oscar races that turned reportage into cinema history.', 'academy-awards-table'),
                 ),
+                'DOCUMENTARY (SHORT SUBJECT)' => array(
+                    'class' => 'aat-documentary-dossier aat-documentary-short-dossier',
+                    'title' => __('Documentary Short Subject Dossier', 'academy-awards-table'),
+                    'subtitle' => __('The documentary short file: field reports, observed lives, urgent nonfiction craft, and the compact films that turned brief running times into lasting Academy memory.', 'academy-awards-table'),
+                    'history_kicker' => __('Documentary Shorts Era Browser', 'academy-awards-table'),
+                    'history_title' => __('Documentary Short Subject Through the Eras', 'academy-awards-table'),
+                    'era_copy' => __('A visual entry point into the %1$s Documentary Short Subject run.', 'academy-awards-table'),
+                ),
             );
             $premium_category_profile = isset($premium_category_profiles[$category_key]) ? $premium_category_profiles[$category_key] : array();
             $is_premium_category_dossier = !empty($premium_category_profile);
