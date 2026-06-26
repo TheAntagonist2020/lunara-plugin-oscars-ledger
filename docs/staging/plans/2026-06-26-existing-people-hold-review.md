@@ -26,7 +26,7 @@ spec: `docs/staging/specs/2026-06-26-existing-people-hold-review.md`
   acceptance: `php -l academy-awards-table.php`; `php -l inc\control-desk.php`
   spec: `docs/staging/specs/2026-06-26-existing-people-hold-review.md#implementation-notes`
 
-- [ ] T5: Verify, deploy, and preserve continuity
+- [x] T5: Verify, deploy, and preserve continuity
   goal: Deploy only changed files, prove the live guard, flush cache, smoke public routes, and update continuity evidence.
   files: `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\LUNARA_WORLD_CHANGELOG.md`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES\SESSION-LOG-2026-06-25.md`, `C:\Users\silve_i21do49\OneDrive\Desktop\New folder\09_DOCS_AND_NOTES\LUNARA_WEBSITE_HANDOFF.md`
   acceptance: live WP-CLI verifier returns blocked-unapproved and metadata-unchanged; public smoke returns `200` with no private leakage.
