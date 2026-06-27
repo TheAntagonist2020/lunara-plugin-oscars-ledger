@@ -1923,7 +1923,7 @@ get_header();
                     );
                 }
             ?>
-            <section class="aat-hub-section aat-ceremony-ballot-ledger">
+            <section class="aat-hub-section aat-ceremony-ballot-ledger<?php echo $ceremony_ballot_full_requested ? ' is-full-ledger' : ' is-fast-ledger'; ?>">
                 <div class="aat-section-head">
                     <h2 class="aat-section-title"><?php echo esc_html__('Complete Ceremony Ledger', 'academy-awards-table'); ?></h2>
                     <p class="aat-section-description">
@@ -1949,8 +1949,24 @@ get_header();
                     <span><?php echo esc_html(sprintf(__('%s winners', 'academy-awards-table'), number_format_i18n($wins))); ?></span>
                     <?php if (!$ceremony_ballot_full_requested) : ?>
                         <span><?php echo esc_html__('Nominees summarized for speed', 'academy-awards-table'); ?></span>
+                    <?php else : ?>
+                        <span><?php echo esc_html__('Every nominee expanded', 'academy-awards-table'); ?></span>
                     <?php endif; ?>
                 </div>
+                <?php if ($ceremony_ballot_full_requested) : ?>
+                    <div class="aat-ceremony-full-ledger-brief">
+                        <div>
+                            <p class="aat-hub-kicker"><?php echo esc_html__('Research View', 'academy-awards-table'); ?></p>
+                            <strong><?php echo esc_html__('Every ballot trail is open.', 'academy-awards-table'); ?></strong>
+                            <span><?php echo esc_html__('The ceremony stays chaptered by category while nominee, title, person, review, and history links remain directly reachable.', 'academy-awards-table'); ?></span>
+                        </div>
+                        <div class="aat-ceremony-full-ledger-stats" aria-label="<?php echo esc_attr__('Expanded ceremony ledger stats', 'academy-awards-table'); ?>">
+                            <span class="aat-ceremony-full-ledger-stat"><strong><?php echo esc_html(number_format_i18n($noms)); ?></strong><em><?php echo esc_html__('records', 'academy-awards-table'); ?></em></span>
+                            <span class="aat-ceremony-full-ledger-stat"><strong><?php echo esc_html(number_format_i18n(max(0, $noms - $wins))); ?></strong><em><?php echo esc_html__('nominee rows', 'academy-awards-table'); ?></em></span>
+                            <span class="aat-ceremony-full-ledger-stat"><strong><?php echo esc_html(number_format_i18n(count($ceremony_ballot_groups))); ?></strong><em><?php echo esc_html__('chapters', 'academy-awards-table'); ?></em></span>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <?php if (!empty($ceremony_ledger_jump_links)) : ?>
                     <div class="aat-ceremony-ledger-command">
                         <div class="aat-ceremony-ledger-command-copy">
@@ -2060,7 +2076,9 @@ get_header();
                                 </div>
                             <?php endif; ?>
                             <div class="aat-ceremony-ballot-rows">
+                                <?php $ballot_row_index = 0; ?>
                                 <?php foreach ($rendered_group_rows as $ballot_row) :
+                                    $ballot_row_index++;
                                     $ballot_row = $aat_enrich_winner_entry_links($ballot_row);
                                     $is_row_winner = !empty($ballot_row['winner']);
                                     $row_film_html = $aat_render_pipe_links($ballot_row['film'] ?? '', $ballot_row['film_id'] ?? '', 'aat-hub-inline-link aat-ballot-main-link');
@@ -2094,7 +2112,13 @@ get_header();
                                 ?>
                                     <article class="aat-ceremony-ballot-row<?php echo $is_row_winner ? ' is-winner' : ''; ?>">
                                         <div class="aat-ceremony-ballot-status">
+                                            <?php if ($ceremony_ballot_full_requested) : ?>
+                                                <span class="aat-ceremony-ballot-row-index"><?php echo esc_html(sprintf('%02d', $ballot_row_index)); ?></span>
+                                            <?php endif; ?>
                                             <span class="<?php echo $is_row_winner ? 'aat-winner-badge' : 'aat-nominee-badge'; ?>"><?php echo esc_html($is_row_winner ? __('Winner', 'academy-awards-table') : __('Nominee', 'academy-awards-table')); ?></span>
+                                            <?php if ($ceremony_ballot_full_requested) : ?>
+                                                <span class="aat-ceremony-ballot-depth"><?php echo esc_html(sprintf(__('%1$s of %2$s', 'academy-awards-table'), number_format_i18n($ballot_row_index), number_format_i18n(count($rendered_group_rows)))); ?></span>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="aat-ceremony-ballot-copy<?php echo $row_has_visual ? ' has-media' : ''; ?>">
                                             <?php if ($row_has_visual) : ?>

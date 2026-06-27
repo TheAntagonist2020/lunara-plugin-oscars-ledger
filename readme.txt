@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.82
+Stable tag: 2.7.83
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.83 =
+* Added a scoped research-view brief to ceremony full-ledger mode with compact stats for records, nominee rows, and category chapters.
+* Added scan-friendly row indexes and row-depth metadata for expanded full-ballot nominee rows while preserving every existing link and source row.
 
 = 2.7.82 =
 * Added chaptered Complete Ceremony Ledger rhythm with a Ballot Navigator jump strip and category-level visual interruption.

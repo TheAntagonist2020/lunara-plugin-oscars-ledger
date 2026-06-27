@@ -216,6 +216,11 @@ $assert(strpos($hub_template, 'is-ledger-chapter') !== false, 'Ceremony ballot c
 $assert(strpos($hub_template, 'aat-ceremony-ballot-group-visuals') !== false, 'Ceremony ballot groups should render verified visual interruption when title visuals exist.');
 $assert(strpos($hub_template, 'aat-ceremony-ballot-visual') !== false, 'Ceremony ballot visual cards should expose a public hook.');
 $assert(strpos($hub_template, 'aat-ceremony-ballot-media') !== false, 'Ceremony ballot rows should expose verified title media when available.');
+$assert(strpos($hub_template, 'is-full-ledger') !== false, 'Ceremony full ballot mode should expose a scoped full-ledger hook.');
+$assert(strpos($hub_template, 'aat-ceremony-full-ledger-brief') !== false, 'Ceremony full ballot mode should render a research-view command brief.');
+$assert(strpos($hub_template, 'aat-ceremony-full-ledger-stat') !== false, 'Ceremony full ballot command briefs should expose compact research stats.');
+$assert(strpos($hub_template, 'aat-ceremony-ballot-row-index') !== false, 'Ceremony full ballot rows should expose a scan-friendly row index.');
+$assert(strpos($hub_template, 'aat-ceremony-ballot-depth') !== false, 'Ceremony full ballot rows should expose row-depth metadata.');
 $assert(strpos($entity_template, '$profile_dossier_cards') !== false, 'Oscar entity pages should build profile dossier cards.');
 $assert(strpos($entity_template, 'aat-profile-dossier-strip') !== false, 'Oscar entity pages should render a profile dossier strip.');
 $assert(strpos($entity_template, 'aat-profile-dossier-track') !== false, 'Oscar entity pages should render a bounded dossier track.');
@@ -241,6 +246,10 @@ $assert(strpos($css, '.aat-ceremony-ledger-jump-strip') !== false, 'Ceremony led
 $assert(strpos($css, '.aat-ceremony-ballot-group.is-ledger-chapter') !== false, 'Ceremony ledger chapters should receive deliberate public styling.');
 $assert(strpos($css, '.aat-ceremony-ballot-group-visuals') !== false, 'Ceremony ledger verified visuals should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-ceremony-ballot-media') !== false, 'Ceremony ballot row media should be explicitly sized in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-ballot-ledger.is-full-ledger') !== false, 'Ceremony full ballot mode should receive scoped public styling.');
+$assert(strpos($css, '.aat-ceremony-full-ledger-brief') !== false, 'Ceremony full ballot research briefs should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-ballot-row-index') !== false, 'Ceremony full ballot row indexes should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-ballot-depth') !== false, 'Ceremony full ballot depth metadata should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-strip') !== false, 'Profile dossier strip should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-track') !== false, 'Profile dossier track should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-card.has-no-media') !== false, 'Profile dossier text-led cards should have deliberate styling.');

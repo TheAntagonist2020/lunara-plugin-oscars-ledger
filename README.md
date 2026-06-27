@@ -14,10 +14,11 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.82`.
+Current baseline: `2.7.83`.
 
 ## Current Public Surface
 
+- Ceremony full-ledger mode now has a scoped research-view brief, compact ledger stats, and row indexes so expanded nominee trails stay scan-friendly.
 - Ceremony Complete Ledger sections now render as chaptered reader surfaces with a Ballot Navigator jump strip, verified title visuals, and compact row media where existing title art is available.
 - Ceremony pages now include a compact Reader Path momentum module below Race Highlights, turning the same existing ceremony data into direct jumps for major races, Best Picture nominees, winner circle, and full ballot.
 - Ceremony write-up public text now repairs the common double-encoded UTF-8 mojibake sequences seen in live ceremony imports before templates escape the copy.
