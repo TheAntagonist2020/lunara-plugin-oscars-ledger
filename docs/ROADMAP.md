@@ -1,0 +1,4 @@
+- [ ] M1: Upgrade Oscars title/person destination files into richer reader-path surfaces.
+- [ ] M2: Add Oscar image integrity controls for verified poster and portrait mapping.
+- [ ] M3: Tighten Reviews archive and single-review retention surfaces.
+- [ ] M4: Tighten homepage first viewport and signature lanes.

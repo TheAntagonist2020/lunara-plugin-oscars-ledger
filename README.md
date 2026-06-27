@@ -14,10 +14,11 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.85`.
+Current baseline: `2.7.86`.
 
 ## Current Public Surface
 
+- Title and person profile destination files now include a scoped Reader Path module that links readers into reviews, title files, ceremony dossiers, category histories, full ledger sections, and IMDb references using only existing verified media and links.
 - Ceremony major-race winner cards now keep text-led no-media states readable by letting long winner names use the full card width instead of collapsing into the poster column.
 - Ceremony Highlights now render as a ceremony-specific exit lane with one featured title, a compact visual rail, verified title imagery when available, and intentional text-led states when art is absent.
 - Ceremony full-ledger mode now has a scoped research-view brief, compact ledger stats, and row indexes so expanded nominee trails stay scan-friendly.

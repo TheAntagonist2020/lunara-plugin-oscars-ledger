@@ -775,6 +775,262 @@ if ($entity === 'title' && is_array($rows)) {
     }
 }
 
+$profile_reader_path_cards = array();
+$profile_reader_path_seen = array();
+$profile_reader_path_limit = (int) apply_filters('aat_entity_profile_reader_path_limit', 4, $entity, $id);
+$profile_reader_path_limit = max(3, min(5, $profile_reader_path_limit));
+
+$add_profile_reader_path_card = function($card) use (&$profile_reader_path_cards, &$profile_reader_path_seen, $profile_reader_path_limit) {
+    if (count($profile_reader_path_cards) >= $profile_reader_path_limit) {
+        return;
+    }
+
+    $url = trim((string) ($card['url'] ?? ''));
+    $title = trim((string) ($card['title'] ?? ''));
+    if ($url === '' || $title === '') {
+        return;
+    }
+
+    $key = trim((string) ($card['key'] ?? ''));
+    if ($key === '') {
+        $key = md5($url . '|' . $title);
+    }
+    if (isset($profile_reader_path_seen[$key])) {
+        return;
+    }
+
+    $profile_reader_path_seen[$key] = true;
+    $profile_reader_path_cards[] = $card;
+};
+
+$build_profile_review_media = function($review_id, $visual_label, $media_class = 'aat-profile-reader-path-image') {
+    $review_id = absint($review_id);
+    if ($review_id <= 0) {
+        return '';
+    }
+
+    $thumb = get_the_post_thumbnail_url($review_id, 'medium_large');
+    if (!$thumb) {
+        return '';
+    }
+
+    $visual_label = trim((string) $visual_label);
+
+    return '<img class="' . esc_attr($media_class) . '" src="' . esc_url($thumb) . '" alt="' . esc_attr($visual_label !== '' ? $visual_label : __('Lunara review image', 'academy-awards-table')) . '" loading="lazy" decoding="async" />';
+};
+
+if ($entity === 'title') {
+    if (!empty($aat_review_ids[0])) {
+        $reader_review_id = absint($aat_review_ids[0]);
+        $reader_review_url = $reader_review_id > 0 ? get_permalink($reader_review_id) : '';
+        if ($reader_review_url) {
+            $reader_review_title = trim((string) get_the_title($reader_review_id));
+            $reader_review_media = $build_profile_review_media($reader_review_id, $reader_review_title !== '' ? $reader_review_title : $profile_subject_label);
+            $add_profile_reader_path_card(array(
+                'key' => 'title-review-' . $reader_review_id,
+                'kind' => 'review-path',
+                'classes' => array('is-title-reader-path', 'is-review-path', $reader_review_media !== '' ? 'has-media' : 'has-no-media'),
+                'url' => $reader_review_url,
+                'media_html' => $reader_review_media,
+                'kicker' => __('Lunara Review', 'academy-awards-table'),
+                'title' => $reader_review_title !== '' ? $reader_review_title : __('Read the Review', 'academy-awards-table'),
+                'meta' => __('Criticism File', 'academy-awards-table'),
+                'body' => __('Move from the Oscar record into the Lunara argument for this film.', 'academy-awards-table'),
+                'action' => __('Read Review', 'academy-awards-table'),
+            ));
+        }
+    }
+
+    if (!empty($latest_result['ceremony'])) {
+        $reader_ceremony = intval($latest_result['ceremony']);
+        $reader_ceremony_url = $build_ceremony_url($reader_ceremony);
+        if ($reader_ceremony_url !== '') {
+            $reader_ceremony_label = !empty($latest_result['year'])
+                ? (string) $latest_result['year']
+                : sprintf(__('%s Academy Awards', 'academy-awards-table'), $ordinal($reader_ceremony));
+            $reader_ceremony_media = $build_profile_dossier_media($latest_result_visual, $profile_subject_label, 'aat-profile-reader-path-image');
+            $reader_ceremony_style = $get_visual_backdrop_style($latest_result_visual, array('prefer_poster' => true, 'position' => 'center top'));
+            $add_profile_reader_path_card(array(
+                'key' => 'title-ceremony-' . $reader_ceremony,
+                'kind' => 'ceremony-path',
+                'classes' => array('is-title-reader-path', 'is-ceremony-path', $reader_ceremony_media !== '' ? 'has-media' : 'has-no-media', $reader_ceremony_style !== '' ? 'aat-card-has-backdrop' : ''),
+                'url' => $reader_ceremony_url,
+                'style' => $reader_ceremony_style,
+                'media_html' => $reader_ceremony_media,
+                'kicker' => __('Ceremony File', 'academy-awards-table'),
+                'title' => sprintf(__('%s Ceremony', 'academy-awards-table'), $ordinal($reader_ceremony)),
+                'meta' => $reader_ceremony_label,
+                'body' => __('Jump into the ceremony dossier where this title sits in the night around it.', 'academy-awards-table'),
+                'action' => __('Open Ceremony', 'academy-awards-table'),
+            ));
+        }
+    }
+
+    if (!empty($category_rollups[0]['url']) && !empty($category_rollups[0]['label'])) {
+        $reader_category = $category_rollups[0];
+        $reader_category_wins = intval($reader_category['wins'] ?? 0);
+        $reader_category_nominations = intval($reader_category['nominations'] ?? 0);
+        $add_profile_reader_path_card(array(
+            'key' => 'title-category-' . sanitize_key((string) ($reader_category['category'] ?? $reader_category['label'])),
+            'kind' => 'category-path',
+            'classes' => array('is-title-reader-path', 'is-category-path', 'has-no-media'),
+            'url' => (string) $reader_category['url'],
+            'kicker' => __('Category File', 'academy-awards-table'),
+            'title' => (string) $reader_category['label'],
+            'meta' => sprintf(
+                _n('%1$s nomination / %2$s win', '%1$s nominations / %2$s wins', $reader_category_nominations, 'academy-awards-table'),
+                number_format_i18n($reader_category_nominations),
+                number_format_i18n($reader_category_wins)
+            ),
+            'body' => __('Follow the category history that surrounds this title inside the larger Oscar field.', 'academy-awards-table'),
+            'action' => __('Open Category', 'academy-awards-table'),
+        ));
+    }
+
+    $add_profile_reader_path_card(array(
+        'key' => 'title-ledger-history',
+        'kind' => 'history-path',
+        'classes' => array('is-title-reader-path', 'is-history-path', 'has-no-media'),
+        'url' => '#oscar-history',
+        'kicker' => __('Full Trail', 'academy-awards-table'),
+        'title' => __('Oscar History', 'academy-awards-table'),
+        'meta' => sprintf(_n('%s recorded result', '%s recorded results', $total_nominations, 'academy-awards-table'), number_format_i18n($total_nominations)),
+        'body' => __('Drop into the full result run with every category, ceremony, and linked participant intact.', 'academy-awards-table'),
+        'action' => __('Open Trail', 'academy-awards-table'),
+    ));
+
+    if ($imdb_url !== '') {
+        $add_profile_reader_path_card(array(
+            'key' => 'title-imdb-reference',
+            'kind' => 'source-path',
+            'classes' => array('is-title-reader-path', 'is-source-path', 'has-no-media'),
+            'url' => $imdb_url,
+            'external' => true,
+            'kicker' => __('Source Trail', 'academy-awards-table'),
+            'title' => __('IMDb Record', 'academy-awards-table'),
+            'meta' => strtoupper((string) $id),
+            'body' => __('Open the external reference used for ID checks and title reconciliation.', 'academy-awards-table'),
+            'action' => __('Open IMDb', 'academy-awards-table'),
+        ));
+    }
+} elseif ($entity === 'name') {
+    $reader_anchor_title_id = trim((string) ($latest_result['title_id'] ?? ''));
+    if ($reader_anchor_title_id !== '') {
+        $reader_anchor_title = $get_title_label($reader_anchor_title_id);
+        if ($reader_anchor_title === '') {
+            $reader_anchor_title = strtoupper($reader_anchor_title_id);
+        }
+        $reader_anchor_url = $build_entity_url($reader_anchor_title_id);
+        $reader_anchor_visual = $get_title_visual($reader_anchor_title_id, 'medium_large');
+        $reader_anchor_media = $build_profile_dossier_media($reader_anchor_visual, $reader_anchor_title, 'aat-profile-reader-path-image');
+        $reader_anchor_style = $get_visual_backdrop_style($reader_anchor_visual, array('prefer_poster' => true, 'position' => 'center top'));
+        if ($reader_anchor_url !== '') {
+            $add_profile_reader_path_card(array(
+                'key' => 'person-title-' . $reader_anchor_title_id,
+                'kind' => 'title-path',
+                'classes' => array('is-person-reader-path', 'is-title-path', $reader_anchor_media !== '' ? 'has-media' : 'has-no-media', $reader_anchor_style !== '' ? 'aat-card-has-backdrop' : ''),
+                'url' => $reader_anchor_url,
+                'style' => $reader_anchor_style,
+                'media_html' => $reader_anchor_media,
+                'kicker' => __('Anchor Title', 'academy-awards-table'),
+                'title' => $reader_anchor_title,
+                'meta' => !empty($latest_result['year']) ? (string) $latest_result['year'] : '',
+                'body' => __('Open the title file currently anchoring this person profile in the Oscar Ledger.', 'academy-awards-table'),
+                'action' => __('Open Title', 'academy-awards-table'),
+            ));
+        }
+    }
+
+    if (!empty($aat_related_reviews[0]['review_url'])) {
+        $reader_related_review = $aat_related_reviews[0];
+        $reader_related_title = trim((string) ($reader_related_review['review_title'] ?? ''));
+        $reader_related_media = '';
+        if (!empty($reader_related_review['review_thumb'])) {
+            $reader_related_media = '<img class="aat-profile-reader-path-image" src="' . esc_url($reader_related_review['review_thumb']) . '" alt="' . esc_attr($reader_related_title !== '' ? $reader_related_title : __('Lunara review image', 'academy-awards-table')) . '" loading="lazy" decoding="async" />';
+        } elseif (!empty($reader_related_review['fallback_html'])) {
+            $reader_related_media = (string) $reader_related_review['fallback_html'];
+        }
+        $add_profile_reader_path_card(array(
+            'key' => 'person-review-' . absint($reader_related_review['review_id'] ?? 0),
+            'kind' => 'review-path',
+            'classes' => array('is-person-reader-path', 'is-review-path', $reader_related_media !== '' ? 'has-media' : 'has-no-media'),
+            'url' => (string) $reader_related_review['review_url'],
+            'media_html' => $reader_related_media,
+            'kicker' => __('On Lunara', 'academy-awards-table'),
+            'title' => $reader_related_title !== '' ? $reader_related_title : __('Related Review', 'academy-awards-table'),
+            'meta' => trim((string) (($reader_related_review['film_label'] ?? '') . (!empty($reader_related_review['film_year']) ? ' / ' . $reader_related_review['film_year'] : ''))),
+            'body' => __('Connect this Oscar file back to the criticism archive.', 'academy-awards-table'),
+            'action' => __('Read Review', 'academy-awards-table'),
+        ));
+    }
+
+    if (!empty($latest_result['ceremony'])) {
+        $reader_ceremony = intval($latest_result['ceremony']);
+        $reader_ceremony_url = $build_ceremony_url($reader_ceremony);
+        if ($reader_ceremony_url !== '') {
+            $add_profile_reader_path_card(array(
+                'key' => 'person-ceremony-' . $reader_ceremony,
+                'kind' => 'ceremony-path',
+                'classes' => array('is-person-reader-path', 'is-ceremony-path', 'has-no-media'),
+                'url' => $reader_ceremony_url,
+                'kicker' => __('Ceremony File', 'academy-awards-table'),
+                'title' => sprintf(__('%s Ceremony', 'academy-awards-table'), $ordinal($reader_ceremony)),
+                'meta' => !empty($latest_result['year']) ? (string) $latest_result['year'] : '',
+                'body' => __('See the ceremony dossier that frames this profile’s most recent Oscar appearance.', 'academy-awards-table'),
+                'action' => __('Open Ceremony', 'academy-awards-table'),
+            ));
+        }
+    }
+
+    if (!empty($category_rollups[0]['url']) && !empty($category_rollups[0]['label'])) {
+        $reader_category = $category_rollups[0];
+        $add_profile_reader_path_card(array(
+            'key' => 'person-category-' . sanitize_key((string) ($reader_category['category'] ?? $reader_category['label'])),
+            'kind' => 'category-path',
+            'classes' => array('is-person-reader-path', 'is-category-path', 'has-no-media'),
+            'url' => (string) $reader_category['url'],
+            'kicker' => __('Category File', 'academy-awards-table'),
+            'title' => (string) $reader_category['label'],
+            'meta' => sprintf(
+                _n('%1$s nomination / %2$s win', '%1$s nominations / %2$s wins', intval($reader_category['nominations'] ?? 0), 'academy-awards-table'),
+                number_format_i18n(intval($reader_category['nominations'] ?? 0)),
+                number_format_i18n(intval($reader_category['wins'] ?? 0))
+            ),
+            'body' => __('Follow the award field where this profile has the deepest Oscar footprint.', 'academy-awards-table'),
+            'action' => __('Open Category', 'academy-awards-table'),
+        ));
+    }
+
+    if (!empty($distinct_films)) {
+        $add_profile_reader_path_card(array(
+            'key' => 'person-filmography',
+            'kind' => 'filmography-path',
+            'classes' => array('is-person-reader-path', 'is-filmography-path', 'has-no-media'),
+            'url' => '#nominated-films',
+            'kicker' => __('Film Trail', 'academy-awards-table'),
+            'title' => __('Nominated Films', 'academy-awards-table'),
+            'meta' => sprintf(_n('%s linked film', '%s linked films', count($distinct_films), 'academy-awards-table'), number_format_i18n(count($distinct_films))),
+            'body' => __('Scan the poster-led film run attached to this person’s Oscar history.', 'academy-awards-table'),
+            'action' => __('Open Films', 'academy-awards-table'),
+        ));
+    }
+
+    if ($imdb_url !== '') {
+        $add_profile_reader_path_card(array(
+            'key' => 'person-imdb-reference',
+            'kind' => 'source-path',
+            'classes' => array('is-person-reader-path', 'is-source-path', 'has-no-media'),
+            'url' => $imdb_url,
+            'external' => true,
+            'kicker' => __('Source Trail', 'academy-awards-table'),
+            'title' => __('IMDb Profile', 'academy-awards-table'),
+            'meta' => strtoupper((string) $id),
+            'body' => __('Open the external reference used for person ID checks and reconciliation.', 'academy-awards-table'),
+            'action' => __('Open IMDb', 'academy-awards-table'),
+        ));
+    }
+}
+
 get_header();
 ?>
 <div class="aat-container aat-entity-page aat-profile-file <?php echo esc_attr($profile_file_class); ?>">
@@ -1018,6 +1274,60 @@ get_header();
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        </section>
+    <?php endif; ?>
+
+    <?php if (!empty($profile_reader_path_cards)) : ?>
+        <?php
+        $profile_reader_path_title = $entity === 'title'
+            ? __('Where This Title Leads', 'academy-awards-table')
+            : __('Where This Profile Leads', 'academy-awards-table');
+        $profile_reader_path_description = $entity === 'title'
+            ? __('Move from the title file into criticism, ceremony context, category history, and the full ledger trail.', 'academy-awards-table')
+            : __('Move from this person file into title context, Lunara criticism, ceremony dossiers, and the award fields around the work.', 'academy-awards-table');
+        $profile_reader_path_classes = array('aat-profile-reader-path', $entity === 'title' ? 'is-title-reader-path' : 'is-person-reader-path');
+        ?>
+        <section class="<?php echo esc_attr(implode(' ', $profile_reader_path_classes)); ?>" aria-label="<?php echo esc_attr($profile_reader_path_title); ?>">
+            <div class="aat-section-head aat-profile-reader-path-head">
+                <div>
+                    <p class="aat-profile-reader-path-kicker"><?php echo esc_html__('Reader Path', 'academy-awards-table'); ?></p>
+                    <h2 class="aat-section-title"><?php echo esc_html($profile_reader_path_title); ?></h2>
+                </div>
+                <p class="aat-section-description"><?php echo esc_html($profile_reader_path_description); ?></p>
+            </div>
+
+            <div class="aat-profile-reader-path-grid">
+                <?php foreach ($profile_reader_path_cards as $profile_reader_path_card) : ?>
+                    <?php
+                    $reader_card_classes = array_filter(array_merge(array('aat-profile-reader-path-card'), (array) ($profile_reader_path_card['classes'] ?? array())));
+                    $reader_card_url = trim((string) ($profile_reader_path_card['url'] ?? ''));
+                    $reader_card_style = trim((string) ($profile_reader_path_card['style'] ?? ''));
+                    $reader_card_media_html = (string) ($profile_reader_path_card['media_html'] ?? '');
+                    $reader_card_external = !empty($profile_reader_path_card['external']);
+                    $reader_card_action = trim((string) ($profile_reader_path_card['action'] ?? __('Open File', 'academy-awards-table')));
+                    ?>
+                    <article class="<?php echo esc_attr(implode(' ', $reader_card_classes)); ?>"<?php if ($reader_card_style !== '') : ?> style="<?php echo esc_attr($reader_card_style); ?>"<?php endif; ?>>
+                        <?php if ($reader_card_media_html !== '') : ?>
+                            <a class="aat-profile-reader-path-media" href="<?php echo esc_url($reader_card_url); ?>"<?php if ($reader_card_external) : ?> target="_blank" rel="noopener noreferrer"<?php endif; ?>>
+                                <?php echo $reader_card_media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                            </a>
+                        <?php endif; ?>
+                        <div class="aat-profile-reader-path-body">
+                            <p class="aat-profile-reader-path-label"><?php echo esc_html($profile_reader_path_card['kicker'] ?? ''); ?></p>
+                            <h3 class="aat-profile-reader-path-title">
+                                <a href="<?php echo esc_url($reader_card_url); ?>"<?php if ($reader_card_external) : ?> target="_blank" rel="noopener noreferrer"<?php endif; ?>><?php echo esc_html($profile_reader_path_card['title'] ?? ''); ?></a>
+                            </h3>
+                            <?php if (!empty($profile_reader_path_card['meta'])) : ?>
+                                <p class="aat-profile-reader-path-meta"><?php echo esc_html($profile_reader_path_card['meta']); ?></p>
+                            <?php endif; ?>
+                            <?php if (!empty($profile_reader_path_card['body'])) : ?>
+                                <p class="aat-profile-reader-path-copy"><?php echo esc_html($profile_reader_path_card['body']); ?></p>
+                            <?php endif; ?>
+                            <a class="aat-profile-reader-path-action" href="<?php echo esc_url($reader_card_url); ?>"<?php if ($reader_card_external) : ?> target="_blank" rel="noopener noreferrer"<?php endif; ?>><?php echo esc_html($reader_card_action); ?></a>
                         </div>
                     </article>
                 <?php endforeach; ?>

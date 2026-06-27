@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.85
+Stable tag: 2.7.86
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.86 =
+* Added title/person profile Reader Path modules that route readers into reviews, title files, ceremony dossiers, category histories, full ledger anchors, and IMDb references.
+* Reused only existing verified Oscar/title/review media and rendered text-led cards deliberately when no safe image is available.
 
 = 2.7.85 =
 * Fixed ceremony major-race cards without poster media so long winner names use the full feature width instead of collapsing into the narrow poster column.

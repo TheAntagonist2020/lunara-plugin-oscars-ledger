@@ -235,6 +235,12 @@ $assert(strpos($entity_template, 'aat-profile-dossier-track') !== false, 'Oscar 
 $assert(strpos($entity_template, 'is-title-touchpoint') !== false, 'Title entity pages should expose result-card touchpoints.');
 $assert(strpos($entity_template, 'is-film-touchpoint') !== false, 'Person and company entity pages should expose related-film touchpoints.');
 $assert(strpos($entity_template, 'has-no-media') !== false, 'Profile dossier cards should render intentional text-led states when media is unavailable.');
+$assert(strpos($entity_template, '$profile_reader_path_cards') !== false, 'Oscar title/person pages should build reader-path destination cards.');
+$assert(strpos($entity_template, 'aat-profile-reader-path') !== false, 'Oscar title/person pages should render a scoped reader-path module.');
+$assert(strpos($entity_template, 'aat-profile-reader-path-grid') !== false, 'Oscar title/person reader paths should expose a bounded grid hook.');
+$assert(strpos($entity_template, 'aat-profile-reader-path-card') !== false, 'Oscar title/person reader paths should expose card-level hooks.');
+$assert(strpos($entity_template, 'is-title-reader-path') !== false, 'Title destination files should expose a scoped title reader-path hook.');
+$assert(strpos($entity_template, 'is-person-reader-path') !== false, 'Person destination files should expose a scoped person reader-path hook.');
 $assert(strpos($css, '.aat-era-chapter-media-grid') !== false, 'Premium category era poster grid should be styled in the public stylesheet.');
 $assert(strpos($css, 'grid-template-columns: repeat(4, minmax(0, 1fr))') !== false, 'Premium category era poster grid should become a dense mobile strip.');
 $assert(strpos($css, '.aat-category-scale-brief') !== false, 'Brief category dossiers should receive scaled-down spacing and command cards.');
@@ -267,6 +273,10 @@ $assert(strpos($css, '.aat-profile-dossier-strip') !== false, 'Profile dossier s
 $assert(strpos($css, '.aat-profile-dossier-track') !== false, 'Profile dossier track should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-card.has-no-media') !== false, 'Profile dossier text-led cards should have deliberate styling.');
 $assert(strpos($css, 'scroll-snap-type: x proximity') !== false, 'Profile dossier mobile track should remain horizontally contained.');
+$assert(strpos($css, '.aat-profile-reader-path') !== false, 'Profile reader-path modules should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-profile-reader-path-grid') !== false, 'Profile reader paths should have a public layout rule.');
+$assert(strpos($css, '.aat-profile-reader-path-card') !== false, 'Profile reader-path cards should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-profile-reader-path-card.has-no-media') !== false, 'Profile reader-path text-led cards should have deliberate styling.');
 
 foreach (array(
     '.aat-generic-category-dossier',
