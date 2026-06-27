@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.86
+Stable tag: 2.7.87
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.87 =
+* Added `Academy Awards > Image Integrity`, a private Image Integrity Console that normalizes poster and portrait mapping health into Needs Review, Ready, Missing, Wrong Match, Accepted, and Resolved buckets.
+* Reused existing Poster Library, OMDb poster review, Person Portrait Queue, and PEOPLE portrait review metadata without importing media, deleting media, mutating Oscar result rows, or exposing private review metadata publicly.
 
 = 2.7.86 =
 * Added title/person profile Reader Path modules that route readers into reviews, title files, ceremony dossiers, category histories, full ledger anchors, and IMDb references.

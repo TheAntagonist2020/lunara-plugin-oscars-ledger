@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.86
+ * Version: 2.7.87
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.86');
+define('AAT_VERSION', '2.7.87');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -6004,7 +6004,7 @@ class Academy_Awards_Table {
          * Safer: gate by the `page` query var (our menu slugs) instead.
          */
         $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
-        $allowed_pages = array('academy-awards-table', 'academy-awards-tracker', 'academy-awards-posters', 'academy-awards-person-portraits', 'academy-awards-omdb-audit', 'academy-awards-ceremony-writeups');
+        $allowed_pages = array('academy-awards-table', 'academy-awards-tracker', 'academy-awards-posters', 'academy-awards-person-portraits', 'academy-awards-image-integrity', 'academy-awards-omdb-audit', 'academy-awards-ceremony-writeups');
 
         if (!in_array($page, $allowed_pages, true)) {
             return;
@@ -6079,6 +6079,15 @@ class Academy_Awards_Table {
             'manage_options',
             'academy-awards-person-portraits',
             array($this, 'render_person_portrait_import_admin_page')
+        );
+
+        add_submenu_page(
+            'academy-awards-table',
+            __('Image Integrity', 'academy-awards-table'),
+            __('Image Integrity', 'academy-awards-table'),
+            'manage_options',
+            'academy-awards-image-integrity',
+            array($this, 'render_image_integrity_admin_page')
         );
 
         add_submenu_page(
@@ -6452,6 +6461,27 @@ class Academy_Awards_Table {
         $tmdb_key_configured = $this->get_tmdb_api_key() !== '';
 
         include AAT_PLUGIN_DIR . 'templates/person-portrait-import-admin.php';
+    }
+
+    /**
+     * Render the private image-integrity command console.
+     */
+    public function render_image_integrity_admin_page() {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have permission to access this page.', 'academy-awards-table'));
+        }
+
+        $bucket = isset($_GET['integrity_bucket']) ? sanitize_key(wp_unslash($_GET['integrity_bucket'])) : 'needs_review';
+        $section = isset($_GET['integrity_section']) ? sanitize_key(wp_unslash($_GET['integrity_section'])) : 'all';
+        $limit = isset($_GET['limit']) ? absint($_GET['limit']) : 80;
+
+        $image_integrity = $this->build_image_integrity_console_data(array(
+            'bucket' => $bucket,
+            'section' => $section,
+            'limit' => $limit,
+        ));
+
+        include AAT_PLUGIN_DIR . 'templates/image-integrity-admin.php';
     }
 
     /**
@@ -7848,6 +7878,348 @@ class Academy_Awards_Table {
         );
     }
 
+    private function get_image_integrity_bucket_labels() {
+        return array(
+            'all' => __('All Buckets', 'academy-awards-table'),
+            'needs_review' => __('Needs Review', 'academy-awards-table'),
+            'ready' => __('Ready', 'academy-awards-table'),
+            'missing' => __('Missing', 'academy-awards-table'),
+            'wrong_match' => __('Wrong Match', 'academy-awards-table'),
+            'accepted' => __('Accepted', 'academy-awards-table'),
+            'resolved' => __('Resolved', 'academy-awards-table'),
+        );
+    }
+
+    private function get_image_integrity_section_labels() {
+        return array(
+            'all' => __('All Visuals', 'academy-awards-table'),
+            'posters' => __('Posters', 'academy-awards-table'),
+            'portraits' => __('Portraits', 'academy-awards-table'),
+        );
+    }
+
+    private function sanitize_image_integrity_bucket($bucket) {
+        $bucket = sanitize_key((string) $bucket);
+        $labels = $this->get_image_integrity_bucket_labels();
+        return isset($labels[$bucket]) ? $bucket : 'needs_review';
+    }
+
+    private function sanitize_image_integrity_section($section) {
+        $section = sanitize_key((string) $section);
+        $labels = $this->get_image_integrity_section_labels();
+        return isset($labels[$section]) ? $section : 'all';
+    }
+
+    private function get_image_integrity_bucket_for_poster_state($state) {
+        $state = $this->sanitize_omdb_poster_review_state($state);
+        if (in_array($state, array('accepted', 'ignore_accept'), true)) {
+            return 'accepted';
+        }
+        if ($state === 'manual_replacement') {
+            return 'ready';
+        }
+        if (in_array($state, array('source_failed', 'needs_manual'), true)) {
+            return 'missing';
+        }
+        if ($state === 'wrong_match') {
+            return 'wrong_match';
+        }
+        if ($state === 'resolved') {
+            return 'resolved';
+        }
+        return 'needs_review';
+    }
+
+    private function get_image_integrity_bucket_for_portrait_state($state) {
+        $state = $this->sanitize_person_portrait_existing_review_state($state);
+        if ($state === 'approved_to_adopt') {
+            return 'accepted';
+        }
+        if (in_array($state, array('wrong_person_or_label', 'not_a_person'), true)) {
+            return 'wrong_match';
+        }
+        if ($state === 'needs_better_source') {
+            return 'missing';
+        }
+        if (in_array($state, array('reject_ignore', 'resolved'), true)) {
+            return 'resolved';
+        }
+        return 'needs_review';
+    }
+
+    private function get_image_integrity_bucket_for_person_visual_state($visual_state) {
+        $visual_state = sanitize_key((string) $visual_state);
+        if (in_array($visual_state, array('local-portrait', 'tmdb-portrait'), true)) {
+            return 'ready';
+        }
+        return 'missing';
+    }
+
+    private function build_image_integrity_console_data($args = array()) {
+        $bucket = $this->sanitize_image_integrity_bucket($args['bucket'] ?? 'needs_review');
+        $section = $this->sanitize_image_integrity_section($args['section'] ?? 'all');
+        $limit = isset($args['limit']) ? absint($args['limit']) : 80;
+        $limit = max(1, min(200, $limit));
+
+        $bucket_labels = $this->get_image_integrity_bucket_labels();
+        $section_labels = $this->get_image_integrity_section_labels();
+        $counts = array();
+        foreach ($bucket_labels as $bucket_key => $label) {
+            if ($bucket_key !== 'all') {
+                $counts[$bucket_key] = 0;
+            }
+        }
+
+        $rows = array();
+        if ($section === 'all' || $section === 'posters') {
+            $rows = array_merge($rows, $this->build_image_integrity_poster_rows(240));
+        }
+        if ($section === 'all' || $section === 'portraits') {
+            $rows = array_merge($rows, $this->build_image_integrity_portrait_rows(240));
+        }
+
+        foreach ($rows as $row) {
+            $row_bucket = (string) ($row['bucket'] ?? 'needs_review');
+            if (isset($counts[$row_bucket])) {
+                $counts[$row_bucket]++;
+            }
+        }
+        $counts['all'] = count($rows);
+
+        usort($rows, function ($a, $b) {
+            $weight_a = $this->get_image_integrity_row_sort_weight((string) ($a['bucket'] ?? 'needs_review'));
+            $weight_b = $this->get_image_integrity_row_sort_weight((string) ($b['bucket'] ?? 'needs_review'));
+            if ($weight_a !== $weight_b) {
+                return $weight_a <=> $weight_b;
+            }
+
+            $updated_a = (string) ($a['updated_at'] ?? '');
+            $updated_b = (string) ($b['updated_at'] ?? '');
+            if ($updated_a !== $updated_b) {
+                return strcmp($updated_b, $updated_a);
+            }
+
+            return strcmp((string) ($a['label'] ?? ''), (string) ($b['label'] ?? ''));
+        });
+
+        if ($bucket !== 'all') {
+            $rows = array_values(array_filter($rows, function ($row) use ($bucket) {
+                return (string) ($row['bucket'] ?? '') === $bucket;
+            }));
+        }
+
+        $total_filtered = count($rows);
+        $rows = array_slice($rows, 0, $limit);
+
+        return array(
+            'bucket' => $bucket,
+            'section' => $section,
+            'limit' => $limit,
+            'rows' => $rows,
+            'counts' => $counts,
+            'bucket_labels' => $bucket_labels,
+            'section_labels' => $section_labels,
+            'total_filtered' => $total_filtered,
+            'poster_library_url' => admin_url('admin.php?page=academy-awards-posters'),
+            'portrait_queue_url' => admin_url('admin.php?page=academy-awards-person-portraits'),
+            'omdb_audit_url' => admin_url('admin.php?page=academy-awards-omdb-audit'),
+        );
+    }
+
+    private function build_image_integrity_poster_rows($limit = 200) {
+        global $wpdb;
+
+        $limit = max(1, min(500, absint($limit)));
+        $poster_table = $wpdb->prefix . 'aat_posters';
+        $review_table = $this->get_omdb_poster_reviews_table_name();
+        $rows_by_id = array();
+        $review_map = array();
+        $poster_states = $this->get_omdb_poster_review_states();
+
+        $review_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $review_table));
+        if ($review_exists === $review_table) {
+            $review_rows = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT imdb_id, poster_state, poster_note, reviewer_user_id, reviewed_at, updated_at FROM $review_table ORDER BY updated_at DESC LIMIT %d",
+                    $limit
+                ),
+                ARRAY_A
+            );
+            foreach ((array) $review_rows as $review_row) {
+                $imdb_id = strtolower(trim((string) ($review_row['imdb_id'] ?? '')));
+                if ($this->is_title_entity_id($imdb_id)) {
+                    $review_map[$imdb_id] = $review_row;
+                }
+            }
+        }
+
+        $poster_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $poster_table));
+        if ($poster_exists === $poster_table) {
+            $poster_rows = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT imdb_id, attachment_id, source, updated_at FROM $poster_table ORDER BY updated_at DESC LIMIT %d",
+                    $limit
+                ),
+                ARRAY_A
+            );
+            foreach ((array) $poster_rows as $poster_row) {
+                $imdb_id = strtolower(trim((string) ($poster_row['imdb_id'] ?? '')));
+                if (!$this->is_title_entity_id($imdb_id)) {
+                    continue;
+                }
+
+                $review = $review_map[$imdb_id] ?? array();
+                $state = isset($review['poster_state']) ? $this->sanitize_omdb_poster_review_state($review['poster_state']) : 'manual_replacement';
+                $bucket = !empty($review) ? $this->get_image_integrity_bucket_for_poster_state($state) : 'ready';
+                $attachment_id = absint($poster_row['attachment_id'] ?? 0);
+                $label = trim((string) $this->get_entity_display_name('title', $imdb_id));
+
+                $rows_by_id['poster|' . $imdb_id] = array(
+                    'kind' => 'poster',
+                    'kind_label' => __('Poster', 'academy-awards-table'),
+                    'entity_id' => $imdb_id,
+                    'label' => $label !== '' ? $label : strtoupper($imdb_id),
+                    'bucket' => $bucket,
+                    'state' => $state,
+                    'state_label' => !empty($review) ? (string) ($poster_states[$state] ?? $poster_states['needs_review']) : __('Mapped Poster', 'academy-awards-table'),
+                    'note' => (string) ($review['poster_note'] ?? ''),
+                    'attachment_id' => $attachment_id,
+                    'thumb_url' => $attachment_id > 0 ? (string) wp_get_attachment_image_url($attachment_id, 'thumbnail') : '',
+                    'source' => (string) ($poster_row['source'] ?? ''),
+                    'updated_at' => (string) (($review['updated_at'] ?? '') ?: ($poster_row['updated_at'] ?? '')),
+                    'entity_url' => $this->build_entity_url_from_id($imdb_id),
+                    'workflow_url' => admin_url('admin.php?page=academy-awards-posters'),
+                );
+            }
+        }
+
+        foreach ($review_map as $imdb_id => $review) {
+            $key = 'poster|' . $imdb_id;
+            if (isset($rows_by_id[$key])) {
+                continue;
+            }
+
+            $state = $this->sanitize_omdb_poster_review_state($review['poster_state'] ?? '');
+            $label = trim((string) $this->get_entity_display_name('title', $imdb_id));
+            $rows_by_id[$key] = array(
+                'kind' => 'poster',
+                'kind_label' => __('Poster', 'academy-awards-table'),
+                'entity_id' => $imdb_id,
+                'label' => $label !== '' ? $label : strtoupper($imdb_id),
+                'bucket' => $this->get_image_integrity_bucket_for_poster_state($state),
+                'state' => $state,
+                'state_label' => (string) ($poster_states[$state] ?? $poster_states['needs_review']),
+                'note' => (string) ($review['poster_note'] ?? ''),
+                'attachment_id' => 0,
+                'thumb_url' => '',
+                'source' => __('Poster review annotation', 'academy-awards-table'),
+                'updated_at' => (string) ($review['updated_at'] ?? ''),
+                'entity_url' => $this->build_entity_url_from_id($imdb_id),
+                'workflow_url' => admin_url('admin.php?page=academy-awards-omdb-audit'),
+            );
+        }
+
+        return array_values($rows_by_id);
+    }
+
+    private function build_image_integrity_portrait_rows($limit = 200) {
+        $limit = max(1, min(500, absint($limit)));
+        $rows_by_key = array();
+
+        foreach ((array) $this->get_person_profile_attachment_audit($limit) as $audit_row) {
+            $person_id = strtolower(trim((string) ($audit_row['person_id'] ?? '')));
+            if (!$this->is_imdb_name_entity_id($person_id)) {
+                continue;
+            }
+
+            $visual_state = (string) ($audit_row['visual_state'] ?? 'no-portrait');
+            $attachment_id = absint($audit_row['attachment_id'] ?? 0);
+            $rows_by_key['portrait-current|' . $person_id] = array(
+                'kind' => 'portrait',
+                'kind_label' => __('Portrait', 'academy-awards-table'),
+                'entity_id' => $person_id,
+                'label' => (string) ($audit_row['label'] ?? strtoupper($person_id)),
+                'bucket' => $this->get_image_integrity_bucket_for_person_visual_state($visual_state),
+                'state' => $visual_state,
+                'state_label' => (string) ($audit_row['portrait_state_label'] ?? __('Portrait audit', 'academy-awards-table')),
+                'note' => '',
+                'attachment_id' => $attachment_id,
+                'thumb_url' => (string) ($audit_row['thumb_url'] ?? ''),
+                'source' => (string) ($audit_row['visual_source'] ?? ''),
+                'updated_at' => '',
+                'entity_url' => (string) ($audit_row['profile_url'] ?? $this->build_entity_url_from_id($person_id)),
+                'workflow_url' => admin_url('admin.php?page=academy-awards-person-portraits'),
+            );
+        }
+
+        $adoption_sets = array(
+            $this->get_existing_person_portrait_adoption_rows(array('view' => 'all', 'limit' => $limit, 'offset' => 0)),
+            $this->get_existing_person_portrait_adoption_rows(array('view' => 'manual', 'limit' => min(60, $limit), 'offset' => 0)),
+        );
+
+        foreach ($adoption_sets as $adoption) {
+            foreach ((array) ($adoption['rows'] ?? array()) as $row) {
+                $attachment_id = absint($row['attachment_id'] ?? 0);
+                $person_id = strtolower(trim((string) ($row['person_id'] ?? '')));
+                $manual_review = !empty($row['manual_review']);
+                $is_duplicate = !empty($row['duplicate_person_id']);
+
+                if ($attachment_id <= 0 && !$manual_review) {
+                    continue;
+                }
+
+                $review_state = 'needs_review';
+                if (!$manual_review && !$is_duplicate && !empty($row['existing_review_state'])) {
+                    $review_state = $this->sanitize_person_portrait_existing_review_state($row['existing_review_state']);
+                } elseif ($is_duplicate) {
+                    $review_state = 'wrong_person_or_label';
+                }
+
+                $bucket = $manual_review ? 'needs_review' : $this->get_image_integrity_bucket_for_portrait_state($review_state);
+                $note = '';
+                if (isset($row['existing_review']['correction_note'])) {
+                    $note = (string) $row['existing_review']['correction_note'];
+                } elseif (!empty($row['manual_review_reason'])) {
+                    $note = (string) $row['manual_review_reason'];
+                }
+
+                $entity_key = $person_id !== '' ? $person_id : 'attachment-' . $attachment_id;
+                $key = 'portrait-candidate|' . $attachment_id . '|' . $entity_key;
+                $rows_by_key[$key] = array(
+                    'kind' => 'portrait',
+                    'kind_label' => __('Portrait Candidate', 'academy-awards-table'),
+                    'entity_id' => $person_id,
+                    'label' => (string) ($row['label'] ?? ($person_id !== '' ? strtoupper($person_id) : sprintf(__('Attachment #%d', 'academy-awards-table'), $attachment_id))),
+                    'bucket' => $bucket,
+                    'state' => $review_state,
+                    'state_label' => $manual_review ? __('Manual Review', 'academy-awards-table') : (string) ($row['existing_review_state_label'] ?? ($row['state_label'] ?? __('Needs Review', 'academy-awards-table'))),
+                    'note' => $note,
+                    'attachment_id' => $attachment_id,
+                    'thumb_url' => (string) ($row['thumb_url'] ?? ''),
+                    'source' => (string) ($row['match_strategy'] ?? ''),
+                    'updated_at' => (string) ($row['existing_review']['updated_at'] ?? ''),
+                    'entity_url' => $person_id !== '' ? $this->build_entity_url_from_id($person_id) : '',
+                    'workflow_url' => admin_url('admin.php?page=academy-awards-person-portraits'),
+                );
+            }
+        }
+
+        return array_values($rows_by_key);
+    }
+
+    private function get_image_integrity_row_sort_weight($bucket) {
+        $weights = array(
+            'wrong_match' => 0,
+            'needs_review' => 1,
+            'missing' => 2,
+            'accepted' => 3,
+            'ready' => 4,
+            'resolved' => 5,
+        );
+
+        return $weights[$bucket] ?? 9;
+    }
+
     private function get_omdb_review_states() {
         return array(
             'needs_review' => __('Needs Review', 'academy-awards-table'),
@@ -7875,7 +8247,9 @@ class Academy_Awards_Table {
             'accepted' => __('Accepted', 'academy-awards-table'),
             'source_failed' => __('Source Failed', 'academy-awards-table'),
             'needs_manual' => __('Needs Manual Poster', 'academy-awards-table'),
+            'wrong_match' => __('Wrong Match', 'academy-awards-table'),
             'manual_replacement' => __('Manual Replacement', 'academy-awards-table'),
+            'resolved' => __('Resolved', 'academy-awards-table'),
             'ignore_accept' => __('Ignore / Accept', 'academy-awards-table'),
         );
     }

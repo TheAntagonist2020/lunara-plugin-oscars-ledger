@@ -1817,6 +1817,231 @@
     margin-top: 10px;
 }
 
+/* Image Integrity Console */
+.aat-image-integrity-admin {
+    max-width: 1420px;
+}
+
+.aat-image-integrity-admin .aat-admin-header p {
+    color: #e6eef7;
+    margin: 6px 0 0;
+    opacity: .9;
+}
+
+.aat-image-integrity-brief {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin: 18px 0;
+}
+
+.aat-image-integrity-brief > div {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    padding: 16px 18px;
+    border: 1px solid rgba(201,169,97,.34);
+    border-radius: 10px;
+    background: #fffaf0;
+}
+
+.aat-image-integrity-brief strong {
+    color: #0a1520;
+    font-size: 14px;
+}
+
+.aat-image-integrity-brief span {
+    color: #50575e;
+}
+
+.aat-image-integrity-actions,
+.aat-image-integrity-section-tabs {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.aat-image-integrity-section-tab {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 999px;
+    color: #1d2327;
+    display: inline-flex;
+    font-weight: 700;
+    min-height: 34px;
+    padding: 0 14px;
+    text-decoration: none;
+}
+
+.aat-image-integrity-section-tab:hover,
+.aat-image-integrity-section-tab:focus,
+.aat-image-integrity-section-tab.is-active {
+    background: #0a1520;
+    border-color: #0a1520;
+    color: #c9a961;
+}
+
+.aat-image-integrity-bucket-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 10px;
+    margin: 18px 0;
+}
+
+.aat-image-integrity-bucket-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 10px;
+    color: #1d2327;
+    display: grid;
+    gap: 8px;
+    min-height: 76px;
+    min-width: 0;
+    padding: 12px 14px;
+    text-decoration: none;
+}
+
+.aat-image-integrity-bucket-card:hover,
+.aat-image-integrity-bucket-card:focus,
+.aat-image-integrity-bucket-card.is-active {
+    background: #fff8e5;
+    border-color: #c9a961;
+    color: #0a1520;
+}
+
+.aat-image-integrity-bucket-card span {
+    color: #646970;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.aat-image-integrity-bucket-card strong {
+    color: #0a1520;
+    font-size: 28px;
+    line-height: 1;
+}
+
+.aat-image-integrity-table-heading {
+    align-items: start;
+    display: flex;
+    gap: 18px;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.aat-image-integrity-table-heading h2 {
+    margin-bottom: 4px;
+}
+
+.aat-image-integrity-table-heading p {
+    margin-top: 0;
+}
+
+.aat-image-integrity-limit {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.aat-image-integrity-limit label {
+    color: #646970;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.aat-image-integrity-limit input {
+    width: 76px;
+}
+
+.aat-image-integrity-table th,
+.aat-image-integrity-table td {
+    vertical-align: middle;
+}
+
+.aat-image-integrity-visual-cell {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    min-width: 160px;
+}
+
+.aat-image-integrity-thumb {
+    align-items: center;
+    background: #0a1520;
+    border: 1px solid rgba(201,169,97,.34);
+    border-radius: 8px;
+    color: #c9a961;
+    display: inline-flex;
+    flex: 0 0 54px;
+    font-size: 11px;
+    font-weight: 800;
+    height: 54px;
+    justify-content: center;
+    line-height: 1.1;
+    object-fit: cover;
+    overflow: hidden;
+    text-align: center;
+    width: 54px;
+}
+
+.aat-image-integrity-thumb.is-empty {
+    padding: 4px;
+}
+
+.aat-image-integrity-state {
+    border: 1px solid #dcdcde;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    line-height: 1.2;
+    padding: 5px 9px;
+    text-transform: uppercase;
+}
+
+.aat-image-integrity-state.is-ready,
+.aat-image-integrity-state.is-accepted,
+.aat-image-integrity-state.is-resolved {
+    background: #edfaef;
+    border-color: #68de7c;
+    color: #0a6b1f;
+}
+
+.aat-image-integrity-state.is-needs_review {
+    background: #fff8e5;
+    border-color: #c9a961;
+    color: #7a5600;
+}
+
+.aat-image-integrity-state.is-missing,
+.aat-image-integrity-state.is-wrong_match {
+    background: #fcf0f1;
+    border-color: #d63638;
+    color: #8a2424;
+}
+
+.aat-image-integrity-empty {
+    display: grid;
+    gap: 4px;
+    padding: 18px;
+    border: 1px dashed #c3c4c7;
+    border-radius: 10px;
+    background: #f6f7f7;
+}
+
+.aat-image-integrity-empty strong {
+    color: #0a1520;
+}
+
 /* Ceremony Write-Ups */
 .aat-ceremony-writeups-admin {
     max-width: 1280px;
@@ -2009,8 +2234,17 @@
 
 @media (max-width: 980px) {
     .aat-admin-stat-grid,
+    .aat-image-integrity-brief,
     .aat-ceremony-writeups-grid {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .aat-image-integrity-bucket-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .aat-image-integrity-table-heading {
+        display: grid;
     }
 
     .aat-ceremony-writeups-counts {
