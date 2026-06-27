@@ -1908,6 +1908,21 @@ get_header();
         <?php endif; ?>
 
         <?php if (!empty($ceremony_ballot_groups)) : ?>
+            <?php
+                $ceremony_ledger_jump_links = array();
+                foreach ($ceremony_ballot_groups as $jump_group) {
+                    $jump_category = trim((string) ($jump_group['category'] ?? ''));
+                    $jump_rows = !empty($jump_group['rows']) && is_array($jump_group['rows']) ? $jump_group['rows'] : array();
+                    if ($jump_category === '' || empty($jump_rows)) {
+                        continue;
+                    }
+
+                    $ceremony_ledger_jump_links[] = array(
+                        'label' => trim((string) ($jump_group['label'] ?? $aat->format_category_display($jump_category))),
+                        'url'   => '#ceremony-category-' . sanitize_title($jump_category),
+                    );
+                }
+            ?>
             <section class="aat-hub-section aat-ceremony-ballot-ledger">
                 <div class="aat-section-head">
                     <h2 class="aat-section-title"><?php echo esc_html__('Complete Ceremony Ledger', 'academy-awards-table'); ?></h2>
@@ -1936,6 +1951,20 @@ get_header();
                         <span><?php echo esc_html__('Nominees summarized for speed', 'academy-awards-table'); ?></span>
                     <?php endif; ?>
                 </div>
+                <?php if (!empty($ceremony_ledger_jump_links)) : ?>
+                    <div class="aat-ceremony-ledger-command">
+                        <div class="aat-ceremony-ledger-command-copy">
+                            <p class="aat-hub-kicker"><?php echo esc_html__('Ballot Navigator', 'academy-awards-table'); ?></p>
+                            <strong><?php echo esc_html__('Jump the ceremony by category.', 'academy-awards-table'); ?></strong>
+                            <span><?php echo esc_html__('The full ledger stays intact, but the route now gives readers a faster way through the ballot.', 'academy-awards-table'); ?></span>
+                        </div>
+                        <nav class="aat-ceremony-ledger-jump-strip" aria-label="<?php echo esc_attr__('Ceremony category jump links', 'academy-awards-table'); ?>">
+                            <?php foreach ($ceremony_ledger_jump_links as $jump_link) : ?>
+                                <a href="<?php echo esc_url((string) $jump_link['url']); ?>"><?php echo esc_html((string) $jump_link['label']); ?></a>
+                            <?php endforeach; ?>
+                        </nav>
+                    </div>
+                <?php endif; ?>
                 <div class="aat-ceremony-ballot-groups">
                     <?php foreach ($ceremony_ballot_groups as $ballot_group) :
                         $group_category = trim((string) ($ballot_group['category'] ?? ''));
@@ -1950,8 +1979,41 @@ get_header();
                         if ($group_category === '' || empty($group_rows)) {
                             continue;
                         }
+                        $group_visuals = array();
+                        $group_visual_seen = array();
+                        foreach ($group_rows as $group_visual_row) {
+                            foreach (explode('|', (string) ($group_visual_row['film_id'] ?? '')) as $group_visual_title_id) {
+                                $group_visual_title_id = strtolower(trim((string) $group_visual_title_id));
+                                if (!preg_match('/^tt\d+$/', $group_visual_title_id) || isset($group_visual_seen[$group_visual_title_id])) {
+                                    continue;
+                                }
+
+                                $group_visual_seen[$group_visual_title_id] = true;
+                                $group_visual_package = $aat_get_visual_package($group_visual_title_id, 'medium');
+                                if (empty($group_visual_package['poster_html']) && empty($group_visual_package['poster_url']) && empty($group_visual_package['backdrop_url'])) {
+                                    continue;
+                                }
+
+                                $group_visual_label = $aat_pipe_display($group_visual_row['film'] ?? '');
+                                if ($group_visual_label === '') {
+                                    $group_visual_label = trim((string) ($group_visual_row['name'] ?? $group_label));
+                                }
+
+                                $group_visuals[] = array(
+                                    'id'       => $group_visual_title_id,
+                                    'label'    => $group_visual_label,
+                                    'url'      => $aat_build_entity_url($group_visual_title_id),
+                                    'visual'   => $group_visual_package,
+                                    'winner'   => !empty($group_visual_row['winner']),
+                                );
+
+                                if (count($group_visuals) >= 3) {
+                                    break 2;
+                                }
+                            }
+                        }
                     ?>
-                        <section class="aat-ceremony-ballot-group" id="ceremony-category-<?php echo esc_attr(sanitize_title($group_category)); ?>">
+                        <section class="aat-ceremony-ballot-group is-ledger-chapter<?php echo !empty($group_visuals) ? ' has-visuals' : ''; ?>" id="ceremony-category-<?php echo esc_attr(sanitize_title($group_category)); ?>">
                             <header class="aat-ceremony-ballot-group-head">
                                 <div>
                                     <p class="aat-hub-kicker"><?php echo esc_html__('Category', 'academy-awards-table'); ?></p>
@@ -1963,6 +2025,28 @@ get_header();
                                     <?php echo esc_html(sprintf(__('%1$s winner%2$s / %3$s record%4$s', 'academy-awards-table'), number_format_i18n($group_winner_count), $group_winner_count === 1 ? '' : 's', number_format_i18n(count($group_rows)), count($group_rows) === 1 ? '' : 's')); ?>
                                 </p>
                             </header>
+                            <?php if (!empty($group_visuals)) : ?>
+                                <div class="aat-ceremony-ballot-group-visuals" aria-label="<?php echo esc_attr(sprintf(__('%s verified visual anchors', 'academy-awards-table'), $group_label)); ?>">
+                                    <?php foreach ($group_visuals as $group_visual_card) :
+                                        $group_card_visual = $group_visual_card['visual'];
+                                        $group_card_backdrop_style = $aat_get_card_backdrop_style($group_card_visual['poster_url'] ?? '', $group_card_visual['backdrop_url'] ?? '');
+                                    ?>
+                                        <a class="aat-ceremony-ballot-visual<?php echo !empty($group_visual_card['winner']) ? ' is-winner' : ' is-nominee'; ?><?php echo $group_card_backdrop_style !== '' ? ' aat-card-has-backdrop' : ''; ?>" href="<?php echo esc_url((string) $group_visual_card['url']); ?>"<?php echo $group_card_backdrop_style !== '' ? ' style="' . esc_attr($group_card_backdrop_style) . '"' : ''; ?>>
+                                            <span class="aat-ceremony-ballot-visual-thumb">
+                                                <?php if (!empty($group_card_visual['poster_html'])) : ?>
+                                                    <?php echo $group_card_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                                <?php elseif (!empty($group_card_visual['poster_url'])) : ?>
+                                                    <img src="<?php echo esc_url((string) $group_card_visual['poster_url']); ?>" alt="<?php echo esc_attr((string) $group_visual_card['label']); ?> poster" loading="lazy" decoding="async" />
+                                                <?php endif; ?>
+                                            </span>
+                                            <span class="aat-ceremony-ballot-visual-copy">
+                                                <span><?php echo esc_html(!empty($group_visual_card['winner']) ? __('Winner', 'academy-awards-table') : __('Nominee', 'academy-awards-table')); ?></span>
+                                                <strong><?php echo esc_html((string) $group_visual_card['label']); ?></strong>
+                                            </span>
+                                        </a>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                             <?php if (!$ceremony_ballot_full_requested && $group_nominee_count > 0) : ?>
                                 <div class="aat-ceremony-nominee-summary">
                                     <span>
@@ -2004,24 +2088,38 @@ get_header();
                                     $row_person_history_label = $row_person_history_meta['label'];
                                     $row_person_history_kind = $row_person_history_meta['kind'];
                                     $row_review_url = ($row_primary_title_id !== '' && !empty($ceremony_review_map[$row_primary_title_id])) ? (string) $ceremony_review_map[$row_primary_title_id] : '';
+                                    $row_visual = $row_primary_title_id !== '' ? $aat_get_visual_package($row_primary_title_id, 'medium') : array();
+                                    $row_has_visual = !empty($row_visual['poster_html']) || !empty($row_visual['poster_url']);
+                                    $row_media_url = $row_film_url !== '' ? $row_film_url : $row_film_history_url;
                                 ?>
                                     <article class="aat-ceremony-ballot-row<?php echo $is_row_winner ? ' is-winner' : ''; ?>">
                                         <div class="aat-ceremony-ballot-status">
                                             <span class="<?php echo $is_row_winner ? 'aat-winner-badge' : 'aat-nominee-badge'; ?>"><?php echo esc_html($is_row_winner ? __('Winner', 'academy-awards-table') : __('Nominee', 'academy-awards-table')); ?></span>
                                         </div>
-                                        <div class="aat-ceremony-ballot-copy">
-                                            <?php if ($row_primary_html !== '') : ?>
-                                                <h4><?php echo wp_kses_post($row_primary_html); ?></h4>
+                                        <div class="aat-ceremony-ballot-copy<?php echo $row_has_visual ? ' has-media' : ''; ?>">
+                                            <?php if ($row_has_visual) : ?>
+                                                <a class="aat-ceremony-ballot-media" href="<?php echo esc_url($row_media_url); ?>" aria-label="<?php echo esc_attr(sprintf(__('Open %s file', 'academy-awards-table'), $row_film_plain !== '' ? $row_film_plain : $row_credit_plain)); ?>">
+                                                    <?php if (!empty($row_visual['poster_html'])) : ?>
+                                                        <?php echo $row_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                                    <?php elseif (!empty($row_visual['poster_url'])) : ?>
+                                                        <img src="<?php echo esc_url((string) $row_visual['poster_url']); ?>" alt="<?php echo esc_attr($row_film_plain !== '' ? $row_film_plain : $row_credit_plain); ?> poster" loading="lazy" decoding="async" />
+                                                    <?php endif; ?>
+                                                </a>
                                             <?php endif; ?>
-                                            <?php if ($show_credit) : ?>
-                                                <p class="aat-ballot-credit"><strong><?php echo esc_html__('Credit', 'academy-awards-table'); ?>:</strong> <?php echo wp_kses_post($row_credit_html); ?></p>
-                                            <?php endif; ?>
-                                            <?php if (!empty($ballot_row['detail'])) : ?>
-                                                <p class="aat-ballot-detail"><?php echo esc_html((string) $ballot_row['detail']); ?></p>
-                                            <?php endif; ?>
-                                            <?php if (!empty($ballot_row['note'])) : ?>
-                                                <p class="aat-ballot-note"><?php echo esc_html((string) $ballot_row['note']); ?></p>
-                                            <?php endif; ?>
+                                            <div class="aat-ceremony-ballot-text">
+                                                <?php if ($row_primary_html !== '') : ?>
+                                                    <h4><?php echo wp_kses_post($row_primary_html); ?></h4>
+                                                <?php endif; ?>
+                                                <?php if ($show_credit) : ?>
+                                                    <p class="aat-ballot-credit"><strong><?php echo esc_html__('Credit', 'academy-awards-table'); ?>:</strong> <?php echo wp_kses_post($row_credit_html); ?></p>
+                                                <?php endif; ?>
+                                                <?php if (!empty($ballot_row['detail'])) : ?>
+                                                    <p class="aat-ballot-detail"><?php echo esc_html((string) $ballot_row['detail']); ?></p>
+                                                <?php endif; ?>
+                                                <?php if (!empty($ballot_row['note'])) : ?>
+                                                    <p class="aat-ballot-note"><?php echo esc_html((string) $ballot_row['note']); ?></p>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                         <?php if ($row_film_history_url !== '' || $row_person_history_url !== '' || $row_review_url !== '') : ?>
                                             <div class="aat-ceremony-ballot-actions">

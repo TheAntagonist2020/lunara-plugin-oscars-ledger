@@ -210,6 +210,12 @@ $assert(strpos($hub_template, 'aat-ceremony-momentum-grid') !== false, 'Ceremony
 $assert(strpos($hub_template, 'aat-ceremony-momentum-visuals') !== false, 'Ceremony momentum modules should reuse verified race visuals when available.');
 $assert(strpos($hub_template, 'id="ceremony-major-races"') !== false, 'Ceremony major-race sections should expose a direct reader-path anchor.');
 $assert(strpos($hub_template, 'id="ceremony-best-picture-nominees"') !== false, 'Ceremony Best Picture nominee sections should expose a direct reader-path anchor.');
+$assert(strpos($hub_template, 'aat-ceremony-ledger-command') !== false, 'Ceremony ballot ledgers should expose a command rail before the category run.');
+$assert(strpos($hub_template, 'aat-ceremony-ledger-jump-strip') !== false, 'Ceremony ballot ledgers should expose a category jump strip.');
+$assert(strpos($hub_template, 'is-ledger-chapter') !== false, 'Ceremony ballot category groups should identify as ledger chapters.');
+$assert(strpos($hub_template, 'aat-ceremony-ballot-group-visuals') !== false, 'Ceremony ballot groups should render verified visual interruption when title visuals exist.');
+$assert(strpos($hub_template, 'aat-ceremony-ballot-visual') !== false, 'Ceremony ballot visual cards should expose a public hook.');
+$assert(strpos($hub_template, 'aat-ceremony-ballot-media') !== false, 'Ceremony ballot rows should expose verified title media when available.');
 $assert(strpos($entity_template, '$profile_dossier_cards') !== false, 'Oscar entity pages should build profile dossier cards.');
 $assert(strpos($entity_template, 'aat-profile-dossier-strip') !== false, 'Oscar entity pages should render a profile dossier strip.');
 $assert(strpos($entity_template, 'aat-profile-dossier-track') !== false, 'Oscar entity pages should render a bounded dossier track.');
@@ -230,6 +236,11 @@ $assert(strpos($css, '.aat-ceremony-momentum') !== false, 'Ceremony momentum mod
 $assert(strpos($css, '.aat-ceremony-momentum-card') !== false, 'Ceremony momentum cards should have deliberate public styling.');
 $assert(strpos($css, '.aat-ceremony-momentum-visuals') !== false, 'Ceremony momentum verified-visual strips should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-ceremony-momentum-thumb') !== false, 'Ceremony momentum thumbnails should be explicitly sized.');
+$assert(strpos($css, '.aat-ceremony-ledger-command') !== false, 'Ceremony ledger command rails should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-ledger-jump-strip') !== false, 'Ceremony ledger jump strips should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-ballot-group.is-ledger-chapter') !== false, 'Ceremony ledger chapters should receive deliberate public styling.');
+$assert(strpos($css, '.aat-ceremony-ballot-group-visuals') !== false, 'Ceremony ledger verified visuals should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-ballot-media') !== false, 'Ceremony ballot row media should be explicitly sized in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-strip') !== false, 'Profile dossier strip should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-track') !== false, 'Profile dossier track should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-card.has-no-media') !== false, 'Profile dossier text-led cards should have deliberate styling.');

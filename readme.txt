@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.81
+Stable tag: 2.7.82
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.82 =
+* Added chaptered Complete Ceremony Ledger rhythm with a Ballot Navigator jump strip and category-level visual interruption.
+* Reused verified title visuals inside ceremony ballot groups and rows only when title art already exists, keeping the full/fast ledger modes intact without empty media chambers.
 
 = 2.7.81 =
 * Added a compact Reader Path momentum module below ceremony Race Highlights, giving readers direct jumps into major races, Best Picture nominees, winner circle, and the full ballot.
