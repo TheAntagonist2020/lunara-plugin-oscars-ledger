@@ -2167,49 +2167,145 @@ get_header();
             </section>
         <?php endif; ?>
 
-        <?php $ceremony_titles = method_exists($aat, 'get_ceremony_title_highlights') ? $aat->get_ceremony_title_highlights($ceremony, 18) : array(); ?>
-        <?php $ceremony_review_cards = !empty($ceremony_titles) ? $aat_build_hub_review_cards($ceremony_titles, $aat_get_related_review_limit()) : array(); ?>
-        <?php if (!empty($ceremony_titles)) : ?>
-            <div class="aat-hub-section aat-ceremony-gallery-section">
-                <h2><?php echo esc_html__('Ceremony Highlights', 'academy-awards-table'); ?></h2>
-                <p class="aat-hub-copy"><?php echo esc_html__('Poster-first highlights from this ceremony, led by winners and the titles that defined the night.', 'academy-awards-table'); ?></p>
-                <div class="aat-filmography-grid aat-hub-film-grid">
-                    <?php foreach ($ceremony_titles as $entry) :
-                        $fid = strtolower(trim((string) ($entry['film_id'] ?? '')));
-                        if (!$fid) { continue; }
-                        $visual = method_exists($aat, 'get_title_visual_package') ? $aat->get_title_visual_package($fid, 'medium_large') : array();
-                        $film_label = !empty($entry['film']) ? (string) $entry['film'] : $aat->lookup_title_label($fid);
-                        $film_url = $aat->get_entity_url($fid);
-                        $ceremony_title_backdrop_style = $aat_get_card_backdrop_style($visual['poster_url'] ?? '', $visual['backdrop_url'] ?? '');
-                        $entry = $aat_enrich_winner_entry_links($entry);
-                    ?>
-                        <article class="aat-filmography-card aat-hub-film-card<?php echo !empty($entry['winner']) ? ' is-winner' : ''; ?><?php echo $ceremony_title_backdrop_style !== '' ? ' aat-card-has-backdrop' : ''; ?>"<?php if ($ceremony_title_backdrop_style !== '') : ?> style="<?php echo esc_attr($ceremony_title_backdrop_style); ?>"<?php endif; ?>>
-                            <a class="aat-filmography-link" href="<?php echo esc_url($film_url ? $film_url : $db_url); ?>">
-                                <div class="aat-filmography-poster-wrap">
-                                    <?php if (!empty($visual['poster_html'])) : ?>
-                                        <?php echo $visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                                    <?php elseif (!empty($visual['poster_url'])) : ?>
-                                        <img class="aat-filmography-poster" src="<?php echo esc_url($visual['poster_url']); ?>" alt="<?php echo esc_attr($film_label); ?> poster" loading="lazy" decoding="async" />
-                                    <?php elseif (!empty($visual['card_fallback_html'])) : ?>
-                                        <?php echo $visual['card_fallback_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                                    <?php else : ?>
-                                        <div class="aat-filmography-poster-placeholder"><span><?php echo esc_html($film_label); ?></span></div>
-                                    <?php endif; ?>
-                                    <?php if (!empty($entry['winner'])) : ?><span class="aat-winner-badge aat-card-badge">Winner</span><?php endif; ?>
-                                </div>
-                                <h3 class="aat-filmography-title"><?php echo esc_html($film_label); ?></h3>
-                                <p class="aat-filmography-meta">
-                                    <?php echo $aat_render_hub_text_link($aat->format_category_display($entry['canonical_category'] ?? ''), !empty($entry['category_url']) ? (string) $entry['category_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                                    <?php if (!empty($entry['person_label'])) : ?>
+        <?php
+            $ceremony_titles = method_exists($aat, 'get_ceremony_title_highlights') ? $aat->get_ceremony_title_highlights($ceremony, 18) : array();
+            $ceremony_review_cards = !empty($ceremony_titles) ? $aat_build_hub_review_cards($ceremony_titles, $aat_get_related_review_limit()) : array();
+            $ceremony_exit_cards = array();
+
+            if (!empty($ceremony_titles)) {
+                foreach ($ceremony_titles as $entry) {
+                    $fid = strtolower(trim((string) ($entry['film_id'] ?? '')));
+                    if (!$fid) {
+                        continue;
+                    }
+
+                    $entry = $aat_enrich_winner_entry_links($entry);
+                    $visual = method_exists($aat, 'get_title_visual_package') ? $aat->get_title_visual_package($fid, 'medium_large') : array();
+                    $film_label = !empty($entry['film']) ? (string) $entry['film'] : $aat->lookup_title_label($fid);
+                    $film_url = $aat->get_entity_url($fid);
+                    $category_label = $aat->format_category_display($entry['canonical_category'] ?? '');
+                    $ceremony_title_backdrop_style = $aat_get_card_backdrop_style($visual['poster_url'] ?? '', $visual['backdrop_url'] ?? '');
+                    $has_verified_visual = !empty($visual['poster_html']) || !empty($visual['poster_url']) || !empty($visual['backdrop_url']);
+
+                    $ceremony_exit_cards[] = array(
+                        'film_id'        => $fid,
+                        'label'          => $film_label,
+                        'url'            => $film_url ? $film_url : $db_url,
+                        'visual'         => is_array($visual) ? $visual : array(),
+                        'has_visual'     => $has_verified_visual,
+                        'backdrop_style' => $ceremony_title_backdrop_style,
+                        'winner'         => !empty($entry['winner']),
+                        'category_label' => $category_label,
+                        'category_url'   => !empty($entry['category_url']) ? (string) $entry['category_url'] : '',
+                        'person_label'   => !empty($entry['person_label']) ? (string) $entry['person_label'] : '',
+                        'person_url'     => !empty($entry['person_url']) ? (string) $entry['person_url'] : '',
+                    );
+                }
+            }
+
+            $ceremony_exit_feature = !empty($ceremony_exit_cards) ? $ceremony_exit_cards[0] : array();
+            $ceremony_exit_rail = count($ceremony_exit_cards) > 1 ? array_slice($ceremony_exit_cards, 1, 12) : array();
+        ?>
+        <?php if (!empty($ceremony_exit_cards)) : ?>
+            <section class="aat-hub-section aat-ceremony-gallery-section aat-ceremony-exit-lane">
+                <div class="aat-ceremony-exit-heading">
+                    <span class="aat-ceremony-exit-kicker"><?php echo esc_html__('Exit File', 'academy-awards-table'); ?></span>
+                    <div>
+                        <h2><?php echo esc_html__('Ceremony Highlights', 'academy-awards-table'); ?></h2>
+                        <p class="aat-hub-copy"><?php echo esc_html__('A winner-led visual path through the films that gave this ceremony its public shape.', 'academy-awards-table'); ?></p>
+                    </div>
+                </div>
+
+                <?php
+                    $feature_visual = !empty($ceremony_exit_feature['visual']) && is_array($ceremony_exit_feature['visual']) ? $ceremony_exit_feature['visual'] : array();
+                    $feature_classes = array(
+                        'aat-ceremony-exit-feature',
+                        !empty($ceremony_exit_feature['has_visual']) ? 'has-media' : 'has-no-media',
+                    );
+                    if (!empty($ceremony_exit_feature['winner'])) {
+                        $feature_classes[] = 'is-winner';
+                    }
+                    if (!empty($ceremony_exit_feature['backdrop_style'])) {
+                        $feature_classes[] = 'aat-card-has-backdrop';
+                    }
+                ?>
+                <div class="aat-ceremony-exit-stage">
+                    <article class="<?php echo esc_attr(implode(' ', $feature_classes)); ?>"<?php if (!empty($ceremony_exit_feature['backdrop_style'])) : ?> style="<?php echo esc_attr($ceremony_exit_feature['backdrop_style']); ?>"<?php endif; ?>>
+                        <a class="aat-ceremony-exit-feature-link" href="<?php echo esc_url((string) $ceremony_exit_feature['url']); ?>">
+                            <div class="aat-ceremony-exit-feature-media">
+                                <?php if (!empty($feature_visual['poster_html'])) : ?>
+                                    <?php echo $feature_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                <?php elseif (!empty($feature_visual['poster_url'])) : ?>
+                                    <img class="aat-ceremony-exit-poster" src="<?php echo esc_url($feature_visual['poster_url']); ?>" alt="<?php echo esc_attr(sprintf(__('%s poster', 'academy-awards-table'), (string) $ceremony_exit_feature['label'])); ?>" loading="lazy" decoding="async" />
+                                <?php elseif (!empty($feature_visual['card_fallback_html']) && !empty($ceremony_exit_feature['has_visual'])) : ?>
+                                    <?php echo $feature_visual['card_fallback_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                <?php else : ?>
+                                    <div class="aat-ceremony-exit-text-media">
+                                        <span><?php echo esc_html((string) $ceremony_exit_feature['category_label']); ?></span>
+                                        <strong><?php echo esc_html((string) $ceremony_exit_feature['label']); ?></strong>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if (!empty($ceremony_exit_feature['winner'])) : ?><span class="aat-winner-badge aat-card-badge"><?php echo esc_html__('Winner', 'academy-awards-table'); ?></span><?php endif; ?>
+                            </div>
+                            <div class="aat-ceremony-exit-feature-copy">
+                                <span class="aat-ceremony-exit-overline"><?php echo esc_html(!empty($ceremony_exit_feature['winner']) ? __('Winner-Led Highlight', 'academy-awards-table') : __('Ceremony Highlight', 'academy-awards-table')); ?></span>
+                                <h3><?php echo esc_html((string) $ceremony_exit_feature['label']); ?></h3>
+                                <p class="aat-ceremony-exit-meta">
+                                    <?php echo $aat_render_hub_text_link((string) $ceremony_exit_feature['category_label'], !empty($ceremony_exit_feature['category_url']) ? (string) $ceremony_exit_feature['category_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                    <?php if (!empty($ceremony_exit_feature['person_label'])) : ?>
                                         <span class="aat-meta-sep" aria-hidden="true">&middot;</span>
-                                        <?php echo $aat_render_hub_text_link((string) $entry['person_label'], !empty($entry['person_url']) ? (string) $entry['person_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                        <?php echo $aat_render_hub_text_link((string) $ceremony_exit_feature['person_label'], !empty($ceremony_exit_feature['person_url']) ? (string) $ceremony_exit_feature['person_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                     <?php endif; ?>
                                 </p>
-                            </a>
-                        </article>
-                    <?php endforeach; ?>
+                                <span class="aat-ceremony-exit-action"><?php echo esc_html__('Open Film File', 'academy-awards-table'); ?></span>
+                            </div>
+                        </a>
+                    </article>
+
+                    <?php if (!empty($ceremony_exit_rail)) : ?>
+                        <div class="aat-ceremony-exit-rail" aria-label="<?php echo esc_attr__('Additional ceremony title highlights', 'academy-awards-table'); ?>">
+                            <?php foreach ($ceremony_exit_rail as $exit_card) :
+                                $exit_visual = !empty($exit_card['visual']) && is_array($exit_card['visual']) ? $exit_card['visual'] : array();
+                                $exit_classes = array(
+                                    'aat-ceremony-exit-card',
+                                    !empty($exit_card['has_visual']) ? 'has-media' : 'has-no-media',
+                                );
+                                if (!empty($exit_card['winner'])) {
+                                    $exit_classes[] = 'is-winner';
+                                }
+                                if (!empty($exit_card['backdrop_style'])) {
+                                    $exit_classes[] = 'aat-card-has-backdrop';
+                                }
+                            ?>
+                                <article class="<?php echo esc_attr(implode(' ', $exit_classes)); ?>"<?php if (!empty($exit_card['backdrop_style'])) : ?> style="<?php echo esc_attr($exit_card['backdrop_style']); ?>"<?php endif; ?>>
+                                    <a class="aat-ceremony-exit-card-link" href="<?php echo esc_url((string) $exit_card['url']); ?>">
+                                        <?php if (!empty($exit_card['has_visual'])) : ?>
+                                            <span class="aat-ceremony-exit-thumb">
+                                                <?php if (!empty($exit_visual['poster_html'])) : ?>
+                                                    <?php echo $exit_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                                <?php elseif (!empty($exit_visual['poster_url'])) : ?>
+                                                    <img src="<?php echo esc_url($exit_visual['poster_url']); ?>" alt="<?php echo esc_attr(sprintf(__('%s poster', 'academy-awards-table'), (string) $exit_card['label'])); ?>" loading="lazy" decoding="async" />
+                                                <?php elseif (!empty($exit_visual['card_fallback_html'])) : ?>
+                                                    <?php echo $exit_visual['card_fallback_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                                <?php else : ?>
+                                                    <span class="aat-ceremony-exit-mini-title"><?php echo esc_html((string) $exit_card['label']); ?></span>
+                                                <?php endif; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                        <span class="aat-ceremony-exit-card-body">
+                                            <span class="aat-ceremony-exit-card-kicker"><?php echo esc_html(!empty($exit_card['winner']) ? __('Winner', 'academy-awards-table') : __('Nominee File', 'academy-awards-table')); ?></span>
+                                            <strong><?php echo esc_html((string) $exit_card['label']); ?></strong>
+                                            <span class="aat-ceremony-exit-card-meta">
+                                                <?php echo $aat_render_hub_text_link((string) $exit_card['category_label'], !empty($exit_card['category_url']) ? (string) $exit_card['category_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                            </span>
+                                        </span>
+                                    </a>
+                                </article>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
-            </div>
+            </section>
         <?php endif; ?>
 
         <?php if (!empty($ceremony_review_cards)) : ?>

@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.83
+Stable tag: 2.7.84
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.84 =
+* Replaced the generic Ceremony Highlights poster grid with a ceremony-specific exit lane using one featured title and a compact visual rail.
+* Reused existing verified title visuals when available and rendered no-media cards as deliberate text-led states instead of empty image chambers.
 
 = 2.7.83 =
 * Added a scoped research-view brief to ceremony full-ledger mode with compact stats for records, nominee rows, and category chapters.

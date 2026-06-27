@@ -44,8 +44,8 @@ $builder = $method_slice($plugin, 'private function build_profile_image_person_c
 $writer = $method_slice($plugin, 'private function write_profile_image_person_credit_audit_csv', 'private function normalize_profile_image_coverage_cli_args');
 
 foreach (array(
-    'Version: 2.7.83',
-    "define('AAT_VERSION', '2.7.83')",
+    'Version: 2.7.84',
+    "define('AAT_VERSION', '2.7.84')",
     'person-credit-audit',
     'build_profile_image_person_credit_audit',
     'write_profile_image_person_credit_audit_csv',
@@ -124,7 +124,7 @@ foreach (array(
     'person-credit-audit',
     'unresolved person credit',
     'read-only',
-    '2.7.83',
+    '2.7.84',
 ) as $needle) {
     $assert(strpos($docs, $needle) !== false, "Docs should describe the private read-only person-credit audit: {$needle}");
 }

@@ -221,6 +221,12 @@ $assert(strpos($hub_template, 'aat-ceremony-full-ledger-brief') !== false, 'Cere
 $assert(strpos($hub_template, 'aat-ceremony-full-ledger-stat') !== false, 'Ceremony full ballot command briefs should expose compact research stats.');
 $assert(strpos($hub_template, 'aat-ceremony-ballot-row-index') !== false, 'Ceremony full ballot rows should expose a scan-friendly row index.');
 $assert(strpos($hub_template, 'aat-ceremony-ballot-depth') !== false, 'Ceremony full ballot rows should expose row-depth metadata.');
+$assert(strpos($hub_template, '$ceremony_exit_cards') !== false, 'Ceremony pages should build a dedicated visual exit lane from ceremony title highlights.');
+$assert(strpos($hub_template, 'aat-ceremony-exit-lane') !== false, 'Ceremony highlights should expose a scoped exit-lane hook.');
+$assert(strpos($hub_template, 'aat-ceremony-exit-feature') !== false, 'Ceremony highlights should render a featured visual title card.');
+$assert(strpos($hub_template, 'aat-ceremony-exit-feature-media') !== false, 'Ceremony highlights should expose a feature media chamber.');
+$assert(strpos($hub_template, 'aat-ceremony-exit-rail') !== false, 'Ceremony highlights should render the remaining title highlights as a visual rail.');
+$assert(strpos($hub_template, 'aat-ceremony-exit-card') !== false, 'Ceremony highlight rail cards should expose card-level hooks.');
 $assert(strpos($entity_template, '$profile_dossier_cards') !== false, 'Oscar entity pages should build profile dossier cards.');
 $assert(strpos($entity_template, 'aat-profile-dossier-strip') !== false, 'Oscar entity pages should render a profile dossier strip.');
 $assert(strpos($entity_template, 'aat-profile-dossier-track') !== false, 'Oscar entity pages should render a bounded dossier track.');
@@ -250,6 +256,11 @@ $assert(strpos($css, '.aat-ceremony-ballot-ledger.is-full-ledger') !== false, 'C
 $assert(strpos($css, '.aat-ceremony-full-ledger-brief') !== false, 'Ceremony full ballot research briefs should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-ceremony-ballot-row-index') !== false, 'Ceremony full ballot row indexes should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-ceremony-ballot-depth') !== false, 'Ceremony full ballot depth metadata should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-exit-lane') !== false, 'Ceremony exit lanes should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-exit-feature') !== false, 'Ceremony exit feature cards should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-exit-feature-media') !== false, 'Ceremony exit feature media should be explicitly sized.');
+$assert(strpos($css, '.aat-ceremony-exit-rail') !== false, 'Ceremony exit rails should have a public layout rule.');
+$assert(strpos($css, '.aat-ceremony-exit-card.has-no-media') !== false, 'Ceremony exit rail text-led cards should have deliberate styling.');
 $assert(strpos($css, '.aat-profile-dossier-strip') !== false, 'Profile dossier strip should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-track') !== false, 'Profile dossier track should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-card.has-no-media') !== false, 'Profile dossier text-led cards should have deliberate styling.');

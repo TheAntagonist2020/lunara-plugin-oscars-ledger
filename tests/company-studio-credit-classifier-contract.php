@@ -55,10 +55,10 @@ $classifier = $method_slice($plugin, 'private function normalize_profile_image_c
 $review_storage = $method_slice($plugin, 'private function get_company_credit_review_filter_labels', 'private function get_person_credit_review_states');
 
 foreach (array(
-    'Version: 2.7.83',
-    "define('AAT_VERSION', '2.7.83')",
-    'Stable tag: 2.7.83',
-    'Current baseline: `2.7.83`',
+    'Version: 2.7.84',
+    "define('AAT_VERSION', '2.7.84')",
+    'Stable tag: 2.7.84',
+    'Current baseline: `2.7.84`',
     'company/studio credit resolver',
 ) as $needle) {
     $assert(stripos($plugin . $docs, $needle) !== false, "Version/docs marker should exist: {$needle}");
