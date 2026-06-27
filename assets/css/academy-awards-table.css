@@ -6947,6 +6947,188 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     color: var(--aat-gold);
 }
 
+.aat-ceremony-momentum {
+    display: grid;
+    grid-template-columns: minmax(0, .86fr) minmax(0, 1.14fr);
+    gap: clamp(14px, 2.2vw, 22px);
+    min-width: 0;
+    padding: clamp(18px, 2.8vw, 30px);
+    border: 1px solid rgba(201,169,97,.18);
+    border-radius: 18px;
+    background:
+        linear-gradient(90deg, rgba(201,169,97,.1) 1px, transparent 1px),
+        radial-gradient(circle at 12% 8%, rgba(201,169,97,.14), transparent 34%),
+        linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.012)),
+        rgba(6,15,26,.68);
+    background-size: 60px 60px, auto, auto, auto;
+    overflow: hidden;
+}
+
+.aat-ceremony-momentum-head {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    min-width: 0;
+}
+
+.aat-ceremony-momentum-head h2 {
+    margin: 0;
+    max-width: 16ch;
+    color: var(--aat-white);
+    font-size: clamp(1.82rem, 3.05vw, 3.08rem);
+    line-height: 1.03;
+    text-wrap: balance;
+}
+
+.aat-ceremony-momentum-head .aat-hub-copy {
+    margin: 0;
+    max-width: 58ch;
+}
+
+.aat-ceremony-momentum-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    min-width: 0;
+}
+
+.aat-ceremony-momentum-card {
+    position: relative;
+    display: grid;
+    align-content: end;
+    gap: 7px;
+    min-width: 0;
+    min-height: 132px;
+    padding: clamp(14px, 2vw, 18px);
+    border: 1px solid rgba(201,169,97,.14);
+    border-radius: 14px;
+    background:
+        linear-gradient(150deg, rgba(14,28,44,.86), rgba(2,8,15,.94)),
+        rgba(6,15,26,.82);
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 16px 34px rgba(0,0,0,.16);
+    overflow: hidden;
+}
+
+.aat-ceremony-momentum-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(201,169,97,.13), transparent 42%);
+    opacity: .58;
+    pointer-events: none;
+}
+
+.aat-ceremony-momentum-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.aat-ceremony-momentum-card:hover,
+.aat-ceremony-momentum-card:focus {
+    border-color: rgba(201,169,97,.34);
+    transform: translateY(-2px);
+}
+
+.aat-ceremony-momentum-label,
+.aat-ceremony-momentum-visual-copy span {
+    color: var(--aat-gold-light);
+    font-size: .64rem;
+    font-weight: 900;
+    letter-spacing: .12em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.aat-ceremony-momentum-card strong {
+    color: var(--aat-white);
+    font-size: clamp(1.32rem, 2vw, 1.86rem);
+    line-height: 1;
+    overflow-wrap: anywhere;
+}
+
+.aat-ceremony-momentum-copy {
+    color: rgba(244,239,227,.66);
+    font-size: .82rem;
+    line-height: 1.4;
+}
+
+.aat-ceremony-momentum-visuals {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    min-width: 0;
+}
+
+.aat-ceremony-momentum-visual {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(48px, 66px) minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid rgba(201,169,97,.14);
+    border-radius: 13px;
+    background:
+        linear-gradient(145deg, rgba(14,28,44,.7), rgba(2,8,15,.9)),
+        rgba(6,15,26,.78);
+    color: inherit;
+    text-decoration: none;
+    overflow: hidden;
+}
+
+.aat-ceremony-momentum-visual.aat-card-has-backdrop::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--aat-card-backdrop);
+    background-size: cover;
+    background-position: center;
+    opacity: .13;
+    filter: saturate(.72) contrast(1.08);
+    transform: scale(1.04);
+}
+
+.aat-ceremony-momentum-visual > * {
+    position: relative;
+    z-index: 1;
+}
+
+.aat-ceremony-momentum-thumb {
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    border: 1px solid rgba(201,169,97,.2);
+    border-radius: 8px;
+    background: rgba(2,8,15,.58);
+    overflow: hidden;
+}
+
+.aat-ceremony-momentum-thumb img,
+.aat-ceremony-momentum-thumb .aat-filmography-poster,
+.aat-ceremony-momentum-thumb .aat-hub-spotlight-poster {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.aat-ceremony-momentum-visual-copy {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.aat-ceremony-momentum-visual-copy strong {
+    color: var(--aat-white);
+    font-size: clamp(.95rem, 1.16vw, 1.08rem);
+    line-height: 1.08;
+    overflow-wrap: anywhere;
+}
+
 .aat-ceremony-thesis {
     display: grid;
     grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
@@ -7297,12 +7479,18 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
 
     .aat-ceremony-editorial-writeup,
     .aat-ceremony-race-highlights-head,
+    .aat-ceremony-momentum,
+    .aat-ceremony-momentum-grid,
     .aat-ceremony-thesis,
     .aat-major-race-briefing {
         grid-template-columns: minmax(0, 1fr);
     }
 
     .aat-ceremony-race-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .aat-ceremony-momentum-visuals {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -7350,6 +7538,10 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     .aat-ceremony-race-highlights-head,
     .aat-ceremony-race-card,
     .aat-ceremony-race-body,
+    .aat-ceremony-momentum,
+    .aat-ceremony-momentum-head,
+    .aat-ceremony-momentum-card,
+    .aat-ceremony-momentum-visual,
     .aat-ceremony-thesis,
     .aat-major-race-briefing,
     .aat-major-race-briefing-card,
@@ -7390,6 +7582,11 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     .aat-ceremony-dossier .aat-ceremony-race-highlights-head .aat-hub-copy,
     .aat-ceremony-dossier .aat-ceremony-race-card h3,
     .aat-ceremony-dossier .aat-ceremony-race-card p,
+    .aat-ceremony-dossier .aat-ceremony-momentum-head h2,
+    .aat-ceremony-dossier .aat-ceremony-momentum-head .aat-hub-copy,
+    .aat-ceremony-dossier .aat-ceremony-momentum-card strong,
+    .aat-ceremony-dossier .aat-ceremony-momentum-copy,
+    .aat-ceremony-dossier .aat-ceremony-momentum-visual-copy strong,
     .aat-ceremony-dossier .aat-ceremony-thesis h2,
     .aat-ceremony-dossier .aat-ceremony-thesis .aat-hub-copy,
     .aat-ceremony-dossier .aat-major-race-briefing-card h3,
@@ -7423,6 +7620,8 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     .aat-ceremony-editorial-writeup,
     .aat-ceremony-race-highlights-head,
     .aat-ceremony-dossier .aat-hub-metric-grid,
+    .aat-ceremony-momentum,
+    .aat-ceremony-momentum-grid,
     .aat-ceremony-thesis,
     .aat-ceremony-thesis-stats,
     .aat-major-race-briefing,
@@ -7456,6 +7655,32 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     }
 
     .aat-ceremony-race-card {
+        flex: 0 0 min(76vw, 286px);
+        scroll-snap-align: start;
+    }
+
+    .aat-ceremony-momentum {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .aat-ceremony-momentum-card {
+        min-height: 116px;
+    }
+
+    .aat-ceremony-momentum-visuals {
+        display: flex;
+        gap: 10px;
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        padding: 2px 2px 12px;
+        scroll-padding-inline: 2px;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .aat-ceremony-momentum-visual {
         flex: 0 0 min(76vw, 286px);
         scroll-snap-align: start;
     }

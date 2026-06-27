@@ -1248,6 +1248,54 @@ get_header();
                     'kind'  => 'category',
                 );
             }
+
+            $ceremony_pulse_cards = array(
+                array(
+                    'label' => __('Major Race Runway', 'academy-awards-table'),
+                    'value' => sprintf(
+                        /* translators: 1: completed major races, 2: total major races */
+                        __('%1$s/%2$s set', 'academy-awards-table'),
+                        number_format_i18n($ceremony_major_completed_count),
+                        number_format_i18n(count($ceremony_major_race_order))
+                    ),
+                    'copy'  => __('Picture, Director, Actor, and Actress in one reader path.', 'academy-awards-table'),
+                    'url'   => '#ceremony-major-races',
+                    'kind'  => 'races',
+                ),
+                array(
+                    'label' => __('Picture Field', 'academy-awards-table'),
+                    'value' => sprintf(
+                        /* translators: %s: Best Picture nominee count */
+                        _n('%s nominee', '%s nominees', count($best_picture_nominees), 'academy-awards-table'),
+                        number_format_i18n(count($best_picture_nominees))
+                    ),
+                    'copy'  => __('The shortlist most visitors expect first, held above the full ledger.', 'academy-awards-table'),
+                    'url'   => !empty($best_picture_nominees) ? '#ceremony-best-picture-nominees' : $ceremony_ballot_full_url,
+                    'kind'  => 'picture',
+                ),
+                array(
+                    'label' => __('Winner Circle', 'academy-awards-table'),
+                    'value' => $winner_record_label,
+                    'copy'  => __('Every winner remains one jump away once the ceremony opens out.', 'academy-awards-table'),
+                    'url'   => '#ceremony-winner-circle',
+                    'kind'  => 'winners',
+                ),
+                array(
+                    'label' => __('Deep Ledger', 'academy-awards-table'),
+                    'value' => sprintf(
+                        /* translators: %s: category count */
+                        _n('%s category', '%s categories', count($ceremony_ballot_groups), 'academy-awards-table'),
+                        number_format_i18n(count($ceremony_ballot_groups))
+                    ),
+                    'copy'  => __('Fast view stays readable; full ballot mode keeps every nominee trail available.', 'academy-awards-table'),
+                    'url'   => $ceremony_ballot_full_url,
+                    'kind'  => 'ledger',
+                ),
+            );
+            $ceremony_pulse_visuals = array_slice(array_values(array_filter($ceremony_race_highlight_cards, function($pulse_candidate) {
+                $pulse_visual = !empty($pulse_candidate['visual']) && is_array($pulse_candidate['visual']) ? $pulse_candidate['visual'] : array();
+                return !empty($pulse_visual['poster_html']) || !empty($pulse_visual['poster_url']);
+            })), 0, 4);
     ?>
         <div class="aat-ceremony-dossier">
             <style>
@@ -1418,6 +1466,51 @@ get_header();
                         </article>
                     <?php endforeach; ?>
                 </div>
+            </section>
+        <?php endif; ?>
+
+        <?php if (!empty($ceremony_pulse_cards)) : ?>
+            <section class="aat-hub-section aat-ceremony-momentum" aria-label="<?php echo esc_attr__('Ceremony reader path', 'academy-awards-table'); ?>">
+                <div class="aat-ceremony-momentum-head">
+                    <p class="aat-hub-kicker"><?php echo esc_html__('Reader Path', 'academy-awards-table'); ?></p>
+                    <h2><?php echo esc_html__('The ceremony stays in motion from races to record.', 'academy-awards-table'); ?></h2>
+                    <p class="aat-hub-copy"><?php echo esc_html__('Jump from the visual race board into the major fields, Picture slate, winner circle, or the complete ballot without losing the thread of the night.', 'academy-awards-table'); ?></p>
+                </div>
+                <div class="aat-ceremony-momentum-grid" aria-label="<?php echo esc_attr__('Ceremony navigation cards', 'academy-awards-table'); ?>">
+                    <?php foreach ($ceremony_pulse_cards as $pulse_card) : ?>
+                        <a class="aat-ceremony-momentum-card is-kind-<?php echo esc_attr(sanitize_html_class((string) $pulse_card['kind'])); ?>" href="<?php echo esc_url($pulse_card['url']); ?>">
+                            <span class="aat-ceremony-momentum-label"><?php echo esc_html($pulse_card['label']); ?></span>
+                            <strong><?php echo esc_html($pulse_card['value']); ?></strong>
+                            <span class="aat-ceremony-momentum-copy"><?php echo esc_html($pulse_card['copy']); ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+                <?php if (!empty($ceremony_pulse_visuals)) : ?>
+                    <div class="aat-ceremony-momentum-visuals" aria-label="<?php echo esc_attr__('Verified ceremony visual anchors', 'academy-awards-table'); ?>">
+                        <?php foreach ($ceremony_pulse_visuals as $pulse_visual_card) :
+                            $pulse_visual = !empty($pulse_visual_card['visual']) && is_array($pulse_visual_card['visual']) ? $pulse_visual_card['visual'] : array();
+                            if (empty($pulse_visual['poster_html']) && empty($pulse_visual['poster_url'])) {
+                                continue;
+                            }
+                            $pulse_url = !empty($pulse_visual_card['primary_url']) ? (string) $pulse_visual_card['primary_url'] : (string) $pulse_visual_card['ledger_url'];
+                            $pulse_backdrop_style = $aat_get_card_backdrop_style($pulse_visual['poster_url'] ?? '', $pulse_visual['backdrop_url'] ?? '');
+                        ?>
+                            <a class="aat-ceremony-momentum-visual<?php echo $pulse_backdrop_style !== '' ? ' aat-card-has-backdrop' : ''; ?>" href="<?php echo esc_url($pulse_url); ?>"<?php echo $pulse_backdrop_style !== '' ? ' style="' . esc_attr($pulse_backdrop_style) . '"' : ''; ?>>
+                                <span class="aat-ceremony-momentum-thumb">
+                                    <?php if (!empty($pulse_visual['poster_html'])) : ?>
+                                        <?php echo $pulse_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                    <?php else : ?>
+                                        <img src="<?php echo esc_url($pulse_visual['poster_url']); ?>" alt="<?php echo esc_attr(sprintf(__('%s poster', 'academy-awards-table'), (string) $pulse_visual_card['primary_label'])); ?>" loading="lazy" decoding="async" />
+                                    <?php endif; ?>
+                                </span>
+                                <span class="aat-ceremony-momentum-visual-copy">
+                                    <span><?php echo esc_html($pulse_visual_card['label']); ?></span>
+                                    <strong><?php echo esc_html($pulse_visual_card['primary_label']); ?></strong>
+                                </span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </section>
         <?php endif; ?>
 
@@ -1614,7 +1707,7 @@ get_header();
         <?php endif; ?>
 
         <?php if (!empty($best_picture_nominees)) : ?>
-            <div class="aat-hub-section aat-best-picture-nominees-section">
+            <div class="aat-hub-section aat-best-picture-nominees-section" id="ceremony-best-picture-nominees">
                 <h2><?php echo esc_html__('Best Picture Nominees', 'academy-awards-table'); ?></h2>
                 <p class="aat-hub-copy">
                     <?php
@@ -1679,7 +1772,7 @@ get_header();
         </div>
 
         <?php if (!empty($ceremony_major_race_groups)) : ?>
-            <section class="aat-hub-section aat-ceremony-major-races" aria-label="<?php echo esc_attr__('Major Oscar races', 'academy-awards-table'); ?>">
+            <section class="aat-hub-section aat-ceremony-major-races" id="ceremony-major-races" aria-label="<?php echo esc_attr__('Major Oscar races', 'academy-awards-table'); ?>">
                 <div class="aat-section-head">
                     <div>
                         <p class="aat-hub-kicker"><?php echo esc_html__('Major Races', 'academy-awards-table'); ?></p>

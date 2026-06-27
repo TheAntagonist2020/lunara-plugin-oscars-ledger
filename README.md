@@ -14,10 +14,11 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.80`.
+Current baseline: `2.7.81`.
 
 ## Current Public Surface
 
+- Ceremony pages now include a compact Reader Path momentum module below Race Highlights, turning the same existing ceremony data into direct jumps for major races, Best Picture nominees, winner circle, and full ballot.
 - Ceremony write-up public text now repairs the common double-encoded UTF-8 mojibake sequences seen in live ceremony imports before templates escape the copy.
 - Ceremony pages now carry a verified Race Highlights strip near the dossier top, using existing title visuals for Best Picture, Directing, Actor, and Actress before the thesis/ledger flow continues.
 - Ceremony pages include a data-derived Ceremony Thesis layer with critical-path navigation and compact major-race briefing cards.

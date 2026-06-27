@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.80
+Stable tag: 2.7.81
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.81 =
+* Added a compact Reader Path momentum module below ceremony Race Highlights, giving readers direct jumps into major races, Best Picture nominees, winner circle, and the full ballot.
+* Reused verified ceremony race visuals as a bounded mini visual strip when posters already exist, with mobile scroll containment and no empty image chambers.
 
 = 2.7.80 =
 * Added a byte-exact ceremony write-up text guard that repairs common double-encoded UTF-8 mojibake before public rendering.

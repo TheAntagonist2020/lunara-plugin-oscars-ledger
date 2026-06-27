@@ -204,6 +204,12 @@ $assert(strpos($hub_template, 'aat-ceremony-race-highlights') !== false, 'Ceremo
 $assert(strpos($hub_template, 'aat-ceremony-race-strip') !== false, 'Ceremony pages should render major-race cards inside a bounded strip.');
 $assert(strpos($hub_template, 'aat-ceremony-race-card') !== false, 'Ceremony race highlights should expose card-level hooks.');
 $assert(strpos($hub_template, 'is-major-race') !== false, 'Ceremony race highlight cards should identify major-race cards.');
+$assert(strpos($hub_template, '$ceremony_pulse_cards') !== false, 'Ceremony pages should build a reader-path pulse board from existing ceremony data.');
+$assert(strpos($hub_template, 'aat-ceremony-momentum') !== false, 'Ceremony pages should render a compact momentum module below race highlights.');
+$assert(strpos($hub_template, 'aat-ceremony-momentum-grid') !== false, 'Ceremony momentum modules should expose a card grid hook.');
+$assert(strpos($hub_template, 'aat-ceremony-momentum-visuals') !== false, 'Ceremony momentum modules should reuse verified race visuals when available.');
+$assert(strpos($hub_template, 'id="ceremony-major-races"') !== false, 'Ceremony major-race sections should expose a direct reader-path anchor.');
+$assert(strpos($hub_template, 'id="ceremony-best-picture-nominees"') !== false, 'Ceremony Best Picture nominee sections should expose a direct reader-path anchor.');
 $assert(strpos($entity_template, '$profile_dossier_cards') !== false, 'Oscar entity pages should build profile dossier cards.');
 $assert(strpos($entity_template, 'aat-profile-dossier-strip') !== false, 'Oscar entity pages should render a profile dossier strip.');
 $assert(strpos($entity_template, 'aat-profile-dossier-track') !== false, 'Oscar entity pages should render a bounded dossier track.');
@@ -220,6 +226,10 @@ $assert(strpos($css, '.aat-ceremony-race-highlights') !== false, 'Ceremony race-
 $assert(strpos($css, '.aat-ceremony-race-strip') !== false, 'Ceremony race-highlights strip should have a public layout rule.');
 $assert(strpos($css, '.aat-ceremony-race-card') !== false, 'Ceremony race-highlight cards should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-ceremony-race-media') !== false, 'Ceremony race-highlight media chambers should be explicitly sized.');
+$assert(strpos($css, '.aat-ceremony-momentum') !== false, 'Ceremony momentum modules should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-momentum-card') !== false, 'Ceremony momentum cards should have deliberate public styling.');
+$assert(strpos($css, '.aat-ceremony-momentum-visuals') !== false, 'Ceremony momentum verified-visual strips should be styled in the public stylesheet.');
+$assert(strpos($css, '.aat-ceremony-momentum-thumb') !== false, 'Ceremony momentum thumbnails should be explicitly sized.');
 $assert(strpos($css, '.aat-profile-dossier-strip') !== false, 'Profile dossier strip should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-track') !== false, 'Profile dossier track should be styled in the public stylesheet.');
 $assert(strpos($css, '.aat-profile-dossier-card.has-no-media') !== false, 'Profile dossier text-led cards should have deliberate styling.');
