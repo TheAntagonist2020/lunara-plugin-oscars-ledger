@@ -8001,6 +8001,11 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     grid-template-columns: minmax(132px, 180px) minmax(0, 1fr);
 }
 
+.aat-major-race-feature > .aat-major-race-copy:only-child {
+    grid-column: 1 / -1;
+    max-width: min(100%, 38rem);
+}
+
 .aat-major-race-media {
     display: block;
     width: 100%;
@@ -8029,6 +8034,15 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     font-size: clamp(1.22rem, 2.15vw, 2.05rem);
     line-height: 1.06;
     text-wrap: balance;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+}
+
+.aat-major-race-title .aat-hub-inline-link-title {
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
 }
 
 .aat-major-race-meta,
@@ -8461,6 +8475,15 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
         overflow-wrap: anywhere;
         text-wrap: auto;
         white-space: normal;
+    }
+
+    .aat-major-race-title,
+    .aat-major-race-title .aat-hub-inline-link-title {
+        max-width: 100%;
+        overflow-wrap: normal;
+        word-break: normal;
+        hyphens: none;
+        text-wrap: balance;
     }
 
     .aat-ceremony-command-card,

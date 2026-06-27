@@ -209,6 +209,8 @@ $assert(strpos($hub_template, 'aat-ceremony-momentum') !== false, 'Ceremony page
 $assert(strpos($hub_template, 'aat-ceremony-momentum-grid') !== false, 'Ceremony momentum modules should expose a card grid hook.');
 $assert(strpos($hub_template, 'aat-ceremony-momentum-visuals') !== false, 'Ceremony momentum modules should reuse verified race visuals when available.');
 $assert(strpos($hub_template, 'id="ceremony-major-races"') !== false, 'Ceremony major-race sections should expose a direct reader-path anchor.');
+$assert(strpos($css, '.aat-major-race-feature > .aat-major-race-copy:only-child') !== false, 'Major-race cards without poster media should let winner copy span the full feature width.');
+$assert(strpos($css, '.aat-major-race-title .aat-hub-inline-link-title') !== false, 'Major-race winner titles should receive scoped readable wrapping rules.');
 $assert(strpos($hub_template, 'id="ceremony-best-picture-nominees"') !== false, 'Ceremony Best Picture nominee sections should expose a direct reader-path anchor.');
 $assert(strpos($hub_template, 'aat-ceremony-ledger-command') !== false, 'Ceremony ballot ledgers should expose a command rail before the category run.');
 $assert(strpos($hub_template, 'aat-ceremony-ledger-jump-strip') !== false, 'Ceremony ballot ledgers should expose a category jump strip.');

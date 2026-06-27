@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.84
+Stable tag: 2.7.85
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.85 =
+* Fixed ceremony major-race cards without poster media so long winner names use the full feature width instead of collapsing into the narrow poster column.
+* Added a visual rhythm contract for the no-media major-race title wrap behavior.
 
 = 2.7.84 =
 * Replaced the generic Ceremony Highlights poster grid with a ceremony-specific exit lane using one featured title and a compact visual rail.
