@@ -241,6 +241,7 @@ $assert(strpos($entity_template, 'aat-profile-reader-path-grid') !== false, 'Osc
 $assert(strpos($entity_template, 'aat-profile-reader-path-card') !== false, 'Oscar title/person reader paths should expose card-level hooks.');
 $assert(strpos($entity_template, 'is-title-reader-path') !== false, 'Title destination files should expose a scoped title reader-path hook.');
 $assert(strpos($entity_template, 'is-person-reader-path') !== false, 'Person destination files should expose a scoped person reader-path hook.');
+$assert(strpos($entity_template, '$category_key = strtoupper($cat);') !== false, 'Entity pages should normalize category labels case-insensitively before map lookup.');
 $assert(strpos($css, '.aat-era-chapter-media-grid') !== false, 'Premium category era poster grid should be styled in the public stylesheet.');
 $assert(strpos($css, 'grid-template-columns: repeat(4, minmax(0, 1fr))') !== false, 'Premium category era poster grid should become a dense mobile strip.');
 $assert(strpos($css, '.aat-category-scale-brief') !== false, 'Brief category dossiers should receive scaled-down spacing and command cards.');

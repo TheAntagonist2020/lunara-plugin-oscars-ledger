@@ -37,6 +37,7 @@ $ordinal = function($n) {
 $format_category = function($cat) {
     $cat = trim((string) $cat);
     if ($cat === '') return '';
+    $category_key = strtoupper($cat);
     $map = array(
         'ACTOR IN A LEADING ROLE' => 'Best Actor',
         'ACTRESS IN A LEADING ROLE' => 'Best Actress',
@@ -47,7 +48,7 @@ $format_category = function($cat) {
         'WRITING (ORIGINAL SCREENPLAY)' => 'Original Screenplay',
         'WRITING (ADAPTED SCREENPLAY)' => 'Adapted Screenplay',
     );
-    return $map[$cat] ?? ucwords(strtolower($cat));
+    return $map[$category_key] ?? ucwords(strtolower($cat));
 };
 
 $build_entity_url = function($id) use ($aat) {
