@@ -18,7 +18,7 @@ files:      `assets/css/academy-awards-table.css`
 acceptance: `php tests/inner-page-visual-rhythm-contract.php` passes CSS hook assertions.
 spec:       `docs/staging/specs/2026-06-27-profile-destination-files.md#acceptance`
 
-- [ ] T4: Version, verify, deploy, and preserve continuity.
+- [x] T4: Version, verify, deploy, and preserve continuity.
 goal:       Release the phase as Oscars `2.7.86`, align Control Desk, verify live routes, and capture evidence.
 files:      plugin docs/version files, Theme Control Desk, continuity docs
 acceptance: Local/remote lint and SHA256 checks pass, public smoke routes return `200`, and visual evidence is saved under `10_VISUAL_EVIDENCE`.
