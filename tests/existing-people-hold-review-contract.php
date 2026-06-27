@@ -52,8 +52,8 @@ $adopt_method = $method_slice($plugin, 'private function adopt_existing_person_p
 $review_helpers = $method_slice($plugin, 'private function get_person_portrait_existing_review_states', 'private function get_existing_person_portrait_adoption_rows');
 
 foreach (array(
-    'Version: 2.7.88',
-    "define('AAT_VERSION', '2.7.88')",
+    'Version: 2.7.89',
+    "define('AAT_VERSION', '2.7.89')",
     'get_person_portrait_existing_reviews_table_name',
     'maybe_create_person_portrait_existing_reviews_table',
     'aat_person_portrait_existing_reviews',
@@ -167,7 +167,7 @@ foreach (array(
     'wp_aat_person_portrait_existing_reviews',
     'Approved To Adopt',
     'aat_existing_portrait_review_required',
-    '2.7.88',
+    '2.7.89',
 ) as $needle) {
     $assert(strpos($docs . $spec . $plan, $needle) !== false, "Docs/spec/plan should describe hold-review workflow: {$needle}");
 }

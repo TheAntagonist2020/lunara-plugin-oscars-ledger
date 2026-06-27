@@ -1976,6 +1976,109 @@
     line-height: 1.3;
 }
 
+.aat-image-integrity-review-pack {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(10,21,32,.08);
+    margin: 16px 0;
+    padding: 16px;
+}
+
+.aat-image-integrity-review-pack-heading {
+    align-items: start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.aat-image-integrity-review-pack-heading span {
+    color: #7a5600;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.aat-image-integrity-review-pack-heading h2 {
+    margin: 2px 0 4px;
+}
+
+.aat-image-integrity-review-pack-heading p {
+    color: #50575e;
+    margin: 0;
+    max-width: 720px;
+}
+
+.aat-image-integrity-review-pack-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.aat-image-integrity-review-pack-card {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    color: #0a1520;
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    padding: 12px;
+    text-decoration: none;
+}
+
+.aat-image-integrity-review-pack-card:hover,
+.aat-image-integrity-review-pack-card:focus {
+    background: #fff8e5;
+    border-color: #c9a961;
+    color: #0a1520;
+    box-shadow: 0 0 0 2px rgba(201,169,97,.18);
+}
+
+.aat-image-integrity-review-pack-card.is-wrong_match {
+    border-left: 4px solid #d63638;
+}
+
+.aat-image-integrity-review-pack-card.is-needs_review {
+    border-left: 4px solid #c9a961;
+}
+
+.aat-image-integrity-review-pack-index,
+.aat-image-integrity-review-pack-kind {
+    color: #646970;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.aat-image-integrity-review-pack-card strong,
+.aat-image-integrity-review-pack-card code,
+.aat-image-integrity-review-pack-card em {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.aat-image-integrity-review-pack-card strong {
+    font-size: 14px;
+    line-height: 1.25;
+}
+
+.aat-image-integrity-review-pack-card em {
+    color: #50575e;
+    font-style: normal;
+}
+
+.aat-image-integrity-review-pack-empty {
+    background: #f6f7f7;
+    border: 1px dashed #c3c4c7;
+    border-radius: 8px;
+    color: #50575e;
+    padding: 14px;
+}
+
 .aat-image-integrity-table-heading {
     align-items: start;
     display: flex;
@@ -2333,6 +2436,10 @@
     }
 
     .aat-image-integrity-triage-rail {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .aat-image-integrity-review-pack-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 

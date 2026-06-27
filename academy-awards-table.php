@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.88
+ * Version: 2.7.89
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.88');
+define('AAT_VERSION', '2.7.89');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -8041,6 +8041,11 @@ class Academy_Awards_Table {
             return strcmp((string) ($a['label'] ?? ''), (string) ($b['label'] ?? ''));
         });
 
+        $review_pack_limit = 25;
+        $review_pack_rows = array_slice(array_values(array_filter($rows, function ($row) {
+            return in_array((string) ($row['bucket'] ?? ''), array('wrong_match', 'needs_review'), true);
+        })), 0, $review_pack_limit);
+
         if ($bucket !== 'all') {
             $rows = array_values(array_filter($rows, function ($row) use ($bucket) {
                 return (string) ($row['bucket'] ?? '') === $bucket;
@@ -8066,6 +8071,8 @@ class Academy_Awards_Table {
             'focus' => $focus,
             'limit' => $limit,
             'rows' => $rows,
+            'review_pack_limit' => $review_pack_limit,
+            'review_pack_rows' => $review_pack_rows,
             'counts' => $counts,
             'focus_counts' => $focus_counts,
             'bucket_labels' => $bucket_labels,

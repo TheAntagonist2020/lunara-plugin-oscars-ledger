@@ -48,8 +48,8 @@ $poster_method = $method_slice($plugin, 'private function build_image_integrity_
 $portrait_method = $method_slice($plugin, 'private function build_image_integrity_portrait_rows', 'private function get_image_integrity_row_sort_weight');
 
 foreach (array(
-    "Version: 2.7.88",
-    "define('AAT_VERSION', '2.7.88')",
+    "Version: 2.7.89",
+    "define('AAT_VERSION', '2.7.89')",
     "'academy-awards-image-integrity'",
     'render_image_integrity_admin_page',
     'templates/image-integrity-admin.php',
@@ -77,6 +77,8 @@ foreach (array(
     'get_image_integrity_triage_focus_labels',
     'fix_first',
     'Fix First',
+    'review_pack_rows',
+    'review_pack_limit',
     'priority_label',
     'impact_label',
     'triage_reason',
@@ -121,6 +123,9 @@ foreach (array(
 
 foreach (array(
     'aat-image-integrity-admin',
+    'aat-image-integrity-review-pack',
+    'Fix First Review Pack',
+    'Top 25',
     'aat-image-integrity-triage-rail',
     'aat-image-integrity-triage-card',
     'aat-image-integrity-priority',
@@ -136,6 +141,9 @@ foreach (array(
 
 foreach (array(
     '.aat-image-integrity-admin',
+    '.aat-image-integrity-review-pack',
+    '.aat-image-integrity-review-pack-grid',
+    '.aat-image-integrity-review-pack-card',
     '.aat-image-integrity-triage-rail',
     '.aat-image-integrity-triage-card',
     '.aat-image-integrity-priority',
@@ -148,8 +156,9 @@ foreach (array(
 
 foreach (array(
     'Image Integrity Console',
-    '2.7.88',
+    '2.7.89',
     'Fix First',
+    'Fix First Review Pack',
     'Academy Awards > Image Integrity',
 ) as $needle) {
     $assert(strpos($readme, $needle) !== false, "Docs should describe the Image Integrity Console: {$needle}");

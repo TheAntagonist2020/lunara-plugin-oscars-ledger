@@ -10,6 +10,8 @@ $section = (string) ($image_integrity['section'] ?? 'all');
 $focus = (string) ($image_integrity['focus'] ?? 'all');
 $limit = (int) ($image_integrity['limit'] ?? 80);
 $rows = is_array($image_integrity['rows'] ?? null) ? $image_integrity['rows'] : array();
+$review_pack_rows = is_array($image_integrity['review_pack_rows'] ?? null) ? $image_integrity['review_pack_rows'] : array();
+$review_pack_limit = (int) ($image_integrity['review_pack_limit'] ?? 25);
 $counts = is_array($image_integrity['counts'] ?? null) ? $image_integrity['counts'] : array();
 $focus_counts = is_array($image_integrity['focus_counts'] ?? null) ? $image_integrity['focus_counts'] : array();
 $bucket_labels = is_array($image_integrity['bucket_labels'] ?? null) ? $image_integrity['bucket_labels'] : array();
@@ -113,6 +115,47 @@ $page_url = admin_url('admin.php?page=academy-awards-image-integrity');
                 <?php endif; ?>
             </a>
         <?php endforeach; ?>
+    </div>
+
+    <div class="aat-image-integrity-review-pack">
+        <div class="aat-image-integrity-review-pack-heading">
+            <div>
+                <span><?php echo esc_html__('Top 25', 'academy-awards-table'); ?></span>
+                <h2><?php echo esc_html__('Fix First Review Pack', 'academy-awards-table'); ?></h2>
+                <p><?php echo esc_html__('A read-only sprint list from the current visual section, sorted by urgency and Oscar impact before the full table below.', 'academy-awards-table'); ?></p>
+            </div>
+            <a class="button button-secondary" href="<?php echo esc_url(add_query_arg(array(
+                'page' => 'academy-awards-image-integrity',
+                'integrity_section' => $section,
+                'integrity_bucket' => 'all',
+                'integrity_focus' => 'fix_first',
+                'limit' => max($limit, $review_pack_limit),
+            ), admin_url('admin.php'))); ?>">
+                <?php echo esc_html__('Open Fix First Table', 'academy-awards-table'); ?>
+            </a>
+        </div>
+
+        <?php if (empty($review_pack_rows)) : ?>
+            <div class="aat-image-integrity-review-pack-empty">
+                <?php echo esc_html__('No Fix First rows in this section.', 'academy-awards-table'); ?>
+            </div>
+        <?php else : ?>
+            <div class="aat-image-integrity-review-pack-grid">
+                <?php foreach ($review_pack_rows as $pack_index => $pack_row) : ?>
+                    <?php
+                    $pack_workflow_url = (string) ($pack_row['workflow_url'] ?? $page_url);
+                    $pack_bucket = (string) ($pack_row['bucket'] ?? 'needs_review');
+                    ?>
+                    <a class="<?php echo esc_attr('aat-image-integrity-review-pack-card is-' . $pack_bucket); ?>" href="<?php echo esc_url($pack_workflow_url); ?>">
+                        <span class="aat-image-integrity-review-pack-index"><?php echo esc_html(number_format_i18n($pack_index + 1)); ?></span>
+                        <span class="aat-image-integrity-review-pack-kind"><?php echo esc_html((string) ($pack_row['kind_label'] ?? '')); ?></span>
+                        <strong><?php echo esc_html((string) ($pack_row['label'] ?? '')); ?></strong>
+                        <code><?php echo esc_html((string) ($pack_row['entity_id'] ?? '')); ?></code>
+                        <em><?php echo esc_html((string) ($pack_row['impact_label'] ?? __('No Oscar rows', 'academy-awards-table'))); ?></em>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 
     <div class="aat-admin-section">
