@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.87
+Stable tag: 2.7.88
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.88 =
+* Added a Fix First triage rail to the private Image Integrity Console so Wrong Match and Needs Review rows can be worked before lower-risk image gaps.
+* Added row priority, Oscar-impact context, and admin-only triage reasons without changing public routes, auto-adopting images, importing media, or mutating Oscar result rows.
 
 = 2.7.87 =
 * Added `Academy Awards > Image Integrity`, a private Image Integrity Console that normalizes poster and portrait mapping health into Needs Review, Ready, Missing, Wrong Match, Accepted, and Resolved buckets.

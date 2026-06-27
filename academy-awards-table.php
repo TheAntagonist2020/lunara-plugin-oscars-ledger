@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.87
+ * Version: 2.7.88
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.87');
+define('AAT_VERSION', '2.7.88');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -6473,11 +6473,13 @@ class Academy_Awards_Table {
 
         $bucket = isset($_GET['integrity_bucket']) ? sanitize_key(wp_unslash($_GET['integrity_bucket'])) : 'needs_review';
         $section = isset($_GET['integrity_section']) ? sanitize_key(wp_unslash($_GET['integrity_section'])) : 'all';
+        $focus = isset($_GET['integrity_focus']) ? sanitize_key(wp_unslash($_GET['integrity_focus'])) : 'all';
         $limit = isset($_GET['limit']) ? absint($_GET['limit']) : 80;
 
         $image_integrity = $this->build_image_integrity_console_data(array(
             'bucket' => $bucket,
             'section' => $section,
+            'focus' => $focus,
             'limit' => $limit,
         ));
 
@@ -7898,6 +7900,16 @@ class Academy_Awards_Table {
         );
     }
 
+    private function get_image_integrity_triage_focus_labels() {
+        return array(
+            'all' => __('All Rows', 'academy-awards-table'),
+            'fix_first' => __('Fix First', 'academy-awards-table'),
+            'wrong_match' => __('Wrong Matches', 'academy-awards-table'),
+            'needs_review' => __('Needs Review', 'academy-awards-table'),
+            'missing' => __('Missing Visuals', 'academy-awards-table'),
+        );
+    }
+
     private function sanitize_image_integrity_bucket($bucket) {
         $bucket = sanitize_key((string) $bucket);
         $labels = $this->get_image_integrity_bucket_labels();
@@ -7908,6 +7920,12 @@ class Academy_Awards_Table {
         $section = sanitize_key((string) $section);
         $labels = $this->get_image_integrity_section_labels();
         return isset($labels[$section]) ? $section : 'all';
+    }
+
+    private function sanitize_image_integrity_focus($focus) {
+        $focus = sanitize_key((string) $focus);
+        $labels = $this->get_image_integrity_triage_focus_labels();
+        return isset($labels[$focus]) ? $focus : 'all';
     }
 
     private function get_image_integrity_bucket_for_poster_state($state) {
@@ -7958,17 +7976,20 @@ class Academy_Awards_Table {
     private function build_image_integrity_console_data($args = array()) {
         $bucket = $this->sanitize_image_integrity_bucket($args['bucket'] ?? 'needs_review');
         $section = $this->sanitize_image_integrity_section($args['section'] ?? 'all');
+        $focus = $this->sanitize_image_integrity_focus($args['focus'] ?? 'all');
         $limit = isset($args['limit']) ? absint($args['limit']) : 80;
         $limit = max(1, min(200, $limit));
 
         $bucket_labels = $this->get_image_integrity_bucket_labels();
         $section_labels = $this->get_image_integrity_section_labels();
+        $focus_labels = $this->get_image_integrity_triage_focus_labels();
         $counts = array();
         foreach ($bucket_labels as $bucket_key => $label) {
             if ($bucket_key !== 'all') {
                 $counts[$bucket_key] = 0;
             }
         }
+        $focus_counts = array_fill_keys(array_keys($focus_labels), 0);
 
         $rows = array();
         if ($section === 'all' || $section === 'posters') {
@@ -7986,11 +8007,29 @@ class Academy_Awards_Table {
         }
         $counts['all'] = count($rows);
 
+        foreach ($rows as $row_index => $row) {
+            $rows[$row_index] = $this->hydrate_image_integrity_triage_context($row);
+            $row_bucket = (string) ($rows[$row_index]['bucket'] ?? 'needs_review');
+            $focus_counts['all']++;
+            if (in_array($row_bucket, array('wrong_match', 'needs_review'), true)) {
+                $focus_counts['fix_first']++;
+            }
+            if (isset($focus_counts[$row_bucket])) {
+                $focus_counts[$row_bucket]++;
+            }
+        }
+
         usort($rows, function ($a, $b) {
             $weight_a = $this->get_image_integrity_row_sort_weight((string) ($a['bucket'] ?? 'needs_review'));
             $weight_b = $this->get_image_integrity_row_sort_weight((string) ($b['bucket'] ?? 'needs_review'));
             if ($weight_a !== $weight_b) {
                 return $weight_a <=> $weight_b;
+            }
+
+            $impact_a = intval($a['impact_score'] ?? 0);
+            $impact_b = intval($b['impact_score'] ?? 0);
+            if ($impact_a !== $impact_b) {
+                return $impact_b <=> $impact_a;
             }
 
             $updated_a = (string) ($a['updated_at'] ?? '');
@@ -8008,21 +8047,144 @@ class Academy_Awards_Table {
             }));
         }
 
+        if ($focus !== 'all') {
+            $rows = array_values(array_filter($rows, function ($row) use ($focus) {
+                $row_bucket = (string) ($row['bucket'] ?? '');
+                if ($focus === 'fix_first') {
+                    return in_array($row_bucket, array('wrong_match', 'needs_review'), true);
+                }
+                return $row_bucket === $focus;
+            }));
+        }
+
         $total_filtered = count($rows);
         $rows = array_slice($rows, 0, $limit);
 
         return array(
             'bucket' => $bucket,
             'section' => $section,
+            'focus' => $focus,
             'limit' => $limit,
             'rows' => $rows,
             'counts' => $counts,
+            'focus_counts' => $focus_counts,
             'bucket_labels' => $bucket_labels,
             'section_labels' => $section_labels,
+            'focus_labels' => $focus_labels,
             'total_filtered' => $total_filtered,
             'poster_library_url' => admin_url('admin.php?page=academy-awards-posters'),
             'portrait_queue_url' => admin_url('admin.php?page=academy-awards-person-portraits'),
             'omdb_audit_url' => admin_url('admin.php?page=academy-awards-omdb-audit'),
+        );
+    }
+
+    private function hydrate_image_integrity_triage_context($row) {
+        $row = is_array($row) ? $row : array();
+        $bucket = (string) ($row['bucket'] ?? 'needs_review');
+        $impact = $this->get_image_integrity_entity_impact((string) ($row['entity_id'] ?? ''));
+
+        $row['impact_score'] = intval($impact['score'] ?? 0);
+        $row['impact_label'] = (string) ($impact['label'] ?? __('No Oscar rows', 'academy-awards-table'));
+        $row['priority_key'] = 'steady';
+        $row['priority_label'] = __('Stable', 'academy-awards-table');
+        $row['triage_reason'] = __('No immediate credibility action is required.', 'academy-awards-table');
+
+        if ($bucket === 'wrong_match') {
+            $row['priority_key'] = 'fix_first';
+            $row['priority_label'] = __('Fix First', 'academy-awards-table');
+            $row['triage_reason'] = __('Wrong-match visuals can damage public trust immediately.', 'academy-awards-table');
+        } elseif ($bucket === 'needs_review') {
+            $row['priority_key'] = 'review_now';
+            $row['priority_label'] = __('Review Now', 'academy-awards-table');
+            $row['triage_reason'] = __('Needs a human call before it should support public visual modules.', 'academy-awards-table');
+        } elseif ($bucket === 'missing') {
+            $row['priority_key'] = 'visual_gap';
+            $row['priority_label'] = __('Visual Gap', 'academy-awards-table');
+            $row['triage_reason'] = __('Missing media limits dossier, category, and profile-page dynamism.', 'academy-awards-table');
+        } elseif (in_array($bucket, array('ready', 'accepted', 'resolved'), true)) {
+            $row['priority_key'] = 'verified_lane';
+            $row['priority_label'] = __('Verified Lane', 'academy-awards-table');
+            $row['triage_reason'] = __('This row is not blocking the immediate cleanup queue.', 'academy-awards-table');
+        }
+
+        return $row;
+    }
+
+    private function get_image_integrity_entity_impact($entity_id) {
+        global $wpdb;
+
+        $entity_id = strtolower(trim((string) $entity_id));
+        $empty = array(
+            'score' => 0,
+            'label' => __('No Oscar rows', 'academy-awards-table'),
+        );
+
+        if ($entity_id === '' || (!$this->is_title_entity_id($entity_id) && !$this->is_imdb_name_entity_id($entity_id))) {
+            return $empty;
+        }
+
+        $entity_stats_table = $this->get_entity_stats_table_name();
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $entity_stats_table));
+        $row = null;
+        if ($exists === $entity_stats_table) {
+            $row = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT nominations, wins, ceremonies FROM $entity_stats_table WHERE entity_id = %s LIMIT 1",
+                    $entity_id
+                ),
+                ARRAY_A
+            );
+        }
+
+        if (!is_array($row) || empty($row)) {
+            $entity = $this->is_title_entity_id($entity_id) ? 'title' : 'name';
+            $rows = $this->get_entity_rows($entity, $entity_id);
+            $nominations = is_array($rows) ? count($rows) : 0;
+            $wins = 0;
+            $ceremonies = array();
+            foreach ((array) $rows as $entity_row) {
+                if (!empty($entity_row['winner'])) {
+                    $wins++;
+                }
+                $ceremony = intval($entity_row['ceremony'] ?? 0);
+                if ($ceremony > 0) {
+                    $ceremonies[$ceremony] = true;
+                }
+            }
+            $row = array(
+                'nominations' => $nominations,
+                'wins' => $wins,
+                'ceremonies' => count($ceremonies),
+            );
+        }
+
+        $nominations = intval($row['nominations'] ?? 0);
+        $wins = intval($row['wins'] ?? 0);
+        $ceremonies = intval($row['ceremonies'] ?? 0);
+        if ($nominations <= 0 && $wins <= 0 && $ceremonies <= 0) {
+            return $empty;
+        }
+
+        $score = ($wins * 12) + ($nominations * 2) + $ceremonies;
+        if ($wins > 0) {
+            $label = sprintf(
+                /* translators: 1: wins, 2: nominations */
+                __('%1$d wins / %2$d noms', 'academy-awards-table'),
+                $wins,
+                $nominations
+            );
+        } else {
+            $label = sprintf(
+                /* translators: 1: nominations, 2: ceremonies */
+                __('%1$d noms / %2$d ceremonies', 'academy-awards-table'),
+                $nominations,
+                $ceremonies
+            );
+        }
+
+        return array(
+            'score' => $score,
+            'label' => $label,
         );
     }
 

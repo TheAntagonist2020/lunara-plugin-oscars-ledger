@@ -48,8 +48,8 @@ $poster_method = $method_slice($plugin, 'private function build_image_integrity_
 $portrait_method = $method_slice($plugin, 'private function build_image_integrity_portrait_rows', 'private function get_image_integrity_row_sort_weight');
 
 foreach (array(
-    "Version: 2.7.87",
-    "define('AAT_VERSION', '2.7.87')",
+    "Version: 2.7.88",
+    "define('AAT_VERSION', '2.7.88')",
     "'academy-awards-image-integrity'",
     'render_image_integrity_admin_page',
     'templates/image-integrity-admin.php',
@@ -66,9 +66,23 @@ foreach (array(
     "current_user_can('manage_options')",
     'sanitize_image_integrity_bucket',
     'sanitize_image_integrity_section',
+    'sanitize_image_integrity_focus',
+    'integrity_focus',
     'include AAT_PLUGIN_DIR . \'templates/image-integrity-admin.php\'',
 ) as $needle) {
     $assert(strpos($render_method . $builder_method, $needle) !== false, "Admin surface should be private and normalized: {$needle}");
+}
+
+foreach (array(
+    'get_image_integrity_triage_focus_labels',
+    'fix_first',
+    'Fix First',
+    'priority_label',
+    'impact_label',
+    'triage_reason',
+    'get_image_integrity_entity_impact',
+) as $needle) {
+    $assert(strpos($plugin, $needle) !== false, "Image Integrity should expose private triage priority context: {$needle}");
 }
 
 foreach (array(
@@ -107,8 +121,12 @@ foreach (array(
 
 foreach (array(
     'aat-image-integrity-admin',
+    'aat-image-integrity-triage-rail',
+    'aat-image-integrity-triage-card',
+    'aat-image-integrity-priority',
     'aat-image-integrity-bucket-card',
     'aat-image-integrity-row',
+    'Fix First',
     'Poster Library',
     'Person Portrait Queue',
     'No private review metadata renders on public routes.',
@@ -118,6 +136,9 @@ foreach (array(
 
 foreach (array(
     '.aat-image-integrity-admin',
+    '.aat-image-integrity-triage-rail',
+    '.aat-image-integrity-triage-card',
+    '.aat-image-integrity-priority',
     '.aat-image-integrity-bucket-grid',
     '.aat-image-integrity-thumb',
     '.aat-image-integrity-state',
@@ -127,7 +148,8 @@ foreach (array(
 
 foreach (array(
     'Image Integrity Console',
-    '2.7.87',
+    '2.7.88',
+    'Fix First',
     'Academy Awards > Image Integrity',
 ) as $needle) {
     $assert(strpos($readme, $needle) !== false, "Docs should describe the Image Integrity Console: {$needle}");

@@ -7,12 +7,16 @@ if (!defined('ABSPATH')) { exit; }
 $image_integrity = is_array($image_integrity ?? null) ? $image_integrity : array();
 $bucket = (string) ($image_integrity['bucket'] ?? 'needs_review');
 $section = (string) ($image_integrity['section'] ?? 'all');
+$focus = (string) ($image_integrity['focus'] ?? 'all');
 $limit = (int) ($image_integrity['limit'] ?? 80);
 $rows = is_array($image_integrity['rows'] ?? null) ? $image_integrity['rows'] : array();
 $counts = is_array($image_integrity['counts'] ?? null) ? $image_integrity['counts'] : array();
+$focus_counts = is_array($image_integrity['focus_counts'] ?? null) ? $image_integrity['focus_counts'] : array();
 $bucket_labels = is_array($image_integrity['bucket_labels'] ?? null) ? $image_integrity['bucket_labels'] : array();
 $section_labels = is_array($image_integrity['section_labels'] ?? null) ? $image_integrity['section_labels'] : array();
+$focus_labels = is_array($image_integrity['focus_labels'] ?? null) ? $image_integrity['focus_labels'] : array();
 $total_filtered = (int) ($image_integrity['total_filtered'] ?? count($rows));
+$table_scope = $focus !== 'all' ? (string) ($focus_labels[$focus] ?? __('Selected focus', 'academy-awards-table')) : (string) ($bucket_labels[$bucket] ?? __('Selected bucket', 'academy-awards-table'));
 $page_url = admin_url('admin.php?page=academy-awards-image-integrity');
 ?>
 <div class="wrap aat-admin-wrap aat-image-integrity-admin">
@@ -56,6 +60,7 @@ $page_url = admin_url('admin.php?page=academy-awards-image-integrity');
                 'page' => 'academy-awards-image-integrity',
                 'integrity_section' => $section_key,
                 'integrity_bucket' => $bucket,
+                'integrity_focus' => $focus,
                 'limit' => $limit,
             ), admin_url('admin.php'));
             ?>
@@ -73,6 +78,7 @@ $page_url = admin_url('admin.php?page=academy-awards-image-integrity');
                 'page' => 'academy-awards-image-integrity',
                 'integrity_section' => $section,
                 'integrity_bucket' => $bucket_key,
+                'integrity_focus' => 'all',
                 'limit' => $limit,
             ), admin_url('admin.php'));
             ?>
@@ -83,17 +89,44 @@ $page_url = admin_url('admin.php?page=academy-awards-image-integrity');
         <?php endforeach; ?>
     </div>
 
+    <div class="aat-image-integrity-triage-rail" aria-label="<?php echo esc_attr__('Image integrity triage priorities', 'academy-awards-table'); ?>">
+        <?php foreach ($focus_labels as $focus_key => $focus_label) : ?>
+            <?php
+            $rendered_focus_label = $focus_key === 'fix_first' ? __('Fix First', 'academy-awards-table') : (string) $focus_label;
+            $focus_url = add_query_arg(array(
+                'page' => 'academy-awards-image-integrity',
+                'integrity_section' => $section,
+                'integrity_bucket' => $focus_key === 'all' ? $bucket : 'all',
+                'integrity_focus' => $focus_key,
+                'limit' => $limit,
+            ), admin_url('admin.php'));
+            ?>
+            <a class="<?php echo esc_attr('aat-image-integrity-triage-card is-' . $focus_key . ($focus_key === $focus ? ' is-active' : '')); ?>" href="<?php echo esc_url($focus_url); ?>">
+                <span><?php echo esc_html($rendered_focus_label); ?></span>
+                <strong><?php echo esc_html(number_format_i18n((int) ($focus_counts[$focus_key] ?? 0))); ?></strong>
+                <?php if ($focus_key === 'fix_first') : ?>
+                    <em><?php echo esc_html__('Wrong matches and unreviewed visuals first.', 'academy-awards-table'); ?></em>
+                <?php elseif ($focus_key === 'missing') : ?>
+                    <em><?php echo esc_html__('Image gaps that limit public dynamism.', 'academy-awards-table'); ?></em>
+                <?php else : ?>
+                    <em><?php echo esc_html__('Scoped private review queue.', 'academy-awards-table'); ?></em>
+                <?php endif; ?>
+            </a>
+        <?php endforeach; ?>
+    </div>
+
     <div class="aat-admin-section">
         <div class="aat-image-integrity-table-heading">
             <div>
-                <h2><?php echo esc_html($bucket_labels[$bucket] ?? __('Needs Review', 'academy-awards-table')); ?></h2>
+                <h2><?php echo esc_html($table_scope); ?></h2>
                 <p>
                     <?php
                     echo esc_html(sprintf(
                         /* translators: 1: visible row count, 2: total filtered rows */
-                        __('Showing %1$s of %2$s private integrity rows.', 'academy-awards-table'),
+                        __('Showing %1$s of %2$s private integrity rows in %3$s.', 'academy-awards-table'),
                         number_format_i18n(count($rows)),
-                        number_format_i18n($total_filtered)
+                        number_format_i18n($total_filtered),
+                        $table_scope
                     ));
                     ?>
                 </p>
@@ -102,6 +135,7 @@ $page_url = admin_url('admin.php?page=academy-awards-image-integrity');
                 <input type="hidden" name="page" value="academy-awards-image-integrity">
                 <input type="hidden" name="integrity_section" value="<?php echo esc_attr($section); ?>">
                 <input type="hidden" name="integrity_bucket" value="<?php echo esc_attr($bucket); ?>">
+                <input type="hidden" name="integrity_focus" value="<?php echo esc_attr($focus); ?>">
                 <label for="aat-image-integrity-limit"><?php echo esc_html__('Rows', 'academy-awards-table'); ?></label>
                 <input id="aat-image-integrity-limit" type="number" name="limit" min="1" max="200" value="<?php echo esc_attr((string) $limit); ?>">
                 <button class="button" type="submit"><?php echo esc_html__('Apply', 'academy-awards-table'); ?></button>
@@ -120,6 +154,7 @@ $page_url = admin_url('admin.php?page=academy-awards-image-integrity');
                         <tr>
                             <th><?php echo esc_html__('Visual', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Entity', 'academy-awards-table'); ?></th>
+                            <th><?php echo esc_html__('Priority', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Bucket', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('State', 'academy-awards-table'); ?></th>
                             <th><?php echo esc_html__('Source', 'academy-awards-table'); ?></th>
@@ -134,6 +169,7 @@ $page_url = admin_url('admin.php?page=academy-awards-image-integrity');
                             $workflow_url = (string) ($row['workflow_url'] ?? $page_url);
                             $entity_url = (string) ($row['entity_url'] ?? '');
                             $note = trim((string) ($row['note'] ?? ''));
+                            $priority_key = (string) ($row['priority_key'] ?? 'steady');
                             ?>
                             <tr class="<?php echo esc_attr('aat-image-integrity-row is-' . $row_bucket); ?>">
                                 <td class="aat-image-integrity-visual-cell">
@@ -150,6 +186,13 @@ $page_url = admin_url('admin.php?page=academy-awards-image-integrity');
                                     <?php if ($entity_url !== '') : ?>
                                         <div><a href="<?php echo esc_url($entity_url); ?>" target="_blank" rel="noopener"><?php echo esc_html__('Open public file', 'academy-awards-table'); ?></a></div>
                                     <?php endif; ?>
+                                </td>
+                                <td>
+                                    <span class="<?php echo esc_attr('aat-image-integrity-priority is-' . $priority_key); ?>">
+                                        <?php echo esc_html((string) ($row['priority_label'] ?? __('Stable', 'academy-awards-table'))); ?>
+                                    </span>
+                                    <div class="aat-muted"><?php echo esc_html((string) ($row['impact_label'] ?? __('No Oscar rows', 'academy-awards-table'))); ?></div>
+                                    <div class="aat-image-integrity-reason"><?php echo esc_html((string) ($row['triage_reason'] ?? '')); ?></div>
                                 </td>
                                 <td>
                                     <span class="<?php echo esc_attr('aat-image-integrity-state is-' . $row_bucket); ?>">
