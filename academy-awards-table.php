@@ -21,9 +21,33 @@ define('AAT_VERSION', '2.7.89');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
-if (!defined('AAT_TMDB_API_KEY')) {
-    define('AAT_TMDB_API_KEY', 'b17bcb1a2b1a44a50898eaf079bcdede');
+
+// TMDB API key — never committed to source control. Resolved (in order) from a
+// wp-config AAT_TMDB_API_KEY constant, the AAT_TMDB_API_KEY environment
+// variable, or the `aat_tmdb_api_key` option. Defined on plugins_loaded rather
+// than at global scope, and skipped while WordPress is installing, so the option
+// lookup never runs before the database is ready (WP install / WP-CLI bootstrap).
+// Mirrors get_omdb_api_key() and keeps the secret out of git while preserving the
+// constant indirection the theme relies on; batch imports work once the key is set.
+if (!function_exists('aat_define_tmdb_api_key')) {
+    function aat_define_tmdb_api_key() {
+        if (defined('AAT_TMDB_API_KEY')) {
+            return;
+        }
+        $key = getenv('AAT_TMDB_API_KEY');
+        if (!is_string($key) || '' === trim($key)) {
+            if (function_exists('wp_installing') && wp_installing()) {
+                return; // DB not ready during install / some CLI bootstraps
+            }
+            $key = (string) get_option('aat_tmdb_api_key', '');
+        }
+        $key = trim($key);
+        if ('' !== $key) {
+            define('AAT_TMDB_API_KEY', $key);
+        }
+    }
 }
+add_action('plugins_loaded', 'aat_define_tmdb_api_key', 1);
 
 require_once AAT_PLUGIN_DIR . 'includes/class-aat-ceremony-writeups.php';
 
