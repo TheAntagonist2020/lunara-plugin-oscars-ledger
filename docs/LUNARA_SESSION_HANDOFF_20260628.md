@@ -95,7 +95,7 @@ accuracy) is real and visible in the data.
 ### Scorecard
 | Surface | Verdict | One-liner |
 |---|---|---|
-| Oscars plugin (code) | Solid | Mature, 22 security contract-tests; 739 KB God-class monolith |
+| Oscars plugin (code) | Solid | Mature, 22 security contract-tests; 739 KB God-class monolith; **hardcoded TMDB key default (line 25)** |
 | Theme (code) | Mixed | Strong security; ~680 KB dead-duplicated functions.php; ARCHITECTURE.md is inverted from reality |
 | Core plugin (code) | Solid | Clean shared content model; one cross-repo unescaped echo |
 | Dispatch plugin (code) | Solid | Real quality gates (holds weak output as draft); 4 stale dup files |
@@ -108,10 +108,14 @@ accuracy) is real and visible in the data.
 | Site & infrastructure | **At-risk** | 38 active plugins; failing CWV (mobile 39); image optimizer OFF |
 
 ### HIGH severity
-1. **IMDb Guard — hardcoded TMDB API key** in `lunara-imdb-guard.php` `fetch_tmdb_images()`
-   (`b17bcb1a2b1a44a50898eaf079bcdede`), present in git history since ~v0.2.0. OMDb key is
-   handled correctly (option + `LUNARA_IMDB_GUARD_OMDB_API_KEY` constant); TMDB was missed.
-   → rotate, move to option/constant, scrub history.
+1. **Hardcoded TMDB API key in TWO repos** — the same live key
+   (`b17bcb1a2b1a44a50898eaf079bcdede`) is committed in BOTH `lunara-imdb-guard.php`
+   (`fetch_tmdb_images()`) AND `academy-awards-table.php` **line 24-25** as the
+   `AAT_TMDB_API_KEY` default (`define('AAT_TMDB_API_KEY', '…')`). Verified directly; the
+   Oscars-monolith copy was initially missed (the 739 KB file wasn't read whole) and was
+   caught by gemini-code-assist on PR #1. OMDb is clean in both (constant/option, no
+   committed default). → rotate the key on TMDB's side, remove the hardcoded defaults from
+   BOTH files (keep the constant/option indirection), then scrub git history.
 2. **IMDb Guard — broken regex**: `preg_match('//u', $content, $matches)` (empty pattern) in
    `extract_review_header_context()` makes the "review_header" lookup source dead code;
    validation always falls back to post title. Restore the intended title/year regex + guard.
@@ -187,10 +191,12 @@ accuracy) is real and visible in the data.
 - `lunara_oscar_pick` (11) is carousel-ready: every pick verified image + structured meta +
   real critical writing. Two link to canonical entities via `_lunara_pick_oscar_entity_url`.
 - Backups healthy (Jetpack rewind, zero errors); security baseline reasonable; secrets handled
-  correctly everywhere EXCEPT the one hardcoded TMDB key.
+  correctly everywhere EXCEPT the TMDB key, which is hardcoded in two files (see HIGH #1).
 
 ## 5. Prioritized punch list (where to go next)
-1. Rotate + de-hardcode the TMDB key (imdb-guard). Security, first.
+1. Rotate + de-hardcode the TMDB key — committed in BOTH `lunara-imdb-guard.php` and
+   `academy-awards-table.php` (line 25, `AAT_TMDB_API_KEY`). Remove both hardcoded defaults,
+   rotate on TMDB, scrub history. Security, first.
 2. Infra triage: activate image optimizer; cut active plugins to <20 (one per category); pin
    Jetpack stable; delete duplicate Core/MCP-Adapter installs; resolve Classic-vs-block editor;
    tackle desktop CLS (explicit dims on hero/carousel). Biggest reader-facing win.
