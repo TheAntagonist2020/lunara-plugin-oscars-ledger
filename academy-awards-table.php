@@ -30,9 +30,10 @@ define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
 // batch poster/backdrop/profile imports continue to work once the key is set.
 if (!defined('AAT_TMDB_API_KEY')) {
     $aat_tmdb_api_key = getenv('AAT_TMDB_API_KEY');
-    if (!is_string($aat_tmdb_api_key) || '' === $aat_tmdb_api_key) {
+    if (!is_string($aat_tmdb_api_key) || '' === trim($aat_tmdb_api_key)) {
         $aat_tmdb_api_key = (string) get_option('aat_tmdb_api_key', '');
     }
+    $aat_tmdb_api_key = trim($aat_tmdb_api_key);
     if ('' !== $aat_tmdb_api_key) {
         define('AAT_TMDB_API_KEY', $aat_tmdb_api_key);
     }
