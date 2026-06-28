@@ -21,8 +21,22 @@ define('AAT_VERSION', '2.7.89');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
+
+// TMDB API key — never committed to source control. Resolves, in order, from a
+// wp-config constant (AAT_TMDB_API_KEY), the AAT_TMDB_API_KEY environment
+// variable, or the `aat_tmdb_api_key` option saved on the Oscars settings
+// screen. This mirrors the OMDb key handling (get_omdb_api_key) and keeps the
+// secret out of git while leaving the existing constant indirection intact, so
+// batch poster/backdrop/profile imports continue to work once the key is set.
 if (!defined('AAT_TMDB_API_KEY')) {
-    define('AAT_TMDB_API_KEY', 'b17bcb1a2b1a44a50898eaf079bcdede');
+    $aat_tmdb_api_key = getenv('AAT_TMDB_API_KEY');
+    if (!is_string($aat_tmdb_api_key) || '' === trim($aat_tmdb_api_key)) {
+        $aat_tmdb_api_key = (string) get_option('aat_tmdb_api_key', '');
+    }
+    $aat_tmdb_api_key = trim($aat_tmdb_api_key);
+    if ('' !== $aat_tmdb_api_key) {
+        define('AAT_TMDB_API_KEY', $aat_tmdb_api_key);
+    }
 }
 
 require_once AAT_PLUGIN_DIR . 'includes/class-aat-ceremony-writeups.php';
