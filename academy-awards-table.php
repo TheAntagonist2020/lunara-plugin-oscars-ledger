@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.59
+ * Version: 2.7.60
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.59');
+define('AAT_VERSION', '2.7.60');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -8918,7 +8918,7 @@ public function get_person_context_for_imdb_id($imdb_id) {
  * Fetch and cache TMDB data for an IMDb title id.
  * Falls back to a TMDB title search when direct IMDb lookup fails.
  */
-public function get_tmdb_data_for_imdb_id( $imdb_id ) {
+public function get_tmdb_data_for_imdb_id( $imdb_id, $allow_remote = true ) {
     $imdb_id = strtolower( trim( (string) $imdb_id ) );
     if ( ! preg_match('/^tt\d+$/', $imdb_id) ) {
         return array();
@@ -8928,6 +8928,14 @@ public function get_tmdb_data_for_imdb_id( $imdb_id ) {
     $cached = get_transient( $cache_key );
     if ( is_array( $cached ) ) {
         return $cached;
+    }
+
+    // On public render paths ($allow_remote = false) never issue a blocking
+    // remote lookup: a cold cache returns empty so the caller falls back to its
+    // local poster or premium fallback plate instantly. Remote enrichment is
+    // reserved for the admin importers, which pass $allow_remote = true.
+    if ( ! $allow_remote ) {
+        return array();
     }
 
     $key = $this->get_tmdb_api_key();
@@ -9030,7 +9038,7 @@ public function get_tmdb_data_for_imdb_id( $imdb_id ) {
 /**
  * Fetch and cache TMDB data for an IMDb person id using the Oscar dataset as context.
  */
-public function get_tmdb_person_data_for_imdb_id($imdb_id) {
+public function get_tmdb_person_data_for_imdb_id($imdb_id, $allow_remote = true) {
     $imdb_id = strtolower(trim((string) $imdb_id));
     if (!preg_match('/^nm\d+$/', $imdb_id)) {
         return array();
@@ -9040,6 +9048,13 @@ public function get_tmdb_person_data_for_imdb_id($imdb_id) {
     $cached = get_transient($cache_key);
     if (is_array($cached)) {
         return $cached;
+    }
+
+    // Public render paths pass $allow_remote = false so a cold cache resolves
+    // instantly to the local portrait or premium fallback plate instead of
+    // blocking on a remote person lookup. The portrait queue importer passes true.
+    if (!$allow_remote) {
+        return array();
     }
 
     $key = $this->get_tmdb_api_key();
@@ -9195,7 +9210,7 @@ public function get_tmdb_person_data_for_imdb_id($imdb_id) {
      * Prefers a mapped local poster, then TMDB poster/backdrop metadata.
      */
 
-public function get_title_visual_package($tt, $size = 'large') {
+public function get_title_visual_package($tt, $size = 'large', $allow_remote = false) {
     $tt = strtolower(trim((string) $tt));
     if (!preg_match('/^tt\d+$/', $tt)) {
         return array();
@@ -9224,7 +9239,7 @@ public function get_title_visual_package($tt, $size = 'large') {
         $out['poster_html'] = $poster_html;
     }
 
-    $tmdb = $this->get_tmdb_data_for_imdb_id($tt);
+    $tmdb = $this->get_tmdb_data_for_imdb_id($tt, $allow_remote);
     if (is_array($tmdb) && !empty($tmdb)) {
         $out['tmdb'] = $tmdb;
         if (empty($out['poster_html']) && !empty($tmdb['poster_full'])) {
@@ -9271,7 +9286,7 @@ public function get_title_visual_package($tt, $size = 'large') {
 /**
  * Resolve the preferred visual package for a person profile.
  */
-public function get_person_visual_package($nm_id, $size = 'large') {
+public function get_person_visual_package($nm_id, $size = 'large', $allow_remote = false) {
     $nm_id = strtolower(trim((string) $nm_id));
     if (!preg_match('/^nm\d+$/', $nm_id)) {
         return array();
@@ -9309,7 +9324,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
     }
 
-    $tmdb = $this->get_tmdb_person_data_for_imdb_id($nm_id);
+    $tmdb = $this->get_tmdb_person_data_for_imdb_id($nm_id, $allow_remote);
     if (is_array($tmdb) && !empty($tmdb)) {
         $out['tmdb'] = $tmdb;
         if (empty($out['portrait_url']) && !empty($tmdb['profile_full'])) {

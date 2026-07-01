@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.59
+Stable tag: 2.7.60
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.60 =
+* Made poster and portrait imagery on public Oscars routes render local-first: title/person visual packages no longer trigger blocking TMDB lookups during a page load. Locally imported posters show instantly, already-cached TMDB data still enriches the fallback plate, and a cold cache falls back to the premium title plate immediately instead of waiting on the network. Remote enrichment now happens only in the admin poster/portrait importers. Keeps ceremony, category, and entity pages fast and reliable even before an import run.
 
 = 2.7.59 =
 * Repaired ceremony guide punctuation at render time: apostrophes and em-dashes lost during the original DOCX import (stored as the replacement marker) and hyphens stored as a literal "?" are now reconstructed from context so approved ceremony write-ups read cleanly. Display path only — stored rows and the admin edit surface are untouched.
