@@ -1203,21 +1203,58 @@ get_header();
                 body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card strong{color:var(--aat-white)!important;max-width:100%!important;font-size:clamp(1.12rem,1.65vw,1.72rem)!important;line-height:1.06!important;overflow-wrap:anywhere!important;white-space:normal!important}
                 body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card.is-primary strong{color:var(--aat-gold)!important;font-size:clamp(2.25rem,3.2vw,2.95rem)!important}
                 body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-actions{grid-column:1/-1!important;justify-content:start!important;margin-top:4px!important}
-                @media(max-width:980px){body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero{grid-template-columns:minmax(0,1fr)!important}}
-                @media(max-width:640px){body .aat-container .aat-ceremony-dossier{width:min(100%,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;margin-left:auto!important;margin-right:auto!important;overflow-x:hidden!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero{grid-template-columns:minmax(0,1fr)!important;padding:16px!important;border-radius:12px!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-title{font-size:clamp(2.15rem,14vw,3.05rem)!important;max-width:10ch!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-subtitle,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-nav,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-nav *,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-card,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-card strong,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-index,body .aat-container .aat-ceremony-dossier .aat-ceremony-marquee .aat-hub-copy,body .aat-container .aat-ceremony-dossier .aat-ceremony-marquee .aat-hub-copy *{max-width:29ch!important;overflow-wrap:anywhere!important;text-wrap:auto!important;white-space:normal!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-nav{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-slot,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-index{width:100%!important;min-width:0!important;justify-self:stretch!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-command-band{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card,body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card.is-primary{grid-row:auto!important;min-height:0!important;padding:15px!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-actions .aat-btn{width:100%!important;justify-content:center!important}}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-lead{display:grid!important;gap:clamp(16px,2.4vw,28px)!important;align-content:center!important;min-width:0!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero.has-dossier-poster .aat-ceremony-dossier-lead{grid-template-columns:minmax(138px,182px) minmax(0,1fr)!important;align-items:center!important;gap:clamp(18px,2.1vw,30px)!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-poster{display:grid!important;gap:10px!important;min-width:0!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-poster-frame{position:relative!important;aspect-ratio:2/3!important;border-radius:13px!important;overflow:hidden!important;border:1px solid rgba(201,169,97,.3)!important;box-shadow:0 20px 44px rgba(0,0,0,.44)!important;background:rgba(6,15,26,.72)!important;transition:transform .55s cubic-bezier(.2,.7,.2,1),box-shadow .55s cubic-bezier(.2,.7,.2,1)!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-poster-frame img,body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-poster-frame .aat-entity-poster{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;transition:transform .8s cubic-bezier(.2,.7,.2,1)!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-poster-frame .aat-entity-poster-fallback{border:0!important;border-radius:13px!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-poster-frame:hover{transform:translateY(-4px)!important;box-shadow:0 28px 60px rgba(0,0,0,.52)!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-poster-frame:hover img{transform:scale(1.055)!important}
+                body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-poster-tag{font-size:.66rem!important;letter-spacing:.16em!important;text-transform:uppercase!important;color:var(--aat-gold-light)!important;text-align:center!important}
+                @media(max-width:980px){body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero.has-dossier-poster .aat-ceremony-dossier-lead{grid-template-columns:minmax(120px,154px) minmax(0,1fr)!important}}
+                @media(max-width:640px){body .aat-container .aat-ceremony-dossier{width:min(100%,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;margin-left:auto!important;margin-right:auto!important;overflow-x:hidden!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero{grid-template-columns:minmax(0,1fr)!important;padding:16px!important;border-radius:12px!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-title{font-size:clamp(2.15rem,14vw,3.05rem)!important;max-width:10ch!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero .aat-hub-subtitle,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-nav,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-nav *,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-card,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-card strong,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-index,body .aat-container .aat-ceremony-dossier .aat-ceremony-marquee .aat-hub-copy,body .aat-container .aat-ceremony-dossier .aat-ceremony-marquee .aat-hub-copy *{max-width:29ch!important;overflow-wrap:anywhere!important;text-wrap:auto!important;white-space:normal!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-nav{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-slot,body .aat-container .aat-ceremony-dossier .aat-ceremony-neighbor-index{width:100%!important;min-width:0!important;justify-self:stretch!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-command-band{grid-template-columns:minmax(0,1fr)!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card,body .aat-container .aat-ceremony-dossier .aat-ceremony-command-card.is-primary{grid-row:auto!important;min-height:0!important;padding:15px!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-actions .aat-btn{width:100%!important;justify-content:center!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-hero.has-dossier-poster .aat-ceremony-dossier-lead{grid-template-columns:minmax(0,1fr)!important;justify-items:start!important;gap:16px!important}body .aat-container .aat-ceremony-dossier .aat-ceremony-dossier-poster{max-width:150px!important}}
             </style>
-            <section class="aat-ceremony-dossier-hero">
-                <div class="aat-ceremony-dossier-copy">
-                    <p class="aat-hub-kicker"><?php echo esc_html__('Oscar Ledger Year Dossier', 'academy-awards-table'); ?></p>
-                    <h1 class="aat-hub-title"><?php echo esc_html($ceremony_dossier_label); ?></h1>
-                    <p class="aat-hub-subtitle">
-                        <?php echo esc_html(sprintf(
-                            /* translators: 1: ceremony year, 2: ceremony title */
-                            __('The %1$s file for %2$s: winners first, ballot trails on demand, and the films that shaped the ceremony.', 'academy-awards-table'),
-                            (string) $year_label,
-                            $ceremony_title_label
-                        )); ?>
-                    </p>
+            <?php
+                // Best Picture winner poster for the dossier lead. Local-first
+                // (allow_remote = false) so it never blocks the hero on a cold
+                // cache; falls back to the premium plate when no poster is
+                // imported yet, so the hero is never an empty slot.
+                $dossier_poster_html = '';
+                if (!empty($best_picture) && is_callable($aat_extract_title_ids) && method_exists($aat, 'get_title_visual_package')) {
+                    $dossier_bp_ids = $aat_extract_title_ids($best_picture);
+                    if (!empty($dossier_bp_ids)) {
+                        $dossier_visual = (array) $aat->get_title_visual_package($dossier_bp_ids[0], 'medium_large', false);
+                        if (!empty($dossier_visual['poster_html'])) {
+                            $dossier_poster_html = $dossier_visual['poster_html'];
+                        } elseif (!empty($dossier_visual['poster_url'])) {
+                            $dossier_poster_html = '<img class="aat-entity-poster" src="' . esc_url($dossier_visual['poster_url']) . '" alt="' . esc_attr($best_picture_label . ' poster') . '" loading="lazy" decoding="async" />';
+                        } elseif (!empty($dossier_visual['fallback_html'])) {
+                            $dossier_poster_html = $dossier_visual['fallback_html'];
+                        }
+                    }
+                }
+            ?>
+            <section class="aat-ceremony-dossier-hero<?php echo $dossier_poster_html !== '' ? ' has-dossier-poster' : ''; ?>">
+                <div class="aat-ceremony-dossier-lead">
+                    <?php if ($dossier_poster_html !== '') : ?>
+                    <div class="aat-ceremony-dossier-poster">
+                        <div class="aat-ceremony-dossier-poster-frame"><?php echo $dossier_poster_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+                        <span class="aat-ceremony-dossier-poster-tag"><?php echo esc_html__('Best Picture', 'academy-awards-table'); ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <div class="aat-ceremony-dossier-copy">
+                        <p class="aat-hub-kicker"><?php echo esc_html__('Oscar Ledger Year Dossier', 'academy-awards-table'); ?></p>
+                        <h1 class="aat-hub-title"><?php echo esc_html($ceremony_dossier_label); ?></h1>
+                        <p class="aat-hub-subtitle">
+                            <?php echo esc_html(sprintf(
+                                /* translators: 1: ceremony year, 2: ceremony title */
+                                __('The %1$s file for %2$s: winners first, ballot trails on demand, and the films that shaped the ceremony.', 'academy-awards-table'),
+                                (string) $year_label,
+                                $ceremony_title_label
+                            )); ?>
+                        </p>
+                    </div>
                 </div>
                 <div class="aat-ceremony-command-band" aria-label="<?php esc_attr_e('Ceremony ledger summary', 'academy-awards-table'); ?>">
                     <div class="aat-ceremony-command-card is-primary">
