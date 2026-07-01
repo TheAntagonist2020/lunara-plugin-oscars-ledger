@@ -1172,7 +1172,7 @@ get_header();
                     $film_label = $get_title_label($fid);
                     if (!$film_label) { $film_label = strtoupper($fid); }
                     $poster_html = $aat->get_poster_img_html_for_title($fid, 'medium', array('class' => 'aat-filmography-poster', 'sizes' => '(max-width: 720px) 132px, 160px'));
-                    $tmdb_item = method_exists($aat, 'get_tmdb_data_for_imdb_id') ? $aat->get_tmdb_data_for_imdb_id($fid) : array();
+                    $tmdb_item = method_exists($aat, 'get_tmdb_data_for_imdb_id') ? $aat->get_tmdb_data_for_imdb_id($fid, false) : array();
                     $film_url = $build_entity_url($fid);
                 ?>
                     <article class="aat-filmography-card">

@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.58
+ * Version: 2.7.61
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,13 +17,37 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.58');
+define('AAT_VERSION', '2.7.61');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
-if (!defined('AAT_TMDB_API_KEY')) {
-    define('AAT_TMDB_API_KEY', 'b17bcb1a2b1a44a50898eaf079bcdede');
+
+// TMDB API key — never committed to source control. Resolved (in order) from a
+// wp-config AAT_TMDB_API_KEY constant, the AAT_TMDB_API_KEY environment
+// variable, or the `aat_tmdb_api_key` option. Defined on plugins_loaded rather
+// than at global scope, and skipped while WordPress is installing, so the option
+// lookup never runs before the database is ready (WP install / WP-CLI bootstrap).
+// Mirrors get_omdb_api_key() and keeps the secret out of git while preserving the
+// constant indirection the theme relies on; batch imports work once the key is set.
+if (!function_exists('aat_define_tmdb_api_key')) {
+    function aat_define_tmdb_api_key() {
+        if (defined('AAT_TMDB_API_KEY')) {
+            return;
+        }
+        $key = getenv('AAT_TMDB_API_KEY');
+        if (!is_string($key) || '' === trim($key)) {
+            if (function_exists('wp_installing') && wp_installing()) {
+                return; // DB not ready during install / some CLI bootstraps
+            }
+            $key = (string) get_option('aat_tmdb_api_key', '');
+        }
+        $key = trim($key);
+        if ('' !== $key) {
+            define('AAT_TMDB_API_KEY', $key);
+        }
+    }
 }
+add_action('plugins_loaded', 'aat_define_tmdb_api_key', 1);
 
 require_once AAT_PLUGIN_DIR . 'includes/class-aat-ceremony-writeups.php';
 
@@ -7167,7 +7191,20 @@ class Academy_Awards_Table {
             ARRAY_A
         );
 
-        return $this->decode_ceremony_writeup_text_fields($row, array('ceremony_label', 'headline', 'dek', 'body'));
+        $writeup = $this->decode_ceremony_writeup_text_fields($row, array('ceremony_label', 'headline', 'dek', 'body'));
+
+        // Render-time repair of punctuation lost during the original guide import
+        // (see AAT_Ceremony_Writeups::repair_lost_punctuation). Display path only —
+        // the stored row and the admin edit surface are left untouched.
+        if (is_array($writeup)) {
+            foreach (array('ceremony_label', 'headline', 'dek', 'body') as $repair_field) {
+                if (isset($writeup[$repair_field]) && is_string($writeup[$repair_field])) {
+                    $writeup[$repair_field] = AAT_Ceremony_Writeups::repair_lost_punctuation($writeup[$repair_field]);
+                }
+            }
+        }
+
+        return $writeup;
     }
 
 
@@ -8881,7 +8918,7 @@ public function get_person_context_for_imdb_id($imdb_id) {
  * Fetch and cache TMDB data for an IMDb title id.
  * Falls back to a TMDB title search when direct IMDb lookup fails.
  */
-public function get_tmdb_data_for_imdb_id( $imdb_id ) {
+public function get_tmdb_data_for_imdb_id( $imdb_id, $allow_remote = true ) {
     $imdb_id = strtolower( trim( (string) $imdb_id ) );
     if ( ! preg_match('/^tt\d+$/', $imdb_id) ) {
         return array();
@@ -8891,6 +8928,14 @@ public function get_tmdb_data_for_imdb_id( $imdb_id ) {
     $cached = get_transient( $cache_key );
     if ( is_array( $cached ) ) {
         return $cached;
+    }
+
+    // On public render paths ($allow_remote = false) never issue a blocking
+    // remote lookup: a cold cache returns empty so the caller falls back to its
+    // local poster or premium fallback plate instantly. Remote enrichment is
+    // reserved for the admin importers, which pass $allow_remote = true.
+    if ( ! $allow_remote ) {
+        return array();
     }
 
     $key = $this->get_tmdb_api_key();
@@ -8993,7 +9038,7 @@ public function get_tmdb_data_for_imdb_id( $imdb_id ) {
 /**
  * Fetch and cache TMDB data for an IMDb person id using the Oscar dataset as context.
  */
-public function get_tmdb_person_data_for_imdb_id($imdb_id) {
+public function get_tmdb_person_data_for_imdb_id($imdb_id, $allow_remote = true) {
     $imdb_id = strtolower(trim((string) $imdb_id));
     if (!preg_match('/^nm\d+$/', $imdb_id)) {
         return array();
@@ -9003,6 +9048,13 @@ public function get_tmdb_person_data_for_imdb_id($imdb_id) {
     $cached = get_transient($cache_key);
     if (is_array($cached)) {
         return $cached;
+    }
+
+    // Public render paths pass $allow_remote = false so a cold cache resolves
+    // instantly to the local portrait or premium fallback plate instead of
+    // blocking on a remote person lookup. The portrait queue importer passes true.
+    if (!$allow_remote) {
+        return array();
     }
 
     $key = $this->get_tmdb_api_key();
@@ -9158,7 +9210,7 @@ public function get_tmdb_person_data_for_imdb_id($imdb_id) {
      * Prefers a mapped local poster, then TMDB poster/backdrop metadata.
      */
 
-public function get_title_visual_package($tt, $size = 'large') {
+public function get_title_visual_package($tt, $size = 'large', $allow_remote = false) {
     $tt = strtolower(trim((string) $tt));
     if (!preg_match('/^tt\d+$/', $tt)) {
         return array();
@@ -9187,7 +9239,7 @@ public function get_title_visual_package($tt, $size = 'large') {
         $out['poster_html'] = $poster_html;
     }
 
-    $tmdb = $this->get_tmdb_data_for_imdb_id($tt);
+    $tmdb = $this->get_tmdb_data_for_imdb_id($tt, $allow_remote);
     if (is_array($tmdb) && !empty($tmdb)) {
         $out['tmdb'] = $tmdb;
         if (empty($out['poster_html']) && !empty($tmdb['poster_full'])) {
@@ -9234,7 +9286,7 @@ public function get_title_visual_package($tt, $size = 'large') {
 /**
  * Resolve the preferred visual package for a person profile.
  */
-public function get_person_visual_package($nm_id, $size = 'large') {
+public function get_person_visual_package($nm_id, $size = 'large', $allow_remote = false) {
     $nm_id = strtolower(trim((string) $nm_id));
     if (!preg_match('/^nm\d+$/', $nm_id)) {
         return array();
@@ -9272,7 +9324,7 @@ public function get_person_visual_package($nm_id, $size = 'large') {
         }
     }
 
-    $tmdb = $this->get_tmdb_person_data_for_imdb_id($nm_id);
+    $tmdb = $this->get_tmdb_person_data_for_imdb_id($nm_id, $allow_remote);
     if (is_array($tmdb) && !empty($tmdb)) {
         $out['tmdb'] = $tmdb;
         if (empty($out['portrait_url']) && !empty($tmdb['profile_full'])) {

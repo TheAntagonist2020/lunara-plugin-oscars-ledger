@@ -92,6 +92,66 @@ if (!class_exists('AAT_Ceremony_Writeups')) {
             return self::normalize_public_text($value);
         }
 
+        /**
+         * Reconstruct punctuation that was destroyed during the original guide import.
+         *
+         * A batch of ceremony guides was imported after their smart apostrophes and
+         * em-dashes had already been lost. Those glyphs survive in the database only
+         * as the U+FFFD replacement marker (which renders as "ï¿½") or, for hyphens,
+         * as a literal "?". Re-decoding cannot recover them because the information
+         * was gone before storage, so we rebuild each glyph from its surrounding
+         * context. This runs at render time only — stored rows are never modified,
+         * and the admin edit surface still shows the raw text so it can be corrected
+         * at the source when convenient.
+         */
+        public static function repair_lost_punctuation($text) {
+            $text = (string) $text;
+            if ($text === '') {
+                return '';
+            }
+
+            // The lost glyph, however it survived: the raw U+FFFD character, or its
+            // double-mojibake form "ï¿½" (stored bytes C3 AF C2 BF C2 BD).
+            $marker = '(?:\x{FFFD}|\x{00EF}\x{00BF}\x{00BD})';
+
+            // A marker fenced by whitespace was a spaced em-dash separator, e.g.
+            // "97th Academy Awards — March 2, 2025".
+            $repaired = preg_replace('/(\s)' . $marker . '(\s)/u', '$1—$2', $text);
+            if (is_string($repaired)) {
+                $text = $repaired;
+            }
+
+            // Any remaining marker sat inside a word and was an apostrophe, e.g.
+            // "Baker's", "evening's", "don't".
+            $repaired = preg_replace('/' . $marker . '/u', '’', $text);
+            if (is_string($repaired)) {
+                $text = $repaired;
+            }
+
+            // A literal "?" wedged between two letters with no spaces was a hyphen,
+            // e.g. "micro-budget", "art-deco". A genuine question mark is always
+            // followed by whitespace or a boundary, so letter-?-letter is unambiguous.
+            // Run twice so chained losses collapse fully ("slice?of?life").
+            $repaired = preg_replace('/(\p{L})\?(\p{L})/u', '$1-$2', $text);
+            if (is_string($repaired)) {
+                $text = $repaired;
+            }
+            $repaired = preg_replace('/(\p{L})\?(\p{L})/u', '$1-$2', $text);
+            if (is_string($repaired)) {
+                $text = $repaired;
+            }
+
+            // A repaired apostrophe can land next to a surviving quote mark
+            // ("'Anora'" + lost apostrophe + "s"); collapse the run so it reads as a
+            // single possessive rather than a doubled glyph.
+            $repaired = preg_replace('/[\x{0027}\x{2018}\x{2019}]{2,}/u', '’', $text);
+            if (is_string($repaired)) {
+                $text = $repaired;
+            }
+
+            return $text;
+        }
+
         public static function parser_is_available() {
             return class_exists('ZipArchive') || class_exists('PharData');
         }
