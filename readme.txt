@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.61
+Stable tag: 2.7.62
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.62 =
+* Ceremony dossier premium pass. The ceremony guide is now a full-width magazine spread: heading band on top with meta and actions, body in two columns with a gold rule on wide screens (was a narrow single column beside a mostly-empty panel). The hero stat grid no longer has an empty hole beside Top Winner. The four major-race briefing cards now carry the winner's film poster (local-only resolution, text-led fallback when no poster is imported). The ceremony snapshot card balances its poster against centered copy instead of leaving two-thirds of the card empty. Dossier sections reveal on scroll and cards lift on hover, with reduced-motion respected.
 
 = 2.7.61 =
 * Added a Best Picture winner poster to the ceremony dossier hero. The winning film's poster now anchors the year dossier beside the headline, with a "Best Picture" caption and a subtle hover lift/zoom. Uses the local-first visual package (no blocking lookups) and falls back to the premium branded plate when a poster has not been imported yet, so the hero is never an empty slot. Responsive: the poster sits beside the copy on desktop and stacks above it on smaller screens.
