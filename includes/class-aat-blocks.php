@@ -14,7 +14,14 @@ class Academy_Awards_Table_Blocks {
     public static function init() {
         add_filter('block_categories_all', array(__CLASS__, 'register_category'));
         add_action('init', array(__CLASS__, 'register_blocks'));
-        add_action('admin_menu', array(__CLASS__, 'register_migration_page'));
+
+        // The shortcode→block migration page is retired along with the
+        // inserter entries: the site standardized on shortcodes, so a tool
+        // that converts shortcodes INTO blocks now points the wrong way.
+        // Restore with: add_filter('aat_enable_block_migration_page', '__return_true');
+        if (apply_filters('aat_enable_block_migration_page', false)) {
+            add_action('admin_menu', array(__CLASS__, 'register_migration_page'));
+        }
     }
 
     public static function register_category($categories) {
@@ -46,9 +53,15 @@ class Academy_Awards_Table_Blocks {
             'category'      => 'lunara',
             'editor_script' => 'aat-blocks',
             'supports'      => array(
-                'align'  => array('wide', 'full'),
-                'anchor' => true,
-                'html'   => false,
+                'align'    => array('wide', 'full'),
+                'anchor'   => true,
+                'html'     => false,
+                // Kept registered so any stored block markup still renders,
+                // but hidden from the inserter: the 2026-07 content census
+                // found ZERO posts/pages using these blocks — every live
+                // Oscars surface renders via shortcode/template — and the
+                // editorial workflow is standardizing on shortcodes.
+                'inserter' => false,
             ),
         );
 
