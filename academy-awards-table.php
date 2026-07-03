@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.64
+ * Version: 2.7.65
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.64');
+define('AAT_VERSION', '2.7.65');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -14825,7 +14825,17 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
             return new WP_Error('aat_poster_sync_bad_id', __('Invalid IMDb title ID.', 'academy-awards-table'));
         }
 
-        if ($this->get_poster_attachment_id_for_title($imdb_id) > 0) {
+        $existing_attachment = $this->get_poster_attachment_id_for_title($imdb_id);
+        if ($existing_attachment > 0) {
+            // Write the mapping through to the poster table when coverage came
+            // from a review featured image, so this title stops occupying a
+            // candidate slot on every future sync run.
+            global $wpdb;
+            $poster_table = $wpdb->prefix . 'aat_posters';
+            $mapped = $wpdb->get_var($wpdb->prepare("SELECT imdb_id FROM $poster_table WHERE imdb_id = %s", $imdb_id));
+            if (!$mapped) {
+                $this->set_poster_attachment_id($imdb_id, $existing_attachment, 'review-featured-auto');
+            }
             return array('status' => 'exists');
         }
 
@@ -14864,6 +14874,10 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
             }
         }
 
+        // Both APIs came up empty — park this title for a week so the sync
+        // batch keeps advancing instead of retrying the same misses forever.
+        $this->record_poster_api_sync_failure($imdb_id);
+
         return array('status' => 'missing');
     }
 
@@ -14876,25 +14890,103 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
         $limit = max(1, min(500, intval($limit)));
         $this->ensure_projection_data_available();
 
+        // Titles that already have a mapped poster are excluded in SQL so every
+        // run advances into genuinely-missing territory instead of re-reading
+        // the same alphabetical batch forever. Titles that recently failed both
+        // APIs are held back for a week so they cannot clog the batch either.
+        $recent_failures = $this->get_poster_api_sync_recent_failures();
+        $fetch_limit = min(500, $limit + count($recent_failures));
+
         $entities_table = $this->get_entities_table_name();
+        $poster_table = $wpdb->prefix . 'aat_posters';
         $rows = $wpdb->get_col(
             $wpdb->prepare(
-                "SELECT entity_id FROM $entities_table WHERE entity_type = %s AND entity_id REGEXP %s ORDER BY sort_label ASC LIMIT %d",
+                "SELECT entity_id FROM $entities_table
+                 WHERE entity_type = %s AND entity_id REGEXP %s
+                   AND entity_id NOT IN (SELECT imdb_id FROM $poster_table)
+                 ORDER BY sort_label ASC LIMIT %d",
                 'title',
                 '^tt[0-9]{7,9}$',
-                $limit
+                $fetch_limit
             )
         );
 
         $out = array();
         foreach ((array) $rows as $row_id) {
             $row_id = strtolower(trim((string) $row_id));
-            if ($this->is_title_entity_id($row_id)) {
-                $out[$row_id] = true;
+            if (!$this->is_title_entity_id($row_id) || isset($recent_failures[$row_id])) {
+                continue;
+            }
+            $out[$row_id] = true;
+            if (count($out) >= $limit) {
+                break;
             }
         }
 
         return array_keys($out);
+    }
+
+    /**
+     * Titles that failed both poster APIs recently (tt => unix timestamp).
+     * Entries expire after a week so new artwork upstream gets retried.
+     */
+    private function get_poster_api_sync_recent_failures() {
+        $failures = get_option('aat_poster_api_sync_recent_failures', array());
+        if (!is_array($failures)) {
+            return array();
+        }
+
+        $cutoff = time() - WEEK_IN_SECONDS;
+        $fresh = array();
+        foreach ($failures as $tt => $ts) {
+            $tt = strtolower(trim((string) $tt));
+            if (intval($ts) >= $cutoff && $this->is_title_entity_id($tt)) {
+                $fresh[$tt] = intval($ts);
+            }
+        }
+
+        if (count($fresh) !== count($failures)) {
+            update_option('aat_poster_api_sync_recent_failures', $fresh, false);
+        }
+
+        return $fresh;
+    }
+
+    private function record_poster_api_sync_failure($tt) {
+        $tt = strtolower(trim((string) $tt));
+        if (!$this->is_title_entity_id($tt)) {
+            return;
+        }
+
+        $failures = $this->get_poster_api_sync_recent_failures();
+        $failures[$tt] = time();
+        // Keep the newest entries if the list somehow balloons.
+        if (count($failures) > 3000) {
+            arsort($failures);
+            $failures = array_slice($failures, 0, 3000, true);
+        }
+        update_option('aat_poster_api_sync_recent_failures', $failures, false);
+    }
+
+    /**
+     * Count ledger titles that still have no mapped local poster.
+     */
+    public function count_titles_without_mapped_poster() {
+        global $wpdb;
+
+        $this->ensure_projection_data_available();
+        $entities_table = $this->get_entities_table_name();
+        $poster_table = $wpdb->prefix . 'aat_posters';
+
+        return intval($wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM $entities_table
+                 WHERE entity_type = %s AND entity_id REGEXP %s
+                   AND entity_id NOT IN (SELECT imdb_id FROM $poster_table)",
+                'title',
+                '^tt[0-9]{7,9}$'
+            )
+        ));
     }
 
     /**
@@ -15225,6 +15317,12 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
     public function ajax_posters_sync_from_apis() {
         $this->verify_admin_ajax_request();
 
+        if ($this->get_omdb_api_key() === '' && $this->get_tmdb_api_key() === '') {
+            wp_send_json_error(array(
+                'message' => __('No API key is configured. Paste your OMDb and/or TMDB key in the API Settings box above, save, then run the import again.', 'academy-awards-table'),
+            ));
+        }
+
         $limit = isset($_POST['limit']) ? intval($_POST['limit']) : 120;
         $limit = max(1, min(500, $limit));
 
@@ -15237,6 +15335,7 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
             'synced_tmdb' => $out['synced_tmdb'] ?? 0,
             'skipped_existing' => $out['skipped_existing'] ?? 0,
             'missing' => $out['missing'] ?? 0,
+            'remaining' => $this->count_titles_without_mapped_poster(),
         ));
     }
 

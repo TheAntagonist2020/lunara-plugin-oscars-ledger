@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.64
+Stable tag: 2.7.65
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.65 =
+* Unstuck the Poster Library API importer. The candidate batch previously always re-read the same first titles alphabetically — once those were covered, every run reported zero imports and the rest of the ledger was unreachable. Candidates now exclude titles that already have a mapped poster, titles covered by a review featured image write their mapping through so they stop occupying batch slots, and titles that fail both APIs are parked for a week instead of clogging every run. The status line now reports how many titles still lack a local poster so repeated clicks read as progress, and running with no API key configured says so plainly instead of silently missing on every row.
+* Made the Person Portrait Queue navigable. The import flow (Queue Controls + Verified Profile Candidates) now leads the page with a plain-language how-to; the four data-repair lanes (WP-CLI reference, person credit review, company/studio credits, existing PEOPLE adoption) are collapsed into Advanced panels at the bottom. No behavior changed in any lane.
 
 = 2.7.64 =
 * Category dossier premium pass. The Latest Winner command card in every category hero now carries the winning film's poster (local-first, cached-TMDB backup, clean text layout when no poster is imported), with a subtle hover zoom. Category pages gain the same reveal-on-scroll motion as ceremony dossiers, gated so JS-off and reduced-motion readers always see everything. Fixed a reveal bug affecting very tall sections (the Best Picture era browser could stay hidden because a 34,000px section can never reach the old 6% visibility threshold) — both category and ceremony observers now trigger on first entry into the viewport.
