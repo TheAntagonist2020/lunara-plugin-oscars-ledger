@@ -2266,7 +2266,7 @@ get_header();
                         io.unobserve(entry.target);
                     }
                 });
-            }, { threshold: .06, rootMargin: '0px 0px -60px 0px' });
+            }, { threshold: 0, rootMargin: '0px 0px -60px 0px' });
             blocks.forEach(function (block) {
                 block.classList.add('aat-dossier-reveal');
                 io.observe(block);
@@ -2448,7 +2448,19 @@ get_header();
                 $latest_winner_label = !empty($latest_winner['primary_label']) ? (string) $latest_winner['primary_label'] : (!empty($latest_winner['film']) ? (string) $latest_winner['film'] : (string) ($latest_winner['name'] ?? ''));
             }
     ?>
+        <?php $category_hero_poster = !empty($latest_winner['film_id']) ? $aat_index_poster_html((string) $latest_winner['film_id']) : ''; ?>
         <div class="aat-category-dossier aat-inner-route-system<?php echo $is_premium_category_dossier ? ' aat-premium-category-dossier ' . esc_attr((string) $premium_category_profile['class']) : ' aat-generic-category-dossier'; ?>">
+        <style>
+            /* Category dossier: latest-winner hero poster + reveal motion
+               (shared by premium and generic category files). */
+            body .aat-container .aat-category-dossier .aat-dossier-command-card.is-latest.has-hero-poster{display:grid!important;grid-template-columns:minmax(0,1fr) 88px!important;column-gap:14px!important;align-content:center!important;align-items:center!important}
+            body .aat-container .aat-category-dossier .aat-dossier-command-card.is-latest.has-hero-poster > span,body .aat-container .aat-category-dossier .aat-dossier-command-card.is-latest.has-hero-poster > strong{grid-column:1!important;min-width:0!important}
+            body .aat-container .aat-category-dossier .aat-category-hero-poster{grid-column:2!important;grid-row:1/span 2!important;width:88px!important;aspect-ratio:2/3!important;border:1px solid rgba(201,169,97,.3)!important;border-radius:10px!important;overflow:hidden!important;box-shadow:0 14px 30px rgba(0,0,0,.4)!important}
+            body .aat-container .aat-category-dossier .aat-category-hero-poster img{border:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;width:100%!important;height:100%!important;max-width:none!important;object-fit:cover!important;transition:transform .6s cubic-bezier(.2,.7,.2,1)!important}
+            body .aat-container .aat-category-dossier .aat-dossier-command-card.is-latest:hover .aat-category-hero-poster img{transform:scale(1.06)!important}
+            @media(max-width:620px){body .aat-container .aat-category-dossier .aat-dossier-command-card.is-latest.has-hero-poster{grid-template-columns:minmax(0,1fr) 72px!important}}
+            @media(prefers-reduced-motion:no-preference){body .aat-container .aat-category-dossier .aat-dossier-reveal{opacity:0;transform:translateY(18px);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1)}body .aat-container .aat-category-dossier .aat-dossier-reveal.aat-inview{opacity:1;transform:none}}
+        </style>
         <?php if ($is_premium_category_dossier) : ?>
             <style>
                 body .aat-container .aat-premium-category-dossier{min-width:0!important;max-width:100%!important;overflow:hidden!important}
@@ -2476,9 +2488,12 @@ get_header();
                     <p class="aat-hub-subtitle"><?php echo esc_html((string) $premium_category_profile['subtitle']); ?></p>
                 </div>
                 <div class="aat-dossier-command-band" aria-label="<?php echo esc_attr((string) $premium_category_profile['summary_label']); ?>">
-                    <div class="aat-dossier-command-card is-latest">
+                    <div class="aat-dossier-command-card is-latest<?php echo $category_hero_poster !== '' ? ' has-hero-poster' : ''; ?>">
                         <span><?php echo esc_html__('Latest Winner', 'academy-awards-table'); ?></span>
                         <strong><?php echo esc_html($latest_winner_label !== '' ? $latest_winner_label : __('Pending', 'academy-awards-table')); ?></strong>
+                        <?php if ($category_hero_poster !== '') : ?>
+                            <div class="aat-category-hero-poster" aria-hidden="true"><?php echo $category_hero_poster; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+                        <?php endif; ?>
                     </div>
                     <div class="aat-dossier-command-card">
                         <span><?php echo esc_html__('Span', 'academy-awards-table'); ?></span>
@@ -2514,9 +2529,12 @@ get_header();
                     )); ?></p>
                 </div>
                 <div class="aat-dossier-command-band" aria-label="<?php echo esc_attr(sprintf(__('%s category summary', 'academy-awards-table'), $category_heading_label)); ?>">
-                    <div class="aat-dossier-command-card is-latest">
+                    <div class="aat-dossier-command-card is-latest<?php echo $category_hero_poster !== '' ? ' has-hero-poster' : ''; ?>">
                         <span><?php echo esc_html__('Latest Winner', 'academy-awards-table'); ?></span>
                         <strong><?php echo esc_html($latest_winner_label !== '' ? $latest_winner_label : __('Pending', 'academy-awards-table')); ?></strong>
+                        <?php if ($category_hero_poster !== '') : ?>
+                            <div class="aat-category-hero-poster" aria-hidden="true"><?php echo $category_hero_poster; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+                        <?php endif; ?>
                     </div>
                     <div class="aat-dossier-command-card">
                         <span><?php echo esc_html__('Span', 'academy-awards-table'); ?></span>
@@ -3060,6 +3078,30 @@ get_header();
                 </div>
             </div>
         </div>
+
+        <script>
+        /* Category dossier reveal-on-scroll. Sections stay fully visible
+           without JS or under reduced motion; the hiding class is only
+           added here, right before the observer starts watching. */
+        (function () {
+            if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                return;
+            }
+            var blocks = document.querySelectorAll('.aat-category-dossier > section, .aat-category-dossier > nav, .aat-category-dossier > div.aat-hub-section');
+            var io = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('aat-inview');
+                        io.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0, rootMargin: '0px 0px -60px 0px' });
+            blocks.forEach(function (block) {
+                block.classList.add('aat-dossier-reveal');
+                io.observe(block);
+            });
+        })();
+        </script>
 
         <?php if ($table_view_requested) : ?>
             <div class="aat-hub-section aat-table-shell">
