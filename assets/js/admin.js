@@ -798,9 +798,10 @@
                                 ' (OMDb ' + (d.synced_omdb || 0) +
                                 ', TMDB ' + (d.synced_tmdb || 0) +
                                 ') • Existing: ' + (d.skipped_existing || 0) +
-                                ' • Missing: ' + (d.missing || 0)
+                                ' • Missing: ' + (d.missing || 0) +
+                                (typeof d.remaining === 'number' ? ' • Still without a local poster: ' + d.remaining + ' — click again to continue' : '')
                             );
-                            setTimeout(function() { window.location.reload(); }, 1000);
+                            setTimeout(function() { window.location.reload(); }, 2500);
                             return;
                         }
                         $status.text((resp && resp.data && resp.data.message) ? resp.data.message : 'API sync failed.');
