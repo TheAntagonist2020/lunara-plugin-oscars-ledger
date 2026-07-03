@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.62
+Stable tag: 2.7.63
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.63 =
+* Ceremonies and Categories index premium pass. Both index grids are now poster-led: every ceremony card carries its Best Picture winner's poster with a "Best Picture: …" line, and every category card carries its most recent winner's film poster with a "Latest: … (year)" line. Posters resolve local-first (imported library, then cached TMDB URL) and never trigger a remote lookup during render; cards without an imported poster keep the clean text layout. Winner data comes from one batched query per index — no per-card database hits. Cards lift with a gold edge on hover and reveal with a light stagger on scroll; reduced-motion and JS-off readers always see every card.
 
 = 2.7.62 =
 * Ceremony dossier premium pass. The ceremony guide is now a full-width magazine spread: heading band on top with meta and actions, body in two columns with a gold rule on wide screens (was a narrow single column beside a mostly-empty panel). The hero stat grid no longer has an empty hole beside Top Winner. The four major-race briefing cards now carry the winner's film poster (local-only resolution, text-led fallback when no poster is imported). The ceremony snapshot card balances its poster against centered copy instead of leaving two-thirds of the card empty. Dossier sections reveal on scroll and cards lift on hover, with reduced-motion respected.

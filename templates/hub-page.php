@@ -834,13 +834,86 @@ get_header();
         <?php endif; ?>
     </p>
 
+    <?php if (in_array($hub, array('ceremonies', 'categories'), true)) : ?>
+        <style>
+            /* Index premium pass: poster-led cards + motion for the ceremonies
+               and categories indexes (shares the ceremony-dossier grammar). */
+            body .aat-container .aat-hub-page-index-grid .aat-hub-card.has-index-poster{display:grid!important;grid-template-columns:84px minmax(0,1fr)!important;column-gap:14px!important;align-items:center!important;padding:13px 16px!important}
+            body .aat-container .aat-hub-card{transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease!important}
+            body .aat-container .aat-hub-card:hover{border-color:rgba(225,197,126,.5)!important;box-shadow:0 14px 32px rgba(0,0,0,.32)!important;transform:translateY(-3px)!important}
+            body .aat-container .aat-index-poster{grid-column:1!important;grid-row:1/span 6!important;aspect-ratio:2/3!important;border:1px solid rgba(201,169,97,.28)!important;border-radius:8px!important;overflow:hidden!important;width:100%!important}
+            body .aat-container .aat-index-poster img{border:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;height:100%!important;max-width:none!important;object-fit:cover!important;transition:transform .6s cubic-bezier(.2,.7,.2,1)!important;width:100%!important}
+            body .aat-container .aat-hub-card:hover .aat-index-poster img{transform:scale(1.07)!important}
+            body .aat-container .aat-hub-page-index-grid .aat-hub-card.has-index-poster > :not(.aat-index-poster){grid-column:2!important;min-width:0!important}
+            body .aat-container .aat-index-winnerline{margin:2px 0 0!important;color:var(--aat-gold-light,#eadbb3)!important;font-size:.74rem!important;letter-spacing:.06em!important}
+            @media(prefers-reduced-motion:no-preference){
+                .aat-idx-js .aat-hub-page-index-grid .aat-hub-card{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1)}
+                .aat-idx-js .aat-hub-page-index-grid .aat-hub-card.aat-inview{opacity:1;transform:none}
+            }
+        </style>
+        <script>
+        /* Index card reveal: the hiding class root (.aat-idx-js) is only ever
+           added here, so JS-off and reduced-motion readers see every card. */
+        (function(){
+            if(!('IntersectionObserver' in window))return;
+            if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+            function init(){
+                var cards=document.querySelectorAll('.aat-hub-page-index-grid .aat-hub-card');
+                if(!cards.length)return;
+                document.documentElement.classList.add('aat-idx-js');
+                var io=new IntersectionObserver(function(es){
+                    es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('aat-inview');io.unobserve(e.target);}});
+                },{threshold:.05,rootMargin:'0px 0px -30px 0px'});
+                cards.forEach(function(c,i){c.style.transitionDelay=Math.min(i%12*35,380)+'ms';io.observe(c);});
+            }
+            if(document.readyState!=='loading'){init();}else{document.addEventListener('DOMContentLoaded',init);}
+        })();
+        </script>
+    <?php endif; ?>
+
     <?php
+        // Resolve a small index poster for a tt ID — local library first,
+        // cached TMDB URL second, never a remote lookup during render.
+        $aat_index_poster_html = function ($tt) use ($aat) {
+            $tt = strtolower(trim((string) $tt));
+            if ($tt === '' || !method_exists($aat, 'get_title_visual_package')) {
+                return '';
+            }
+            $visual = $aat->get_title_visual_package($tt, 'medium', false);
+            if (!empty($visual['poster_html'])) {
+                return (string) $visual['poster_html'];
+            }
+            if (!empty($visual['poster_url'])) {
+                return '<img src="' . esc_url((string) $visual['poster_url']) . '" alt="" loading="lazy" decoding="async" />';
+            }
+            return '';
+        };
+
         // CEREMONIES INDEX
         if ($hub === 'ceremonies') :
             $rows = $wpdb->get_results(
                 "SELECT ceremony, MIN(year) AS year_label FROM $table_name GROUP BY ceremony ORDER BY ceremony DESC",
                 ARRAY_A
             );
+
+            // One batched query maps every ceremony to its Best Picture winner;
+            // posters resolve local-only (no remote lookups on render).
+            $aat_index_bp_map = array();
+            $aat_index_bp_rows = $wpdb->get_results(
+                "SELECT ceremony, film, film_id FROM $table_name WHERE winner = 1 AND canonical_category = 'BEST PICTURE'",
+                ARRAY_A
+            );
+            if (is_array($aat_index_bp_rows)) {
+                foreach ($aat_index_bp_rows as $bp_row) {
+                    $bp_cer = intval($bp_row['ceremony'] ?? 0);
+                    if ($bp_cer <= 0 || isset($aat_index_bp_map[$bp_cer])) continue;
+                    $bp_ids = $aat_extract_title_ids(array('film_id' => (string) ($bp_row['film_id'] ?? '')));
+                    $aat_index_bp_map[$bp_cer] = array(
+                        'tt'   => !empty($bp_ids) ? (string) $bp_ids[0] : '',
+                        'film' => trim((string) ($bp_row['film'] ?? '')),
+                    );
+                }
+            }
     ?>
         <div class="aat-hub-header">
             <h1 class="aat-hub-title"><?php echo esc_html__('Ceremonies', 'academy-awards-table'); ?></h1>
@@ -865,18 +938,26 @@ get_header();
             <div class="aat-stat"><span class="aat-stat-number"><?php echo esc_html(number_format_i18n($total_categories)); ?></span><span class="aat-stat-label"><?php echo esc_html__('Categories', 'academy-awards-table'); ?></span></div>
         </div>
 
-        <div class="aat-hub-grid">
+        <div class="aat-hub-grid aat-hub-page-index-grid">
             <?php if (!empty($rows)) : foreach ($rows as $r) :
                 $c = intval($r['ceremony'] ?? 0);
                 if ($c <= 0) continue;
                 $year_label = (string) ($r['year_label'] ?? '');
                 $url = $aat->get_ceremony_url($c);
+                $bp = isset($aat_index_bp_map[$c]) ? $aat_index_bp_map[$c] : array();
+                $index_poster = !empty($bp['tt']) ? $aat_index_poster_html($bp['tt']) : '';
             ?>
-                <article class="aat-hub-card">
+                <article class="aat-hub-card<?php echo $index_poster !== '' ? ' has-index-poster' : ''; ?>">
+                    <?php if ($index_poster !== '') : ?>
+                        <div class="aat-index-poster" aria-hidden="true"><?php echo $index_poster; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+                    <?php endif; ?>
                     <h3 class="aat-hub-card-title">
                         <?php echo $aat_render_hub_text_link($aat->ordinal($c) . ' ' . __('Academy Awards', 'academy-awards-table'), $url, 'aat-hub-card-link aat-hub-inline-link-title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                     </h3>
                     <p class="aat-hub-card-meta"><?php echo $aat_render_hub_text_link($year_label, $url, 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
+                    <?php if (!empty($bp['film'])) : ?>
+                        <p class="aat-index-winnerline"><?php echo esc_html(sprintf(/* translators: %s: Best Picture winner title */ __('Best Picture: %s', 'academy-awards-table'), $bp['film'])); ?></p>
+                    <?php endif; ?>
                     <p class="aat-hub-card-action"><?php echo $aat_render_hub_text_link(__('Open ceremony', 'academy-awards-table'), $url, 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
                 </article>
             <?php endforeach; endif; ?>
@@ -901,6 +982,38 @@ get_header();
                 }
             }
             ksort($grouped);
+
+            // One batched query maps every canonical category to its most
+            // recent winner (film + poster tt + year) — no per-card queries.
+            $aat_index_cat_map = array();
+            $aat_index_cat_rows = $wpdb->get_results(
+                "SELECT t.canonical_category, t.year, t.film, t.film_id, t.name
+                 FROM $table_name t
+                 INNER JOIN (
+                     SELECT canonical_category, MAX(ceremony) AS latest_ceremony
+                     FROM $table_name
+                     WHERE winner = 1 AND canonical_category != ''
+                     GROUP BY canonical_category
+                 ) latest
+                    ON latest.canonical_category = t.canonical_category
+                   AND latest.latest_ceremony = t.ceremony
+                 WHERE t.winner = 1
+                 ORDER BY t.canonical_category ASC, t.film ASC",
+                ARRAY_A
+            );
+            if (is_array($aat_index_cat_rows)) {
+                foreach ($aat_index_cat_rows as $cw_row) {
+                    $cw_cat = trim((string) ($cw_row['canonical_category'] ?? ''));
+                    if ($cw_cat === '' || isset($aat_index_cat_map[$cw_cat])) continue;
+                    $cw_ids = $aat_extract_title_ids(array('film_id' => (string) ($cw_row['film_id'] ?? '')));
+                    $aat_index_cat_map[$cw_cat] = array(
+                        'tt'   => !empty($cw_ids) ? (string) $cw_ids[0] : '',
+                        'film' => trim((string) ($cw_row['film'] ?? '')),
+                        'name' => trim((string) ($cw_row['name'] ?? '')),
+                        'year' => trim((string) ($cw_row['year'] ?? '')),
+                    );
+                }
+            }
     ?>
         <div class="aat-hub-header">
             <h1 class="aat-hub-title"><?php echo esc_html__('Categories', 'academy-awards-table'); ?></h1>
@@ -928,14 +1041,31 @@ get_header();
         <?php foreach ($grouped as $cls => $list) : ?>
             <div class="aat-hub-section">
                 <h2><?php echo esc_html($cls); ?></h2>
-                <div class="aat-hub-grid">
+                <div class="aat-hub-grid aat-hub-page-index-grid">
                     <?php foreach ($list as $cat) :
                         $url = $aat->get_category_url($cat);
                         $label = $aat->format_category_display($cat);
+                        $cw = isset($aat_index_cat_map[$cat]) ? $aat_index_cat_map[$cat] : array();
+                        $index_poster = !empty($cw['tt']) ? $aat_index_poster_html($cw['tt']) : '';
+                        $latest_line = '';
+                        if (!empty($cw['film'])) {
+                            $latest_line = $cw['film'];
+                        } elseif (!empty($cw['name'])) {
+                            $latest_line = $cw['name'];
+                        }
+                        if ($latest_line !== '' && !empty($cw['year'])) {
+                            $latest_line .= ' (' . $cw['year'] . ')';
+                        }
                     ?>
-                        <article class="aat-hub-card">
+                        <article class="aat-hub-card<?php echo $index_poster !== '' ? ' has-index-poster' : ''; ?>">
+                            <?php if ($index_poster !== '') : ?>
+                                <div class="aat-index-poster" aria-hidden="true"><?php echo $index_poster; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+                            <?php endif; ?>
                             <h3 class="aat-hub-card-title"><?php echo $aat_render_hub_text_link($label, $url, 'aat-hub-card-link aat-hub-inline-link-title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></h3>
                             <p class="aat-hub-card-meta"><?php echo esc_html($cat); ?></p>
+                            <?php if ($latest_line !== '') : ?>
+                                <p class="aat-index-winnerline"><?php echo esc_html(sprintf(/* translators: %s: most recent winner */ __('Latest: %s', 'academy-awards-table'), $latest_line)); ?></p>
+                            <?php endif; ?>
                             <p class="aat-hub-card-action"><?php echo $aat_render_hub_text_link(__('Open category', 'academy-awards-table'), $url, 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
                         </article>
                     <?php endforeach; ?>
