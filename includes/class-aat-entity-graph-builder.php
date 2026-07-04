@@ -1,0 +1,759 @@
+<?php
+/**
+ * Entity Graph Builder — Phase 2 of the Lunara knowledge graph.
+ *
+ * Translates the Academy Awards tables (entities / award facts / nominees /
+ * categories / ceremonies) into the WordPress entity models registered by
+ * Lunara Core 0.2.0: movie posts, person posts, lunara_studio terms, and
+ * ledger_entry join posts — with posters attached from the local poster
+ * library and director/cast relationships wired from the award record.
+ *
+ * Design contract:
+ * - IDEMPOTENT. Natural keys (entity_id, source_award_id) are stored as
+ *   post meta; re-running updates in place and never duplicates.
+ * - BATCHED + RESUMABLE. A cursor-based state machine advances through
+ *   movies → people → studios → ledger → verify. Runs via an AJAX
+ *   self-loop while the admin page is open AND a chained cron event as
+ *   background insurance, guarded by a shared lock.
+ * - LOCAL-ONLY. No external API calls: imagery comes from the existing
+ *   aat_posters attachment map. Missing art backfills later through the
+ *   normal importers.
+ * - NON-DESTRUCTIVE to the live site: the Oscars surfaces keep rendering
+ *   from the SQL tables; the graph is built alongside.
+ *
+ * @package Academy_Awards_Table
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+final class AAT_Entity_Graph_Builder {
+
+    const STATE_OPTION = 'aat_entity_graph_state';
+    const LOCK_KEY     = 'aat_entity_graph_lock';
+    const CRON_HOOK    = 'aat_entity_graph_cron';
+
+    const BATCH_ENTITIES = 200;
+    const BATCH_LEDGER   = 150;
+    const BATCH_TEARDOWN = 200;
+
+    public static function init() {
+        add_action('admin_menu', array(__CLASS__, 'register_admin_page'), 40);
+        add_action('wp_ajax_aat_entity_graph_start', array(__CLASS__, 'ajax_start'));
+        add_action('wp_ajax_aat_entity_graph_step', array(__CLASS__, 'ajax_step'));
+        add_action('wp_ajax_aat_entity_graph_stop', array(__CLASS__, 'ajax_stop'));
+        add_action('wp_ajax_aat_entity_graph_teardown', array(__CLASS__, 'ajax_teardown'));
+        add_action(self::CRON_HOOK, array(__CLASS__, 'cron_step'));
+    }
+
+    /* ---------------------------------------------------------------------
+     * Table + model plumbing
+     * ------------------------------------------------------------------ */
+
+    private static function table($name) {
+        global $wpdb;
+        return $wpdb->prefix . 'aat_' . $name;
+    }
+
+    private static function models_ready() {
+        return post_type_exists('movie') && post_type_exists('person') && post_type_exists('ledger_entry');
+    }
+
+    private static function post_status() {
+        $status = apply_filters('aat_entity_graph_post_status', 'publish');
+        return in_array($status, array('publish', 'draft', 'pending', 'private'), true) ? $status : 'publish';
+    }
+
+    private static function default_state() {
+        return array(
+            'stage'      => 'idle',
+            'running'    => false,
+            'cursor'     => '',
+            'test_ceremony' => 0,
+            'totals'     => array('movies' => 0, 'people' => 0, 'studios' => 0, 'ledger' => 0),
+            'processed'  => array('movies' => 0, 'people' => 0, 'studios' => 0, 'ledger' => 0),
+            'created'    => 0,
+            'updated'    => 0,
+            'started_at' => 0,
+            'finished_at' => 0,
+            'last_error' => '',
+            'report'     => array(),
+        );
+    }
+
+    private static function get_state() {
+        $state = get_option(self::STATE_OPTION);
+        return is_array($state) ? array_merge(self::default_state(), $state) : self::default_state();
+    }
+
+    private static function save_state($state) {
+        update_option(self::STATE_OPTION, $state, false);
+    }
+
+    /** Small lookup maps, cached per request. */
+    private static function categories_map() {
+        static $map = null;
+        if (null === $map) {
+            global $wpdb;
+            $map = array();
+            $rows = $wpdb->get_results('SELECT category_slug, canonical_category, display_category, award_class FROM ' . self::table('categories'), ARRAY_A);
+            foreach ((array) $rows as $row) {
+                $map[$row['category_slug']] = $row;
+            }
+        }
+        return $map;
+    }
+
+    private static function ceremonies_map() {
+        static $map = null;
+        if (null === $map) {
+            global $wpdb;
+            $map = array();
+            $rows = $wpdb->get_results('SELECT ceremony, year_label, ceremony_label, sort_year FROM ' . self::table('ceremonies'), ARRAY_A);
+            foreach ((array) $rows as $row) {
+                $map[(int) $row['ceremony']] = $row;
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * post_id map for a set of natural keys stored under $meta_key.
+     */
+    private static function existing_posts_map($meta_key, array $values) {
+        global $wpdb;
+        if (empty($values)) {
+            return array();
+        }
+        $placeholders = implode(',', array_fill(0, count($values), '%s'));
+        $sql = $wpdb->prepare(
+            "SELECT pm.meta_value AS k, pm.post_id FROM {$wpdb->postmeta} pm INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE pm.meta_key = %s AND p.post_status != 'trash' AND pm.meta_value IN ($placeholders)",
+            array_merge(array($meta_key), $values)
+        );
+        $map = array();
+        foreach ((array) $wpdb->get_results($sql, ARRAY_A) as $row) {
+            $map[$row['k']] = (int) $row['post_id'];
+        }
+        return $map;
+    }
+
+    /** attachment_id map from the local poster/portrait library. */
+    private static function attachment_map(array $imdb_ids) {
+        global $wpdb;
+        if (empty($imdb_ids)) {
+            return array();
+        }
+        $placeholders = implode(',', array_fill(0, count($imdb_ids), '%s'));
+        $sql = $wpdb->prepare(
+            'SELECT imdb_id, attachment_id FROM ' . self::table('posters') . " WHERE attachment_id > 0 AND imdb_id IN ($placeholders)",
+            $imdb_ids
+        );
+        $map = array();
+        foreach ((array) $wpdb->get_results($sql, ARRAY_A) as $row) {
+            $map[$row['imdb_id']] = (int) $row['attachment_id'];
+        }
+        return $map;
+    }
+
+    /** ACF-aware field write with a raw-meta fallback. */
+    private static function set_field($field_key, $field_name, $value, $post_id) {
+        if (function_exists('update_field')) {
+            update_field($field_key, $value, $post_id);
+            return;
+        }
+        update_post_meta($post_id, $field_name, $value);
+        update_post_meta($post_id, '_' . $field_name, $field_key);
+    }
+
+    /* ---------------------------------------------------------------------
+     * Stage runners
+     * ------------------------------------------------------------------ */
+
+    /**
+     * Run one batch of whatever stage the state machine is in.
+     * Returns the updated state.
+     */
+    public static function run_step() {
+        $state = self::get_state();
+        if (!$state['running']) {
+            return $state;
+        }
+        if (!self::models_ready()) {
+            $state['last_error'] = 'Lunara Core 0.2.0 (entity graph models) is not active — deploy/activate it first.';
+            $state['running'] = false;
+            self::save_state($state);
+            return $state;
+        }
+
+        // Shared lock so the AJAX loop and the cron chain never overlap.
+        if (get_transient(self::LOCK_KEY)) {
+            return $state;
+        }
+        set_transient(self::LOCK_KEY, 1, 50);
+
+        try {
+            switch ($state['stage']) {
+                case 'movies':
+                    $state = self::step_entities($state, 'title', 'movie', 'movies');
+                    break;
+                case 'people':
+                    $state = self::step_entities($state, 'name', 'person', 'people');
+                    break;
+                case 'studios':
+                    $state = self::step_studios($state);
+                    break;
+                case 'ledger':
+                    $state = self::step_ledger($state);
+                    break;
+                case 'verify':
+                    $state = self::step_verify($state);
+                    break;
+                default:
+                    $state['running'] = false;
+            }
+        } catch (Throwable $e) {
+            $state['last_error'] = $e->getMessage();
+            $state['running'] = false;
+        }
+
+        self::save_state($state);
+        delete_transient(self::LOCK_KEY);
+
+        // Chain the background insurance while running.
+        if ($state['running'] && !wp_next_scheduled(self::CRON_HOOK)) {
+            wp_schedule_single_event(time() + 30, self::CRON_HOOK);
+        }
+
+        return $state;
+    }
+
+    /** SQL filter limiting a run to one ceremony (the proving batch). */
+    private static function ceremony_entity_filter($test_ceremony, $entity_col = 'e.entity_id') {
+        global $wpdb;
+        if ($test_ceremony <= 0) {
+            return '';
+        }
+        $facts = self::table('award_facts');
+        $noms  = self::table('award_nominees');
+        return $wpdb->prepare(
+            " AND ( EXISTS (SELECT 1 FROM $facts f WHERE f.ceremony = %d AND (f.film_entity_id = $entity_col OR f.primary_entity_id = $entity_col))
+                 OR EXISTS (SELECT 1 FROM $noms n WHERE n.ceremony = %d AND n.entity_id = $entity_col) )",
+            $test_ceremony,
+            $test_ceremony
+        );
+    }
+
+    private static function step_entities($state, $entity_type, $post_type, $counter_key) {
+        global $wpdb;
+        $entities = self::table('entities');
+        $filter   = self::ceremony_entity_filter((int) $state['test_ceremony']);
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT e.entity_id, e.label FROM $entities e
+                 WHERE e.entity_type = %s AND e.entity_id > %s $filter
+                 ORDER BY e.entity_id ASC LIMIT %d",
+                $entity_type,
+                (string) $state['cursor'],
+                self::BATCH_ENTITIES
+            ),
+            ARRAY_A
+        );
+
+        if (empty($rows)) {
+            // Stage complete — advance.
+            $state['cursor'] = '';
+            $state['stage']  = ('movies' === $state['stage']) ? 'people' : 'studios';
+            return $state;
+        }
+
+        $ids      = wp_list_pluck($rows, 'entity_id');
+        $existing = self::existing_posts_map('_lunara_entity_id', $ids);
+        $posters  = self::attachment_map($ids);
+        $years    = array();
+
+        if ('title' === $entity_type) {
+            $placeholders = implode(',', array_fill(0, count($ids), '%s'));
+            $year_rows = $wpdb->get_results(
+                $wpdb->prepare(
+                    'SELECT f.film_entity_id AS k, MIN(c.sort_year) AS y FROM ' . self::table('award_facts') . ' f
+                     INNER JOIN ' . self::table('ceremonies') . " c ON c.ceremony = f.ceremony
+                     WHERE f.film_entity_id IN ($placeholders) GROUP BY f.film_entity_id",
+                    $ids
+                ),
+                ARRAY_A
+            );
+            foreach ((array) $year_rows as $yr) {
+                // Ceremony year honors the FILM year (ceremony honors the prior
+                // year's films), so subtract one for release year.
+                $years[$yr['k']] = max(1888, ((int) $yr['y']) - 1);
+            }
+        }
+
+        $status = self::post_status();
+
+        foreach ($rows as $row) {
+            $entity_id = $row['entity_id'];
+            $label     = trim(wp_strip_all_tags((string) $row['label']));
+            if ('' === $label) {
+                $label = $entity_id;
+            }
+
+            if (isset($existing[$entity_id])) {
+                $post_id = $existing[$entity_id];
+                // Keep the title fresh; content/excerpt are editorial and untouched.
+                if (get_post_field('post_title', $post_id) !== $label) {
+                    wp_update_post(array('ID' => $post_id, 'post_title' => $label));
+                }
+                $state['updated']++;
+            } else {
+                $post_id = wp_insert_post(
+                    array(
+                        'post_type'   => $post_type,
+                        'post_status' => $status,
+                        'post_title'  => $label,
+                    ),
+                    true
+                );
+                if (is_wp_error($post_id)) {
+                    $state['last_error'] = $post_id->get_error_message();
+                    continue;
+                }
+                update_post_meta($post_id, '_lunara_entity_id', $entity_id);
+                $state['created']++;
+            }
+
+            if ('title' === $entity_type) {
+                self::set_field('field_lunara_movie_imdb_title_id', 'imdb_title_id', $entity_id, $post_id);
+                if (isset($years[$entity_id])) {
+                    self::set_field('field_lunara_movie_release_year', 'release_year', $years[$entity_id], $post_id);
+                }
+            } else {
+                update_post_meta($post_id, '_lunara_imdb_name_id', $entity_id);
+            }
+
+            if (isset($posters[$entity_id]) && !has_post_thumbnail($post_id)) {
+                set_post_thumbnail($post_id, $posters[$entity_id]);
+            }
+
+            $state['cursor'] = $entity_id;
+            $state['processed'][$counter_key]++;
+        }
+
+        return $state;
+    }
+
+    private static function step_studios($state) {
+        global $wpdb;
+        if (!taxonomy_exists('lunara_studio')) {
+            $state['stage'] = 'ledger';
+            $state['cursor'] = '0';
+            return $state;
+        }
+        $entities = self::table('entities');
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT entity_id, label FROM $entities WHERE entity_type = 'company' AND entity_id > %s ORDER BY entity_id ASC LIMIT %d",
+                (string) $state['cursor'],
+                self::BATCH_ENTITIES
+            ),
+            ARRAY_A
+        );
+        if (empty($rows)) {
+            $state['stage']  = 'ledger';
+            $state['cursor'] = '0';
+            return $state;
+        }
+        foreach ($rows as $row) {
+            $label = trim(wp_strip_all_tags((string) $row['label']));
+            if ('' !== $label) {
+                $term = term_exists($label, 'lunara_studio');
+                if (!$term) {
+                    $term = wp_insert_term($label, 'lunara_studio');
+                }
+                if (!is_wp_error($term) && !empty($term['term_id'])) {
+                    update_term_meta((int) $term['term_id'], '_lunara_entity_id', $row['entity_id']);
+                }
+            }
+            $state['cursor'] = $row['entity_id'];
+            $state['processed']['studios']++;
+        }
+        return $state;
+    }
+
+    private static function step_ledger($state) {
+        global $wpdb;
+        $facts = self::table('award_facts');
+
+        $where = $wpdb->prepare('f.id > %d', (int) $state['cursor']);
+        if ((int) $state['test_ceremony'] > 0) {
+            $where .= $wpdb->prepare(' AND f.ceremony = %d', (int) $state['test_ceremony']);
+        }
+
+        $rows = $wpdb->get_results(
+            "SELECT f.id, f.source_award_id, f.ceremony, f.year_label, f.category_slug, f.winner,
+                    f.film_entity_id, f.primary_entity_id, f.primary_label
+             FROM $facts f WHERE $where ORDER BY f.id ASC LIMIT " . self::BATCH_LEDGER,
+            ARRAY_A
+        );
+
+        if (empty($rows)) {
+            $state['stage']  = 'verify';
+            $state['cursor'] = '';
+            return $state;
+        }
+
+        $categories = self::categories_map();
+        $ceremonies = self::ceremonies_map();
+
+        $award_keys  = array_map('strval', wp_list_pluck($rows, 'source_award_id'));
+        $existing    = self::existing_posts_map('_aat_source_award_id', $award_keys);
+        $entity_refs = array();
+        foreach ($rows as $row) {
+            if ('' !== $row['film_entity_id']) {
+                $entity_refs[] = $row['film_entity_id'];
+            }
+            if ('' !== $row['primary_entity_id']) {
+                $entity_refs[] = $row['primary_entity_id'];
+            }
+        }
+        $entity_posts = self::existing_posts_map('_lunara_entity_id', array_values(array_unique($entity_refs)));
+
+        $status = self::post_status();
+
+        foreach ($rows as $row) {
+            $cat      = isset($categories[$row['category_slug']]) ? $categories[$row['category_slug']] : array();
+            $cat_name = !empty($cat['display_category']) ? $cat['display_category'] : (!empty($cat['canonical_category']) ? $cat['canonical_category'] : $row['category_slug']);
+            $cer      = isset($ceremonies[(int) $row['ceremony']]) ? $ceremonies[(int) $row['ceremony']] : array();
+            $year     = !empty($cer['sort_year']) ? (int) $cer['sort_year'] : 0;
+
+            $title = trim(($row['year_label'] ? $row['year_label'] : ('Ceremony ' . $row['ceremony'])) . ' — ' . $cat_name . ' — ' . ($row['primary_label'] ? $row['primary_label'] : $row['film_entity_id']));
+
+            $key = (string) $row['source_award_id'];
+            if (isset($existing[$key])) {
+                $post_id = $existing[$key];
+                $state['updated']++;
+            } else {
+                $post_id = wp_insert_post(
+                    array(
+                        'post_type'   => 'ledger_entry',
+                        'post_status' => $status,
+                        'post_title'  => $title,
+                    ),
+                    true
+                );
+                if (is_wp_error($post_id)) {
+                    $state['last_error'] = $post_id->get_error_message();
+                    $state['cursor'] = (string) $row['id'];
+                    continue;
+                }
+                update_post_meta($post_id, '_aat_source_award_id', $key);
+                $state['created']++;
+            }
+
+            $movie_post  = ('' !== $row['film_entity_id'] && isset($entity_posts[$row['film_entity_id']])) ? $entity_posts[$row['film_entity_id']] : 0;
+            $person_post = 0;
+            if ('' !== $row['primary_entity_id'] && 0 === strpos($row['primary_entity_id'], 'nm') && isset($entity_posts[$row['primary_entity_id']])) {
+                $person_post = $entity_posts[$row['primary_entity_id']];
+            }
+
+            if ($movie_post) {
+                self::set_field('field_lunara_ledger_movie', 'movie', $movie_post, $post_id);
+            }
+            if ($person_post) {
+                self::set_field('field_lunara_ledger_person', 'person', $person_post, $post_id);
+            }
+            self::set_field('field_lunara_ledger_category', 'category', $cat_name, $post_id);
+            self::set_field('field_lunara_ledger_ceremony', 'ceremony_number', (int) $row['ceremony'], $post_id);
+            if ($year) {
+                self::set_field('field_lunara_ledger_year', 'ceremony_year', $year, $post_id);
+            }
+            self::set_field('field_lunara_ledger_won', 'won', (int) $row['winner'] ? 1 : 0, $post_id);
+
+            // Relationship wiring: directing → movie.directors, acting →
+            // movie.principal_cast. String-classified against the canonical
+            // category name; everything else stays a pure ledger link.
+            if ($movie_post && $person_post) {
+                $canonical = strtolower((string) ($cat['canonical_category'] ?? $cat_name));
+                if (false !== strpos($canonical, 'direct')) {
+                    self::append_relationship($movie_post, 'field_lunara_movie_directors', 'directors', $person_post);
+                } elseif (0 === strpos($canonical, 'act')) {
+                    self::append_relationship($movie_post, 'field_lunara_movie_principal_cast', 'principal_cast', $person_post);
+                }
+            }
+
+            $state['cursor'] = (string) $row['id'];
+            $state['processed']['ledger']++;
+        }
+
+        return $state;
+    }
+
+    private static function append_relationship($post_id, $field_key, $field_name, $related_id) {
+        $current = function_exists('get_field') ? get_field($field_name, $post_id, false) : get_post_meta($post_id, $field_name, true);
+        $current = is_array($current) ? array_map('intval', $current) : array();
+        if (!in_array((int) $related_id, $current, true)) {
+            $current[] = (int) $related_id;
+            self::set_field($field_key, $field_name, $current, $post_id);
+        }
+    }
+
+    private static function step_verify($state) {
+        global $wpdb;
+        $test = (int) $state['test_ceremony'];
+
+        $entities = self::table('entities');
+        $facts    = self::table('award_facts');
+
+        if ($test > 0) {
+            $filter = self::ceremony_entity_filter($test);
+            $src_movies = (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities e WHERE e.entity_type = 'title' $filter");
+            $src_people = (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities e WHERE e.entity_type = 'name' $filter");
+            $src_ledger = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $facts f WHERE f.ceremony = %d", $test));
+        } else {
+            $src_movies = (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities WHERE entity_type = 'title'");
+            $src_people = (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities WHERE entity_type = 'name'");
+            $src_ledger = (int) $wpdb->get_var("SELECT COUNT(*) FROM $facts");
+        }
+
+        $count_posts = function ($type, $key) use ($wpdb) {
+            return (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = %s
+                 WHERE p.post_type = %s AND p.post_status != 'trash'",
+                $key,
+                $type
+            ));
+        };
+
+        $state['report'] = array(
+            'movies' => array('source' => $src_movies, 'built' => $count_posts('movie', '_lunara_entity_id')),
+            'people' => array('source' => $src_people, 'built' => $count_posts('person', '_lunara_entity_id')),
+            'ledger' => array('source' => $src_ledger, 'built' => $count_posts('ledger_entry', '_aat_source_award_id')),
+        );
+        $state['stage']       = 'done';
+        $state['running']     = false;
+        $state['finished_at'] = time();
+        return $state;
+    }
+
+    /* ---------------------------------------------------------------------
+     * AJAX + cron endpoints
+     * ------------------------------------------------------------------ */
+
+    private static function guard() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'forbidden'), 403);
+        }
+        check_ajax_referer('aat_entity_graph', 'nonce');
+    }
+
+    public static function ajax_start() {
+        self::guard();
+        global $wpdb;
+        $state = self::default_state();
+        $state['running']       = true;
+        $state['stage']         = 'movies';
+        $state['test_ceremony'] = isset($_POST['test_ceremony']) ? absint($_POST['test_ceremony']) : 0;
+        $state['started_at']    = time();
+
+        $entities = self::table('entities');
+        $facts    = self::table('award_facts');
+        if ($state['test_ceremony'] > 0) {
+            $filter = self::ceremony_entity_filter($state['test_ceremony']);
+            $state['totals'] = array(
+                'movies'  => (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities e WHERE e.entity_type = 'title' $filter"),
+                'people'  => (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities e WHERE e.entity_type = 'name' $filter"),
+                'studios' => 0,
+                'ledger'  => (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $facts WHERE ceremony = %d", $state['test_ceremony'])),
+            );
+        } else {
+            $state['totals'] = array(
+                'movies'  => (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities WHERE entity_type = 'title'"),
+                'people'  => (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities WHERE entity_type = 'name'"),
+                'studios' => (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities WHERE entity_type = 'company'"),
+                'ledger'  => (int) $wpdb->get_var("SELECT COUNT(*) FROM $facts"),
+            );
+        }
+
+        self::save_state($state);
+        wp_send_json_success(self::run_step());
+    }
+
+    public static function ajax_step() {
+        self::guard();
+        wp_send_json_success(self::run_step());
+    }
+
+    public static function ajax_stop() {
+        self::guard();
+        $state = self::get_state();
+        $state['running'] = false;
+        self::save_state($state);
+        wp_clear_scheduled_hook(self::CRON_HOOK);
+        wp_send_json_success($state);
+    }
+
+    public static function cron_step() {
+        $state = self::run_step();
+        if ($state['running']) {
+            wp_schedule_single_event(time() + 30, self::CRON_HOOK);
+        }
+    }
+
+    /** Batched removal of everything the builder created. */
+    public static function ajax_teardown() {
+        self::guard();
+        global $wpdb;
+        $ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT DISTINCT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID
+             WHERE p.post_type IN ('movie','person','ledger_entry') AND pm.meta_key IN ('_lunara_entity_id','_aat_source_award_id')
+             LIMIT %d",
+            self::BATCH_TEARDOWN
+        ));
+        foreach ((array) $ids as $id) {
+            wp_delete_post((int) $id, true);
+        }
+        $remaining = (int) $wpdb->get_var(
+            "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID
+             WHERE p.post_type IN ('movie','person','ledger_entry') AND pm.meta_key IN ('_lunara_entity_id','_aat_source_award_id')"
+        );
+        if (0 === $remaining) {
+            delete_option(self::STATE_OPTION);
+        }
+        wp_send_json_success(array('deleted' => count($ids), 'remaining' => $remaining));
+    }
+
+    /* ---------------------------------------------------------------------
+     * Admin page
+     * ------------------------------------------------------------------ */
+
+    public static function register_admin_page() {
+        add_submenu_page(
+            'academy-awards-table',
+            __('Entity Graph Builder', 'academy-awards-table'),
+            __('Entity Graph', 'academy-awards-table'),
+            'manage_options',
+            'aat-entity-graph',
+            array(__CLASS__, 'render_admin_page')
+        );
+    }
+
+    public static function render_admin_page() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        global $wpdb;
+        $entities = self::table('entities');
+        $facts    = self::table('award_facts');
+        $counts = array(
+            'movies'  => (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities WHERE entity_type = 'title'"),
+            'people'  => (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities WHERE entity_type = 'name'"),
+            'studios' => (int) $wpdb->get_var("SELECT COUNT(*) FROM $entities WHERE entity_type = 'company'"),
+            'ledger'  => (int) $wpdb->get_var("SELECT COUNT(*) FROM $facts"),
+        );
+        $latest_ceremony = (int) $wpdb->get_var('SELECT MAX(ceremony) FROM ' . self::table('ceremonies'));
+        $state = self::get_state();
+        $ready = self::models_ready();
+        $nonce = wp_create_nonce('aat_entity_graph');
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Entity Graph Builder', 'academy-awards-table'); ?></h1>
+            <p><?php esc_html_e('Translates the Academy Awards tables into Movie, Person, and Ledger Entry entities with posters attached from the local library. Idempotent and resumable: re-running updates in place, never duplicates.', 'academy-awards-table'); ?></p>
+
+            <?php if (!$ready) : ?>
+                <div class="notice notice-error"><p><strong><?php esc_html_e('Lunara Core 0.2.0 is not active (movie/person/ledger_entry models missing). Deploy and activate it, then reload this page.', 'academy-awards-table'); ?></strong></p></div>
+            <?php endif; ?>
+
+            <h2><?php esc_html_e('Source data', 'academy-awards-table'); ?></h2>
+            <table class="widefat striped" style="max-width:640px">
+                <tbody>
+                    <tr><td><?php esc_html_e('Films (title entities)', 'academy-awards-table'); ?></td><td><?php echo esc_html(number_format_i18n($counts['movies'])); ?></td></tr>
+                    <tr><td><?php esc_html_e('People (name entities)', 'academy-awards-table'); ?></td><td><?php echo esc_html(number_format_i18n($counts['people'])); ?></td></tr>
+                    <tr><td><?php esc_html_e('Studios (company entities)', 'academy-awards-table'); ?></td><td><?php echo esc_html(number_format_i18n($counts['studios'])); ?></td></tr>
+                    <tr><td><?php esc_html_e('Award facts (ledger rows)', 'academy-awards-table'); ?></td><td><?php echo esc_html(number_format_i18n($counts['ledger'])); ?></td></tr>
+                </tbody>
+            </table>
+
+            <h2 style="margin-top:24px"><?php esc_html_e('Build', 'academy-awards-table'); ?></h2>
+            <p>
+                <button class="button button-primary" id="aat-eg-start-full" <?php disabled(!$ready); ?>><?php esc_html_e('Start Full Build', 'academy-awards-table'); ?></button>
+                <button class="button" id="aat-eg-start-test" <?php disabled(!$ready); ?>><?php echo esc_html(sprintf(__('Proving Run: Ceremony %d Only', 'academy-awards-table'), $latest_ceremony)); ?></button>
+                <button class="button" id="aat-eg-stop"><?php esc_html_e('Pause', 'academy-awards-table'); ?></button>
+                <button class="button button-link-delete" id="aat-eg-teardown"><?php esc_html_e('Tear Down Built Entities', 'academy-awards-table'); ?></button>
+            </p>
+            <div id="aat-eg-status" style="max-width:640px;padding:14px 16px;border:1px solid #c3c4c7;background:#fff">
+                <strong id="aat-eg-stage"><?php echo esc_html($state['stage']); ?></strong>
+                <div id="aat-eg-progress" style="margin-top:8px;font-family:monospace;white-space:pre-line"></div>
+            </div>
+
+            <script>
+            (function () {
+                var nonce = <?php echo wp_json_encode($nonce); ?>;
+                var ajax = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>;
+                var initial = <?php echo wp_json_encode($state); ?>;
+                var looping = false;
+
+                function post(action, extra) {
+                    var body = new URLSearchParams(Object.assign({ action: action, nonce: nonce }, extra || {}));
+                    return fetch(ajax, { method: 'POST', credentials: 'same-origin', body: body }).then(function (r) { return r.json(); });
+                }
+
+                function render(state) {
+                    document.getElementById('aat-eg-stage').textContent =
+                        (state.running ? 'RUNNING — ' : '') + state.stage.toUpperCase() + (state.last_error ? ('  |  ERROR: ' + state.last_error) : '');
+                    var p = state.processed || {}, t = state.totals || {};
+                    var lines = ['movies  ' + (p.movies || 0) + ' / ' + (t.movies || 0),
+                                 'people  ' + (p.people || 0) + ' / ' + (t.people || 0),
+                                 'studios ' + (p.studios || 0) + ' / ' + (t.studios || 0),
+                                 'ledger  ' + (p.ledger || 0) + ' / ' + (t.ledger || 0),
+                                 'created ' + (state.created || 0) + '   updated ' + (state.updated || 0)];
+                    if (state.report && state.report.movies) {
+                        lines.push('');
+                        lines.push('VERIFY  movies ' + state.report.movies.built + '/' + state.report.movies.source +
+                                   '  people ' + state.report.people.built + '/' + state.report.people.source +
+                                   '  ledger ' + state.report.ledger.built + '/' + state.report.ledger.source);
+                    }
+                    document.getElementById('aat-eg-progress').textContent = lines.join('\n');
+                }
+
+                function loop() {
+                    if (looping) { return; }
+                    looping = true;
+                    (function tick() {
+                        post('aat_entity_graph_step').then(function (res) {
+                            if (!res || !res.success) { looping = false; return; }
+                            render(res.data);
+                            if (res.data.running) { setTimeout(tick, 250); } else { looping = false; }
+                        }).catch(function () { looping = false; });
+                    })();
+                }
+
+                document.getElementById('aat-eg-start-full').addEventListener('click', function () {
+                    post('aat_entity_graph_start').then(function (res) { if (res.success) { render(res.data); loop(); } });
+                });
+                document.getElementById('aat-eg-start-test').addEventListener('click', function () {
+                    post('aat_entity_graph_start', { test_ceremony: <?php echo (int) $latest_ceremony; ?> }).then(function (res) { if (res.success) { render(res.data); loop(); } });
+                });
+                document.getElementById('aat-eg-stop').addEventListener('click', function () {
+                    post('aat_entity_graph_stop').then(function (res) { if (res.success) { render(res.data); } });
+                });
+                document.getElementById('aat-eg-teardown').addEventListener('click', function () {
+                    if (!window.confirm('Delete every built movie/person/ledger entity? The Academy Awards tables are untouched; this only removes the generated posts.')) { return; }
+                    (function purge() {
+                        post('aat_entity_graph_teardown').then(function (res) {
+                            if (res.success && res.data.remaining > 0) { purge(); }
+                            else { document.getElementById('aat-eg-progress').textContent = 'Teardown complete.'; }
+                        });
+                    })();
+                });
+
+                render(initial);
+                if (initial.running) { loop(); }
+            })();
+            </script>
+        </div>
+        <?php
+    }
+}
