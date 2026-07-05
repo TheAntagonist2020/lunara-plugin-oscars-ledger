@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.72
+ * Version: 2.7.73
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.72');
+define('AAT_VERSION', '2.7.73');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -154,6 +154,57 @@ class Academy_Awards_Table {
         return $wpdb->prefix . 'aat_entity_stats';
     }
 
+    /**
+     * Versioned in-place migrations for the derived reporting tables.
+     *
+     * Schema v2 widens every entity-id column from varchar(32) to varchar(64):
+     * slug-based local name ids (lnm-…) exceed 32 characters for long
+     * organization credits (e.g. "lnm-the-governments-of-great-britain"), and
+     * strict-mode MySQL rejects the whole row — which is how the two
+     * documentary winner rows (The True Glory, First Steps) silently vanished
+     * from the facts table. ALTER … MODIFY keeps the tables populated, so the
+     * live Oscars surfaces never see an empty window.
+     */
+    private function maybe_upgrade_reporting_schema() {
+        global $wpdb;
+
+        $target = '2';
+        if ((string) get_option('aat_reporting_schema_version') === $target) {
+            return;
+        }
+
+        $alters = array(
+            $this->get_entities_table_name()       => array(
+                "MODIFY entity_id varchar(64) NOT NULL",
+            ),
+            $this->get_award_facts_table_name()    => array(
+                "MODIFY film_entity_id varchar(64) NOT NULL DEFAULT ''",
+                "MODIFY primary_entity_id varchar(64) NOT NULL DEFAULT ''",
+            ),
+            $this->get_award_nominees_table_name() => array(
+                "MODIFY entity_id varchar(64) NOT NULL DEFAULT ''",
+            ),
+            $this->get_ceremony_stats_table_name() => array(
+                "MODIFY top_title_entity_id varchar(64) NOT NULL DEFAULT ''",
+            ),
+            $this->get_entity_stats_table_name()   => array(
+                "MODIFY entity_id varchar(64) NOT NULL",
+            ),
+        );
+
+        foreach ($alters as $table => $changes) {
+            $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+            if ($exists !== $table) {
+                continue; // Fresh install — dbDelta creates it at the new width.
+            }
+            foreach ($changes as $change) {
+                $wpdb->query("ALTER TABLE $table $change"); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+            }
+        }
+
+        update_option('aat_reporting_schema_version', $target, false);
+    }
+
     private function maybe_create_reporting_tables($charset_collate = '') {
         global $wpdb;
 
@@ -163,6 +214,8 @@ class Academy_Awards_Table {
                 $charset_collate = 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
             }
         }
+
+        $this->maybe_upgrade_reporting_schema();
 
         $ceremonies_table = $this->get_ceremonies_table_name();
         $categories_table = $this->get_categories_table_name();
@@ -195,7 +248,7 @@ class Academy_Awards_Table {
         ) $charset_collate;";
 
         $sql_entities = "CREATE TABLE IF NOT EXISTS $entities_table (
-            entity_id varchar(32) NOT NULL,
+            entity_id varchar(64) NOT NULL,
             entity_type varchar(20) NOT NULL DEFAULT '',
             label varchar(500) NOT NULL DEFAULT '',
             sort_label varchar(500) NOT NULL DEFAULT '',
@@ -212,8 +265,8 @@ class Academy_Awards_Table {
             year_label varchar(20) NOT NULL DEFAULT '',
             category_slug varchar(191) NOT NULL DEFAULT '',
             winner tinyint(1) NOT NULL DEFAULT 0,
-            film_entity_id varchar(32) NOT NULL DEFAULT '',
-            primary_entity_id varchar(32) NOT NULL DEFAULT '',
+            film_entity_id varchar(64) NOT NULL DEFAULT '',
+            primary_entity_id varchar(64) NOT NULL DEFAULT '',
             primary_label varchar(500) NOT NULL DEFAULT '',
             nominee_count smallint(5) unsigned NOT NULL DEFAULT 0,
             has_detail tinyint(1) NOT NULL DEFAULT 0,
@@ -238,7 +291,7 @@ class Academy_Awards_Table {
             source_award_id mediumint(9) unsigned NOT NULL,
             ceremony int(3) NOT NULL,
             category_slug varchar(191) NOT NULL DEFAULT '',
-            entity_id varchar(32) NOT NULL DEFAULT '',
+            entity_id varchar(64) NOT NULL DEFAULT '',
             entity_type varchar(20) NOT NULL DEFAULT '',
             entity_label varchar(500) NOT NULL DEFAULT '',
             nominee_ordinal smallint(5) unsigned NOT NULL DEFAULT 0,
@@ -266,7 +319,7 @@ class Academy_Awards_Table {
             categories_total int(11) NOT NULL DEFAULT 0,
             winner_categories int(11) NOT NULL DEFAULT 0,
             winning_titles_count int(11) NOT NULL DEFAULT 0,
-            top_title_entity_id varchar(32) NOT NULL DEFAULT '',
+            top_title_entity_id varchar(64) NOT NULL DEFAULT '',
             top_title_label varchar(500) NOT NULL DEFAULT '',
             top_title_mentions int(11) NOT NULL DEFAULT 0,
             top_title_wins int(11) NOT NULL DEFAULT 0,
@@ -289,7 +342,7 @@ class Academy_Awards_Table {
         ) $charset_collate;";
 
         $sql_entity_stats = "CREATE TABLE IF NOT EXISTS $entity_stats_table (
-            entity_id varchar(32) NOT NULL,
+            entity_id varchar(64) NOT NULL,
             entity_type varchar(20) NOT NULL DEFAULT '',
             label varchar(500) NOT NULL DEFAULT '',
             nominations int(11) NOT NULL DEFAULT 0,
@@ -1277,28 +1330,71 @@ class Academy_Awards_Table {
             }
         }
 
+        // Guarded inserts: clamp every string to its column width, retry once
+        // with invalid-UTF8 stripped, and record anything that STILL fails so
+        // the Data Integrity audit can name the exact row and SQL error.
+        // Nothing is ever allowed to go silently missing from the derivation.
+        $insert_failures = array();
+        $insert_failures_total = 0;
+        $safe_insert = function($table, $data, $clamps = array()) use ($wpdb, &$insert_failures, &$insert_failures_total) {
+            foreach ($clamps as $field => $max_chars) {
+                if (isset($data[$field]) && is_string($data[$field]) && mb_strlen($data[$field]) > $max_chars) {
+                    $data[$field] = mb_substr($data[$field], 0, $max_chars);
+                }
+            }
+
+            if (false !== $wpdb->insert($table, $data)) {
+                return true;
+            }
+
+            $retry = $data;
+            foreach ($retry as $field => $value) {
+                if (is_string($value)) {
+                    $retry[$field] = wp_check_invalid_utf8($value, true);
+                }
+            }
+            if (false !== $wpdb->insert($table, $retry)) {
+                return true;
+            }
+
+            $insert_failures_total++;
+            if (count($insert_failures) < 50) {
+                $insert_failures[] = array(
+                    'table' => (string) $table,
+                    'error' => (string) $wpdb->last_error,
+                    'row'   => array(
+                        'source_award_id' => isset($data['source_award_id']) ? intval($data['source_award_id']) : 0,
+                        'ceremony'        => isset($data['ceremony']) ? intval($data['ceremony']) : 0,
+                        'entity_id'       => isset($data['entity_id']) ? (string) $data['entity_id'] : '',
+                        'category_slug'   => isset($data['category_slug']) ? (string) $data['category_slug'] : '',
+                    ),
+                );
+            }
+            return false;
+        };
+
         foreach ($ceremonies as $ceremony_row) {
-            $wpdb->insert($ceremonies_table, $ceremony_row);
+            $safe_insert($ceremonies_table, $ceremony_row, array('year_label' => 20, 'ceremony_label' => 32));
         }
 
         foreach ($categories as $category_row) {
-            $wpdb->insert($categories_table, $category_row);
+            $safe_insert($categories_table, $category_row, array('category_slug' => 191, 'canonical_category' => 255, 'display_category' => 255, 'award_class' => 50));
         }
 
         foreach ($entities as $entity_row) {
-            $wpdb->insert($entities_table, $entity_row);
+            $safe_insert($entities_table, $entity_row, array('entity_id' => 64, 'entity_type' => 20, 'label' => 500, 'sort_label' => 500));
         }
 
         foreach ($facts as $fact_row) {
-            $wpdb->insert($facts_table, $fact_row);
+            $safe_insert($facts_table, $fact_row, array('year_label' => 20, 'category_slug' => 191, 'film_entity_id' => 64, 'primary_entity_id' => 64, 'primary_label' => 500));
         }
 
         foreach ($nominees as $nominee_row) {
-            $wpdb->insert($nominees_table, $nominee_row);
+            $safe_insert($nominees_table, $nominee_row, array('category_slug' => 191, 'entity_id' => 64, 'entity_type' => 20, 'entity_label' => 500));
         }
 
         foreach ($category_stats as $category_slug => $stat_row) {
-            $wpdb->insert($category_stats_table, array(
+            $safe_insert($category_stats_table, array(
                 'category_slug' => $category_slug,
                 'canonical_category' => $stat_row['canonical_category'],
                 'nominations' => intval($stat_row['nominations']),
@@ -1306,11 +1402,11 @@ class Academy_Awards_Table {
                 'ceremonies' => count($stat_row['ceremonies_map']),
                 'first_ceremony' => intval($stat_row['first_ceremony']),
                 'last_ceremony' => intval($stat_row['last_ceremony']),
-            ));
+            ), array('category_slug' => 191, 'canonical_category' => 255));
         }
 
         foreach ($entity_stats as $entity_id => $stat_row) {
-            $wpdb->insert($entity_stats_table, array(
+            $safe_insert($entity_stats_table, array(
                 'entity_id' => $entity_id,
                 'entity_type' => $stat_row['entity_type'],
                 'label' => $stat_row['label'],
@@ -1319,7 +1415,7 @@ class Academy_Awards_Table {
                 'ceremonies' => count($stat_row['ceremonies_map']),
                 'first_ceremony' => intval($stat_row['first_ceremony']),
                 'last_ceremony' => intval($stat_row['last_ceremony']),
-            ));
+            ), array('entity_id' => 64, 'entity_type' => 20, 'label' => 500));
         }
 
         foreach ($ceremony_stats as $ceremony_key => $stat_row) {
@@ -1347,7 +1443,7 @@ class Academy_Awards_Table {
                 }
             }
 
-            $wpdb->insert($ceremony_stats_table, array(
+            $safe_insert($ceremony_stats_table, array(
                 'ceremony' => intval($ceremony_key),
                 'year_label' => $stat_row['year_label'],
                 'nominations' => intval($stat_row['nominations']),
@@ -1359,7 +1455,19 @@ class Academy_Awards_Table {
                 'top_title_label' => $top_title_label,
                 'top_title_mentions' => $top_title_mentions,
                 'top_title_wins' => $top_title_wins,
-            ));
+            ), array('year_label' => 20, 'top_title_entity_id' => 64, 'top_title_label' => 500));
+        }
+
+        // Persist the failure log for the Data Integrity audit; a clean run
+        // clears it so stale errors never linger.
+        if ($insert_failures_total > 0) {
+            update_option('aat_reporting_insert_failures', array(
+                'total' => $insert_failures_total,
+                'failures' => $insert_failures,
+                'generated_at' => current_time('mysql'),
+            ), false);
+        } else {
+            delete_option('aat_reporting_insert_failures');
         }
 
         return array(
@@ -1371,6 +1479,7 @@ class Academy_Awards_Table {
             'ceremony_stats' => count($ceremony_stats),
             'category_stats' => count($category_stats),
             'entity_stats' => count($entity_stats),
+            'insert_failures' => $insert_failures_total,
         );
     }
 
