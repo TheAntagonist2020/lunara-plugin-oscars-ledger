@@ -731,6 +731,25 @@ final class AAT_Entity_Graph_Builder {
         );
         $report['lost_winner_rows'] = (array) $lost;
 
+        // Full derivation census — EVERY master row must have a facts row,
+        // winner or not. The winner-only check above hides non-winner losses.
+        $report['lost_rows_any_total'] = (int) $wpdb->get_var(
+            "SELECT COUNT(*) FROM $master m
+             LEFT JOIN $facts f ON f.source_award_id = m.id
+             WHERE f.id IS NULL"
+        );
+        $report['lost_rows_any'] = (array) $wpdb->get_results(
+            "SELECT m.id, m.ceremony, m.canonical_category, m.film, m.winner FROM $master m
+             LEFT JOIN $facts f ON f.source_award_id = m.id
+             WHERE f.id IS NULL
+             ORDER BY m.ceremony ASC LIMIT 20",
+            ARRAY_A
+        );
+
+        // Guarded-insert failure log from the last rebuild (2.7.73+): names
+        // the exact table, row, and SQL error for anything that failed twice.
+        $report['insert_failures'] = get_option('aat_reporting_insert_failures', array());
+
         $zero = $wpdb->get_results(
             "SELECT ceremony, category_slug, COUNT(*) AS nominees FROM $facts
              GROUP BY ceremony, category_slug HAVING SUM(winner = 1) = 0
@@ -1229,6 +1248,19 @@ final class AAT_Entity_Graph_Builder {
                             lines.push('');
                             lines.push('Winner rows LOST IN DERIVATION (master flagged, no facts row):');
                             r.lost_winner_rows.forEach(function (l) { lines.push('  #' + l.id + ' cer ' + l.ceremony + ' — ' + (l.canonical_category || '(blank category)') + ' — ' + (l.film || '')); });
+                        }
+                        lines.push('');
+                        lines.push('Derivation census: ' + (r.lost_rows_any_total || 0) + ' master row(s) with no facts row (any winner state)' + ((r.lost_rows_any_total || 0) === 0 ? '   ✓ complete' : '   ✗ INCOMPLETE'));
+                        if (r.lost_rows_any && r.lost_rows_any.length) {
+                            r.lost_rows_any.forEach(function (l) { lines.push('  #' + l.id + ' cer ' + l.ceremony + (parseInt(l.winner, 10) ? ' [WINNER]' : '') + ' — ' + (l.canonical_category || '(blank category)') + ' — ' + (l.film || '')); });
+                        }
+                        if (r.insert_failures && r.insert_failures.total) {
+                            lines.push('');
+                            lines.push('Guarded-insert FAILURES on last rebuild: ' + r.insert_failures.total + ' (at ' + (r.insert_failures.generated_at || '?') + ')');
+                            (r.insert_failures.failures || []).forEach(function (f) {
+                                var row = f.row || {};
+                                lines.push('  ' + f.table + ' — src #' + (row.source_award_id || 0) + ' cer ' + (row.ceremony || 0) + (row.entity_id ? ' entity ' + row.entity_id : '') + ' — ' + (f.error || 'unknown SQL error'));
+                            });
                         }
                         lines.push('');
                         lines.push('Categories with zero winners (facts): ' + r.zero_winner_total);
