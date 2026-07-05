@@ -720,6 +720,15 @@ final class AAT_Entity_Graph_Builder {
         $report['ceremony_drift'] = array_slice((array) $drift, 0, 40);
         $report['ceremony_drift_total'] = count((array) $drift);
 
+        $lost = $wpdb->get_results(
+            "SELECT m.id, m.ceremony, m.canonical_category, m.film FROM $master m
+             LEFT JOIN $facts f ON f.source_award_id = m.id
+             WHERE m.winner = 1 AND f.id IS NULL
+             ORDER BY m.ceremony ASC LIMIT 20",
+            ARRAY_A
+        );
+        $report['lost_winner_rows'] = (array) $lost;
+
         $zero = $wpdb->get_results(
             "SELECT ceremony, category_slug, COUNT(*) AS nominees FROM $facts
              GROUP BY ceremony, category_slug HAVING SUM(winner = 1) = 0
@@ -820,40 +829,78 @@ final class AAT_Entity_Graph_Builder {
                 return new WP_Error('bad_csv', 'Bundled dataset is missing the ' . $col . ' column.');
             }
         }
+        $csv_rows = 0;
         while (false !== ($row = fgetcsv($handle, 0, "\t"))) {
             if (!isset($row[$idx['Winner']]) || 'True' !== trim((string) $row[$idx['Winner']])) {
                 continue;
             }
-            $key = intval($row[$idx['Ceremony']]) . '|' . strtoupper(trim((string) $row[$idx['CanonicalCategory']])) . '|' .
-                   strtolower(trim((string) $row[$idx['FilmId']])) . '|' . strtolower(trim((string) $row[$idx['NomineeIds']]));
+            $csv_rows++;
+            $key = self::backfill_key(
+                $row[$idx['Ceremony']],
+                $row[$idx['CanonicalCategory']],
+                (string) $row[$idx['FilmId']] . ' ' . (string) $row[$idx['NomineeIds']]
+            );
             $winner_keys[$key] = true;
         }
         fclose($handle);
 
         $master = $wpdb->prefix . 'academy_awards';
         $rows = $wpdb->get_results(
-            "SELECT id, ceremony, canonical_category, film_id, nominee_ids FROM $master WHERE winner != 1 OR winner IS NULL",
+            "SELECT id, ceremony, canonical_category, category, film_id, nominee_ids FROM $master WHERE winner != 1 OR winner IS NULL",
             ARRAY_A
         );
         $ids = array();
         $per_ceremony = array();
+        $sample_unmatched = array();
         foreach ((array) $rows as $row) {
-            $key = intval($row['ceremony']) . '|' . strtoupper(trim((string) $row['canonical_category'])) . '|' .
-                   strtolower(trim((string) $row['film_id'])) . '|' . strtolower(trim((string) $row['nominee_ids']));
-            if (isset($winner_keys[$key])) {
+            // Try canonical first, then the raw category — masters imported by
+            // different tools disagree about which column holds which variant.
+            $matched = false;
+            foreach (array($row['canonical_category'], $row['category']) as $cat) {
+                $key = self::backfill_key($row['ceremony'], $cat, (string) $row['film_id'] . ' ' . (string) $row['nominee_ids']);
+                if (isset($winner_keys[$key])) {
+                    $matched = true;
+                    break;
+                }
+            }
+            if ($matched) {
                 $ids[] = (int) $row['id'];
                 $cer = (int) $row['ceremony'];
                 $per_ceremony[$cer] = isset($per_ceremony[$cer]) ? $per_ceremony[$cer] + 1 : 1;
+            } elseif (count($sample_unmatched) < 3) {
+                $sample_unmatched[] = self::backfill_key($row['ceremony'], $row['canonical_category'], (string) $row['film_id'] . ' ' . (string) $row['nominee_ids']);
             }
         }
         ksort($per_ceremony);
 
+        $sample_csv = array_slice(array_keys($winner_keys), 0, 3);
+
         return array(
-            'csv_winner_rows' => count($winner_keys),
-            'candidates'      => count($ids),
-            'ids'             => $ids,
-            'per_ceremony'    => $per_ceremony,
+            'csv_winner_rows'       => $csv_rows,
+            'csv_winner_keys'       => count($winner_keys),
+            'candidates'            => count($ids),
+            'ids'                   => $ids,
+            'per_ceremony'          => $per_ceremony,
+            'sample_csv_keys'       => $sample_csv,
+            'sample_unflagged_keys' => $sample_unmatched,
         );
+    }
+
+    /**
+     * Format-immune matching key: ceremony number, category reduced to bare
+     * alphanumerics (so "WRITING (Adapted Screenplay)", "Best Adapted
+     * Screenplay", and "writing-adapted-screenplay" variants collide only
+     * when they truly are the same words), and the SORTED SET of every
+     * tt/nm token found across film and nominee id fields — immune to
+     * pipe/comma/order/column-assignment differences between the bundled
+     * dataset and however the master was originally loaded.
+     */
+    private static function backfill_key($ceremony, $category, $id_blob) {
+        $cat = strtoupper((string) preg_replace('/[^A-Za-z0-9]+/', '', (string) $category));
+        preg_match_all('/(?:tt|nm)\d{5,10}/i', strtolower((string) $id_blob), $m);
+        $tokens = array_unique($m[0]);
+        sort($tokens);
+        return intval($ceremony) . '|' . $cat . '|' . implode(',', $tokens);
     }
 
     public static function ajax_backfill_preview() {
@@ -1026,6 +1073,11 @@ final class AAT_Entity_Graph_Builder {
                             'Ceremonies with win-count drift: ' + r.ceremony_drift_total
                         ];
                         r.ceremony_drift.forEach(function (d) { lines.push('  ceremony ' + d.ceremony + ': master ' + d.master_wins + ' vs facts ' + d.facts_wins); });
+                        if (r.lost_winner_rows && r.lost_winner_rows.length) {
+                            lines.push('');
+                            lines.push('Winner rows LOST IN DERIVATION (master flagged, no facts row):');
+                            r.lost_winner_rows.forEach(function (l) { lines.push('  #' + l.id + ' cer ' + l.ceremony + ' — ' + (l.canonical_category || '(blank category)') + ' — ' + (l.film || '')); });
+                        }
                         lines.push('');
                         lines.push('Categories with zero winners (facts): ' + r.zero_winner_total);
                         r.zero_winner_groups.forEach(function (z) { lines.push('  cer ' + z.ceremony + ' — ' + z.category_slug + ' (' + z.nominees + ' nominees)'); });
@@ -1044,9 +1096,15 @@ final class AAT_Entity_Graph_Builder {
                     post('aat_entity_graph_backfill_preview').then(function (res) {
                         if (!res.success) { document.getElementById('aat-eg-backfill').textContent = 'Error: ' + (res.data && res.data.message); return; }
                         var r = res.data;
-                        var lines = ['Bundled dataset winner rows: ' + r.csv_winner_rows,
+                        var lines = ['Bundled dataset winner rows: ' + r.csv_winner_rows + ' (' + r.csv_winner_keys + ' unique nominations)',
                                      'Master rows missing their flag: ' + r.candidates, ''];
                         Object.keys(r.per_ceremony).forEach(function (c) { lines.push('  ceremony ' + c + ': +' + r.per_ceremony[c]); });
+                        if (r.candidates === 0 && r.sample_unflagged_keys && r.sample_unflagged_keys.length) {
+                            lines.push('');
+                            lines.push('DIAGNOSTIC — zero matches. Sample keys:');
+                            lines.push('  bundled: ' + (r.sample_csv_keys || []).join('  '));
+                            lines.push('  master:  ' + r.sample_unflagged_keys.join('  '));
+                        }
                         document.getElementById('aat-eg-backfill').textContent = lines.join('\n');
                     });
                 });
