@@ -47,6 +47,8 @@ final class AAT_Entity_Graph_Builder {
         add_action('wp_ajax_aat_entity_graph_teardown', array(__CLASS__, 'ajax_teardown'));
         add_action('wp_ajax_aat_entity_graph_integrity', array(__CLASS__, 'ajax_integrity'));
         add_action('wp_ajax_aat_entity_graph_resync', array(__CLASS__, 'ajax_resync'));
+        add_action('wp_ajax_aat_entity_graph_backfill_preview', array(__CLASS__, 'ajax_backfill_preview'));
+        add_action('wp_ajax_aat_entity_graph_backfill_apply', array(__CLASS__, 'ajax_backfill_apply'));
         add_action(self::CRON_HOOK, array(__CLASS__, 'cron_step'));
 
         // Living-graph plumbing: any data import re-syncs the graph
@@ -788,6 +790,100 @@ final class AAT_Entity_Graph_Builder {
     }
 
     /* ---------------------------------------------------------------------
+     * Winner Flag Backfill — restore flags from the bundled dataset
+     * ------------------------------------------------------------------ */
+
+    /**
+     * The bundled data/oscars.csv is winner-complete (every ceremony-category
+     * carries its winner; 3,515 flags), while the live master lost roughly
+     * 688 flags during its original import. This computes the exact set of
+     * master rows the bundled dataset marks as winners but the master does
+     * not — matched strictly on (ceremony, canonical_category, film_id,
+     * nominee_ids) so mojibake in display names can never cause a mismatch.
+     * SET-ONLY by design: rows Dalton has already flagged are never touched,
+     * and nothing is ever unset.
+     */
+    private static function backfill_candidates() {
+        global $wpdb;
+        $csv_path = trailingslashit(AAT_PLUGIN_DIR) . 'data/oscars.csv';
+        if (!is_readable($csv_path)) {
+            return new WP_Error('no_csv', 'Bundled dataset data/oscars.csv not found.');
+        }
+
+        $winner_keys = array();
+        $handle = fopen($csv_path, 'r');
+        $header = fgetcsv($handle, 0, "\t");
+        $idx = array_flip(array_map('trim', (array) $header));
+        foreach (array('Ceremony', 'CanonicalCategory', 'FilmId', 'NomineeIds', 'Winner') as $col) {
+            if (!isset($idx[$col])) {
+                fclose($handle);
+                return new WP_Error('bad_csv', 'Bundled dataset is missing the ' . $col . ' column.');
+            }
+        }
+        while (false !== ($row = fgetcsv($handle, 0, "\t"))) {
+            if (!isset($row[$idx['Winner']]) || 'True' !== trim((string) $row[$idx['Winner']])) {
+                continue;
+            }
+            $key = intval($row[$idx['Ceremony']]) . '|' . strtoupper(trim((string) $row[$idx['CanonicalCategory']])) . '|' .
+                   strtolower(trim((string) $row[$idx['FilmId']])) . '|' . strtolower(trim((string) $row[$idx['NomineeIds']]));
+            $winner_keys[$key] = true;
+        }
+        fclose($handle);
+
+        $master = $wpdb->prefix . 'academy_awards';
+        $rows = $wpdb->get_results(
+            "SELECT id, ceremony, canonical_category, film_id, nominee_ids FROM $master WHERE winner != 1 OR winner IS NULL",
+            ARRAY_A
+        );
+        $ids = array();
+        $per_ceremony = array();
+        foreach ((array) $rows as $row) {
+            $key = intval($row['ceremony']) . '|' . strtoupper(trim((string) $row['canonical_category'])) . '|' .
+                   strtolower(trim((string) $row['film_id'])) . '|' . strtolower(trim((string) $row['nominee_ids']));
+            if (isset($winner_keys[$key])) {
+                $ids[] = (int) $row['id'];
+                $cer = (int) $row['ceremony'];
+                $per_ceremony[$cer] = isset($per_ceremony[$cer]) ? $per_ceremony[$cer] + 1 : 1;
+            }
+        }
+        ksort($per_ceremony);
+
+        return array(
+            'csv_winner_rows' => count($winner_keys),
+            'candidates'      => count($ids),
+            'ids'             => $ids,
+            'per_ceremony'    => $per_ceremony,
+        );
+    }
+
+    public static function ajax_backfill_preview() {
+        self::guard();
+        $result = self::backfill_candidates();
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+        unset($result['ids']);
+        wp_send_json_success($result);
+    }
+
+    public static function ajax_backfill_apply() {
+        self::guard();
+        global $wpdb;
+        $result = self::backfill_candidates();
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+        $applied = 0;
+        foreach (array_chunk($result['ids'], 500) as $chunk) {
+            $in = implode(',', array_map('intval', $chunk));
+            $applied += (int) $wpdb->query("UPDATE {$wpdb->prefix}academy_awards SET winner = 1 WHERE id IN ($in)");
+        }
+        // Master changed — heal the whole chain immediately.
+        $state = self::resync_from_master();
+        wp_send_json_success(array('applied' => $applied, 'state' => $state));
+    }
+
+    /* ---------------------------------------------------------------------
      * Admin page
      * ------------------------------------------------------------------ */
 
@@ -857,6 +953,14 @@ final class AAT_Entity_Graph_Builder {
                 <button class="button button-primary" id="aat-eg-resync"><?php esc_html_e('Heal From Master + Re-sync Graph', 'academy-awards-table'); ?></button>
             </p>
             <div id="aat-eg-integrity" style="max-width:760px;padding:14px 16px;border:1px solid #c3c4c7;background:#fff;font-family:monospace;white-space:pre-line"><?php esc_html_e('Audit not run yet.', 'academy-awards-table'); ?></div>
+
+            <h2 style="margin-top:28px"><?php esc_html_e('Winner Flag Backfill', 'academy-awards-table'); ?></h2>
+            <p><?php esc_html_e('The bundled data/oscars.csv is winner-complete (every ceremony-category has its winner flagged). This restores flags the master table lost during its original import — matched strictly on ceremony + category + film ID + nominee IDs. It only ever SETS winner = 1: rows you have flagged are never touched, and nothing is ever unset. Applying auto-heals the reporting tables and the graph.', 'academy-awards-table'); ?></p>
+            <p>
+                <button class="button" id="aat-eg-backfill-preview"><?php esc_html_e('Preview Backfill', 'academy-awards-table'); ?></button>
+                <button class="button button-primary" id="aat-eg-backfill-apply"><?php esc_html_e('Apply Backfill + Heal Everything', 'academy-awards-table'); ?></button>
+            </p>
+            <div id="aat-eg-backfill" style="max-width:760px;padding:14px 16px;border:1px solid #c3c4c7;background:#fff;font-family:monospace;white-space:pre-line"><?php esc_html_e('Preview not run yet.', 'academy-awards-table'); ?></div>
 
             <script>
             (function () {
@@ -933,6 +1037,26 @@ final class AAT_Entity_Graph_Builder {
                     document.getElementById('aat-eg-integrity').textContent = 'Healing from master…';
                     post('aat_entity_graph_resync').then(function (res) {
                         if (res.success) { render(res.data); loop(); document.getElementById('aat-eg-integrity').textContent = 'Reporting tables rebuilt from master. Graph re-sync running above.'; }
+                    });
+                });
+                document.getElementById('aat-eg-backfill-preview').addEventListener('click', function () {
+                    document.getElementById('aat-eg-backfill').textContent = 'Computing…';
+                    post('aat_entity_graph_backfill_preview').then(function (res) {
+                        if (!res.success) { document.getElementById('aat-eg-backfill').textContent = 'Error: ' + (res.data && res.data.message); return; }
+                        var r = res.data;
+                        var lines = ['Bundled dataset winner rows: ' + r.csv_winner_rows,
+                                     'Master rows missing their flag: ' + r.candidates, ''];
+                        Object.keys(r.per_ceremony).forEach(function (c) { lines.push('  ceremony ' + c + ': +' + r.per_ceremony[c]); });
+                        document.getElementById('aat-eg-backfill').textContent = lines.join('\n');
+                    });
+                });
+                document.getElementById('aat-eg-backfill-apply').addEventListener('click', function () {
+                    if (!window.confirm('Set winner = 1 on every master row the bundled dataset marks as a winner (never unsets anything), then heal the reporting tables and re-sync the graph?')) { return; }
+                    document.getElementById('aat-eg-backfill').textContent = 'Applying + healing…';
+                    post('aat_entity_graph_backfill_apply').then(function (res) {
+                        if (!res.success) { document.getElementById('aat-eg-backfill').textContent = 'Error: ' + (res.data && res.data.message); return; }
+                        document.getElementById('aat-eg-backfill').textContent = 'Applied ' + res.data.applied + ' winner flags. Full heal + graph re-sync running above.';
+                        render(res.data.state); loop();
                     });
                 });
                 document.getElementById('aat-eg-teardown').addEventListener('click', function () {
