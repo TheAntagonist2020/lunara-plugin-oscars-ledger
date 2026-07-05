@@ -286,9 +286,11 @@ final class AAT_Entity_Graph_Builder {
                 ARRAY_A
             );
             foreach ((array) $year_rows as $yr) {
-                // Ceremony year honors the FILM year (ceremony honors the prior
-                // year's films), so subtract one for release year.
-                $years[$yr['k']] = max(1888, ((int) $yr['y']) - 1);
+                // sort_year is extracted from the Academy's own year_label,
+                // which names the HONORED FILM YEAR (e.g. "2025" for the 98th
+                // ceremony) — so it IS the release year. No arithmetic. (The
+                // first pass subtracted one and shipped 2024 for Hamnet.)
+                $years[$yr['k']] = max(1888, (int) $yr['y']);
             }
         }
 
@@ -473,13 +475,21 @@ final class AAT_Entity_Graph_Builder {
             self::set_field('field_lunara_ledger_won', 'won', (int) $row['winner'] ? 1 : 0, $post_id);
 
             // Relationship wiring: directing → movie.directors, acting →
-            // movie.principal_cast. String-classified against the canonical
-            // category name; everything else stays a pure ledger link.
+            // movie.principal_cast. Classified by the source's own AMPAS
+            // award_class taxonomy (ACTING / DIRECTING / TITLE / ...), with a
+            // strict word-boundary fallback for rows missing a class. The
+            // first pass substring-matched 'direct', which swept ART DIRECTION
+            // nominees into the director slot (Fiona Crombie on Hamnet).
             if ($movie_post && $person_post) {
-                $canonical = strtolower((string) ($cat['canonical_category'] ?? $cat_name));
-                if (false !== strpos($canonical, 'direct')) {
+                $class     = strtoupper(trim((string) ($cat['award_class'] ?? '')));
+                $canonical = strtoupper(trim((string) ($cat['canonical_category'] ?? $cat_name)));
+                $is_directing = ('DIRECTING' === $class)
+                    || ('' === $class && preg_match('/^(BEST\s+)?DIRECT(OR|ING)\b/', $canonical));
+                $is_acting = ('ACTING' === $class)
+                    || ('' === $class && preg_match('/^(BEST\s+)?(SUPPORTING\s+)?(ACTOR|ACTRESS)\b/', $canonical));
+                if ($is_directing) {
                     self::append_relationship($movie_post, 'field_lunara_movie_directors', 'directors', $person_post);
-                } elseif (0 === strpos($canonical, 'act')) {
+                } elseif ($is_acting) {
                     self::append_relationship($movie_post, 'field_lunara_movie_principal_cast', 'principal_cast', $person_post);
                 }
             }
@@ -552,6 +562,18 @@ final class AAT_Entity_Graph_Builder {
     public static function ajax_start() {
         self::guard();
         global $wpdb;
+
+        // Relationships derive purely from the award record at this phase, so
+        // every fresh run rebuilds them from zero — this is what purges
+        // misclassifications from earlier builder versions (append-only
+        // wiring cannot remove a wrong director on re-run).
+        $wpdb->query(
+            "DELETE pm FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id AND p.post_type = 'movie'
+             INNER JOIN {$wpdb->postmeta} tag ON tag.post_id = p.ID AND tag.meta_key = '_lunara_entity_id'
+             WHERE pm.meta_key IN ('directors', 'principal_cast')"
+        );
+
         $state = self::default_state();
         $state['running']       = true;
         $state['stage']         = 'movies';
