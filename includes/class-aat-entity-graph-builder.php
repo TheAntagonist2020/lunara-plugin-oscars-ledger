@@ -33,6 +33,7 @@ final class AAT_Entity_Graph_Builder {
     const STATE_OPTION = 'aat_entity_graph_state';
     const LOCK_KEY     = 'aat_entity_graph_lock';
     const CRON_HOOK    = 'aat_entity_graph_cron';
+    const HEARTBEAT_HOOK = 'aat_entity_graph_heartbeat';
 
     const BATCH_ENTITIES = 200;
     const BATCH_LEDGER   = 150;
@@ -44,7 +45,18 @@ final class AAT_Entity_Graph_Builder {
         add_action('wp_ajax_aat_entity_graph_step', array(__CLASS__, 'ajax_step'));
         add_action('wp_ajax_aat_entity_graph_stop', array(__CLASS__, 'ajax_stop'));
         add_action('wp_ajax_aat_entity_graph_teardown', array(__CLASS__, 'ajax_teardown'));
+        add_action('wp_ajax_aat_entity_graph_integrity', array(__CLASS__, 'ajax_integrity'));
+        add_action('wp_ajax_aat_entity_graph_resync', array(__CLASS__, 'ajax_resync'));
         add_action(self::CRON_HOOK, array(__CLASS__, 'cron_step'));
+
+        // Living-graph plumbing: any data import re-syncs the graph
+        // automatically, and a daily heartbeat catches direct master-table
+        // edits (phpMyAdmin) by comparing win counts across layers.
+        add_action('aat_after_data_import', array(__CLASS__, 'auto_resync'), 20);
+        add_action(self::HEARTBEAT_HOOK, array(__CLASS__, 'heartbeat'));
+        if (!wp_next_scheduled(self::HEARTBEAT_HOOK)) {
+            wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', self::HEARTBEAT_HOOK);
+        }
     }
 
     /* ---------------------------------------------------------------------
@@ -561,6 +573,14 @@ final class AAT_Entity_Graph_Builder {
 
     public static function ajax_start() {
         self::guard();
+        wp_send_json_success(self::start_run(isset($_POST['test_ceremony']) ? absint($_POST['test_ceremony']) : 0));
+    }
+
+    /**
+     * Begin (or restart) a graph build programmatically. Used by the admin
+     * page, the post-import auto-resync, and the drift heartbeat.
+     */
+    public static function start_run($test_ceremony = 0) {
         global $wpdb;
 
         // Relationships derive purely from the award record at this phase, so
@@ -577,7 +597,7 @@ final class AAT_Entity_Graph_Builder {
         $state = self::default_state();
         $state['running']       = true;
         $state['stage']         = 'movies';
-        $state['test_ceremony'] = isset($_POST['test_ceremony']) ? absint($_POST['test_ceremony']) : 0;
+        $state['test_ceremony'] = (int) $test_ceremony;
         $state['started_at']    = time();
 
         $entities = self::table('entities');
@@ -600,7 +620,7 @@ final class AAT_Entity_Graph_Builder {
         }
 
         self::save_state($state);
-        wp_send_json_success(self::run_step());
+        return self::run_step();
     }
 
     public static function ajax_step() {
@@ -645,6 +665,126 @@ final class AAT_Entity_Graph_Builder {
             delete_option(self::STATE_OPTION);
         }
         wp_send_json_success(array('deleted' => count($ids), 'remaining' => $remaining));
+    }
+
+    /* ---------------------------------------------------------------------
+     * Data integrity: master table vs derived tables vs graph
+     * ------------------------------------------------------------------ */
+
+    /**
+     * Layer-by-layer truth audit. The master wp_academy_awards table is the
+     * layer Dalton maintains directly and trusts; every count downstream
+     * must reconcile against it.
+     */
+    public static function integrity_report() {
+        global $wpdb;
+        $master = $wpdb->prefix . 'academy_awards';
+        $facts  = self::table('award_facts');
+
+        $report = array(
+            'master' => array(
+                'rows'    => (int) $wpdb->get_var("SELECT COUNT(*) FROM $master"),
+                'winners' => (int) $wpdb->get_var("SELECT COUNT(*) FROM $master WHERE winner = 1"),
+            ),
+            'facts' => array(
+                'rows'    => (int) $wpdb->get_var("SELECT COUNT(*) FROM $facts"),
+                'winners' => (int) $wpdb->get_var("SELECT COUNT(*) FROM $facts WHERE winner = 1"),
+            ),
+            'graph' => array(
+                'ledger'         => (int) $wpdb->get_var(
+                    "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_aat_source_award_id'
+                     WHERE p.post_type = 'ledger_entry' AND p.post_status != 'trash'"
+                ),
+                'ledger_winners' => (int) $wpdb->get_var(
+                    "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+                     INNER JOIN {$wpdb->postmeta} src ON src.post_id = p.ID AND src.meta_key = '_aat_source_award_id'
+                     INNER JOIN {$wpdb->postmeta} won ON won.post_id = p.ID AND won.meta_key = 'won' AND won.meta_value = '1'
+                     WHERE p.post_type = 'ledger_entry' AND p.post_status != 'trash'"
+                ),
+            ),
+            'ceremony_drift'      => array(),
+            'zero_winner_groups'  => array(),
+            'generated_at'        => current_time('mysql'),
+        );
+
+        $drift = $wpdb->get_results(
+            "SELECT m.ceremony, m.wins AS master_wins, COALESCE(f.wins, 0) AS facts_wins
+             FROM (SELECT ceremony, SUM(winner = 1) AS wins FROM $master GROUP BY ceremony) m
+             LEFT JOIN (SELECT ceremony, SUM(winner = 1) AS wins FROM $facts GROUP BY ceremony) f ON f.ceremony = m.ceremony
+             HAVING master_wins != facts_wins
+             ORDER BY m.ceremony ASC",
+            ARRAY_A
+        );
+        $report['ceremony_drift'] = array_slice((array) $drift, 0, 40);
+        $report['ceremony_drift_total'] = count((array) $drift);
+
+        $zero = $wpdb->get_results(
+            "SELECT ceremony, category_slug, COUNT(*) AS nominees FROM $facts
+             GROUP BY ceremony, category_slug HAVING SUM(winner = 1) = 0
+             ORDER BY ceremony ASC, category_slug ASC",
+            ARRAY_A
+        );
+        $report['zero_winner_groups'] = array_slice((array) $zero, 0, 40);
+        $report['zero_winner_total']  = count((array) $zero);
+
+        return $report;
+    }
+
+    public static function ajax_integrity() {
+        self::guard();
+        wp_send_json_success(self::integrity_report());
+    }
+
+    /**
+     * Heal the whole chain from the master table: re-derive the reporting
+     * tables, then rebuild the graph in the background.
+     */
+    public static function resync_from_master() {
+        if (class_exists('Academy_Awards_Table')) {
+            $plugin = Academy_Awards_Table::get_instance();
+            if (method_exists($plugin, 'lunara_rebuild_reporting_tables')) {
+                $plugin->lunara_rebuild_reporting_tables();
+            }
+        }
+        return self::start_run(0);
+    }
+
+    public static function ajax_resync() {
+        self::guard();
+        wp_send_json_success(self::resync_from_master());
+    }
+
+    /** Fired after any plugin data import completes. */
+    public static function auto_resync() {
+        if (!self::models_ready()) {
+            return;
+        }
+        // Imports already rebuilt the reporting tables; just re-sync the graph.
+        self::start_run(0);
+    }
+
+    /**
+     * Daily drift check: catches direct master-table edits (phpMyAdmin) that
+     * never fire an import hook. Any winner/row drift between master and
+     * facts triggers a full heal.
+     */
+    public static function heartbeat() {
+        if (!self::models_ready()) {
+            return;
+        }
+        global $wpdb;
+        $master = $wpdb->prefix . 'academy_awards';
+        $facts  = self::table('award_facts');
+        $m_rows = (int) $wpdb->get_var("SELECT COUNT(*) FROM $master");
+        $m_wins = (int) $wpdb->get_var("SELECT COUNT(*) FROM $master WHERE winner = 1");
+        $f_rows = (int) $wpdb->get_var("SELECT COUNT(*) FROM $facts");
+        $f_wins = (int) $wpdb->get_var("SELECT COUNT(*) FROM $facts WHERE winner = 1");
+        if ($m_rows !== $f_rows || $m_wins !== $f_wins) {
+            $state = self::get_state();
+            if (!$state['running']) {
+                self::resync_from_master();
+            }
+        }
     }
 
     /* ---------------------------------------------------------------------
@@ -710,6 +850,14 @@ final class AAT_Entity_Graph_Builder {
                 <div id="aat-eg-progress" style="margin-top:8px;font-family:monospace;white-space:pre-line"></div>
             </div>
 
+            <h2 style="margin-top:28px"><?php esc_html_e('Data Integrity', 'academy-awards-table'); ?></h2>
+            <p><?php esc_html_e('The master wp_academy_awards table (the one you maintain) is ground truth. This audit reconciles every downstream layer against it; Heal re-derives the reporting tables from the master and re-syncs the graph. Imports auto-resync, and a daily heartbeat catches direct database edits.', 'academy-awards-table'); ?></p>
+            <p>
+                <button class="button" id="aat-eg-audit"><?php esc_html_e('Run Integrity Audit', 'academy-awards-table'); ?></button>
+                <button class="button button-primary" id="aat-eg-resync"><?php esc_html_e('Heal From Master + Re-sync Graph', 'academy-awards-table'); ?></button>
+            </p>
+            <div id="aat-eg-integrity" style="max-width:760px;padding:14px 16px;border:1px solid #c3c4c7;background:#fff;font-family:monospace;white-space:pre-line"><?php esc_html_e('Audit not run yet.', 'academy-awards-table'); ?></div>
+
             <script>
             (function () {
                 var nonce = <?php echo wp_json_encode($nonce); ?>;
@@ -760,6 +908,32 @@ final class AAT_Entity_Graph_Builder {
                 });
                 document.getElementById('aat-eg-stop').addEventListener('click', function () {
                     post('aat_entity_graph_stop').then(function (res) { if (res.success) { render(res.data); } });
+                });
+                document.getElementById('aat-eg-audit').addEventListener('click', function () {
+                    document.getElementById('aat-eg-integrity').textContent = 'Auditing…';
+                    post('aat_entity_graph_integrity').then(function (res) {
+                        if (!res.success) { return; }
+                        var r = res.data;
+                        var lines = [
+                            'MASTER  rows ' + r.master.rows + '   winners ' + r.master.winners,
+                            'FACTS   rows ' + r.facts.rows + '   winners ' + r.facts.winners + (r.facts.winners === r.master.winners && r.facts.rows === r.master.rows ? '   ✓ in sync' : '   ✗ DRIFT'),
+                            'GRAPH   ledger ' + r.graph.ledger + '   winners ' + r.graph.ledger_winners,
+                            '',
+                            'Ceremonies with win-count drift: ' + r.ceremony_drift_total
+                        ];
+                        r.ceremony_drift.forEach(function (d) { lines.push('  ceremony ' + d.ceremony + ': master ' + d.master_wins + ' vs facts ' + d.facts_wins); });
+                        lines.push('');
+                        lines.push('Categories with zero winners (facts): ' + r.zero_winner_total);
+                        r.zero_winner_groups.forEach(function (z) { lines.push('  cer ' + z.ceremony + ' — ' + z.category_slug + ' (' + z.nominees + ' nominees)'); });
+                        document.getElementById('aat-eg-integrity').textContent = lines.join('\n');
+                    });
+                });
+                document.getElementById('aat-eg-resync').addEventListener('click', function () {
+                    if (!window.confirm('Re-derive the reporting tables from the master table and rebuild the graph from them?')) { return; }
+                    document.getElementById('aat-eg-integrity').textContent = 'Healing from master…';
+                    post('aat_entity_graph_resync').then(function (res) {
+                        if (res.success) { render(res.data); loop(); document.getElementById('aat-eg-integrity').textContent = 'Reporting tables rebuilt from master. Graph re-sync running above.'; }
+                    });
                 });
                 document.getElementById('aat-eg-teardown').addEventListener('click', function () {
                     if (!window.confirm('Delete every built movie/person/ledger entity? The Academy Awards tables are untouched; this only removes the generated posts.')) { return; }
