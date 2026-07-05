@@ -49,6 +49,8 @@ final class AAT_Entity_Graph_Builder {
         add_action('wp_ajax_aat_entity_graph_resync', array(__CLASS__, 'ajax_resync'));
         add_action('wp_ajax_aat_entity_graph_backfill_preview', array(__CLASS__, 'ajax_backfill_preview'));
         add_action('wp_ajax_aat_entity_graph_backfill_apply', array(__CLASS__, 'ajax_backfill_apply'));
+        add_action('wp_ajax_aat_entity_graph_name_census', array(__CLASS__, 'ajax_name_census'));
+        add_action('wp_ajax_aat_entity_graph_name_repair_step', array(__CLASS__, 'ajax_name_repair_step'));
         add_action(self::CRON_HOOK, array(__CLASS__, 'cron_step'));
 
         // Living-graph plumbing: any data import re-syncs the graph
@@ -931,6 +933,148 @@ final class AAT_Entity_Graph_Builder {
     }
 
     /* ---------------------------------------------------------------------
+     * Name Repair — restore true names for U+FFFD-corrupted labels
+     * ------------------------------------------------------------------ */
+
+    /**
+     * Accented names arrived with U+FFFD replacement characters baked into
+     * the source data (Chlo\xEF\xBF\xBD Zhao) — unrecoverable in place, but
+     * every entity carries an intact IMDb bridge id, and TMDB's /find
+     * endpoint resolves both tt and nm ids to canonical names. The repair
+     * heals ALL layers so no future Heal reintroduces the corruption:
+     * graph post title + slug, aat_entities.label, and byte-exact REPLACE()
+     * surgery on the master's film/name/nominees strings.
+     */
+    const FFFD = "\xEF\xBF\xBD";
+
+    private static function tmdb_lookup_name($imdb_id) {
+        if (!defined('AAT_TMDB_API_KEY') || '' === AAT_TMDB_API_KEY) {
+            return new WP_Error('no_key', 'TMDB API key is not configured.');
+        }
+        $url = add_query_arg(
+            array('api_key' => AAT_TMDB_API_KEY, 'external_source' => 'imdb_id'),
+            'https://api.themoviedb.org/3/find/' . rawurlencode($imdb_id)
+        );
+        $response = wp_remote_get($url, array('timeout' => 15));
+        if (is_wp_error($response)) {
+            return $response;
+        }
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+        if (!empty($data['movie_results'][0]['title'])) {
+            return (string) $data['movie_results'][0]['title'];
+        }
+        if (!empty($data['person_results'][0]['name'])) {
+            return (string) $data['person_results'][0]['name'];
+        }
+        if (!empty($data['tv_results'][0]['name'])) {
+            return (string) $data['tv_results'][0]['name'];
+        }
+        return new WP_Error('not_found', 'TMDB has no record for ' . $imdb_id);
+    }
+
+    private static function corrupted_posts_query($limit, $after_id = 0) {
+        global $wpdb;
+        return $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT p.ID, p.post_title, pm.meta_value AS entity_id FROM {$wpdb->posts} p
+                 INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_lunara_entity_id'
+                 WHERE p.post_type IN ('movie','person') AND p.post_status != 'trash'
+                   AND p.post_title LIKE %s AND p.ID > %d
+                 ORDER BY p.ID ASC LIMIT %d",
+                '%' . $wpdb->esc_like(self::FFFD) . '%',
+                (int) $after_id,
+                (int) $limit
+            ),
+            ARRAY_A
+        );
+    }
+
+    public static function ajax_name_census() {
+        self::guard();
+        global $wpdb;
+        $like   = '%' . $wpdb->esc_like(self::FFFD) . '%';
+        $master = $wpdb->prefix . 'academy_awards';
+        wp_send_json_success(array(
+            'graph_posts' => (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type IN ('movie','person') AND post_status != 'trash' AND post_title LIKE %s",
+                $like
+            )),
+            'entities' => (int) $wpdb->get_var($wpdb->prepare(
+                'SELECT COUNT(*) FROM ' . self::table('entities') . ' WHERE label LIKE %s',
+                $like
+            )),
+            'master_rows' => (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM $master WHERE film LIKE %s OR name LIKE %s OR nominees LIKE %s",
+                $like, $like, $like
+            )),
+            'tmdb_key' => defined('AAT_TMDB_API_KEY') && '' !== AAT_TMDB_API_KEY,
+        ));
+    }
+
+    /**
+     * Repair one batch of corrupted graph posts (and their entity + master
+     * echoes). Cursor comes from the client so the loop is stateless.
+     */
+    public static function ajax_name_repair_step() {
+        self::guard();
+        global $wpdb;
+        $after = isset($_POST['after_id']) ? absint($_POST['after_id']) : 0;
+        $rows  = self::corrupted_posts_query(12, $after);
+        $master   = $wpdb->prefix . 'academy_awards';
+        $entities = self::table('entities');
+        $fixed = array();
+        $unresolved = array();
+        $last_id = $after;
+
+        foreach ((array) $rows as $row) {
+            $last_id   = (int) $row['ID'];
+            $entity_id = strtolower(trim((string) $row['entity_id']));
+            $old_title = (string) $row['post_title'];
+            if (!preg_match('/^(tt|nm)\d+$/', $entity_id)) {
+                $unresolved[] = $old_title . ' (no bridge id)';
+                continue;
+            }
+            $name = self::tmdb_lookup_name($entity_id);
+            if (is_wp_error($name)) {
+                $unresolved[] = $old_title . ' (' . $name->get_error_message() . ')';
+                usleep(120000);
+                continue;
+            }
+
+            wp_update_post(array(
+                'ID'         => (int) $row['ID'],
+                'post_title' => $name,
+                'post_name'  => sanitize_title($name),
+            ));
+
+            // Heal the derived label and the master strings byte-exactly, so
+            // future Heal-From-Master runs re-derive CLEAN labels.
+            $old_label = $wpdb->get_var($wpdb->prepare("SELECT label FROM $entities WHERE entity_id = %s", $entity_id));
+            $wpdb->update($entities, array('label' => $name, 'sort_label' => $name), array('entity_id' => $entity_id));
+            if (is_string($old_label) && false !== strpos($old_label, self::FFFD)) {
+                foreach (array('film', 'name', 'nominees') as $col) {
+                    $wpdb->query($wpdb->prepare(
+                        "UPDATE $master SET $col = REPLACE($col, %s, %s) WHERE $col LIKE %s",
+                        $old_label,
+                        $name,
+                        '%' . $wpdb->esc_like($old_label) . '%'
+                    ));
+                }
+            }
+
+            $fixed[] = $old_title . ' → ' . $name;
+            usleep(120000); // stay well inside TMDB rate limits
+        }
+
+        wp_send_json_success(array(
+            'fixed'      => $fixed,
+            'unresolved' => $unresolved,
+            'after_id'   => $last_id,
+            'done'       => count($rows) < 12,
+        ));
+    }
+
+    /* ---------------------------------------------------------------------
      * Admin page
      * ------------------------------------------------------------------ */
 
@@ -1008,6 +1152,14 @@ final class AAT_Entity_Graph_Builder {
                 <button class="button button-primary" id="aat-eg-backfill-apply"><?php esc_html_e('Apply Backfill + Heal Everything', 'academy-awards-table'); ?></button>
             </p>
             <div id="aat-eg-backfill" style="max-width:760px;padding:14px 16px;border:1px solid #c3c4c7;background:#fff;font-family:monospace;white-space:pre-line"><?php esc_html_e('Preview not run yet.', 'academy-awards-table'); ?></div>
+
+            <h2 style="margin-top:28px"><?php esc_html_e('Name Repair', 'academy-awards-table'); ?></h2>
+            <p><?php esc_html_e('Accented names arrived with corrupted characters baked into the source (Chlo� Zhao). Every entity carries an intact IMDb bridge id, so this resolves true names from TMDB and heals every layer — graph titles and URLs, entity labels, and the master strings — so future heals stay clean. Only rows containing the corruption marker are ever touched.', 'academy-awards-table'); ?></p>
+            <p>
+                <button class="button" id="aat-eg-name-census"><?php esc_html_e('Census Corrupted Names', 'academy-awards-table'); ?></button>
+                <button class="button button-primary" id="aat-eg-name-repair"><?php esc_html_e('Repair All Names', 'academy-awards-table'); ?></button>
+            </p>
+            <div id="aat-eg-names" style="max-width:760px;max-height:340px;overflow:auto;padding:14px 16px;border:1px solid #c3c4c7;background:#fff;font-family:monospace;white-space:pre-line"><?php esc_html_e('Census not run yet.', 'academy-awards-table'); ?></div>
 
             <script>
             (function () {
@@ -1116,6 +1268,33 @@ final class AAT_Entity_Graph_Builder {
                         document.getElementById('aat-eg-backfill').textContent = 'Applied ' + res.data.applied + ' winner flags. Full heal + graph re-sync running above.';
                         render(res.data.state); loop();
                     });
+                });
+                document.getElementById('aat-eg-name-census').addEventListener('click', function () {
+                    document.getElementById('aat-eg-names').textContent = 'Counting…';
+                    post('aat_entity_graph_name_census').then(function (res) {
+                        if (!res.success) { return; }
+                        var r = res.data;
+                        document.getElementById('aat-eg-names').textContent =
+                            'Corrupted graph titles: ' + r.graph_posts + '\nCorrupted entity labels: ' + r.entities + '\nCorrupted master rows: ' + r.master_rows + '\nTMDB key configured: ' + (r.tmdb_key ? 'yes' : 'NO — configure it first');
+                    });
+                });
+                document.getElementById('aat-eg-name-repair').addEventListener('click', function () {
+                    if (!window.confirm('Resolve true names from TMDB for every corrupted title and heal graph + entities + master?')) { return; }
+                    var box = document.getElementById('aat-eg-names');
+                    box.textContent = 'Repairing…';
+                    var totalFixed = 0, log = [];
+                    (function step(after) {
+                        post('aat_entity_graph_name_repair_step', { after_id: after }).then(function (res) {
+                            if (!res.success) { box.textContent = 'Error.'; return; }
+                            var d = res.data;
+                            totalFixed += d.fixed.length;
+                            d.fixed.forEach(function (f) { log.push('✓ ' + f); });
+                            d.unresolved.forEach(function (u) { log.push('— ' + u); });
+                            box.textContent = 'Repaired ' + totalFixed + ' so far…\n' + log.join('\n');
+                            if (!d.done) { step(d.after_id); }
+                            else { box.textContent = 'DONE — repaired ' + totalFixed + '.\n' + log.join('\n'); }
+                        });
+                    })(0);
                 });
                 document.getElementById('aat-eg-teardown').addEventListener('click', function () {
                     if (!window.confirm('Delete every built movie/person/ledger entity? The Academy Awards tables are untouched; this only removes the generated posts.')) { return; }
