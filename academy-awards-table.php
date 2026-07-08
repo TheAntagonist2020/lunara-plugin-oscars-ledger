@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.73
+ * Version: 2.7.74
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -16952,6 +16952,71 @@ public function ajax_import_bundled_data() {
 }
 
 require_once AAT_PLUGIN_DIR . 'includes/class-aat-blocks.php';
+
+if ( ! function_exists( 'aat_search_entities' ) ) {
+    /**
+     * Fast ledger search across films and people for the live palette.
+     *
+     * Reads aat_entity_stats only — one small precomputed table (label,
+     * type, nominations, wins) — with prefix matches ranked above infix
+     * and winners above nominees. Callers cache; this stays a single
+     * bounded query.
+     *
+     * @param string $q     Query text (min 2 chars).
+     * @param int    $limit Max rows (1–12).
+     * @return array[] { label, type, nominations, wins, url }
+     */
+    function aat_search_entities( $q, $limit = 6 ) {
+        global $wpdb;
+
+        $q = trim( (string) $q );
+        if ( function_exists( 'mb_strlen' ) ? mb_strlen( $q ) < 2 : strlen( $q ) < 2 ) {
+            return array();
+        }
+        $limit = max( 1, min( 12, (int) $limit ) );
+
+        $stats_table = $wpdb->prefix . 'aat_entity_stats';
+        $like_infix  = '%' . $wpdb->esc_like( $q ) . '%';
+        $like_prefix = $wpdb->esc_like( $q ) . '%';
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT entity_id, entity_type, label, nominations, wins
+                 FROM {$stats_table}
+                 WHERE label LIKE %s
+                 ORDER BY (label LIKE %s) DESC, wins DESC, nominations DESC, label ASC
+                 LIMIT %d",
+                $like_infix,
+                $like_prefix,
+                $limit
+            ),
+            ARRAY_A
+        );
+
+        if ( empty( $rows ) ) {
+            return array();
+        }
+
+        $plugin = class_exists( 'Academy_Awards_Table' ) ? Academy_Awards_Table::get_instance() : null;
+        $out    = array();
+
+        foreach ( $rows as $row ) {
+            $url = $plugin ? (string) $plugin->get_entity_url( $row['entity_id'] ) : '';
+            if ( '' === $url ) {
+                continue;
+            }
+            $out[] = array(
+                'label'       => (string) $row['label'],
+                'type'        => (string) $row['entity_type'],
+                'nominations' => (int) $row['nominations'],
+                'wins'        => (int) $row['wins'],
+                'url'         => $url,
+            );
+        }
+
+        return $out;
+    }
+}
 
 // Initialize plugin
 Academy_Awards_Table::get_instance();
