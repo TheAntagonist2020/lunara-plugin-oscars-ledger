@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.75
+Stable tag: 2.7.76
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.76 =
+* Standardized Oscar credits so official credit prose stays in Name, individual people stay in Nominees and NomineeIds, and song or work titles stay in Detail.
+* Hardened reporting-table rebuilds with schema migration failure checks, complete nominee projections, accurate ceremony/category/entity rollups, and auditable insert failures.
+* Added portable contracts for structured credits, reporting integrity, and the live-search entity feed while preserving the production entity-graph architecture.
 
 = 2.7.75 =
 * Prevented winner backfill collisions by matching company IDs and the normalized award detail, so same-film studio credits and Original Song nominees cannot promote one another.

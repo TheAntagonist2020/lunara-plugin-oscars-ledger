@@ -40,6 +40,9 @@ if (!is_readable($csv_path)) {
 if (!defined('ABSPATH')) {
     define('ABSPATH', $root . '/');
 }
+if (!defined('HOUR_IN_SECONDS')) {
+    define('HOUR_IN_SECONDS', 3600);
+}
 
 if (!function_exists('plugin_dir_path')) {
     function plugin_dir_path($file) {
@@ -65,6 +68,12 @@ if (!function_exists('add_filter')) {
     }
 }
 
+if (!function_exists('apply_filters')) {
+    function apply_filters($hook, $value) {
+        return $value;
+    }
+}
+
 if (!function_exists('add_shortcode')) {
     function add_shortcode() {
         return true;
@@ -73,6 +82,18 @@ if (!function_exists('add_shortcode')) {
 
 if (!function_exists('register_activation_hook')) {
     function register_activation_hook() {
+        return true;
+    }
+}
+
+if (!function_exists('wp_next_scheduled')) {
+    function wp_next_scheduled() {
+        return false;
+    }
+}
+
+if (!function_exists('wp_schedule_event')) {
+    function wp_schedule_event() {
         return true;
     }
 }
