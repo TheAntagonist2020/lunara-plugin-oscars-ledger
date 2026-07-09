@@ -74,6 +74,19 @@ $aat_clean_nominee_label = function($value) {
     return trim((string) preg_replace($patterns, '', $value));
 };
 
+$aat_credit_people_key = function($value) use ($aat_clean_nominee_label) {
+    $value = $aat_clean_nominee_label($value);
+    if ($value === '') {
+        return '';
+    }
+    if (function_exists('remove_accents')) {
+        $value = remove_accents($value);
+    }
+    $value = strtolower(str_replace('&', ' and ', $value));
+    $value = preg_replace('/\band\b/', ' ', $value);
+    return trim((string) preg_replace('/[^a-z0-9]+/', ' ', (string) $value));
+};
+
 $aat_join_meta = function($parts) {
     $parts = array_values(array_filter(array_map('trim', (array) $parts), 'strlen'));
     if (empty($parts)) {
@@ -91,11 +104,24 @@ $aat_join_meta = function($parts) {
 $aat_winner_primary = function($entry) use ($aat_pipe_display, $aat_clean_nominee_label) {
     $category = strtoupper(trim((string) ($entry['canonical_category'] ?? '')));
     $film = trim((string) ($entry['film'] ?? ''));
+    $detail = trim((string) ($entry['detail'] ?? ''));
     $name = $aat_clean_nominee_label($entry['name'] ?? '');
     $nominees = $aat_clean_nominee_label($aat_pipe_display($entry['nominees'] ?? ''));
 
     if (in_array($category, array('BEST PICTURE', 'ANIMATED FEATURE FILM', 'DOCUMENTARY (Feature)', 'INTERNATIONAL FEATURE FILM', 'SHORT FILM (Animated)', 'SHORT FILM (Live Action)'), true) && $film !== '') {
         return $film;
+    }
+
+    if ($category === 'MUSIC (ORIGINAL SONG)' && $detail !== '') {
+        return $detail;
+    }
+
+    if ((strpos($category, 'WRITING (') === 0 || strpos($category, 'MUSIC (ORIGINAL SCORE') === 0) && $film !== '') {
+        return $film;
+    }
+
+    if ((strpos($category, 'WRITING (') === 0 || strpos($category, 'MUSIC (ORIGINAL ') === 0) && $nominees !== '') {
+        return $nominees;
     }
 
     if ($name !== '') {
@@ -3450,6 +3476,20 @@ get_header();
                                             }
                                             $primary_label   = trim((string) ($winner_row['primary_label'] ?? ''));
                                             $secondary_label = trim((string) ($winner_row['secondary_label'] ?? ''));
+                                            $winner_category = strtoupper(trim((string) ($winner_row['canonical_category'] ?? '')));
+                                            $winner_credit_line = (strpos($winner_category, 'WRITING (') === 0 || strpos($winner_category, 'MUSIC (ORIGINAL ') === 0)
+                                                ? trim((string) ($winner_row['name'] ?? ''))
+                                                : '';
+                                            $winner_credit_key = $aat_credit_people_key($winner_credit_line);
+                                            $winner_credit_is_score = strpos($winner_category, 'MUSIC (ORIGINAL SCORE') === 0;
+                                            $winner_credit_duplicates_people = $winner_credit_is_score && (
+                                                $winner_credit_key === $aat_credit_people_key($primary_label)
+                                                || $winner_credit_key === $aat_credit_people_key($secondary_label)
+                                            );
+                                            $show_winner_credit_line = $winner_credit_line !== ''
+                                                && $winner_credit_line !== $primary_label
+                                                && $winner_credit_line !== $secondary_label
+                                                && !$winner_credit_duplicates_people;
                                         ?>
                                             <div class="aat-category-history-winner">
                                                 <span class="aat-winner-badge"><?php esc_html_e('Winner', 'academy-awards-table'); ?></span>
@@ -3459,7 +3499,10 @@ get_header();
                                                 <?php if ($secondary_label !== '') : ?>
                                                     <p class="aat-category-history-meta"><?php echo $aat_render_hub_text_link($secondary_label, !empty($winner_row['secondary_url']) ? (string) $winner_row['secondary_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
                                                 <?php endif; ?>
-                                                <?php if (!empty($winner_row['detail'])) : ?>
+                                                <?php if ($show_winner_credit_line) : ?>
+                                                    <p class="aat-category-history-detail"><?php echo esc_html($winner_credit_line); ?></p>
+                                                <?php endif; ?>
+                                                <?php if (!empty($winner_row['detail']) && $winner_row['detail'] !== $primary_label && $winner_row['detail'] !== $secondary_label) : ?>
                                                     <p class="aat-category-history-detail"><?php echo esc_html((string) $winner_row['detail']); ?></p>
                                                 <?php endif; ?>
                                                 <?php if (!empty($winner_people) && (count($winner_people) > 1 || empty($winner_row['primary_url']))) : ?>
