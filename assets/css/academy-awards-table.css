@@ -2083,6 +2083,18 @@ table.aat-datatable thead th.aat-col-control {
     color: var(--aat-light-gray);
 }
 
+.aat-credit-line {
+    display: block;
+    margin-top: 4px;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.aat-credit-separator {
+    color: rgba(255, 255, 255, 0.38);
+}
+
 /* IMDb Links */
 .aat-imdb-link {
     color: var(--aat-gold);

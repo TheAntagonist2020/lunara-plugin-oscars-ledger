@@ -57,15 +57,24 @@ $review_map = isset($ballot_groups['review_map']) && is_array($ballot_groups['re
                             $film = trim((string) ($row['film'] ?? ''));
                             $name = trim((string) ($row['name'] ?? ''));
                             $nominees = trim((string) ($row['nominees'] ?? ''));
+                            $work_title = trim((string) ($row['detail'] ?? ''));
                             $film_id = trim((string) ($row['film_id'] ?? ''));
                             $is_winner = !empty($row['winner']);
-                            $label = $film !== '' ? $film : ($name !== '' ? $name : $nominees);
-                            $detail = '';
-                            if ($film !== '' && $name !== '' && $name !== $film) {
-                                $detail = $name;
-                            } elseif ($nominees !== '' && $nominees !== $label) {
-                                $detail = $nominees;
+                            $category_key = strtoupper($category);
+                            $is_original_song = $category_key === 'MUSIC (ORIGINAL SONG)';
+                            $label = ($is_original_song && $work_title !== '')
+                                ? $work_title
+                                : ($film !== '' ? $film : ($nominees !== '' ? str_replace('|', ', ', $nominees) : $name));
+                            $detail_parts = array();
+                            if ($film !== '' && $film !== $label) {
+                                $detail_parts[] = $film;
                             }
+                            if ($name !== '' && $name !== $label) {
+                                $detail_parts[] = $name;
+                            } elseif ($nominees !== '' && str_replace('|', ', ', $nominees) !== $label) {
+                                $detail_parts[] = str_replace('|', ', ', $nominees);
+                            }
+                            $detail = implode(' · ', array_values(array_unique($detail_parts)));
                             $review_url = '';
                             if ($film_id !== '') {
                                 $ids = preg_split('/\s*\|\s*/', $film_id);
