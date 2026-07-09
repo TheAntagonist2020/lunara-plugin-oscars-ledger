@@ -170,14 +170,14 @@ class Academy_Awards_Table {
 
         $target = '2';
         if ((string) get_option('aat_reporting_schema_version') === $target) {
-            return;
+            return true;
         }
 
         $alters = array(
-            $this->get_entities_table_name()       => array(
+            $this->get_entities_table_name() => array(
                 "MODIFY entity_id varchar(64) NOT NULL",
             ),
-            $this->get_award_facts_table_name()    => array(
+            $this->get_award_facts_table_name() => array(
                 "MODIFY film_entity_id varchar(64) NOT NULL DEFAULT ''",
                 "MODIFY primary_entity_id varchar(64) NOT NULL DEFAULT ''",
             ),
@@ -187,22 +187,41 @@ class Academy_Awards_Table {
             $this->get_ceremony_stats_table_name() => array(
                 "MODIFY top_title_entity_id varchar(64) NOT NULL DEFAULT ''",
             ),
-            $this->get_entity_stats_table_name()   => array(
+            $this->get_entity_stats_table_name() => array(
                 "MODIFY entity_id varchar(64) NOT NULL",
             ),
         );
+        $failures = array();
 
         foreach ($alters as $table => $changes) {
             $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
             if ($exists !== $table) {
-                continue; // Fresh install — dbDelta creates it at the new width.
+                // Fresh installs get the current width from dbDelta below.
+                continue;
             }
+
             foreach ($changes as $change) {
-                $wpdb->query("ALTER TABLE $table $change"); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+                if ($wpdb->query("ALTER TABLE $table $change") === false) {
+                    $failures[] = array(
+                        'table' => (string) $table,
+                        'change' => (string) $change,
+                        'error' => (string) $wpdb->last_error,
+                    );
+                }
             }
         }
 
+        if (!empty($failures)) {
+            update_option('aat_reporting_schema_migration_failures', array(
+                'failures' => $failures,
+                'generated_at' => current_time('mysql'),
+            ), false);
+            return false;
+        }
+
+        delete_option('aat_reporting_schema_migration_failures');
         update_option('aat_reporting_schema_version', $target, false);
+        return true;
     }
 
     private function maybe_create_reporting_tables($charset_collate = '') {
@@ -215,7 +234,7 @@ class Academy_Awards_Table {
             }
         }
 
-        $this->maybe_upgrade_reporting_schema();
+        $reporting_schema_ready = $this->maybe_upgrade_reporting_schema();
 
         $ceremonies_table = $this->get_ceremonies_table_name();
         $categories_table = $this->get_categories_table_name();
@@ -366,6 +385,8 @@ class Academy_Awards_Table {
         dbDelta($sql_ceremony_stats);
         dbDelta($sql_category_stats);
         dbDelta($sql_entity_stats);
+
+        return $reporting_schema_ready;
     }
 
     private function maybe_create_person_credit_reviews_table($charset_collate = '') {
@@ -1024,23 +1045,8 @@ class Academy_Awards_Table {
         $category_stats_table = $this->get_category_stats_table_name();
         $entity_stats_table = $this->get_entity_stats_table_name();
 
-        $this->maybe_create_reporting_tables();
-
-        $wpdb->query("TRUNCATE TABLE $ceremonies_table");
-        $wpdb->query("TRUNCATE TABLE $categories_table");
-        $wpdb->query("TRUNCATE TABLE $entities_table");
-        $wpdb->query("TRUNCATE TABLE $facts_table");
-        $wpdb->query("TRUNCATE TABLE $nominees_table");
-        $wpdb->query("TRUNCATE TABLE $ceremony_stats_table");
-        $wpdb->query("TRUNCATE TABLE $category_stats_table");
-        $wpdb->query("TRUNCATE TABLE $entity_stats_table");
-
-        $rows = $wpdb->get_results(
-            "SELECT id, " . $this->get_awards_row_fields_sql() . " FROM $source_table ORDER BY id ASC",
-            ARRAY_A
-        );
-
-        if (!is_array($rows) || empty($rows)) {
+        $reporting_schema_ready = $this->maybe_create_reporting_tables();
+        if (!$reporting_schema_ready) {
             return array(
                 'ceremonies' => 0,
                 'categories' => 0,
@@ -1050,8 +1056,41 @@ class Academy_Awards_Table {
                 'ceremony_stats' => 0,
                 'category_stats' => 0,
                 'entity_stats' => 0,
+                'insert_failures' => 0,
+                'schema_migration_failed' => true,
+                'preserved_existing_tables' => true,
             );
         }
+
+        $rows = $wpdb->get_results(
+            "SELECT id, " . $this->get_awards_row_fields_sql() . " FROM $source_table ORDER BY id ASC",
+            ARRAY_A
+        );
+
+        if (!is_array($rows)) {
+            return array(
+                'ceremonies' => 0,
+                'categories' => 0,
+                'entities' => 0,
+                'facts' => 0,
+                'nominees' => 0,
+                'ceremony_stats' => 0,
+                'category_stats' => 0,
+                'entity_stats' => 0,
+                'insert_failures' => 0,
+                'source_read_failed' => true,
+                'preserved_existing_tables' => true,
+            );
+        }
+
+        $wpdb->query("TRUNCATE TABLE $ceremonies_table");
+        $wpdb->query("TRUNCATE TABLE $categories_table");
+        $wpdb->query("TRUNCATE TABLE $entities_table");
+        $wpdb->query("TRUNCATE TABLE $facts_table");
+        $wpdb->query("TRUNCATE TABLE $nominees_table");
+        $wpdb->query("TRUNCATE TABLE $ceremony_stats_table");
+        $wpdb->query("TRUNCATE TABLE $category_stats_table");
+        $wpdb->query("TRUNCATE TABLE $entity_stats_table");
 
         $ceremonies = array();
         $categories = array();
@@ -1338,12 +1377,19 @@ class Academy_Awards_Table {
         $insert_failures_total = 0;
         $safe_insert = function($table, $data, $clamps = array()) use ($wpdb, &$insert_failures, &$insert_failures_total) {
             foreach ($clamps as $field => $max_chars) {
-                if (isset($data[$field]) && is_string($data[$field]) && mb_strlen($data[$field]) > $max_chars) {
-                    $data[$field] = mb_substr($data[$field], 0, $max_chars);
+                if (!isset($data[$field]) || !is_string($data[$field])) {
+                    continue;
+                }
+
+                $length = function_exists('mb_strlen') ? mb_strlen($data[$field]) : strlen($data[$field]);
+                if ($length > $max_chars) {
+                    $data[$field] = function_exists('mb_substr')
+                        ? mb_substr($data[$field], 0, $max_chars)
+                        : substr($data[$field], 0, $max_chars);
                 }
             }
 
-            if (false !== $wpdb->insert($table, $data)) {
+            if ($wpdb->insert($table, $data) !== false) {
                 return true;
             }
 
@@ -1353,7 +1399,7 @@ class Academy_Awards_Table {
                     $retry[$field] = wp_check_invalid_utf8($value, true);
                 }
             }
-            if (false !== $wpdb->insert($table, $retry)) {
+            if ($wpdb->insert($table, $retry) !== false) {
                 return true;
             }
 
@@ -1362,11 +1408,13 @@ class Academy_Awards_Table {
                 $insert_failures[] = array(
                     'table' => (string) $table,
                     'error' => (string) $wpdb->last_error,
-                    'row'   => array(
+                    'row' => array(
                         'source_award_id' => isset($data['source_award_id']) ? intval($data['source_award_id']) : 0,
-                        'ceremony'        => isset($data['ceremony']) ? intval($data['ceremony']) : 0,
-                        'entity_id'       => isset($data['entity_id']) ? (string) $data['entity_id'] : '',
-                        'category_slug'   => isset($data['category_slug']) ? (string) $data['category_slug'] : '',
+                        'ceremony' => isset($data['ceremony']) ? intval($data['ceremony']) : 0,
+                        'entity_id' => isset($data['entity_id']) ? (string) $data['entity_id'] : '',
+                        'film_entity_id' => isset($data['film_entity_id']) ? (string) $data['film_entity_id'] : '',
+                        'primary_entity_id' => isset($data['primary_entity_id']) ? (string) $data['primary_entity_id'] : '',
+                        'category_slug' => isset($data['category_slug']) ? (string) $data['category_slug'] : '',
                     ),
                 );
             }
@@ -3544,9 +3592,6 @@ class Academy_Awards_Table {
         $normalized_category = $row['canonical_category'] !== '' ? $row['canonical_category'] : $row['category'];
         if ($this->is_screenplay_category($normalized_category)) {
             $raw_name = $row['name'];
-            $raw_nominees = $row['nominees'];
-
-            $row['name'] = $this->strip_screenplay_credit_prefixes($row['name']);
 
             if ($row['nominees'] !== '') {
                 $row['nominees'] = $this->screenplay_credit_to_pipe_list($row['nominees']);
@@ -3554,14 +3599,6 @@ class Academy_Awards_Table {
 
             if ($row['nominees'] === '' && $raw_name !== '') {
                 $row['nominees'] = $this->screenplay_credit_to_pipe_list($raw_name);
-            }
-
-            if ($row['nominees'] === '' && $raw_nominees !== '') {
-                $row['nominees'] = $this->screenplay_credit_to_pipe_list($raw_nominees);
-            }
-
-            if ($row['nominees'] !== '') {
-                $row['name'] = $this->humanize_pipe_list($row['nominees']);
             }
         }
 
@@ -3704,78 +3741,6 @@ class Academy_Awards_Table {
         }
 
         return $index;
-    }
-
-    /**
-     * Curated screenplay nominee overrides from Lunara tracker research.
-     */
-    private function get_screenplay_nominee_overrides() {
-        static $overrides = null;
-
-        if (is_array($overrides)) {
-            return $overrides;
-        }
-
-        $rows = array(
-            array('97', 'WRITING (Adapted Screenplay)', 'Emilia Pérez', 'Jacques Audiard and Thomas Bidegain', 'Jacques Audiard|Thomas Bidegain', 'nm0002191|nm0081179'),
-            array('97', 'WRITING (Original Screenplay)', 'September 5', 'Moritz Binder', 'Moritz Binder', 'nm9415549'),
-            array('95', 'WRITING (Adapted Screenplay)', 'All Quiet on the Western Front', 'Edward Berger', 'Edward Berger', 'nm0074163'),
-            array('94', 'WRITING (Original Screenplay)', 'The Worst Person in the World', 'Eskil Vogt and Joachim Trier', 'Eskil Vogt|Joachim Trier', 'nm1258777|nm0877285'),
-            array('91', 'WRITING (Original Screenplay)', 'Green Book', 'Nick Vallelonga', 'Nick Vallelonga', 'nm0885014'),
-            array('90', 'WRITING (Original Screenplay)', 'Three Billboards Outside Ebbing, Missouri', 'Martin McDonagh', 'Martin McDonagh', 'nm1732981'),
-            array('82', 'WRITING (Adapted Screenplay)', 'In the Loop', 'Jesse Armstrong', 'Jesse Armstrong', 'nm1104036'),
-            array('82', 'WRITING (Original Screenplay)', 'Up', 'Bob Peterson', 'Bob Peterson', 'nm0677037'),
-            array('78', 'WRITING (Original Screenplay)', 'Good Night, and Good Luck.', 'George Clooney and Grant Heslov', 'George Clooney|Grant Heslov', 'nm0000123|nm0381416'),
-            array('73', 'WRITING (Adapted Screenplay)', 'Crouching Tiger, Hidden Dragon', 'Wang Hui-ling, James Schamus, and Tsai Kuo-jung', 'Wang Hui-ling|James Schamus|Tsai Kuo-jung', 'nm0910924|nm0770005|nm0874631'),
-            array('73', 'WRITING (Adapted Screenplay)', 'O Brother, Where Art Thou?', 'Ethan Coen and Joel Coen', 'Ethan Coen|Joel Coen', 'nm0001053|nm0001054'),
-            array('71', 'WRITING (Original Screenplay)', 'Life Is Beautiful', 'Vincenzo Cerami', 'Vincenzo Cerami', 'nm0148437'),
-            array('71', 'WRITING (Original Screenplay)', 'Shakespeare in Love', 'Marc Norman', 'Marc Norman', 'nm0635565'),
-            array('70', 'WRITING (Adapted Screenplay)', 'Wag the Dog', 'Hilary Henkin', 'Hilary Henkin', 'nm0377088'),
-            array('70', 'WRITING (Original Screenplay)', 'As Good as It Gets', 'Mark Andrus', 'Mark Andrus', 'nm0029125'),
-            array('70', 'WRITING (Original Screenplay)', 'Good Will Hunting', 'Ben Affleck', 'Ben Affleck', 'nm0000255'),
-            array('67', 'WRITING (Original Screenplay)', 'Heavenly Creatures', 'Fran Walsh and Peter Jackson', 'Fran Walsh|Peter Jackson', 'nm0909638|nm0001392'),
-            array('62', 'WRITING (Adapted Screenplay)', 'Enemies, A Love Story', 'Roger L. Simon and Paul Mazursky', 'Roger L. Simon|Paul Mazursky', 'nm0800363|nm0005196'),
-            array('62', 'WRITING (Original Screenplay)', 'sex, lies, and videotape', 'Steven Soderbergh', 'Steven Soderbergh', 'nm0001752'),
-            array('60', 'WRITING (Original Screenplay)', 'Au Revoir Les Enfants (Goodbye, Children)', 'Louis Malle', 'Louis Malle', 'nm0001501'),
-            array('57', 'WRITING (Adapted Screenplay)', 'Greystoke: The Legend of Tarzan, Lord of the Apes', 'Robert Towne and Michael Austin', 'Robert Towne|Michael Austin', 'nm0001801|nm0042472'),
-            array('56', 'WRITING (Adapted Screenplay)', 'Reuben, Reuben', 'Julius J. Epstein', 'Julius J. Epstein', 'nm0258493'),
-            array('53', 'WRITING (Adapted Screenplay)', 'The Elephant Man', 'Christopher De Vore, Eric Bergren, and David Lynch', 'Christopher De Vore|Eric Bergren|David Lynch', 'nm0212246|nm0075015|nm0000186'),
-            array('51', 'WRITING (Adapted Screenplay)', 'Same Time, Next Year', 'Bernard Slade', 'Bernard Slade', 'nm0805152'),
-            array('50', 'WRITING (Adapted Screenplay)', 'Oh, God!', 'Larry Gelbart', 'Larry Gelbart', 'nm0312205'),
-            array('49', 'WRITING (Original Screenplay)', 'Cousin, Cousine', 'Jean-Charles Tacchella and Daniele Thompson', 'Jean-Charles Tacchella|Daniele Thompson', 'nm0006621|nm0860019'),
-            array('45', 'WRITING (Original Screenplay)', 'Lady Sings the Blues', 'Terence McCloy, Chris Clark, and Suzanne De Passe', 'Terence McCloy|Chris Clark|Suzanne De Passe', 'lnm-terence-mccloy|nm0163771|nm0210867'),
-            array('42', 'WRITING (Adapted Screenplay)', 'Goodbye, Mr. Chips', 'Terence Rattigan', 'Terence Rattigan', 'nm0711905'),
-            array('42', 'WRITING (Adapted Screenplay)', "They Shoot Horses, Don't They?", 'James Poe and Robert E. Thompson', 'James Poe|Robert E. Thompson', 'nm0688117|nm0860651'),
-            array('41', 'WRITING (Adapted Screenplay)', 'Rachel, Rachel', 'Stewart Stern', 'Stewart Stern', 'nm0827856'),
-            array('38', 'WRITING (Original Screenplay)', "Casanova '70", 'Agenore Incrocci', 'Agenore Incrocci', 'nm0408488'),
-            array('37', 'WRITING (Original Screenplay)', 'One Potato, Two Potato', 'Raphael Hayes and Orville H. Hampton', 'Raphael Hayes|Orville H. Hampton', 'nm0371193|nm0359034'),
-            array('37', 'WRITING (Original Screenplay)', 'The Organizer', 'Agenore Incrocci, Furio Scarpelli, and Mario Monicelli', 'Agenore Incrocci|Furio Scarpelli|Mario Monicelli', 'nm0408488|nm0769249|nm0598102'),
-            array('36', 'WRITING (Adapted Screenplay)', 'Captain Newman, M.D.', 'Richard L. Breen, Phoebe Ephron, and Henry Ephron', 'Richard L. Breen|Phoebe Ephron|Henry Ephron', 'nm0106764|nm0258290|nm0258288'),
-            array('34', 'WRITING (Original Screenplay)', 'Ballad of a Soldier', 'Valentin Yezhov', 'Valentin Yezhov', 'nm0947899'),
-            array('33', 'WRITING (Original Screenplay)', 'Hiroshima mon amour', 'Marguerite Duras', 'Marguerite Duras', 'nm0243921'),
-            array('30', 'WRITING (Adapted Screenplay)', 'Heaven Knows, Mr. Allison', 'John Huston and John Lee Mahin', 'John Huston|John Lee Mahin', 'nm0001379|nm0536941'),
-            array('22', 'WRITING (Original Screenplay)', 'The Quiet One', 'James Agee, Helen Levitt, and Janice Loeb', 'James Agee|Helen Levitt|Janice Loeb', 'nm0012938|nm1844803|nm0517209'),
-            array('21', 'WRITING (Adapted Screenplay)', 'Johnny Belinda', 'Irma von Cube and Allen Vincent', 'Irma von Cube|Allen Vincent', 'nm0902121|nm0898573'),
-            array('18', 'WRITING (Original Screenplay)', 'What Next, Corporal Hargrove?', 'Harry Kurnitz', 'Harry Kurnitz', 'nm0475823'),
-            array('14', 'WRITING (Original Screenplay)', 'Tall, Dark and Handsome', 'Karl Tunberg and Darrell Ware', 'Karl Tunberg|Darrell Ware', 'nm0876562|nm0912090'),
-            array('14', 'WRITING (Original Screenplay)', 'Tom, Dick and Harry', 'Paul Jarrico', 'Paul Jarrico', 'nm0418972'),
-            array('12', 'WRITING (Adapted Screenplay)', 'Goodbye, Mr. Chips', 'R.C. Sherriff, Claudine West, and Eric Maschwitz', 'R.C. Sherriff|Claudine West|Eric Maschwitz', 'nm0792670|nm0921995|nm0556178'),
-            array('11', 'WRITING (Adapted Screenplay)', 'Pygmalion', 'George Bernard Shaw, W. P. Lipscomb, and Cecil Lewis', 'George Bernard Shaw|W. P. Lipscomb|Cecil Lewis', 'nm0789737|nm0513744|nm0507021'),
-            array('10', 'WRITING (Adapted Screenplay)', 'Stage Door', 'Morrie Ryskind and Anthony Veiller', 'Morrie Ryskind|Anthony Veiller', 'nm0753452|nm0892044'),
-            array('4', 'WRITING (Adapted Screenplay)', 'Little Caesar', 'Francis Faragoh', 'Francis Faragoh', 'nm0267020'),
-        );
-
-        $overrides = array();
-        foreach ($rows as $row) {
-            $key = intval($row[0]) . '|' . strtoupper(trim((string) $row[1])) . '|' . strtolower(trim((string) $row[2]));
-            $overrides[$key] = array(
-                'name' => (string) $row[3],
-                'nominees' => (string) $row[4],
-                'nominee_ids' => (string) $row[5],
-            );
-        }
-
-        return $overrides;
     }
 
     /**
@@ -4545,7 +4510,6 @@ class Academy_Awards_Table {
         );
 
         $name_index = $this->build_nominee_name_index();
-        $overrides = $this->get_single_craft_nominee_overrides();
         $updated = 0;
         $resolved_ids = 0;
         $remote_resolved_ids = 0;
@@ -4553,19 +4517,6 @@ class Academy_Awards_Table {
         foreach ((array) $rows as $row) {
             $normalized = $this->normalize_awards_row($row);
             $original_nominee_ids = trim((string) ($normalized['nominee_ids'] ?? ''));
-            $override_key = intval($normalized['ceremony'] ?? 0) . '|' . strtoupper(trim((string) ($normalized['canonical_category'] ?? ''))) . '|' . strtolower(trim((string) ($normalized['film'] ?? '')));
-            $screenplay_overrides = $this->get_screenplay_nominee_overrides();
-
-            if (isset($screenplay_overrides[$override_key])) {
-                $override = $screenplay_overrides[$override_key];
-                $normalized['name'] = (string) ($override['name'] ?? $normalized['name'] ?? '');
-                $normalized['nominees'] = (string) ($override['nominees'] ?? $normalized['nominees'] ?? '');
-                $normalized['nominee_ids'] = (string) ($override['nominee_ids'] ?? $normalized['nominee_ids'] ?? '');
-                if ($original_nominee_ids === '' && !empty($normalized['nominee_ids'])) {
-                    $resolved_ids++;
-                }
-            }
-
             if ($original_nominee_ids === '' && !empty($normalized['nominees'])) {
                 $names = array_values(array_filter(array_map('trim', explode('|', (string) $normalized['nominees'])), 'strlen'));
                 $matched_ids = array();
@@ -15232,7 +15183,7 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
 
         // People / companies in nominee strings
         $name_rows = $wpdb->get_results(
-            $wpdb->prepare("SELECT nominees, nominee_ids, name FROM $awards_table WHERE name != '' AND name LIKE %s LIMIT 80", $like),
+            $wpdb->prepare("SELECT nominees, nominee_ids, name FROM $awards_table WHERE (name LIKE %s OR nominees LIKE %s) LIMIT 80", $like, $like),
             ARRAY_A
         );
         if (is_array($name_rows)) {
@@ -15940,12 +15891,12 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
         $winners_filtered = (int) $filtered_stats['winners_filtered'];
 
         // Data
-        $fields = $this->get_awards_row_fields_sql();
+        $fields = 'id, ' . $this->get_awards_row_fields_sql();
 
         // Stable ordering: whatever the user chooses, keep consistent tie-breakers.
-        $order_sql = "$order_col $order_dir, ceremony DESC, canonical_category ASC, winner DESC, film ASC, name ASC";
+        $order_sql = "$order_col $order_dir, ceremony DESC, canonical_category ASC, winner DESC, film ASC, name ASC, id ASC";
 
-        $data_sql = "SELECT DISTINCT $fields FROM $table_name WHERE $where_sql ORDER BY $order_sql LIMIT %d OFFSET %d";
+        $data_sql = "SELECT $fields FROM $table_name WHERE $where_sql ORDER BY $order_sql LIMIT %d OFFSET %d";
         $data_values = array_merge($values, array($length, $start));
         $data_sql = $wpdb->prepare($data_sql, $data_values);
 
@@ -16680,6 +16631,147 @@ public function ajax_import_bundled_data() {
     }
 
     /**
+     * Build a stable census of award groups for source-of-truth comparisons.
+     *
+     * Credits are part of the award identity. Keeping Name and Nominees in the
+     * signature prevents a repair or import from silently flattening official
+     * role prose or dropping individually linked people.
+     */
+    private function finalize_award_group_census($groups, $rows, $winners) {
+        ksort($groups, SORT_STRING);
+        $signature_rows = array();
+
+        foreach ($groups as $key => $counts) {
+            $signature_rows[] = $key . "\x1f" . intval($counts['rows'] ?? 0) . "\x1f" . intval($counts['winners'] ?? 0);
+        }
+
+        return array(
+            'available' => true,
+            'rows' => intval($rows),
+            'winners' => intval($winners),
+            'groups' => $groups,
+            'signature' => hash('sha256', implode("\n", $signature_rows)),
+        );
+    }
+
+    private function get_award_group_integrity_key($row) {
+        $fields = array('ceremony', 'year', 'class', 'canonical_category', 'category', 'film', 'film_id');
+        $values = array();
+
+        foreach ($fields as $field) {
+            $values[] = trim((string) ($row[$field] ?? ''));
+        }
+
+        foreach (array('name', 'nominees') as $credit_field) {
+            $credit_value = trim((string) ($row[$credit_field] ?? ''));
+            $values[] = (string) preg_replace('/\s+/u', ' ', $credit_value);
+        }
+
+        $id_blob = (string) ($row['film_id'] ?? '') . ' ' . (string) ($row['nominee_ids'] ?? '');
+        preg_match_all('/(?:tt|nm|co)\d{5,10}/i', strtolower($id_blob), $matches);
+        $entity_ids = array_values(array_unique((array) ($matches[0] ?? array())));
+        sort($entity_ids, SORT_STRING);
+        $values[] = implode(',', $entity_ids);
+        $values[] = strtoupper((string) preg_replace('/[^A-Za-z0-9]+/', '', (string) ($row['detail'] ?? '')));
+
+        return implode("\x1f", $values);
+    }
+
+    private function get_bundled_award_group_census() {
+        if (!defined('AAT_BUNDLED_CSV_PATH') || !is_readable(AAT_BUNDLED_CSV_PATH)) {
+            return array(
+                'available' => false,
+                'error' => __('The bundled Oscars dataset is missing or unreadable.', 'academy-awards-table'),
+            );
+        }
+
+        try {
+            $file = new SplFileObject(AAT_BUNDLED_CSV_PATH, 'r');
+            $file->setFlags(SplFileObject::READ_CSV | SplFileObject::SKIP_EMPTY);
+            $file->setCsvControl("\t");
+            $headers = $file->fgetcsv();
+            if (!is_array($headers) || empty($headers)) {
+                throw new RuntimeException(__('The bundled Oscars dataset header could not be read.', 'academy-awards-table'));
+            }
+
+            $headers = array_map('trim', $headers);
+            $headers[0] = preg_replace('/^\x{FEFF}/u', '', (string) $headers[0]);
+            $headers[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $headers[0]);
+            $groups = array();
+            $rows = 0;
+            $winners = 0;
+
+            while (!$file->eof()) {
+                $values = $file->fgetcsv();
+                if (!is_array($values) || (count($values) === 1 && $values[0] === null)) {
+                    continue;
+                }
+                if (count($values) < count($headers)) {
+                    $values = array_pad($values, count($headers), '');
+                }
+                if (count($values) !== count($headers)) {
+                    continue;
+                }
+
+                $source_row = array_combine($headers, $values);
+                if (!is_array($source_row)) {
+                    continue;
+                }
+
+                $row = $this->build_import_db_row($source_row);
+                $key = $this->get_award_group_integrity_key($row);
+                if (!isset($groups[$key])) {
+                    $groups[$key] = array('rows' => 0, 'winners' => 0);
+                }
+                $groups[$key]['rows']++;
+                $groups[$key]['winners'] += !empty($row['winner']) ? 1 : 0;
+                $rows++;
+                $winners += !empty($row['winner']) ? 1 : 0;
+            }
+
+            return $this->finalize_award_group_census($groups, $rows, $winners);
+        } catch (Throwable $error) {
+            return array(
+                'available' => false,
+                'error' => $error->getMessage(),
+            );
+        }
+    }
+
+    private function get_database_award_group_census($awards_table) {
+        global $wpdb;
+
+        $rows = $wpdb->get_results(
+            "SELECT ceremony, year, class, canonical_category, category, film, film_id, name, nominees, nominee_ids, detail, winner
+             FROM $awards_table",
+            ARRAY_A
+        );
+
+        if (!is_array($rows)) {
+            return array(
+                'available' => false,
+                'error' => __('The live awards census query failed.', 'academy-awards-table'),
+            );
+        }
+
+        $groups = array();
+        $total_rows = 0;
+        $total_winners = 0;
+        foreach ($rows as $row) {
+            $key = $this->get_award_group_integrity_key($row);
+            if (!isset($groups[$key])) {
+                $groups[$key] = array('rows' => 0, 'winners' => 0);
+            }
+            $groups[$key]['rows']++;
+            $groups[$key]['winners'] += !empty($row['winner']) ? 1 : 0;
+            $total_rows++;
+            $total_winners += !empty($row['winner']) ? 1 : 0;
+        }
+
+        return $this->finalize_award_group_census($groups, $total_rows, $total_winners);
+    }
+
+    /**
      * Read-only integrity summary for the Lunara Control Desk.
      *
      * This reports current database health without writing, repairing, or caching anything.
@@ -16713,7 +16805,178 @@ public function ajax_import_bundled_data() {
             );
         }
 
+        $facts_table = $this->get_award_facts_table_name();
+        $nominees_table = $this->get_award_nominees_table_name();
+        $entities_table = $this->get_entities_table_name();
+        $entity_stats_table = $this->get_entity_stats_table_name();
+        $category_stats_table = $this->get_category_stats_table_name();
+        $ceremony_stats_table = $this->get_ceremony_stats_table_name();
+        $facts_exists = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $facts_table)) === $facts_table);
+        $nominees_exists = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $nominees_table)) === $nominees_table);
+        $entities_exists = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $entities_table)) === $entities_table);
+        $entity_stats_exists = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $entity_stats_table)) === $entity_stats_table);
+        $category_stats_exists = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $category_stats_table)) === $category_stats_table);
+        $ceremony_stats_exists = ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $ceremony_stats_table)) === $ceremony_stats_table);
+        $reporting_insert_failures = get_option('aat_reporting_insert_failures', array());
+        $reporting_schema_failures = get_option('aat_reporting_schema_migration_failures', array());
+        $reporting_insert_failure_total = intval($reporting_insert_failures['total'] ?? 0);
+        $reporting_schema_failure_total = count((array) ($reporting_schema_failures['failures'] ?? array()));
+        $reporting_rows = 0;
+        $reporting_winners = 0;
+        $reporting_missing_rows_total = 0;
+        $reporting_orphan_rows_total = 0;
+        $reporting_content_mismatch_total = 0;
+        $reporting_nominee_rows = 0;
+        $expected_nominee_rows = 0;
+        $reporting_nominee_count_drift_total = 0;
+        $reporting_nominee_drift_total = 0;
+        $reporting_entity_stats_drift_total = 0;
+        $reporting_missing_rows = array();
+        $reporting_drift_rows = array();
+
+        if ($facts_exists) {
+            $reporting_rows = intval($wpdb->get_var("SELECT COUNT(*) FROM $facts_table"));
+            $reporting_winners = intval($wpdb->get_var("SELECT COUNT(*) FROM $facts_table WHERE winner = 1"));
+            $reporting_missing_rows_total = intval(
+                $wpdb->get_var(
+                    "SELECT COUNT(*) FROM $awards_table awards
+                     LEFT JOIN $facts_table facts ON facts.source_award_id = awards.id
+                     WHERE facts.id IS NULL"
+                )
+            );
+            $reporting_missing_rows = (array) $wpdb->get_results(
+                "SELECT awards.id, awards.ceremony, awards.canonical_category, awards.film, awards.winner
+                 FROM $awards_table awards
+                 LEFT JOIN $facts_table facts ON facts.source_award_id = awards.id
+                 WHERE facts.id IS NULL
+                 ORDER BY awards.ceremony ASC LIMIT $limit",
+                ARRAY_A
+            );
+            $reporting_orphan_rows_total = intval(
+                $wpdb->get_var(
+                    "SELECT COUNT(*) FROM $facts_table facts
+                     LEFT JOIN $awards_table awards ON awards.id = facts.source_award_id
+                     WHERE awards.id IS NULL"
+                )
+            );
+            $reporting_content_mismatch_total = intval(
+                $wpdb->get_var(
+                    "SELECT COUNT(*) FROM $facts_table facts
+                     INNER JOIN $awards_table awards ON awards.id = facts.source_award_id
+                     WHERE facts.ceremony != awards.ceremony
+                        OR facts.year_label != awards.year
+                        OR facts.winner != awards.winner"
+                )
+            );
+            $reporting_drift_rows = (array) $wpdb->get_results(
+                "SELECT facts.source_award_id, awards.ceremony AS source_ceremony,
+                        facts.ceremony AS projected_ceremony, awards.winner AS source_winner,
+                        facts.winner AS projected_winner, awards.canonical_category, awards.film
+                 FROM $facts_table facts
+                 LEFT JOIN $awards_table awards ON awards.id = facts.source_award_id
+                 WHERE awards.id IS NULL
+                    OR facts.ceremony != awards.ceremony
+                    OR facts.year_label != awards.year
+                    OR facts.winner != awards.winner
+                 ORDER BY facts.source_award_id ASC LIMIT $limit",
+                ARRAY_A
+            );
+        }
+
+        $expected_nominee_count_sql = "CASE
+            WHEN TRIM(COALESCE(awards.nominee_ids, '')) = '' THEN 0
+            ELSE 1
+                + LENGTH(REPLACE(awards.nominee_ids, ',', '|'))
+                - LENGTH(REPLACE(REPLACE(awards.nominee_ids, ',', '|'), '|', ''))
+        END";
+        $expected_nominee_rows = intval(
+            $wpdb->get_var("SELECT COALESCE(SUM($expected_nominee_count_sql), 0) FROM $awards_table awards")
+        );
+
+        if ($nominees_exists) {
+            $reporting_nominee_rows = intval($wpdb->get_var("SELECT COUNT(*) FROM $nominees_table"));
+            $reporting_nominee_count_drift_total = intval(
+                $wpdb->get_var(
+                    "SELECT COUNT(*) FROM (
+                        SELECT awards.id
+                        FROM $awards_table awards
+                        LEFT JOIN $nominees_table nominees ON nominees.source_award_id = awards.id
+                        GROUP BY awards.id, awards.nominee_ids
+                        HAVING COUNT(nominees.id) != $expected_nominee_count_sql
+                    ) nominee_count_drift"
+                )
+            );
+            $reporting_nominee_drift_total = intval(
+                $wpdb->get_var(
+                    "SELECT COUNT(*) FROM $nominees_table nominees
+                     LEFT JOIN $awards_table awards ON awards.id = nominees.source_award_id
+                     WHERE awards.id IS NULL
+                        OR nominees.ceremony != awards.ceremony
+                        OR nominees.winner != awards.winner
+                        OR FIND_IN_SET(
+                            nominees.entity_id,
+                            REPLACE(REPLACE(COALESCE(awards.nominee_ids, ''), ' ', ''), '|', ',')
+                        ) = 0"
+                )
+            );
+            $reporting_nominee_drift_total += $reporting_nominee_count_drift_total;
+        }
+
+        if ($entities_exists && $entity_stats_exists) {
+            $orphan_stats = intval(
+                $wpdb->get_var(
+                    "SELECT COUNT(*) FROM $entity_stats_table stats
+                     LEFT JOIN $entities_table entities ON entities.entity_id = stats.entity_id
+                     WHERE entities.entity_id IS NULL"
+                )
+            );
+            $missing_stats = intval(
+                $wpdb->get_var(
+                    "SELECT COUNT(*) FROM $entities_table entities
+                     LEFT JOIN $entity_stats_table stats ON stats.entity_id = entities.entity_id
+                     WHERE stats.entity_id IS NULL"
+                )
+            );
+            $content_stats = 0;
+            if ($facts_exists && $nominees_exists) {
+                $content_stats = intval(
+                    $wpdb->get_var(
+                        "SELECT COUNT(*) FROM $entity_stats_table stats
+                         INNER JOIN $entities_table entities ON entities.entity_id = stats.entity_id
+                         LEFT JOIN (
+                            SELECT entity_id,
+                                   COUNT(*) AS nominations,
+                                   COALESCE(SUM(winner), 0) AS wins,
+                                   COUNT(DISTINCT ceremony) AS ceremonies,
+                                   MIN(ceremony) AS first_ceremony,
+                                   MAX(ceremony) AS last_ceremony
+                            FROM (
+                                SELECT film_entity_id AS entity_id, ceremony, winner
+                                FROM $facts_table
+                                WHERE film_entity_id != ''
+                                UNION ALL
+                                SELECT entity_id, ceremony, winner
+                                FROM $nominees_table
+                                WHERE entity_id != ''
+                            ) projection_rows
+                            GROUP BY entity_id
+                         ) expected ON expected.entity_id = stats.entity_id
+                         WHERE expected.entity_id IS NULL
+                            OR stats.entity_type != entities.entity_type
+                            OR stats.label != entities.label
+                            OR stats.nominations != expected.nominations
+                            OR stats.wins != expected.wins
+                            OR stats.ceremonies != expected.ceremonies
+                            OR stats.first_ceremony != expected.first_ceremony
+                            OR stats.last_ceremony != expected.last_ceremony"
+                    )
+                );
+            }
+            $reporting_entity_stats_drift_total = $orphan_stats + $missing_stats + $content_stats;
+        }
+
         $total_rows          = intval($wpdb->get_var("SELECT COUNT(*) FROM $awards_table"));
+        $source_winner_rows  = intval($wpdb->get_var("SELECT COUNT(*) FROM $awards_table WHERE winner = 1"));
         $latest_ceremony     = intval($wpdb->get_var("SELECT MAX(ceremony) FROM $awards_table"));
         $category_count      = intval($wpdb->get_var("SELECT COUNT(DISTINCT canonical_category) FROM $awards_table WHERE canonical_category != ''"));
         $title_id_rows       = intval($wpdb->get_var("SELECT COUNT(*) FROM $awards_table WHERE film_id REGEXP '(^|\\\\|)tt[0-9]{7,9}(\\\\||$)'"));
@@ -16721,6 +16984,136 @@ public function ajax_import_bundled_data() {
         $invalid_title_ids   = intval($wpdb->get_var("SELECT COUNT(*) FROM $awards_table WHERE film_id != '' AND film_id NOT REGEXP '^(tt[0-9]{7,9})(\\\\|tt[0-9]{7,9})*$'"));
         $nominee_rows        = intval($wpdb->get_var("SELECT COUNT(*) FROM $awards_table WHERE nominees != ''"));
         $missing_nominee_ids = intval($wpdb->get_var("SELECT COUNT(*) FROM $awards_table WHERE nominees != '' AND (nominee_ids IS NULL OR nominee_ids = '')"));
+        $bundled_census      = $this->get_bundled_award_group_census();
+        $database_census     = $this->get_database_award_group_census($awards_table);
+        $bundled_parity      = !empty($bundled_census['available'])
+            && !empty($database_census['available'])
+            && intval($bundled_census['rows'] ?? 0) === intval($database_census['rows'] ?? 0)
+            && intval($bundled_census['winners'] ?? 0) === intval($database_census['winners'] ?? 0)
+            && hash_equals((string) ($bundled_census['signature'] ?? ''), (string) ($database_census['signature'] ?? ''));
+        $bundled_group_differences = array();
+        $bundled_group_difference_total = 0;
+        $reporting_rollup_drift_total = 0;
+
+        if (!empty($bundled_census['available']) && !empty($database_census['available'])) {
+            $all_group_keys = array_unique(array_merge(
+                array_keys((array) ($bundled_census['groups'] ?? array())),
+                array_keys((array) ($database_census['groups'] ?? array()))
+            ));
+            foreach ($all_group_keys as $group_key) {
+                $expected = (array) (($bundled_census['groups'] ?? array())[$group_key] ?? array('rows' => 0, 'winners' => 0));
+                $actual = (array) (($database_census['groups'] ?? array())[$group_key] ?? array('rows' => 0, 'winners' => 0));
+                if ($expected === $actual) {
+                    continue;
+                }
+
+                $bundled_group_difference_total++;
+                if (count($bundled_group_differences) < $limit) {
+                    $parts = explode("\x1f", $group_key);
+                    $bundled_group_differences[] = array(
+                        'label' => __('Bundled dataset drift', 'academy-awards-table'),
+                        'detail' => sprintf(
+                            __('Ceremony %1$d / %2$s / %3$s / expected %4$d rows, %5$d winners / live %6$d rows, %7$d winners', 'academy-awards-table'),
+                            intval($parts[0] ?? 0),
+                            (string) ($parts[3] ?? ''),
+                            (string) ($parts[5] ?? ''),
+                            intval($expected['rows'] ?? 0),
+                            intval($expected['winners'] ?? 0),
+                            intval($actual['rows'] ?? 0),
+                            intval($actual['winners'] ?? 0)
+                        ),
+                    );
+                }
+            }
+        }
+
+        if (!$facts_exists) {
+            $reporting_rollup_drift_total++;
+        } else {
+            if (!$category_stats_exists) {
+                $reporting_rollup_drift_total++;
+            } else {
+                $category_expected_sql = "SELECT category_slug,
+                                                 COUNT(*) AS nominations,
+                                                 COALESCE(SUM(winner), 0) AS wins,
+                                                 COUNT(DISTINCT ceremony) AS ceremonies,
+                                                 MIN(ceremony) AS first_ceremony,
+                                                 MAX(ceremony) AS last_ceremony
+                                          FROM $facts_table
+                                          WHERE category_slug != ''
+                                          GROUP BY category_slug";
+                $reporting_rollup_drift_total += intval(
+                    $wpdb->get_var(
+                        "SELECT COUNT(*) FROM $category_stats_table stats
+                         LEFT JOIN ($category_expected_sql) expected ON expected.category_slug = stats.category_slug
+                         WHERE expected.category_slug IS NULL
+                            OR stats.nominations != expected.nominations
+                            OR stats.wins != expected.wins
+                            OR stats.ceremonies != expected.ceremonies
+                            OR stats.first_ceremony != expected.first_ceremony
+                            OR stats.last_ceremony != expected.last_ceremony"
+                    )
+                );
+                $reporting_rollup_drift_total += intval(
+                    $wpdb->get_var(
+                        "SELECT COUNT(*) FROM ($category_expected_sql) expected
+                         LEFT JOIN $category_stats_table stats ON stats.category_slug = expected.category_slug
+                         WHERE stats.category_slug IS NULL"
+                    )
+                );
+            }
+
+            if (!$ceremony_stats_exists) {
+                $reporting_rollup_drift_total++;
+            } else {
+                $ceremony_expected_sql = "SELECT ceremony,
+                                                 MAX(year_label) AS year_label,
+                                                 COUNT(*) AS nominations,
+                                                 COALESCE(SUM(winner), 0) AS wins,
+                                                 COUNT(DISTINCT category_slug) AS categories_total,
+                                                 COUNT(DISTINCT CASE WHEN winner = 1 THEN category_slug ELSE NULL END) AS winner_categories
+                                          FROM $facts_table
+                                          GROUP BY ceremony";
+                $reporting_rollup_drift_total += intval(
+                    $wpdb->get_var(
+                        "SELECT COUNT(*) FROM $ceremony_stats_table stats
+                         LEFT JOIN ($ceremony_expected_sql) expected ON expected.ceremony = stats.ceremony
+                         WHERE expected.ceremony IS NULL
+                            OR stats.year_label != expected.year_label
+                            OR stats.nominations != expected.nominations
+                            OR stats.wins != expected.wins
+                            OR stats.categories_total != expected.categories_total
+                            OR stats.winner_categories != expected.winner_categories"
+                    )
+                );
+                $reporting_rollup_drift_total += intval(
+                    $wpdb->get_var(
+                        "SELECT COUNT(*) FROM ($ceremony_expected_sql) expected
+                         LEFT JOIN $ceremony_stats_table stats ON stats.ceremony = expected.ceremony
+                         WHERE stats.ceremony IS NULL"
+                    )
+                );
+            }
+        }
+
+        $reporting_ready = $facts_exists
+            && $nominees_exists
+            && $entities_exists
+            && $entity_stats_exists
+            && $category_stats_exists
+            && $ceremony_stats_exists
+            && $reporting_rows === $total_rows
+            && $reporting_winners === $source_winner_rows
+            && $reporting_missing_rows_total === 0
+            && $reporting_orphan_rows_total === 0
+            && $reporting_content_mismatch_total === 0
+            && $reporting_nominee_rows === $expected_nominee_rows
+            && $reporting_nominee_count_drift_total === 0
+            && $reporting_nominee_drift_total === 0
+            && $reporting_entity_stats_drift_total === 0
+            && $reporting_rollup_drift_total === 0
+            && $reporting_insert_failure_total === 0
+            && $reporting_schema_failure_total === 0;
 
         $poster_count                 = 0;
         $missing_poster_attachments   = 0;
@@ -16819,6 +17212,40 @@ public function ajax_import_bundled_data() {
             'note'  => sprintf(__('Latest ceremony: %d; categories: %d.', 'academy-awards-table'), $latest_ceremony, $category_count),
         );
         $checks[] = array(
+            'label' => __('Bundled data parity', 'academy-awards-table'),
+            'value' => !empty($database_census['available'])
+                ? sprintf(__('%1$s rows / %2$s winners', 'academy-awards-table'), number_format_i18n(intval($database_census['rows'] ?? 0)), number_format_i18n(intval($database_census['winners'] ?? 0)))
+                : __('Census unavailable', 'academy-awards-table'),
+            'state' => $bundled_parity ? 'ready' : 'needs',
+            'note' => !empty($bundled_census['available'])
+                ? sprintf(__('Expected %1$s rows / %2$s winners; %3$s award groups differ.', 'academy-awards-table'), number_format_i18n(intval($bundled_census['rows'] ?? 0)), number_format_i18n(intval($bundled_census['winners'] ?? 0)), number_format_i18n($bundled_group_difference_total))
+                : (string) ($bundled_census['error'] ?? __('Bundled census unavailable.', 'academy-awards-table')),
+        );
+        $checks[] = array(
+            'label' => __('Reporting derivation', 'academy-awards-table'),
+            'value' => $facts_exists
+                ? sprintf(
+                    __('%1$s awards; %2$s/%3$s nominee links', 'academy-awards-table'),
+                    number_format_i18n($reporting_rows),
+                    number_format_i18n($reporting_nominee_rows),
+                    number_format_i18n($expected_nominee_rows)
+                )
+                : __('Missing facts table', 'academy-awards-table'),
+            'state' => $reporting_ready ? 'ready' : 'needs',
+            'note'  => sprintf(
+                __('%1$d missing; %2$d orphaned; %3$d stale facts; %4$d nominee drift across %5$d awards; %6$d entity-stat drift; %7$d rollup drift; %8$d insert failures; %9$d schema failures.', 'academy-awards-table'),
+                $reporting_missing_rows_total,
+                $reporting_orphan_rows_total,
+                $reporting_content_mismatch_total,
+                $reporting_nominee_drift_total,
+                $reporting_nominee_count_drift_total,
+                $reporting_entity_stats_drift_total,
+                $reporting_rollup_drift_total,
+                $reporting_insert_failure_total,
+                $reporting_schema_failure_total
+            ),
+        );
+        $checks[] = array(
             'label' => __('IMDb title IDs', 'academy-awards-table'),
             'value' => sprintf(__('%1$s rows with IDs', 'academy-awards-table'), number_format_i18n($title_id_rows)),
             'state' => ($missing_title_ids > 0 || $invalid_title_ids > 0) ? 'weak' : 'ready',
@@ -16869,7 +17296,63 @@ public function ajax_import_bundled_data() {
             }
         }
 
-        $samples = array_merge($samples, $poster_attachment_samples, $poster_ratio_samples);
+        foreach ($reporting_missing_rows as $row) {
+            $samples[] = array(
+                'label' => __('Reporting row missing', 'academy-awards-table'),
+                'detail' => sprintf(
+                    '#%1$d / ceremony %2$d / %3$s / %4$s%5$s',
+                    intval($row['id'] ?? 0),
+                    intval($row['ceremony'] ?? 0),
+                    (string) ($row['canonical_category'] ?? ''),
+                    (string) ($row['film'] ?? ''),
+                    !empty($row['winner']) ? ' / WINNER' : ''
+                ),
+            );
+        }
+
+        foreach ($reporting_drift_rows as $row) {
+            $samples[] = array(
+                'label' => __('Reporting row stale', 'academy-awards-table'),
+                'detail' => sprintf(
+                    '#%1$d / ceremony %2$d -> %3$d / winner %4$d -> %5$d / %6$s / %7$s',
+                    intval($row['source_award_id'] ?? 0),
+                    intval($row['source_ceremony'] ?? 0),
+                    intval($row['projected_ceremony'] ?? 0),
+                    intval($row['source_winner'] ?? 0),
+                    intval($row['projected_winner'] ?? 0),
+                    (string) ($row['canonical_category'] ?? ''),
+                    (string) ($row['film'] ?? '')
+                ),
+            );
+        }
+
+        foreach (array_slice((array) ($reporting_insert_failures['failures'] ?? array()), 0, $limit) as $failure) {
+            $row = (array) ($failure['row'] ?? array());
+            $samples[] = array(
+                'label' => __('Reporting insert failed', 'academy-awards-table'),
+                'detail' => sprintf(
+                    '%1$s / source #%2$d / ceremony %3$d / %4$s',
+                    (string) ($failure['table'] ?? ''),
+                    intval($row['source_award_id'] ?? 0),
+                    intval($row['ceremony'] ?? 0),
+                    (string) ($failure['error'] ?? __('Unknown SQL error', 'academy-awards-table'))
+                ),
+            );
+        }
+
+        foreach (array_slice((array) ($reporting_schema_failures['failures'] ?? array()), 0, $limit) as $failure) {
+            $samples[] = array(
+                'label' => __('Reporting schema migration failed', 'academy-awards-table'),
+                'detail' => sprintf(
+                    '%1$s / %2$s / %3$s',
+                    (string) ($failure['table'] ?? ''),
+                    (string) ($failure['change'] ?? ''),
+                    (string) ($failure['error'] ?? __('Unknown SQL error', 'academy-awards-table'))
+                ),
+            );
+        }
+
+        $samples = array_merge($bundled_group_differences, $samples, $poster_attachment_samples, $poster_ratio_samples);
 
         if ($latest_ceremony > 0) {
             $routes[] = array(
@@ -16917,6 +17400,25 @@ public function ajax_import_bundled_data() {
             'routes'  => $routes,
             'poster_attachment_samples' => $poster_attachment_samples,
             'poster_ratio_samples'      => $poster_ratio_samples,
+            'reporting_missing_rows_total' => $reporting_missing_rows_total,
+            'reporting_orphan_rows_total' => $reporting_orphan_rows_total,
+            'reporting_content_mismatch_total' => $reporting_content_mismatch_total,
+            'reporting_nominee_rows' => $reporting_nominee_rows,
+            'expected_nominee_rows' => $expected_nominee_rows,
+            'reporting_nominee_count_drift_total' => $reporting_nominee_count_drift_total,
+            'reporting_nominee_drift_total' => $reporting_nominee_drift_total,
+            'reporting_entity_stats_drift_total' => $reporting_entity_stats_drift_total,
+            'reporting_rollup_drift_total' => $reporting_rollup_drift_total,
+            'reporting_insert_failures' => $reporting_insert_failures,
+            'reporting_schema_failures' => $reporting_schema_failures,
+            'bundled_data_parity' => array(
+                'ready' => $bundled_parity,
+                'expected_rows' => intval($bundled_census['rows'] ?? 0),
+                'expected_winners' => intval($bundled_census['winners'] ?? 0),
+                'database_rows' => intval($database_census['rows'] ?? 0),
+                'database_winners' => intval($database_census['winners'] ?? 0),
+                'different_groups' => $bundled_group_difference_total,
+            ),
         );
     }
 
@@ -16973,8 +17475,7 @@ if ( ! function_exists( 'aat_search_entities' ) ) {
         if ( function_exists( 'mb_strlen' ) ? mb_strlen( $q ) < 2 : strlen( $q ) < 2 ) {
             return array();
         }
-        $limit = max( 1, min( 12, (int) $limit ) );
-
+        $limit       = max( 1, min( 12, (int) $limit ) );
         $stats_table = $wpdb->prefix . 'aat_entity_stats';
         $like_infix  = '%' . $wpdb->esc_like( $q ) . '%';
         $like_prefix = $wpdb->esc_like( $q ) . '%';
@@ -17005,6 +17506,7 @@ if ( ! function_exists( 'aat_search_entities' ) ) {
             if ( '' === $url ) {
                 continue;
             }
+
             $out[] = array(
                 'label'       => (string) $row['label'],
                 'type'        => (string) $row['entity_type'],

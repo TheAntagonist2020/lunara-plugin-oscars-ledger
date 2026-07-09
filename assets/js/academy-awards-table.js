@@ -514,6 +514,13 @@
                 .trim();
         },
 
+        normalizeCreditPeople: function(value) {
+            return this.normalizeComparableName(value)
+                .replace(/\band\b/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        },
+
         matchedNomineeIdsForRow: function(row) {
             const ids = this.splitPipe(row && row.nominee_ids ? row.nominee_ids : '');
             const nominees = this.splitPipe(row && row.nominees ? row.nominees : '');
@@ -533,30 +540,36 @@
         },
 
         renderNomineeCell: function(row) {
-            let nameRaw = row && row.name ? String(row.name) : '';
-            if (!nameRaw && row && row.nominees) {
-                nameRaw = String(row.nominees).replace(/\|/g, ', ');
-            }
-            if (!nameRaw && this.isTitlePrimaryNomineeRow(row) && row && row.film) {
-                nameRaw = String(row.film).replace(/\|/g, ', ');
-            }
-            if (!nameRaw) return '<span class="aat-no-film">—</span>';
+            const nominees = this.splitPipe(row && row.nominees ? row.nominees : '');
+            const ids = this.splitPipe(row && row.nominee_ids ? row.nominee_ids : '');
+            const officialCredit = row && row.name ? String(row.name).trim() : '';
+            const category = row && (row.canonical_category || row.category) ? String(row.canonical_category || row.category).trim().toUpperCase() : '';
+            const structuredCreditCategory = category.indexOf('WRITING (') === 0 || category.indexOf('MUSIC (ORIGINAL SONG') === 0 || category.indexOf('MUSIC (ORIGINAL SCORE') === 0;
+            let identityHtml = '';
 
-            const ids = this.matchedNomineeIdsForRow(row);
-            // Simple case: 1 nominee id -> link the full name.
-            if (ids.length === 1) {
-                const url = this.buildEntityUrl(ids[0]);
-                if (url) {
-                    return '<a class="aat-imdb-link aat-nominee-link" href="' + url + '">' + this.escapeHtml(nameRaw) + '</a>';
-                }
+            if (nominees.length && nominees.length === ids.length) {
+                identityHtml = nominees.map((nominee, index) => {
+                    const url = this.buildEntityUrl(ids[index]);
+                    return url
+                        ? '<a class="aat-imdb-link aat-nominee-link" href="' + url + '">' + this.escapeHtml(nominee) + '</a>'
+                        : '<span class="aat-nominee-name">' + this.escapeHtml(nominee) + '</span>';
+                }).join('<span class="aat-credit-separator" aria-hidden="true"> · </span>');
+            } else if (nominees.length) {
+                identityHtml = '<span class="aat-nominee-name">' + this.escapeHtml(nominees.join(', ')) + '</span>' + this.renderProfilePills(ids);
+            } else if (this.isTitlePrimaryNomineeRow(row) && row && row.film) {
+                identityHtml = '<span class="aat-nominee-name">' + this.escapeHtml(String(row.film).replace(/\|/g, ', ')) + '</span>';
+            } else if (officialCredit) {
+                identityHtml = '<span class="aat-nominee-name">' + this.escapeHtml(officialCredit) + '</span>' + this.renderProfilePills(ids);
             }
 
-            // Try to split the nominee string into individual names that match the IMDb IDs.
-            const linked = this.linkifyNomineeNames(nameRaw, ids);
-            if (linked) return linked;
+            if (!identityHtml) return '<span class="aat-no-film">—</span>';
 
-            // Fallback: show the original string + IMDb pills.
-            return '<span class="aat-nominee-name">' + this.escapeHtml(nameRaw) + '</span>' + this.renderProfilePills(ids);
+            const peopleLabel = nominees.join(', ');
+            if (structuredCreditCategory && officialCredit && this.normalizeCreditPeople(officialCredit) !== this.normalizeCreditPeople(peopleLabel)) {
+                identityHtml += '<span class="aat-credit-line">' + this.escapeHtml(officialCredit) + '</span>';
+            }
+
+            return identityHtml;
         },
 
         linkifyNomineeNames: function(nameRaw, ids) {
