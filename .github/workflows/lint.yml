@@ -15,6 +15,9 @@ jobs:
         with:
           php-version: '8.2'
 
+      - name: Winner backfill identity contract
+        run: php tests/winner-backfill-identity-contract.php
+
       - name: PHP syntax
         run: |
           set -e

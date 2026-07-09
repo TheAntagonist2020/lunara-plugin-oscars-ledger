@@ -50,8 +50,8 @@ $render_method = $method_slice($plugin, 'public function render_person_portrait_
 $adoption_rows_method = $method_slice($plugin, 'private function get_existing_person_portrait_adoption_rows', 'private function adopt_existing_person_portrait_attachment');
 
 foreach (array(
-    'Version: 2.7.58',
-    "define('AAT_VERSION', '2.7.58')",
+    'Version: 2.7.75',
+    "define('AAT_VERSION', '2.7.75')",
     "'manual'",
     'manual_review_total',
     'manual_review',

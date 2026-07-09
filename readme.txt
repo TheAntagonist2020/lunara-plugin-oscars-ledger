@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.65
+Stable tag: 2.7.75
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.75 =
+* Prevented winner backfill collisions by matching company IDs and the normalized award detail, so same-film studio credits and Original Song nominees cannot promote one another.
+* Standardized the plugin header, runtime constant, stable tag, README baseline, changelog, and regression contracts on one release version.
 
 = 2.7.65 =
 * Unstuck the Poster Library API importer. The candidate batch previously always re-read the same first titles alphabetically — once those were covered, every run reported zero imports and the rest of the ledger was unreachable. Candidates now exclude titles that already have a mapped poster, titles covered by a review featured image write their mapping through so they stop occupying batch slots, and titles that fail both APIs are parked for a week instead of clogging every run. The status line now reports how many titles still lack a local poster so repeated clicks read as progress, and running with no API key configured says so plainly instead of silently missing on every row.
