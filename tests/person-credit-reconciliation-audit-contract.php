@@ -44,8 +44,8 @@ $builder = $method_slice($plugin, 'private function build_profile_image_person_c
 $writer = $method_slice($plugin, 'private function write_profile_image_person_credit_audit_csv', 'private function normalize_profile_image_coverage_cli_args');
 
 foreach (array(
-    'Version: 2.7.58',
-    "define('AAT_VERSION', '2.7.58')",
+    'Version: 2.7.75',
+    "define('AAT_VERSION', '2.7.75')",
     'person-credit-audit',
     'build_profile_image_person_credit_audit',
     'write_profile_image_person_credit_audit_csv',

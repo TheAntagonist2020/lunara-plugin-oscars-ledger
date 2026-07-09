@@ -844,7 +844,7 @@ final class AAT_Entity_Graph_Builder {
         $handle = fopen($csv_path, 'r');
         $header = fgetcsv($handle, 0, "\t");
         $idx = array_flip(array_map('trim', (array) $header));
-        foreach (array('Ceremony', 'CanonicalCategory', 'FilmId', 'NomineeIds', 'Winner') as $col) {
+        foreach (array('Ceremony', 'CanonicalCategory', 'FilmId', 'NomineeIds', 'Detail', 'Winner') as $col) {
             if (!isset($idx[$col])) {
                 fclose($handle);
                 return new WP_Error('bad_csv', 'Bundled dataset is missing the ' . $col . ' column.');
@@ -859,7 +859,8 @@ final class AAT_Entity_Graph_Builder {
             $key = self::backfill_key(
                 $row[$idx['Ceremony']],
                 $row[$idx['CanonicalCategory']],
-                (string) $row[$idx['FilmId']] . ' ' . (string) $row[$idx['NomineeIds']]
+                (string) $row[$idx['FilmId']] . ' ' . (string) $row[$idx['NomineeIds']],
+                $row[$idx['Detail']]
             );
             $winner_keys[$key] = true;
         }
@@ -867,7 +868,7 @@ final class AAT_Entity_Graph_Builder {
 
         $master = $wpdb->prefix . 'academy_awards';
         $rows = $wpdb->get_results(
-            "SELECT id, ceremony, canonical_category, category, film_id, nominee_ids FROM $master WHERE winner != 1 OR winner IS NULL",
+            "SELECT id, ceremony, canonical_category, category, film_id, nominee_ids, detail FROM $master WHERE winner != 1 OR winner IS NULL",
             ARRAY_A
         );
         $ids = array();
@@ -878,7 +879,7 @@ final class AAT_Entity_Graph_Builder {
             // different tools disagree about which column holds which variant.
             $matched = false;
             foreach (array($row['canonical_category'], $row['category']) as $cat) {
-                $key = self::backfill_key($row['ceremony'], $cat, (string) $row['film_id'] . ' ' . (string) $row['nominee_ids']);
+                $key = self::backfill_key($row['ceremony'], $cat, (string) $row['film_id'] . ' ' . (string) $row['nominee_ids'], $row['detail']);
                 if (isset($winner_keys[$key])) {
                     $matched = true;
                     break;
@@ -889,7 +890,7 @@ final class AAT_Entity_Graph_Builder {
                 $cer = (int) $row['ceremony'];
                 $per_ceremony[$cer] = isset($per_ceremony[$cer]) ? $per_ceremony[$cer] + 1 : 1;
             } elseif (count($sample_unmatched) < 3) {
-                $sample_unmatched[] = self::backfill_key($row['ceremony'], $row['canonical_category'], (string) $row['film_id'] . ' ' . (string) $row['nominee_ids']);
+                $sample_unmatched[] = self::backfill_key($row['ceremony'], $row['canonical_category'], (string) $row['film_id'] . ' ' . (string) $row['nominee_ids'], $row['detail']);
             }
         }
         ksort($per_ceremony);
@@ -914,14 +915,17 @@ final class AAT_Entity_Graph_Builder {
      * when they truly are the same words), and the SORTED SET of every
      * tt/nm token found across film and nominee id fields — immune to
      * pipe/comma/order/column-assignment differences between the bundled
-     * dataset and however the master was originally loaded.
+     * dataset and however the master was originally loaded. Company IDs and
+     * normalized row detail are part of the key so studio nominees and songs
+     * that share a film/credit team can never promote one another.
      */
-    private static function backfill_key($ceremony, $category, $id_blob) {
+    private static function backfill_key($ceremony, $category, $id_blob, $detail = '') {
         $cat = strtoupper((string) preg_replace('/[^A-Za-z0-9]+/', '', (string) $category));
-        preg_match_all('/(?:tt|nm)\d{5,10}/i', strtolower((string) $id_blob), $m);
+        preg_match_all('/(?:tt|nm|co)\d{5,10}/i', strtolower((string) $id_blob), $m);
         $tokens = array_unique($m[0]);
         sort($tokens);
-        return intval($ceremony) . '|' . $cat . '|' . implode(',', $tokens);
+        $detail_key = strtoupper((string) preg_replace('/[^A-Za-z0-9]+/', '', (string) $detail));
+        return intval($ceremony) . '|' . $cat . '|' . implode(',', $tokens) . '|' . $detail_key;
     }
 
     public static function ajax_backfill_preview() {
