@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.76
+ * Version: 2.7.77
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.76');
+define('AAT_VERSION', '2.7.77');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -16435,27 +16435,82 @@ public function ajax_import_bundled_data() {
 
         global $wpdb;
         $table_name = $wpdb->prefix . 'academy_awards';
+        $stage_table = $wpdb->prefix . 'academy_awards_import_stage';
+        $state_option = 'aat_bundled_import_state';
 
         $chunk_size = apply_filters('aat_bundled_import_chunk_size', 500);
         $offset = isset($_POST['offset']) ? max(0, intval($_POST['offset'])) : 0;
 
-        // Compute total rows (excluding header) once.
-        $total_rows = intval(get_option('aat_bundled_total_rows', 0));
-        if ($total_rows <= 0 || $offset === 0) {
-            $f = new SplFileObject(AAT_BUNDLED_CSV_PATH, 'r');
-            $f->seek(PHP_INT_MAX);
-            // With a header at line 0, the last line index equals the number of data rows.
-            $total_rows = max(0, intval($f->key()));
-            update_option('aat_bundled_total_rows', $total_rows, false);
+        $source_hash = hash_file('sha256', AAT_BUNDLED_CSV_PATH);
+        if (!is_string($source_hash) || $source_hash === '') {
+            wp_send_json_error(array('message' => 'Bundled dataset hash could not be calculated. The current database was preserved.'));
         }
 
-        // First chunk: start clean.
+        $import_state = array();
         if ($offset === 0) {
-            $wpdb->query("TRUNCATE TABLE $table_name");
-            delete_transient('aat_records_total_v1');
-            delete_transient('aat_records_total_v2');
-            delete_transient('aat_total_stats_v2');
-            delete_transient('aat_awards_meta_v1');
+            $source_census = $this->get_bundled_award_group_census();
+            if (empty($source_census['available']) || intval($source_census['rows'] ?? 0) <= 0) {
+                wp_send_json_error(array('message' => 'Bundled dataset census failed. The current database was preserved.'));
+            }
+
+            $main_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table_name)));
+            if ($main_exists !== $table_name) {
+                wp_send_json_error(array('message' => 'The active Academy Awards table does not exist. Nothing was changed.'));
+            }
+
+            $wpdb->query("DROP TABLE IF EXISTS `$stage_table`"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            if ($wpdb->query("CREATE TABLE `$stage_table` LIKE `$table_name`") === false) { // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                wp_send_json_error(array(
+                    'message' => 'Could not create the validated import staging table. The current database was preserved.',
+                    'database_error' => (string) $wpdb->last_error,
+                ));
+            }
+
+            $backup_table = substr($wpdb->prefix . 'academy_awards_backup_' . gmdate('Ymd_His'), 0, 64);
+            $import_state = array(
+                'status' => 'importing',
+                'source_hash' => $source_hash,
+                'source_signature' => (string) ($source_census['signature'] ?? ''),
+                'expected_rows' => intval($source_census['rows']),
+                'expected_winners' => intval($source_census['winners']),
+                'next_offset' => 0,
+                'imported' => 0,
+                'errors' => 0,
+                'skipped_duplicates' => 0,
+                'stage_table' => $stage_table,
+                'backup_table' => $backup_table,
+                'started_at' => current_time('mysql'),
+            );
+            update_option($state_option, $import_state, false);
+            update_option('aat_bundled_total_rows', intval($source_census['rows']), false);
+        } else {
+            $import_state = get_option($state_option, array());
+            if (!is_array($import_state) || ($import_state['status'] ?? '') !== 'importing') {
+                wp_send_json_error(array('message' => 'No resumable bundled import is active. Start again at row 0; the current database was preserved.'));
+            }
+            if (!hash_equals((string) ($import_state['source_hash'] ?? ''), $source_hash)) {
+                wp_send_json_error(array('message' => 'The bundled dataset changed during import. Start again; the current database was preserved.'));
+            }
+            if (intval($import_state['next_offset'] ?? -1) !== $offset) {
+                wp_send_json_error(array('message' => 'The import offset is out of sequence. Start again; the current database was preserved.'));
+            }
+
+            $stage_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($stage_table)));
+            if ($stage_exists !== $stage_table) {
+                wp_send_json_error(array('message' => 'The import staging table is missing. Start again; the current database was preserved.'));
+            }
+        }
+
+        $total_rows = intval($import_state['expected_rows'] ?? 0);
+        $expected_winners = intval($import_state['expected_winners'] ?? 0);
+        $backup_table = (string) ($import_state['backup_table'] ?? '');
+        if (
+            $total_rows <= 0 ||
+            $expected_winners <= 0 ||
+            strpos($backup_table, $wpdb->prefix . 'academy_awards_backup_') !== 0 ||
+            !preg_match('/^[A-Za-z0-9_]+$/', $backup_table)
+        ) {
+            wp_send_json_error(array('message' => 'The bundled import state is invalid. The current database was preserved.'));
         }
 
         $file = new SplFileObject(AAT_BUNDLED_CSV_PATH, 'r');
@@ -16559,7 +16614,7 @@ public function ajax_import_bundled_data() {
                 }
             }
 
-            $sql = "INSERT INTO $table_name ($col_list) VALUES " . implode(',', $placeholders);
+            $sql = "INSERT INTO $stage_table ($col_list) VALUES " . implode(',', $placeholders);
             $result = $wpdb->query($wpdb->prepare($sql, $values));
 
             if ($result === false) {
@@ -16571,16 +16626,75 @@ public function ajax_import_bundled_data() {
 
         $new_offset = $offset + $processed;
         $done = ($new_offset >= $total_rows);
+        $import_state['next_offset'] = $new_offset;
+        $import_state['imported'] = intval($import_state['imported'] ?? 0) + $imported;
+        $import_state['errors'] = intval($import_state['errors'] ?? 0) + $errors;
+        $import_state['skipped_duplicates'] = intval($import_state['skipped_duplicates'] ?? 0) + $skipped_duplicates;
+        update_option($state_option, $import_state, false);
+
         $screenplay_repair = array();
         $best_picture_repair = array();
         $international_feature_repair = array();
         $documentary_short_repair = array();
 
         if ($done) {
-            $screenplay_repair = $this->repair_writing_credit_rows();
-            $best_picture_repair = $this->repair_best_picture_credit_rows();
-            $international_feature_repair = $this->repair_international_feature_credit_rows();
-            $documentary_short_repair = $this->repair_documentary_and_short_credit_rows();
+            $stage_rows = intval($wpdb->get_var("SELECT COUNT(*) FROM `$stage_table`")); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $stage_winners = intval($wpdb->get_var("SELECT COUNT(*) FROM `$stage_table` WHERE winner = 1")); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $stage_census = $this->get_database_award_group_census($stage_table);
+            $expected_signature = (string) ($import_state['source_signature'] ?? '');
+            $stage_signature = (string) ($stage_census['signature'] ?? '');
+            $signature_matches = !empty($stage_census['available'])
+                && $expected_signature !== ''
+                && hash_equals($expected_signature, $stage_signature);
+            $total_errors = intval($import_state['errors']);
+
+            if ($total_errors > 0 || $stage_rows !== $total_rows || $stage_winners !== $expected_winners || !$signature_matches) {
+                $import_state['status'] = 'validation_failed';
+                $import_state['validated_rows'] = $stage_rows;
+                $import_state['validated_winners'] = $stage_winners;
+                $import_state['validated_signature'] = $stage_signature;
+                $import_state['failed_at'] = current_time('mysql');
+                update_option($state_option, $import_state, false);
+
+                wp_send_json_error(array(
+                    'message' => sprintf(
+                        'Bundled import validation failed before the database swap: expected %1$d rows / %2$d winners, found %3$d rows / %4$d winners with %5$d insert errors; credit-aware content signature match: %6$s. The current database is still live and unchanged.',
+                        $total_rows,
+                        $expected_winners,
+                        $stage_rows,
+                        $stage_winners,
+                        $total_errors,
+                        $signature_matches ? 'yes' : 'no'
+                    ),
+                    'live_preserved' => true,
+                    'stage_table' => $stage_table,
+                ));
+            }
+
+            $swap_sql = "RENAME TABLE `$table_name` TO `$backup_table`, `$stage_table` TO `$table_name`";
+            if ($wpdb->query($swap_sql) === false) { // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+                $import_state['status'] = 'swap_failed';
+                $import_state['database_error'] = (string) $wpdb->last_error;
+                $import_state['failed_at'] = current_time('mysql');
+                update_option($state_option, $import_state, false);
+
+                wp_send_json_error(array(
+                    'message' => 'The validated import could not be swapped into place. The current database is still live and unchanged.',
+                    'live_preserved' => true,
+                    'database_error' => (string) $wpdb->last_error,
+                ));
+            }
+
+            $import_state['status'] = 'swapped';
+            $import_state['swapped_at'] = current_time('mysql');
+            update_option($state_option, $import_state, false);
+
+            // The bundled file is the canonical source. Preserve it exactly;
+            // repair helpers remain available for legacy/manual imports only.
+            $screenplay_repair = array('updated' => 0, 'resolved_ids' => 0, 'source' => 'canonical-bundled');
+            $best_picture_repair = array('updated' => 0, 'resolved_ids' => 0, 'source' => 'canonical-bundled');
+            $international_feature_repair = array('updated' => 0, 'resolved_ids' => 0, 'source' => 'canonical-bundled');
+            $documentary_short_repair = array('updated' => 0, 'resolved_ids' => 0, 'source' => 'canonical-bundled');
             $reporting_rebuild = $this->rebuild_reporting_tables();
 
             // Invalidate performance caches
@@ -16591,19 +16705,22 @@ public function ajax_import_bundled_data() {
 
             // Confirm how many rows actually ended up in the DB.
             $inserted_total = intval($wpdb->get_var("SELECT COUNT(*) FROM $table_name"));
+            $inserted_winners = intval($wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE winner = 1"));
+            $import_state['status'] = 'completed';
+            $import_state['final_rows'] = $inserted_total;
+            $import_state['final_winners'] = $inserted_winners;
+            $import_state['final_signature'] = $stage_signature;
+            $import_state['reporting_rebuild'] = $reporting_rebuild;
+            $import_state['completed_at'] = current_time('mysql');
+            update_option($state_option, $import_state, false);
+
             $message = sprintf(
-                __('Bundled import complete: %1$d rows now in the database. (%2$d rows processed; %3$d insert errors in the final batch; %4$d screenplay rows refreshed; %5$d screenplay nominee ID sets resolved; %6$d Best Picture rows refreshed; %7$d Best Picture nominee ID sets resolved; %8$d International Feature rows refreshed; %9$d International Feature nominee ID sets resolved; %10$d documentary-and-short rows refreshed; %11$d documentary-and-short nominee ID sets resolved.)', 'academy-awards-table'),
+                __('Bundled import complete: %1$d canonical rows and %2$d winners are now live. The credit-aware source signature matched, no post-import credit mutation was applied, and the previous table remains available as %3$s. (%4$d rows processed; %5$d insert errors.)', 'academy-awards-table'),
                 $inserted_total,
+                $inserted_winners,
+                $backup_table,
                 $new_offset,
-                $errors,
-                isset($screenplay_repair['updated']) ? intval($screenplay_repair['updated']) : 0,
-                isset($screenplay_repair['resolved_ids']) ? intval($screenplay_repair['resolved_ids']) : 0,
-                isset($best_picture_repair['updated']) ? intval($best_picture_repair['updated']) : 0,
-                isset($best_picture_repair['resolved_ids']) ? intval($best_picture_repair['resolved_ids']) : 0,
-                isset($international_feature_repair['updated']) ? intval($international_feature_repair['updated']) : 0,
-                isset($international_feature_repair['resolved_ids']) ? intval($international_feature_repair['resolved_ids']) : 0,
-                isset($documentary_short_repair['updated']) ? intval($documentary_short_repair['updated']) : 0,
-                isset($documentary_short_repair['resolved_ids']) ? intval($documentary_short_repair['resolved_ids']) : 0
+                intval($import_state['errors'])
             );
         } else {
             $message = sprintf(__('Importing… %d of %d rows processed.', 'academy-awards-table'), $new_offset, $total_rows);
@@ -16611,17 +16728,18 @@ public function ajax_import_bundled_data() {
 
         if ( $done ) {
             /** Fires after the final chunk of a bundled import completes. */
-            do_action( 'aat_after_data_import', 'bundled', $imported );
+            do_action( 'aat_after_data_import', 'bundled', $inserted_total );
         }
 
         wp_send_json_success(array(
             'imported' => $imported,
-            'errors' => $errors,
-            'skipped_duplicates' => $skipped_duplicates,
+            'errors' => intval($import_state['errors']),
+            'skipped_duplicates' => intval($import_state['skipped_duplicates']),
             'offset' => $new_offset,
             'total_rows' => $total_rows,
             'done' => $done,
             'message' => $message,
+            'backup_table' => $done ? $backup_table : '',
             'screenplay_repair' => $screenplay_repair,
             'best_picture_repair' => $best_picture_repair,
             'international_feature_repair' => $international_feature_repair,
