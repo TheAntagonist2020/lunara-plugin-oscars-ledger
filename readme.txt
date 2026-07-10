@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.76
+Stable tag: 2.7.77
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.77 =
+* Made bundled dataset imports atomic: build and validate a separate staging table, require canonical row/winner/content signatures, swap only after validation, and retain the previous table as a timestamped rollback copy.
+* Kept the active Oscars table live throughout chunked imports and preserved canonical bundled credits without post-import repair mutation.
 
 = 2.7.76 =
 * Standardized Oscar credits so official credit prose stays in Name, individual people stay in Nominees and NomineeIds, and song or work titles stay in Detail.

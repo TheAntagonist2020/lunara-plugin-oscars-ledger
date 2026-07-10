@@ -46,7 +46,7 @@ if (!defined('ABSPATH')) {
         <div class="aat-import-area">
             <div class="aat-import-icon">📁</div>
             <h3><?php esc_html_e('Import the Oscars Dataset', 'academy-awards-table'); ?></h3>
-            <p><?php esc_html_e('Recommended: import the bundled oscars.csv (included with this plugin). Or upload a newer CSV/JSON if you have one.', 'academy-awards-table'); ?></p>
+            <p><?php esc_html_e('Recommended: import the bundled oscars.csv included with this plugin. It is built and validated in a staging table first; the current database stays live until the atomic swap and remains available as a rollback backup.', 'academy-awards-table'); ?></p>
 
             <div class="aat-import-buttons" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
                 <button type="button" id="aat-import-bundled" class="aat-import-btn">

@@ -30,7 +30,7 @@
 
             // Import bundled dataset
             $('#aat-import-bundled').on('click', function() {
-                if (!confirm('Import the bundled oscars.csv into your database? This will replace any existing data.')) {
+                if (!confirm('Build and validate the bundled oscars.csv, then atomically replace the current database? The existing table stays live during import and is preserved as a rollback backup.')) {
                     return;
                 }
                 self.showProgress();
@@ -187,7 +187,10 @@
                 success: function(response) {
                     if (!response.success) {
                         self.hideProgress();
-                        self.showMessage('error', response.data || 'Bundled import failed.');
+                        const errorMessage = response.data && response.data.message
+                            ? response.data.message
+                            : (response.data || 'Bundled import failed.');
+                        self.showMessage('error', errorMessage);
                         return;
                     }
 
