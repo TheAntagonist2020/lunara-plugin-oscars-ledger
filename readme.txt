@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.78
+Stable tag: 2.7.79
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.79 =
+* Converted repeated Ceremony and shared hub presentation/reveal code into cacheable route assets while preserving the full ledger, poster grids, links, and no-script behavior.
+* Removed unused block, global-style, Likes, and AI-summary styles only from plugin-owned virtual pages; site owners can restore any handle through `aat_virtual_page_unused_style_handles`.
 
 = 2.7.78 =
 * Restored WordPress.com edge-cache eligibility for valid public Oscar virtual routes while preserving no-cache responses for genuine entity and hub 404s.
