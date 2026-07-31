@@ -1358,11 +1358,19 @@ get_header();
                 if (!empty($best_picture) && is_callable($aat_extract_title_ids) && method_exists($aat, 'get_title_visual_package')) {
                     $dossier_bp_ids = $aat_extract_title_ids($best_picture);
                     if (!empty($dossier_bp_ids)) {
-                        $dossier_visual = (array) $aat->get_title_visual_package($dossier_bp_ids[0], 'medium_large', false);
+                        $dossier_visual = (array) $aat->get_title_visual_package(
+                            $dossier_bp_ids[0],
+                            'medium_large',
+                            false,
+                            array(
+                                'loading'       => 'eager',
+                                'fetchpriority' => 'high',
+                            )
+                        );
                         if (!empty($dossier_visual['poster_html'])) {
                             $dossier_poster_html = $dossier_visual['poster_html'];
                         } elseif (!empty($dossier_visual['poster_url'])) {
-                            $dossier_poster_html = '<img class="aat-entity-poster" src="' . esc_url($dossier_visual['poster_url']) . '" alt="' . esc_attr($best_picture_label . ' poster') . '" loading="lazy" decoding="async" />';
+                            $dossier_poster_html = '<img class="aat-entity-poster" src="' . esc_url($dossier_visual['poster_url']) . '" alt="' . esc_attr($best_picture_label . ' poster') . '" loading="eager" fetchpriority="high" decoding="async" />';
                         } elseif (!empty($dossier_visual['fallback_html'])) {
                             $dossier_poster_html = $dossier_visual['fallback_html'];
                         }

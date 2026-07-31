@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.80
+Stable tag: 2.7.81
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.81 =
+* Promoted the visible Ceremony Best Picture poster to eager, high-priority loading and kept the first hero outside JavaScript reveal hiding while preserving below-fold motion.
 
 = 2.7.80 =
 * Corrected the Ceremony stylesheet dependency chain so the externalized route assets load in their original cascade order without a circular dependency.
