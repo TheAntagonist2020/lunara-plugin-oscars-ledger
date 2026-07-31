@@ -23,11 +23,14 @@ $assert = static function ($condition, $message) use (&$failures) {
     }
 };
 
-$assert(strpos($plugin, "Version: 2.7.79") !== false, 'Plugin header should report 2.7.79.');
-$assert(strpos($plugin, "define('AAT_VERSION', '2.7.79')") !== false, 'Runtime version should report 2.7.79.');
+$assert(strpos($plugin, "Version: 2.7.80") !== false, 'Plugin header should report 2.7.80.');
+$assert(strpos($plugin, "define('AAT_VERSION', '2.7.80')") !== false, 'Runtime version should report 2.7.80.');
 $assert(strpos($plugin, "'aat-hub-polish'") !== false, 'Hub polish should be enqueued as an external style.');
 $assert(strpos($plugin, "'aat-ceremony-dossier'") !== false, 'Ceremony dossier assets should be enqueued externally.');
 $assert(strpos($plugin, "if (\$hub === 'ceremony')") !== false, 'Ceremony assets must stay route-scoped.');
+$assert(preg_match("/wp_enqueue_style\\(\\s*'aat-ceremony-dossier',[\\s\\S]*?array\\('aat-styles'\\)/", $plugin) === 1, 'Ceremony CSS must depend directly on the base Oscars stylesheet.');
+$assert(preg_match('/wp_enqueue_style\\(\\s*\'aat-hub-polish\',[\\s\\S]*?\\$hub_polish_dependencies/', $plugin) === 1, 'Shared hub polish must preserve the dynamic post-Ceremony dependency.');
+$assert(strpos($plugin, "'aat-ceremony-dossier',\n                    AAT_PLUGIN_URL . 'assets/css/ceremony-dossier.css',\n                    array('aat-hub-polish')") === false, 'Ceremony and hub styles must never form a circular dependency.');
 $assert(strpos($plugin, "dequeue_virtual_page_bloat") !== false, 'Virtual-page bloat removal should remain registered.');
 $assert(strpos($plugin, "'aat_virtual_page_unused_style_handles'") !== false, 'Unused style handles should remain filterable.');
 

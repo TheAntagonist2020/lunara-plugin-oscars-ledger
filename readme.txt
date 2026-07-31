@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.79
+Stable tag: 2.7.80
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.80 =
+* Corrected the Ceremony stylesheet dependency chain so the externalized route assets load in their original cascade order without a circular dependency.
 
 = 2.7.79 =
 * Converted repeated Ceremony and shared hub presentation/reveal code into cacheable route assets while preserving the full ledger, poster grids, links, and no-script behavior.
