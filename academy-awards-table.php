@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.78
+ * Version: 2.7.79
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.78');
+define('AAT_VERSION', '2.7.79');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -610,6 +610,7 @@ class Academy_Awards_Table {
         add_filter('body_class', array($this, 'filter_body_classes'));
         add_filter('wp-optimize-minify-default-exclusions', array($this, 'exclude_wp_optimize_minify_assets'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
+        add_action('wp_enqueue_scripts', array($this, 'dequeue_virtual_page_bloat'), 999);
         add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_shortcode('academy_awards', array($this, 'render_shortcode'));
@@ -6049,10 +6050,66 @@ class Academy_Awards_Table {
         }
 
         if ($is_hub) {
-            wp_add_inline_style(
-                'aat-styles',
-                '.aat-hub-page .aat-category-latest-winner .aat-hub-inline-link,.aat-hub-page .aat-category-history .aat-hub-inline-link,.aat-hub-page .aat-category-history .aat-entity-link{align-items:center!important;display:inline-flex!important;line-height:1.25!important;min-height:32px!important;padding-block:3px!important;text-underline-offset:4px}.aat-hub-page .aat-category-latest-winner .aat-hub-inline-link-title,.aat-hub-page .aat-category-history .aat-hub-inline-link-title{min-height:34px!important}.aat-hub-page .aat-category-history .aat-timeline-link,.aat-hub-page .aat-category-history .aat-decade-pill,.aat-hub-page .aat-category-history .aat-nominee-trail-summary,.aat-hub-page .aat-category-history .aat-winner-circle-action,.aat-hub-page .aat-category-latest-winner .aat-hub-chip{line-height:1.25!important;min-height:34px!important}.aat-hub-page .aat-category-history .aat-decade-pill{padding-block:7px!important}.aat-hub-page .aat-category-history .aat-nominee-trail-actions .aat-winner-circle-action{min-height:34px!important;padding:7px 10px!important}'
+            $hub_polish_path = AAT_PLUGIN_DIR . 'assets/css/hub-polish.css';
+            $hub_polish_dependencies = array('aat-styles');
+
+            if ($hub === 'ceremony') {
+                $ceremony_css_path = AAT_PLUGIN_DIR . 'assets/css/ceremony-dossier.css';
+                $ceremony_js_path = AAT_PLUGIN_DIR . 'assets/js/ceremony-dossier.js';
+                wp_enqueue_style(
+                    'aat-ceremony-dossier',
+                    AAT_PLUGIN_URL . 'assets/css/ceremony-dossier.css',
+                    array('aat-hub-polish'),
+                    file_exists($ceremony_css_path) ? (string) filemtime($ceremony_css_path) : AAT_VERSION
+                );
+                $hub_polish_dependencies = array('aat-ceremony-dossier');
+                wp_enqueue_script(
+                    'aat-ceremony-dossier',
+                    AAT_PLUGIN_URL . 'assets/js/ceremony-dossier.js',
+                    array(),
+                    file_exists($ceremony_js_path) ? (string) filemtime($ceremony_js_path) : AAT_VERSION,
+                    true
+                );
+            }
+
+            // This shared polish was the final template style block. Preserve
+            // that cascade order after moving it into the document head.
+            wp_enqueue_style(
+                'aat-hub-polish',
+                AAT_PLUGIN_URL . 'assets/css/hub-polish.css',
+                $hub_polish_dependencies,
+                file_exists($hub_polish_path) ? (string) filemtime($hub_polish_path) : AAT_VERSION
             );
+        }
+    }
+
+    /**
+     * Remove front-end packages that have no consumer in plugin-owned virtual
+     * templates. These routes render their own semantic markup rather than
+     * post blocks, Likes, sharing, or AI-summary interfaces. The allowlist is
+     * filterable so a host can restore a handle if it adds one of those
+     * features deliberately.
+     */
+    public function dequeue_virtual_page_bloat() {
+        if (!$this->is_entity_request() && !$this->is_hub_request()) {
+            return;
+        }
+
+        $handles = apply_filters(
+            'aat_virtual_page_unused_style_handles',
+            array(
+                'wp-block-library',
+                'wp-block-library-theme',
+                'global-styles',
+                'classic-theme-styles',
+                'jetpack_likes',
+                'jetpack-global-styles-frontend-style',
+                'ai_summarization',
+            )
+        );
+
+        foreach (array_unique(array_filter(array_map('sanitize_key', (array) $handles))) as $handle) {
+            wp_dequeue_style($handle);
         }
     }
 
