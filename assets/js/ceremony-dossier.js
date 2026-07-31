@@ -11,7 +11,7 @@
             if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                 return;
             }
-            var blocks = document.querySelectorAll('.aat-ceremony-dossier > section, .aat-ceremony-dossier > nav, .aat-ceremony-dossier > div.aat-hub-section');
+            var blocks = document.querySelectorAll('.aat-ceremony-dossier > section:not(.aat-ceremony-dossier-hero), .aat-ceremony-dossier > nav, .aat-ceremony-dossier > div.aat-hub-section');
             var io = new IntersectionObserver(function (entries) {
                 entries.forEach(function (entry) {
                     if (entry.isIntersecting) {

@@ -23,8 +23,8 @@ $assert = static function ($condition, $message) use (&$failures) {
     }
 };
 
-$assert(strpos($plugin, "Version: 2.7.80") !== false, 'Plugin header should report 2.7.80.');
-$assert(strpos($plugin, "define('AAT_VERSION', '2.7.80')") !== false, 'Runtime version should report 2.7.80.');
+$assert(strpos($plugin, "Version: 2.7.81") !== false, 'Plugin header should report 2.7.81.');
+$assert(strpos($plugin, "define('AAT_VERSION', '2.7.81')") !== false, 'Runtime version should report 2.7.81.');
 $assert(strpos($plugin, "'aat-hub-polish'") !== false, 'Hub polish should be enqueued as an external style.');
 $assert(strpos($plugin, "'aat-ceremony-dossier'") !== false, 'Ceremony dossier assets should be enqueued externally.');
 $assert(strpos($plugin, "if (\$hub === 'ceremony')") !== false, 'Ceremony assets must stay route-scoped.');
@@ -47,6 +47,10 @@ $assert(strpos($hub_css, '.aat-hub-film-grid .aat-filmography-card') !== false, 
 $assert(strpos($hub_css, '.aat-category-history .aat-decade-pill') !== false, 'Hub stylesheet is missing the category hit-area contract.');
 $assert(strpos($ceremony_js, 'IntersectionObserver') !== false, 'Ceremony reveal script is incomplete.');
 $assert(strpos($ceremony_js, 'prefers-reduced-motion: reduce') !== false, 'Ceremony reveal script must preserve reduced-motion behavior.');
+$assert(strpos($ceremony_js, 'section:not(.aat-ceremony-dossier-hero)') !== false, 'The LCP hero must stay outside reveal hiding.');
+$assert(strpos($template, "'loading'       => 'eager'") !== false, 'The local Ceremony hero poster must load eagerly.');
+$assert(strpos($template, "'fetchpriority' => 'high'") !== false, 'The local Ceremony hero poster must receive high fetch priority.');
+$assert(strpos($template, 'loading="eager" fetchpriority="high"') !== false, 'The fallback Ceremony hero poster must preserve LCP priority.');
 
 $assert(strlen($ceremony_css) < 17000, 'Ceremony CSS exceeds its 17 KB source budget.');
 $assert(strlen($hub_css) < 7000, 'Hub polish exceeds its 7 KB source budget.');

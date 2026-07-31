@@ -55,8 +55,8 @@ $assert($row_method !== '', 'Audit row classifier should be inspectable.');
 $assert($csv_method !== '', 'Audit CSV writer should be inspectable.');
 
 foreach (array(
-    'Version: 2.7.80',
-    "define('AAT_VERSION', '2.7.80')",
+    'Version: 2.7.81',
+    "define('AAT_VERSION', '2.7.81')",
     "'existing-media-audit'",
     "'folder'",
     "'all-media'",

@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.80
+ * Version: 2.7.81
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.80');
+define('AAT_VERSION', '2.7.81');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -9343,7 +9343,7 @@ public function get_tmdb_person_data_for_imdb_id($imdb_id, $allow_remote = true)
      * Prefers a mapped local poster, then TMDB poster/backdrop metadata.
      */
 
-public function get_title_visual_package($tt, $size = 'large', $allow_remote = false) {
+public function get_title_visual_package($tt, $size = 'large', $allow_remote = false, $poster_attrs = array()) {
     $tt = strtolower(trim((string) $tt));
     if (!preg_match('/^tt\d+$/', $tt)) {
         return array();
@@ -9367,7 +9367,9 @@ public function get_title_visual_package($tt, $size = 'large', $allow_remote = f
         'card_fallback_html' => '',
     );
 
-    $poster_html = $this->get_poster_img_html_for_title($tt, $size, array('class' => 'aat-entity-poster'));
+    $poster_attrs = is_array($poster_attrs) ? $poster_attrs : array();
+    $poster_attrs = array_merge(array('class' => 'aat-entity-poster'), $poster_attrs);
+    $poster_html = $this->get_poster_img_html_for_title($tt, $size, $poster_attrs);
     if (!empty($poster_html)) {
         $out['poster_html'] = $poster_html;
     }
