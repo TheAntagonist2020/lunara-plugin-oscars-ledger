@@ -648,6 +648,8 @@ if ($entity !== 'title' && !empty($distinct_films)) {
 get_header();
 ?>
 <div class="aat-container aat-entity-page aat-profile-file <?php echo esc_attr($profile_file_class); ?>">
+<?php // Route section composer (2.7.82): every top-level entity section is captured into $aat_sections and re-emitted through aat_entity_route_sections. Default output is byte-identical; the filter is inert until a consumer hooks it. ?>
+<?php $aat_sections = array(); $aat_route_context = $aat->get_route_context(); ob_start(); ?>
     <style>
         body .aat-container.aat-profile-file{display:grid!important;gap:clamp(22px,3vw,36px)!important;min-width:0!important;max-width:100%!important}
         body .aat-container.aat-profile-file .aat-entity-hero{display:grid!important;grid-template-columns:minmax(220px,320px) minmax(0,1fr)!important;gap:clamp(20px,3vw,38px)!important;align-items:stretch!important;margin:0!important;padding:clamp(20px,4vw,42px)!important;border:1px solid rgba(201,169,97,.24)!important;border-radius:18px!important;background-color:rgba(8,18,29,.95)!important}
@@ -671,6 +673,7 @@ get_header();
         <span class="aat-sep">/</span>
         <span><?php echo esc_html($type_label); ?></span>
     </nav>
+<?php $aat_sections['breadcrumbs'] = ob_get_clean(); ob_start(); ?>
 
     <section class="<?php echo esc_attr(implode(' ', $hero_classes)); ?>"<?php if ($hero_style !== '') : ?> style="<?php echo esc_attr($hero_style); ?>"<?php endif; ?>>
         <?php if (in_array($entity, array('title', 'name', 'company'), true)) : ?>
@@ -789,6 +792,7 @@ get_header();
             </div>
         </div>
     </section>
+<?php $aat_sections['hero'] = ob_get_clean(); ob_start(); ?>
 
     <?php if (!empty($latest_result)) : ?>
         <?php $latest_status_classes = array('aat-entity-status-banner'); ?>
@@ -832,6 +836,7 @@ get_header();
             <?php endif; ?>
         </section>
     <?php endif; ?>
+<?php $aat_sections['latest-result'] = ob_get_clean(); ob_start(); ?>
 
     <div class="aat-stats-bar aat-entity-stats">
         <div class="aat-stat"><span class="aat-stat-number"><?php echo esc_html(number_format_i18n($total_nominations)); ?></span><span class="aat-stat-label">Nominations</span></div>
@@ -857,6 +862,7 @@ get_header();
             </div>
         <?php endif; ?>
     </div>
+<?php $aat_sections['stats-bar'] = ob_get_clean(); ob_start(); ?>
 
     <?php if (!empty($category_rollups) || !empty($ceremony_rollups) || !empty($aat_editorial_refs)) : ?>
         <section id="ledger-crossroads" class="aat-entity-section aat-entity-crossroads" aria-label="<?php echo esc_attr__('Ledger Crossroads', 'academy-awards-table'); ?>">
@@ -958,6 +964,7 @@ get_header();
             </div>
         </section>
     <?php endif; ?>
+<?php $aat_sections['crossroads'] = ob_get_clean(); ob_start(); ?>
 
     <?php if ($entity === 'title' && !empty($aat_review_ids)) : ?>
         <?php
@@ -999,6 +1006,7 @@ get_header();
             </div>
         </section>
     <?php endif; ?>
+<?php $aat_sections['review-module'] = ob_get_clean(); ob_start(); ?>
 
         <section id="oscar-history" class="aat-entity-section aat-entity-timeline">
         <div class="aat-section-head">
@@ -1126,6 +1134,7 @@ get_header();
             </div>
         <?php endif; ?>
     </section>
+<?php $aat_sections['oscar-history'] = ob_get_clean(); ob_start(); ?>
 
 
     <?php if ($entity !== 'title' && !empty($distinct_films)) : ?>
@@ -1219,6 +1228,7 @@ get_header();
             <?php endif; ?>
         </section>
     <?php endif; ?>
+<?php $aat_sections['filmography'] = ob_get_clean(); ob_start(); ?>
 
     <?php if ($entity !== 'title' && !empty($aat_related_reviews)) : ?>
         <section id="on-lunara" class="aat-entity-section aat-related-reviews-section <?php echo esc_attr($aat_related_review_treatment_class); ?>">
@@ -1268,10 +1278,12 @@ get_header();
             </div>
         </section>
     <?php endif; ?>
+<?php $aat_sections['related-reviews'] = ob_get_clean(); ob_start(); ?>
 
     <div class="aat-footer">
         <p>Data sourced from the Academy of Motion Picture Arts and Sciences. Structured dataset compiled and maintained by Lunara Film.</p>
         <p>Profiles are generated directly from the Lunara Film Oscars dataset. New nominations and winners appear automatically after each annual import.</p>
     </div>
+<?php $aat_sections['footer'] = ob_get_clean(); echo implode('', apply_filters('aat_entity_route_sections', $aat_sections, $aat_route_context)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sections are template-rendered markup captured above. ?>
 </div>
 <?php get_footer();
