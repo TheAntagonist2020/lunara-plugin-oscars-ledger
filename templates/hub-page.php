@@ -1349,6 +1349,8 @@ get_header();
             }
     ?>
         <div class="aat-ceremony-dossier">
+<?php // Route section composer (2.7.82): every top-level ceremony section is captured into $aat_sections and re-emitted through aat_hub_route_sections. Default output is byte-identical; the filter is inert until a consumer hooks it. ?>
+<?php $aat_sections = array(); $aat_route_context = $aat->get_route_context(); ob_start(); ?>
             <?php
                 // Best Picture winner poster for the dossier lead. Local-first
                 // (allow_remote = false) so it never blocks the hero on a cold
@@ -1422,6 +1424,7 @@ get_header();
                     <a class="aat-btn aat-btn-primary" href="<?php echo esc_url($db_url); ?>"><?php echo esc_html__('Open Full Ledger', 'academy-awards-table'); ?></a>
                 </div>
             </section>
+<?php $aat_sections['dossier-hero'] = ob_get_clean(); ob_start(); ?>
 
         <?php if ($newer_ceremony > 0 || $older_ceremony > 0) : ?>
             <nav class="aat-ceremony-neighbor-nav" aria-label="<?php echo esc_attr__('Ceremony navigation', 'academy-awards-table'); ?>">
@@ -1449,6 +1452,7 @@ get_header();
                 </div>
             </nav>
         <?php endif; ?>
+<?php $aat_sections['neighbor-nav'] = ob_get_clean(); ob_start(); ?>
 
         <?php
             $ceremony_editorial_writeup = method_exists($aat, 'get_approved_ceremony_writeup') ? $aat->get_approved_ceremony_writeup($ceremony) : array();
@@ -1479,6 +1483,7 @@ get_header();
                 </div>
             </section>
         <?php endif; ?>
+<?php $aat_sections['editorial-writeup'] = ob_get_clean(); ob_start(); ?>
 
         <?php if (!empty($ceremony_major_briefing_cards)) : ?>
             <section class="aat-hub-section aat-ceremony-thesis" aria-label="<?php echo esc_attr__('Ceremony thesis and major race briefing', 'academy-awards-table'); ?>">
@@ -1552,6 +1557,7 @@ get_header();
                 </div>
             </section>
         <?php endif; ?>
+<?php $aat_sections['thesis'] = ob_get_clean(); ob_start(); ?>
 
         <?php if (!empty($ceremony_rollup)) :
             $spotlight_film_id = '';
@@ -1688,6 +1694,7 @@ get_header();
                 </article>
             </div>
         <?php endif; ?>
+<?php $aat_sections['marquee'] = ob_get_clean(); ob_start(); ?>
 
         <?php if (!empty($best_picture_nominees)) : ?>
             <div class="aat-hub-section aat-best-picture-nominees-section">
@@ -1746,6 +1753,7 @@ get_header();
                 </div>
             </div>
         <?php endif; ?>
+<?php $aat_sections['best-picture-nominees'] = ob_get_clean(); ob_start(); ?>
 
         <div class="aat-stats-bar aat-entity-stats">
             <div class="aat-stat"><span class="aat-stat-number"><?php echo esc_html(number_format_i18n($noms)); ?></span><span class="aat-stat-label"><?php echo esc_html__('Nominations', 'academy-awards-table'); ?></span></div>
@@ -1753,6 +1761,7 @@ get_header();
             <div class="aat-stat"><span class="aat-stat-number"><?php echo esc_html(number_format_i18n($cats_count)); ?></span><span class="aat-stat-label"><?php echo esc_html__('Categories', 'academy-awards-table'); ?></span></div>
                     <div class="aat-stat"><span class="aat-stat-number"><?php echo $span ? esc_html($span) : '-'; ?></span><span class="aat-stat-label"><?php echo esc_html__('Ledger span', 'academy-awards-table'); ?></span></div>
         </div>
+<?php $aat_sections['stats-bar'] = ob_get_clean(); ob_start(); ?>
 
         <?php if (!empty($ceremony_major_race_groups)) : ?>
             <section class="aat-hub-section aat-ceremony-major-races" aria-label="<?php echo esc_attr__('Major Oscar races', 'academy-awards-table'); ?>">
@@ -1889,6 +1898,7 @@ get_header();
                 </div>
             </section>
         <?php endif; ?>
+<?php $aat_sections['major-races'] = ob_get_clean(); ob_start(); ?>
 
         <?php if (!empty($ceremony_ballot_groups)) : ?>
             <section class="aat-hub-section aat-ceremony-ballot-ledger">
@@ -2027,6 +2037,7 @@ get_header();
                 </div>
             </section>
         <?php endif; ?>
+<?php $aat_sections['ballot-ledger'] = ob_get_clean(); ob_start(); ?>
 
         <?php $ceremony_titles = method_exists($aat, 'get_ceremony_title_highlights') ? $aat->get_ceremony_title_highlights($ceremony, 18) : array(); ?>
         <?php $ceremony_review_cards = !empty($ceremony_titles) ? $aat_build_hub_review_cards($ceremony_titles, $aat_get_related_review_limit()) : array(); ?>
@@ -2072,6 +2083,7 @@ get_header();
                 </div>
             </div>
         <?php endif; ?>
+<?php $aat_sections['gallery'] = ob_get_clean(); ob_start(); ?>
 
         <?php if (!empty($ceremony_review_cards)) : ?>
             <div class="aat-hub-section aat-related-reviews-section <?php echo esc_attr($aat_related_review_treatment_class); ?>">
@@ -2119,6 +2131,7 @@ get_header();
                 </div>
             </div>
         <?php endif; ?>
+<?php $aat_sections['related-reviews'] = ob_get_clean(); ob_start(); ?>
 
         <?php if (!empty($cats)) : ?>
             <div class="aat-hub-section">
@@ -2133,6 +2146,7 @@ get_header();
                 </div>
             </div>
         <?php endif; ?>
+<?php $aat_sections['category-chips'] = ob_get_clean(); ob_start(); ?>
 
         <?php if (!empty($ceremony_rollup['winner_rows'])) : ?>
             <div class="aat-hub-section aat-winner-circle-section<?php echo $is_latest_ceremony ? ' is-hero-latest' : ''; ?>" id="ceremony-winner-circle">
@@ -2217,6 +2231,7 @@ get_header();
             </div>
         <?php endif; ?>
 
+<?php $aat_sections['winner-circle'] = ob_get_clean(); ob_start(); ?>
         <?php
             $table_view_url = add_query_arg('view', 'table');
             $poster_view_url = remove_query_arg('view');
@@ -2234,6 +2249,7 @@ get_header();
                 </div>
             </div>
         </div>
+<?php $aat_sections['explorer-callout'] = ob_get_clean(); ob_start(); ?>
 
         <?php if ($table_view_requested) : ?>
             <div class="aat-hub-section aat-table-shell">
@@ -2245,6 +2261,7 @@ get_header();
                 ?>
             </div>
         <?php endif; ?>
+<?php $aat_sections['table-shell'] = ob_get_clean(); echo implode('', apply_filters('aat_hub_route_sections', $aat_sections, $aat_route_context)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sections are template-rendered markup captured above. ?>
         </div>
 
     <?php
@@ -2411,6 +2428,8 @@ get_header();
     ?>
         <?php $category_hero_poster = !empty($latest_winner['film_id']) ? $aat_index_poster_html((string) $latest_winner['film_id']) : ''; ?>
         <div class="aat-category-dossier aat-inner-route-system<?php echo $is_premium_category_dossier ? ' aat-premium-category-dossier ' . esc_attr((string) $premium_category_profile['class']) : ' aat-generic-category-dossier'; ?>">
+<?php // Route section composer (2.7.82): every top-level category section is captured into $aat_sections and re-emitted through aat_hub_route_sections. Default output is byte-identical; the filter is inert until a consumer hooks it. ?>
+<?php $aat_sections = array(); $aat_route_context = $aat->get_route_context(); ob_start(); ?>
         <style>
             /* Category dossier: latest-winner hero poster + reveal motion
                (shared by premium and generic category files). */
@@ -2520,6 +2539,7 @@ get_header();
                 </div>
             </section>
         <?php endif; ?>
+<?php $aat_sections['hero'] = ob_get_clean(); ob_start(); ?>
 
         <?php if (!empty($latest_winner)) : ?>
             <?php
@@ -2608,6 +2628,7 @@ get_header();
                 </div>
             </section>
         <?php endif; ?>
+<?php $aat_sections['latest-winner'] = ob_get_clean(); ob_start(); ?>
 
         <div class="aat-stats-bar aat-entity-stats">
             <div class="aat-stat"><span class="aat-stat-number"><?php echo esc_html(number_format_i18n($noms)); ?></span><span class="aat-stat-label"><?php echo esc_html__('Nominations', 'academy-awards-table'); ?></span></div>
@@ -2615,6 +2636,7 @@ get_header();
             <div class="aat-stat"><span class="aat-stat-number"><?php echo esc_html(number_format_i18n($cers)); ?></span><span class="aat-stat-label"><?php echo esc_html__('Ceremonies', 'academy-awards-table'); ?></span></div>
             <div class="aat-stat"><span class="aat-stat-number"><?php echo esc_html($first_year && $last_year ? ($first_year . '-' . $last_year) : '-'); ?></span><span class="aat-stat-label"><?php echo esc_html__('Span', 'academy-awards-table'); ?></span></div>
         </div>
+<?php $aat_sections['stats-bar'] = ob_get_clean(); ob_start(); ?>
 
         <?php
         // Round 2 Step 2 (2026-05-24): Category History — decade-grouped ledger
@@ -2944,6 +2966,7 @@ get_header();
                 </div>
             </div>
         <?php endif; ?>
+<?php $aat_sections['history'] = ob_get_clean(); ob_start(); ?>
 
         <?php $category_highlight_limit = $category_history_full_requested ? 18 : (int) apply_filters('aat_category_title_highlights_fast_limit', 9, $canonical); ?>
         <?php $category_highlight_limit = max(6, min(18, $category_highlight_limit)); ?>
@@ -2991,6 +3014,7 @@ get_header();
                 </div>
             </div>
         <?php endif; ?>
+<?php $aat_sections['gallery'] = ob_get_clean(); ob_start(); ?>
 
         <?php if (!empty($category_review_cards)) : ?>
             <div class="aat-hub-section aat-related-reviews-section <?php echo esc_attr($aat_related_review_treatment_class); ?>">
@@ -3039,6 +3063,7 @@ get_header();
             </div>
         <?php endif; ?>
 
+<?php $aat_sections['related-reviews'] = ob_get_clean(); ob_start(); ?>
         <?php
             $table_view_url = add_query_arg('view', 'table');
             $poster_view_url = remove_query_arg('view');
@@ -3080,6 +3105,7 @@ get_header();
             });
         })();
         </script>
+<?php $aat_sections['explorer-callout'] = ob_get_clean(); ob_start(); ?>
 
         <?php if ($table_view_requested) : ?>
             <div class="aat-hub-section aat-table-shell">
@@ -3091,6 +3117,7 @@ get_header();
                 ?>
             </div>
         <?php endif; ?>
+<?php $aat_sections['table-shell'] = ob_get_clean(); echo implode('', apply_filters('aat_hub_route_sections', $aat_sections, $aat_route_context)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sections are template-rendered markup captured above. ?>
         </div>
 
     <?php

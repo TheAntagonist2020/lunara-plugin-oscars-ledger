@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.81
+ * Version: 2.7.82
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.81');
+define('AAT_VERSION', '2.7.82');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -4593,6 +4593,8 @@ class Academy_Awards_Table {
         $options_table = $wpdb->options;
         $wpdb->query("DELETE FROM $options_table WHERE option_name LIKE '_transient_aat_entity_label_%' OR option_name LIKE '_transient_timeout_aat_entity_label_%'");
 
+        $this->clear_oscars_read_api_caches();
+
         return array(
             'updated' => $updated,
             'resolved_ids' => $resolved_ids,
@@ -4691,6 +4693,7 @@ class Academy_Awards_Table {
             delete_transient('aat_hub_page_stats_v1');
             delete_transient('aat_hub_ceremony_grid_v2');
             delete_transient('aat_hub_category_grid_v2');
+            $this->clear_oscars_read_api_caches();
         }
 
         return array(
@@ -4842,6 +4845,7 @@ class Academy_Awards_Table {
             delete_transient('aat_hub_page_stats_v1');
             delete_transient('aat_hub_ceremony_grid_v2');
             delete_transient('aat_hub_category_grid_v2');
+            $this->clear_oscars_read_api_caches();
         }
 
         return array(
@@ -4987,6 +4991,7 @@ class Academy_Awards_Table {
             delete_transient('aat_hub_page_stats_v1');
             delete_transient('aat_hub_ceremony_grid_v2');
             delete_transient('aat_hub_category_grid_v2');
+            $this->clear_oscars_read_api_caches();
         }
 
         return array(
@@ -5105,6 +5110,7 @@ class Academy_Awards_Table {
             delete_transient('aat_hub_page_stats_v1');
             delete_transient('aat_hub_ceremony_grid_v2');
             delete_transient('aat_hub_category_grid_v2');
+            $this->clear_oscars_read_api_caches();
         }
 
         return array(
@@ -5208,6 +5214,7 @@ class Academy_Awards_Table {
             delete_transient('aat_hub_page_stats_v1');
             delete_transient('aat_hub_ceremony_grid_v2');
             delete_transient('aat_hub_category_grid_v2');
+            $this->clear_oscars_read_api_caches();
         }
 
         return array(
@@ -5398,6 +5405,7 @@ class Academy_Awards_Table {
             delete_transient('aat_hub_page_stats_v1');
             delete_transient('aat_hub_ceremony_grid_v2');
             delete_transient('aat_hub_category_grid_v2');
+            $this->clear_oscars_read_api_caches();
         }
 
         return array(
@@ -8554,6 +8562,7 @@ class Academy_Awards_Table {
         delete_transient('aat_hub_page_stats_v1');
         delete_transient('aat_hub_ceremony_grid_v2');
         delete_transient('aat_hub_category_grid_v2');
+        $this->clear_oscars_read_api_caches();
 
         foreach ((array) $entity_ids as $entity_id) {
             $entity_id = strtolower(trim((string) $entity_id));
@@ -15640,6 +15649,269 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
 
         set_transient($cache_key, $ids, 6 * HOUR_IN_SECONDS);
         return $ids;
+    }
+
+    /**
+     * Oscars read-path API (2.7.82)
+     *
+     * A single plugin-owned surface for the read queries the theme currently
+     * open-codes against the awards table. Inert until a consumer calls it:
+     * nothing here runs during default rendering, and every accessor is a
+     * prepared, transient-cached read invalidated alongside the hub transients.
+     */
+
+    /**
+     * Published review post IDs whose IMDb title meta joins to an Oscars row.
+     *
+     * Ports the postmeta-to-awards join the theme runs in
+     * lunara_oscars_linked_reviews_query() (lunara-theme-blocks
+     * inc/queries.php), built on the aat_review_post_type /
+     * aat_review_imdb_meta_key filters instead of hard-coded values.
+     *
+     * A single fixed-size pool is cached under one key (so invalidation stays
+     * a plain delete_transient) and sliced per request; requests beyond the
+     * pool fall through to a direct prepared query.
+     */
+    public function get_reviewed_award_title_post_ids($limit = 12, $offset = 0) {
+        $limit = max(1, intval($limit));
+        $offset = max(0, intval($offset));
+
+        $pool_size = 200;
+        if (($offset + $limit) <= $pool_size) {
+            $cache_key = 'aat_reviewed_award_post_ids_v1';
+            $pool = get_transient($cache_key);
+            if (!is_array($pool)) {
+                $pool = $this->query_reviewed_award_title_post_ids($pool_size, 0);
+                set_transient($cache_key, $pool, 12 * HOUR_IN_SECONDS);
+            }
+
+            return array_slice(array_map('intval', $pool), $offset, $limit);
+        }
+
+        return $this->query_reviewed_award_title_post_ids($limit, $offset);
+    }
+
+    /**
+     * Uncached prepared join behind get_reviewed_award_title_post_ids().
+     */
+    private function query_reviewed_award_title_post_ids($limit, $offset) {
+        global $wpdb;
+
+        $limit = max(1, intval($limit));
+        $offset = max(0, intval($offset));
+        $table_name = $this->get_table_name();
+        $review_post_type = (string) $this->get_review_post_type();
+        $review_meta_key = (string) $this->get_review_imdb_meta_key();
+
+        $post_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT DISTINCT pm.post_id
+             FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id AND p.post_type = %s AND p.post_status = 'publish'
+             INNER JOIN {$table_name} aa ON aa.film_id = pm.meta_value AND aa.film_id != ''
+             WHERE pm.meta_key = %s AND pm.meta_value != ''
+             GROUP BY pm.post_id
+             ORDER BY p.post_date DESC
+             LIMIT %d OFFSET %d",
+            $review_post_type,
+            $review_meta_key,
+            $limit,
+            $offset
+        ));
+
+        return is_array($post_ids) ? array_values(array_map('intval', array_filter($post_ids, 'is_numeric'))) : array();
+    }
+
+    /**
+     * Per-title category/nomination context for one IMDb title id.
+     *
+     * Ports the per-title award query the theme runs in
+     * lunara_build_home_title_story() (lunara-theme-blocks
+     * inc/home-sections.php): raw rows plus winner-first category ordering
+     * with optional preferred-category pinning.
+     */
+    public function get_title_award_context($imdb_id, $args = array()) {
+        global $wpdb;
+
+        $imdb_id = strtolower(trim((string) $imdb_id));
+        if (!preg_match('/^tt\d+$/', $imdb_id)) {
+            return array();
+        }
+
+        $args = wp_parse_args($args, array(
+            'preferred_categories' => array(),
+            'max_categories'       => 4,
+        ));
+
+        $cache_key = 'aat_title_award_context_v1_' . $imdb_id;
+        $rows = get_transient($cache_key);
+        if (!is_array($rows)) {
+            $table_name = $this->get_table_name();
+            $like = '%' . $wpdb->esc_like($imdb_id) . '%';
+            $rows = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT ceremony, year, canonical_category, film, winner FROM $table_name WHERE (film_id = %s OR film_id LIKE %s) AND canonical_category != '' ORDER BY ceremony DESC, winner DESC, canonical_category ASC",
+                    $imdb_id,
+                    $like
+                ),
+                ARRAY_A
+            );
+            $rows = is_array($rows) ? $rows : array();
+            set_transient($cache_key, $rows, 12 * HOUR_IN_SECONDS);
+        }
+
+        if (empty($rows)) {
+            return array();
+        }
+
+        $winner_rows = array_values(array_filter($rows, static function ($row) {
+            return !empty($row['winner']);
+        }));
+
+        $raw_categories = array();
+        foreach ($winner_rows as $row) {
+            $canonical = trim((string) ($row['canonical_category'] ?? ''));
+            if ($canonical !== '' && !in_array($canonical, $raw_categories, true)) {
+                $raw_categories[] = $canonical;
+            }
+        }
+
+        $ordered_categories = array();
+        foreach ((array) $args['preferred_categories'] as $preferred) {
+            if (in_array($preferred, $raw_categories, true)) {
+                $ordered_categories[] = $preferred;
+            }
+        }
+        foreach ($raw_categories as $canonical) {
+            if (!in_array($canonical, $ordered_categories, true)) {
+                $ordered_categories[] = $canonical;
+            }
+        }
+
+        $display_categories = array();
+        foreach (array_slice($ordered_categories, 0, max(0, intval($args['max_categories']))) as $canonical) {
+            $display_categories[] = $this->format_category_display($canonical);
+        }
+
+        $first_row = $rows[0];
+        $title = trim((string) ($first_row['film'] ?? ''));
+        if ($title === '') {
+            $title = $this->lookup_title_label($imdb_id);
+        }
+
+        return array(
+            'imdb_id'            => $imdb_id,
+            'title'              => $title,
+            'year'               => trim((string) ($first_row['year'] ?? '')),
+            'rows'               => $rows,
+            'wins'               => count($winner_rows),
+            'nominations'        => count($rows),
+            'winner_categories'  => $ordered_categories,
+            'display_categories' => $display_categories,
+        );
+    }
+
+    /**
+     * First ceremony in which a canonical category appears.
+     *
+     * Ports the MIN(ceremony) debut query the theme runs in
+     * lunara_home_category_debuts_in_ceremony() (lunara-theme-blocks
+     * inc/home-sections.php). Returns 0 when the category is unknown.
+     */
+    public function get_category_first_ceremony($canonical_category) {
+        global $wpdb;
+
+        $canonical_category = trim((string) $canonical_category);
+        if ($canonical_category === '') {
+            return 0;
+        }
+
+        $cache_key = 'aat_category_first_ceremony_v1';
+        $map = get_transient($cache_key);
+        if (!is_array($map)) {
+            $map = array();
+        }
+
+        if (!array_key_exists($canonical_category, $map)) {
+            $table_name = $this->get_table_name();
+            $map[$canonical_category] = intval($wpdb->get_var($wpdb->prepare(
+                "SELECT MIN(ceremony) FROM $table_name WHERE canonical_category = %s",
+                $canonical_category
+            )));
+            set_transient($cache_key, $map, 12 * HOUR_IN_SECONDS);
+        }
+
+        return intval($map[$canonical_category]);
+    }
+
+    /**
+     * Describe the current plugin-owned route from the already-sanitized
+     * aat_* query vars (plus the resolved portal page). Never re-parses raw
+     * request data.
+     *
+     * @return array{kind: string, id: mixed} kind is one of
+     *     portal|ceremony|category|ceremonies|categories|about|title|person|company|none.
+     */
+    public function get_route_context() {
+        if ($this->is_entity_request()) {
+            $entity = sanitize_text_field((string) get_query_var('aat_entity'));
+            $entity_id = strtolower(trim((string) sanitize_text_field(get_query_var('aat_entity_id'))));
+
+            if ($entity === 'title') {
+                return array('kind' => 'title', 'id' => $entity_id);
+            }
+            if ($entity === 'name') {
+                return array('kind' => 'person', 'id' => $entity_id);
+            }
+            if ($entity === 'company') {
+                return array('kind' => 'company', 'id' => $entity_id);
+            }
+
+            return array('kind' => 'none', 'id' => null);
+        }
+
+        if ($this->is_hub_request()) {
+            $hub = sanitize_text_field((string) get_query_var('aat_hub'));
+            $hub_id = sanitize_text_field((string) get_query_var('aat_hub_id'));
+
+            if ($hub === 'ceremony') {
+                $ceremony = intval($hub_id);
+                return array('kind' => 'ceremony', 'id' => $ceremony > 0 ? $ceremony : null);
+            }
+            if ($hub === 'category') {
+                $canonical = (string) $this->resolve_category_slug($hub_id);
+                return array('kind' => 'category', 'id' => $canonical !== '' ? $canonical : null);
+            }
+            if (in_array($hub, array('ceremonies', 'categories', 'about'), true)) {
+                return array('kind' => $hub, 'id' => null);
+            }
+
+            return array('kind' => 'none', 'id' => null);
+        }
+
+        if (function_exists('is_page') && is_page()) {
+            $queried = get_queried_object();
+            if ($queried instanceof WP_Post && $queried->post_name === $this->get_entity_base_slug()) {
+                return array('kind' => 'portal', 'id' => intval($queried->ID));
+            }
+        }
+
+        return array('kind' => 'none', 'id' => null);
+    }
+
+    /**
+     * Drop the read-path API transients. Called alongside every hub transient
+     * invalidation site so the read API can never outlive a dataset repair.
+     */
+    private function clear_oscars_read_api_caches() {
+        global $wpdb;
+
+        delete_transient('aat_reviewed_award_post_ids_v1');
+        delete_transient('aat_category_first_ceremony_v1');
+
+        if ($wpdb instanceof wpdb) {
+            $options_table = $wpdb->options;
+            $wpdb->query("DELETE FROM $options_table WHERE option_name LIKE '_transient_aat_title_award_context_v1_%' OR option_name LIKE '_transient_timeout_aat_title_award_context_v1_%'");
+        }
     }
 
     /**

@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.81
+Stable tag: 2.7.82
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.82 =
+* Added a single Oscars read-path API (reviewed-award review IDs, per-title award context, category debut ceremony, and route context) as prepared, transient-cached accessors invalidated with the hub caches — inert infrastructure for the theme's Oscars route design pass.
+* Added route section composer filters (`aat_hub_route_sections`, `aat_entity_route_sections`) to the Ceremony, Category, and entity templates; default output is byte-identical and the hooks stay inert until a consumer attaches.
 
 = 2.7.81 =
 * Promoted the visible Ceremony Best Picture poster to eager, high-priority loading and kept the first hero outside JavaScript reveal hiding while preserving below-fold motion.
