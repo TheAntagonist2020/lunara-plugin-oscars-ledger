@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.82
+Stable tag: 2.7.83
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.83 =
+* Added a stable, read-only, redacted Oscars status API with bounded integrity, artwork, entity-automation health, and capability-aware canonical admin destinations for Site Studio.
 
 = 2.7.82 =
 * Added a single Oscars read-path API (reviewed-award review IDs, per-title award context, category debut ceremony, and route context) as prepared, transient-cached accessors invalidated with the hub caches — inert infrastructure for the theme's Oscars route design pass.

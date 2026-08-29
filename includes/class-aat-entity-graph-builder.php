@@ -107,6 +107,70 @@ final class AAT_Entity_Graph_Builder {
         update_option(self::STATE_OPTION, $state, false);
     }
 
+    /**
+     * Return bounded, redacted graph automation health without running a build.
+     */
+    public static function get_lunara_health() {
+        $models_available = function_exists('post_type_exists')
+            && post_type_exists('movie')
+            && post_type_exists('person')
+            && post_type_exists('ledger_entry');
+        $scheduled = function_exists('wp_next_scheduled') && (bool) wp_next_scheduled(self::HEARTBEAT_HOOK);
+        $state = function_exists('get_option') ? self::get_state() : self::default_state();
+        $running = !empty($state['running']);
+        $finished_at = max(0, intval($state['finished_at'] ?? 0));
+        $started_at = max(0, intval($state['started_at'] ?? 0));
+        $has_error = trim((string) ($state['last_error'] ?? '')) !== '';
+        $stage = (string) ($state['stage'] ?? 'idle');
+        if (!in_array($stage, array('idle', 'movies', 'people', 'studios', 'ledger', 'verify', 'done'), true)) {
+            $stage = 'unknown';
+        }
+
+        if (!$models_available) {
+            $health_state = 'unavailable';
+            $message = self::lunara_text('Entity graph models are unavailable.');
+        } elseif ($has_error) {
+            $health_state = 'error';
+            $message = self::lunara_text('The last entity graph run reported an error.');
+        } elseif ($running) {
+            $health_state = 'running';
+            $message = self::lunara_text('Entity graph automation is running.');
+        } elseif (!$scheduled) {
+            $health_state = 'unscheduled';
+            $message = self::lunara_text('Entity graph automation is not scheduled.');
+        } elseif ($finished_at === 0) {
+            $health_state = 'scheduled_idle';
+            $message = self::lunara_text('Entity graph automation is scheduled and idle.');
+        } elseif ((time() - $finished_at) > (2 * 24 * 60 * 60)) {
+            $health_state = 'stale';
+            $message = self::lunara_text('Entity graph automation has not completed recently.');
+        } else {
+            $health_state = 'healthy';
+            $message = self::lunara_text('Entity graph automation completed recently.');
+        }
+
+        $totals = is_array($state['totals'] ?? null) ? $state['totals'] : array();
+        $processed = is_array($state['processed'] ?? null) ? $state['processed'] : array();
+        return array(
+            'available' => $models_available,
+            'state' => $health_state,
+            'label' => self::lunara_text('Entity graph automation'),
+            'message' => $message,
+            'running' => $running,
+            'scheduled' => $scheduled,
+            'stage' => $stage,
+            'updated_at' => ($finished_at ?: $started_at) ?: null,
+            'counts' => array(
+                'total' => max(0, array_sum(array_map('intval', array_intersect_key($totals, array_flip(array('movies', 'people', 'studios', 'ledger')))))),
+                'processed' => max(0, array_sum(array_map('intval', array_intersect_key($processed, array_flip(array('movies', 'people', 'studios', 'ledger')))))),
+            ),
+        );
+    }
+
+    private static function lunara_text($value) {
+        return function_exists('__') ? __($value, 'academy-awards-table') : $value;
+    }
+
     /** Small lookup maps, cached per request. */
     private static function categories_map() {
         static $map = null;

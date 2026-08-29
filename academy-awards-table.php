@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.82
+ * Version: 2.7.83
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.82');
+define('AAT_VERSION', '2.7.83');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -56,6 +56,8 @@ require_once AAT_PLUGIN_DIR . 'includes/class-aat-ceremony-writeups.php';
 // registers. Admin-only tooling; inert until the models exist.
 require_once AAT_PLUGIN_DIR . 'includes/class-aat-entity-graph-builder.php';
 AAT_Entity_Graph_Builder::init();
+
+require_once AAT_PLUGIN_DIR . 'includes/class-aat-lunara-status.php';
 
 /**
  * Main Plugin Class
@@ -17219,6 +17221,13 @@ public function ajax_import_bundled_data() {
         }
 
         return $this->finalize_award_group_census($groups, $total_rows, $total_winners);
+    }
+
+    /**
+     * Stable, read-only Oscars status for owner-approved consumers.
+     */
+    public function get_lunara_status() {
+        return AAT_Lunara_Status::get_status(AAT_VERSION);
     }
 
     /**
