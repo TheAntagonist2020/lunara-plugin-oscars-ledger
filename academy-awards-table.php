@@ -58,6 +58,7 @@ require_once AAT_PLUGIN_DIR . 'includes/class-aat-entity-graph-builder.php';
 AAT_Entity_Graph_Builder::init();
 
 require_once AAT_PLUGIN_DIR . 'includes/class-aat-lunara-status.php';
+AAT_Lunara_Status::register_refresh_hooks();
 
 /**
  * Main Plugin Class
