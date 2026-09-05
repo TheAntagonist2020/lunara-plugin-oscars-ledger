@@ -283,6 +283,8 @@ if (!empty($aat_winner_rows)) {
     data-initial-winners-only="<?php echo esc_attr($atts['winners_only'] ?? 'false'); ?>"
 >
     <?php if ($layout === 'full' && !$autoload_table) : ?>
+        <?php // Landing section composer (2.7.83): every top-level landing block is captured into $aat_landing_sections and re-emitted through aat_landing_route_sections. Default output is byte-identical; the filter is inert until a consumer hooks it. ?>
+        <?php $aat_landing_sections = array(); $aat_landing_context = array('layout' => $layout, 'ceremony' => $aat_max_ceremony, 'view' => 'landing'); ob_start(); ?>
         <div class="aat-header aat-database-landing-header aat-ledger-command">
             <div class="aat-ledger-command-symbol">
                 <img
@@ -313,6 +315,7 @@ if (!empty($aat_winner_rows)) {
             </nav>
         </div>
 
+        <?php $aat_landing_sections['landing-header'] = ob_get_clean(); ob_start(); ?>
         <div class="aat-hub-metric-grid aat-database-landing-metrics">
             <article class="aat-hub-metric-card">
                 <span class="aat-hub-metric-label"><?php esc_html_e('Records', 'academy-awards-table'); ?></span>
@@ -336,6 +339,7 @@ if (!empty($aat_winner_rows)) {
             </article>
         </div>
 
+        <?php $aat_landing_sections['landing-metrics'] = ob_get_clean(); ob_start(); ?>
         <?php if (!empty($aat_rollup)) : ?>
             <section class="aat-hub-section aat-ceremony-marquee">
                 <div class="aat-ceremony-marquee-copy">
@@ -375,6 +379,7 @@ if (!empty($aat_winner_rows)) {
             </section>
         <?php endif; ?>
 
+        <?php $aat_landing_sections['ceremony-marquee'] = ob_get_clean(); ob_start(); ?>
         <?php if (!empty($aat_top_titles)) : ?>
             <div class="aat-hub-section aat-ceremony-gallery-section">
                 <h2><?php esc_html_e('Poster Highlights', 'academy-awards-table'); ?></h2>
@@ -411,6 +416,7 @@ if (!empty($aat_winner_rows)) {
             </div>
         <?php endif; ?>
 
+        <?php $aat_landing_sections['poster-highlights'] = ob_get_clean(); ob_start(); ?>
         <?php if (!empty($aat_table_latest_rows)) : ?>
             <div class="aat-hub-section aat-winner-circle-section is-hero-latest is-marquee-latest">
                 <h2><?php esc_html_e('Latest Winner Circle', 'academy-awards-table'); ?></h2>
@@ -503,6 +509,7 @@ if (!empty($aat_winner_rows)) {
             </div>
         <?php endif; ?>
 
+        <?php $aat_landing_sections['winner-circle'] = ob_get_clean(); ob_start(); ?>
         <div class="aat-footer aat-database-landing-footer">
             <p class="aat-footer-line">
                 <?php esc_html_e('Want the full sortable table?', 'academy-awards-table'); ?>
@@ -511,6 +518,7 @@ if (!empty($aat_winner_rows)) {
                 <?php esc_html_e('On phones, the poster-first view is now the default for speed and readability.', 'academy-awards-table'); ?>
             </p>
         </div>
+        <?php $aat_landing_sections['landing-footer'] = ob_get_clean(); echo implode('', apply_filters('aat_landing_route_sections', $aat_landing_sections, $aat_landing_context)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sections are template-rendered markup captured above. ?>
     <?php else : ?>
         <?php if ($layout === 'full') : ?>
             <?php $poster_view_url = remove_query_arg('view'); ?>
