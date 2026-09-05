@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.82
+Stable tag: 2.7.83
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.83 =
+* Added a landing section composer filter (`aat_landing_route_sections`) to the `[academy_awards]` landing template so a consumer can drop or reorder the landing header, metric tiles, Latest Ceremony marquee, Poster Highlights, Latest Winner Circle, and footer. Default output is byte-identical and the hook stays inert until a consumer attaches.
 
 = 2.7.82 =
 * Added a single Oscars read-path API (reviewed-award review IDs, per-title award context, category debut ceremony, and route context) as prepared, transient-cached accessors invalidated with the hub caches — inert infrastructure for the theme's Oscars route design pass.
