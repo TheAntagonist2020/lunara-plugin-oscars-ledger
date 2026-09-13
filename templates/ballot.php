@@ -49,7 +49,7 @@ $review_map = isset($ballot_groups['review_map']) && is_array($ballot_groups['re
                 }
                 ?>
                 <article class="aat-ballot__category" data-category="<?php echo esc_attr($category); ?>">
-                    <h3><?php echo esc_html($this->format_category_display($category)); ?></h3>
+                    <h3><?php echo esc_html($this->format_category_display($category, $ceremony)); ?></h3>
                     <div class="aat-ballot__choices" role="list">
                         <?php foreach ($rows as $row) : ?>
                             <?php
