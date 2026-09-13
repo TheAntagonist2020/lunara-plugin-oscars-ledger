@@ -1,6 +1,6 @@
 <?php
 /**
- * Landing section composer contract (2.7.83).
+ * Landing section composer contract (2.7.84).
  *
  * The [academy_awards] landing template captures every top-level block into
  * $aat_landing_sections and re-emits it through the aat_landing_route_sections

@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.83
+ * Version: 2.7.84
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.83');
+define('AAT_VERSION', '2.7.84');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -2483,7 +2483,7 @@ class Academy_Awards_Table {
             return array();
         }
 
-        $cache_key = 'aat_ceremony_rollup_v2_' . $ceremony;
+        $cache_key = 'aat_ceremony_rollup_v3_' . $ceremony;
         $cached = get_transient($cache_key);
         if (is_array($cached)) {
             return $cached;
@@ -2597,14 +2597,14 @@ class Academy_Awards_Table {
 
                 if ($is_winner) {
                     $title_stats[$film_id]['wins']++;
-                    $title_stats[$film_id]['winning_categories'][$category] = $this->format_category_display($category);
+                    $title_stats[$film_id]['winning_categories'][$category] = $this->format_category_display($category, $ceremony);
                 }
             }
 
             if ($is_winner) {
                 $winner_entry = array(
                     'canonical_category' => $category,
-                    'category_label' => $this->format_category_display($category),
+                    'category_label' => $this->format_category_display($category, $ceremony),
                     'film' => $film_label,
                     'film_id' => $film_id,
                     'film_url' => $film_id !== '' ? $this->build_entity_url_from_id($film_id) : '',
@@ -2733,7 +2733,7 @@ class Academy_Awards_Table {
 
             $categories[] = array(
                 'category' => $category,
-                'label' => $this->format_category_display($category),
+                'label' => $this->format_category_display($category, $ceremony),
                 'url' => $this->get_category_url($category),
                 'rows' => $rows,
                 'row_count' => count($rows),
@@ -5568,9 +5568,14 @@ class Academy_Awards_Table {
     /**
      * Convert canonical categories to a friendlier display label (for common entries).
      */
-    public function format_category_display($canonical_category) {
+    public function format_category_display($canonical_category, $ceremony = 0) {
         $cat = (string) $canonical_category;
         if ($cat === '') return '';
+        // Discovery uses today's names; dated records retain their ceremony's name.
+        // Production Design began at the 85th awards; combined Sound at the 93rd.
+        $ceremony = intval($ceremony);
+        if ($cat === 'ART DIRECTION' && ($ceremony === 0 || $ceremony >= 85)) return 'Production Design';
+        if ($cat === 'SOUND MIXING' && ($ceremony === 0 || $ceremony >= 93)) return 'Sound';
         $map = array(
             'ACTOR IN A LEADING ROLE' => 'Best Actor',
             'ACTRESS IN A LEADING ROLE' => 'Best Actress',
@@ -5592,6 +5597,10 @@ class Academy_Awards_Table {
         $slug = sanitize_title((string) $slug);
         if ($slug === '') return '';
 
+        // Resolve aliases before consulting a warm legacy map. No rewrite flush or
+        // database rename is required, and existing canonical URLs keep working.
+        $aliases = array('production-design' => 'art-direction', 'sound' => 'sound-mixing');
+        if (isset($aliases[$slug])) { $slug = $aliases[$slug]; }
         $cache_key = 'aat_category_slug_map_v1';
         $map = get_transient($cache_key);
         if (!is_array($map)) {
@@ -15768,10 +15777,12 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
         }));
 
         $raw_categories = array();
+        $category_ceremonies = array();
         foreach ($winner_rows as $row) {
             $canonical = trim((string) ($row['canonical_category'] ?? ''));
             if ($canonical !== '' && !in_array($canonical, $raw_categories, true)) {
                 $raw_categories[] = $canonical;
+                $category_ceremonies[$canonical] = intval($row['ceremony'] ?? 0);
             }
         }
 
@@ -15789,7 +15800,7 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
 
         $display_categories = array();
         foreach (array_slice($ordered_categories, 0, max(0, intval($args['max_categories']))) as $canonical) {
-            $display_categories[] = $this->format_category_display($canonical);
+            $display_categories[] = $this->format_category_display($canonical, $category_ceremonies[$canonical] ?? 0);
         }
 
         $first_row = $rows[0];
@@ -15907,9 +15918,11 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
 
         delete_transient('aat_reviewed_award_post_ids_v1');
         delete_transient('aat_category_first_ceremony_v1');
+        delete_transient('aat_category_slug_map_v1');
 
         if ($wpdb instanceof wpdb) {
             $options_table = $wpdb->options;
+            $wpdb->query("DELETE FROM $options_table WHERE option_name LIKE '_transient_aat_ceremony_rollup_v2_%' OR option_name LIKE '_transient_timeout_aat_ceremony_rollup_v2_%' OR option_name LIKE '_transient_aat_ceremony_rollup_v3_%' OR option_name LIKE '_transient_timeout_aat_ceremony_rollup_v3_%'");
             $wpdb->query("DELETE FROM $options_table WHERE option_name LIKE '_transient_aat_title_award_context_v1_%' OR option_name LIKE '_transient_timeout_aat_title_award_context_v1_%'");
         }
     }

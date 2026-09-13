@@ -258,7 +258,7 @@ if (!empty($aat_winner_rows)) {
             $winner_entry = $aat_instance->enrich_winner_entry_links($winner_entry);
         }
         if (method_exists($aat_instance, 'format_category_display') && empty($winner_entry['category_label']) && !empty($winner_entry['canonical_category'])) {
-            $winner_entry['category_label'] = $aat_instance->format_category_display((string) $winner_entry['canonical_category']);
+            $winner_entry['category_label'] = $aat_instance->format_category_display((string) $winner_entry['canonical_category'], intval($winner_entry['ceremony'] ?? 0));
         }
         if (function_exists('lunara_home_winner_primary_label')) {
             $winner_entry['primary_label'] = lunara_home_winner_primary_label($winner_entry);

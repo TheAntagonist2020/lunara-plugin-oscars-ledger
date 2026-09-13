@@ -1236,7 +1236,7 @@ get_header();
             foreach ($ceremony_major_race_groups as $briefing_group) {
                 $briefing_category = trim((string) ($briefing_group['category'] ?? ''));
                 $briefing_category_key = strtoupper($briefing_category);
-                $briefing_label = trim((string) ($briefing_group['label'] ?? $aat->format_category_display($briefing_category)));
+                $briefing_label = trim((string) ($briefing_group['label'] ?? $aat->format_category_display($briefing_category, $ceremony)));
                 $briefing_url = trim((string) ($briefing_group['url'] ?? ($briefing_category !== '' ? $aat->get_category_url($briefing_category) : '')));
                 $briefing_rows = !empty($briefing_group['rows']) && is_array($briefing_group['rows']) ? $briefing_group['rows'] : array();
                 $briefing_winner_rows = array_values(array_filter($briefing_rows, function($candidate_row) {
@@ -1779,7 +1779,7 @@ get_header();
                     <?php foreach ($ceremony_major_race_groups as $major_group) :
                         $major_category = trim((string) ($major_group['category'] ?? ''));
                         $major_category_key = strtoupper($major_category);
-                        $major_label = trim((string) ($major_group['label'] ?? $aat->format_category_display($major_category)));
+                        $major_label = trim((string) ($major_group['label'] ?? $aat->format_category_display($major_category, $ceremony)));
                         $major_url = trim((string) ($major_group['url'] ?? ($major_category !== '' ? $aat->get_category_url($major_category) : '')));
                         $major_rows = !empty($major_group['rows']) && is_array($major_group['rows']) ? $major_group['rows'] : array();
                         $winner_rows = array_values(array_filter($major_rows, function($candidate_row) {
@@ -1932,7 +1932,7 @@ get_header();
                 <div class="aat-ceremony-ballot-groups">
                     <?php foreach ($ceremony_ballot_groups as $ballot_group) :
                         $group_category = trim((string) ($ballot_group['category'] ?? ''));
-                        $group_label = trim((string) ($ballot_group['label'] ?? $aat->format_category_display($group_category)));
+                        $group_label = trim((string) ($ballot_group['label'] ?? $aat->format_category_display($group_category, $ceremony)));
                         $group_url = trim((string) ($ballot_group['url'] ?? ($group_category !== '' ? $aat->get_category_url($group_category) : '')));
                         $group_rows = !empty($ballot_group['rows']) && is_array($ballot_group['rows']) ? $ballot_group['rows'] : array();
                         $group_winner_count = intval($ballot_group['winner_count'] ?? 0);
@@ -2071,7 +2071,7 @@ get_header();
                                 </div>
                                 <h3 class="aat-filmography-title"><?php echo esc_html($film_label); ?></h3>
                                 <p class="aat-filmography-meta">
-                                    <?php echo $aat_render_hub_text_link($aat->format_category_display($entry['canonical_category'] ?? ''), !empty($entry['category_url']) ? (string) $entry['category_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                                    <?php echo $aat_render_hub_text_link($aat->format_category_display($entry['canonical_category'] ?? '', intval($entry['ceremony'] ?? $ceremony)), !empty($entry['category_url']) ? (string) $entry['category_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                     <?php if (!empty($entry['person_label'])) : ?>
                                         <span class="aat-meta-sep" aria-hidden="true">&middot;</span>
                                         <?php echo $aat_render_hub_text_link((string) $entry['person_label'], !empty($entry['person_url']) ? (string) $entry['person_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -2139,7 +2139,7 @@ get_header();
                 <div class="aat-hub-chips">
                     <?php foreach ($cats as $cat) :
                         $url = $aat->get_category_url($cat);
-                        $label = $aat->format_category_display($cat);
+                        $label = $aat->format_category_display($cat, $ceremony);
                     ?>
                         <a class="aat-hub-chip" href="<?php echo esc_url($url); ?>"><?php echo esc_html($label); ?></a>
                     <?php endforeach; ?>
@@ -2764,7 +2764,7 @@ get_header();
 
                                         <?php foreach ($winner_rows as $winner_row) :
                                             $winner_row = $aat_enrich_winner_entry_links($winner_row);
-                                            $winner_row['category_label'] = $label;
+                                            $winner_row['category_label'] = $aat->format_category_display($canonical, intval($winner_row['ceremony'] ?? $cer ?? 0));
                                             $winner_actions  = $aat_build_winner_actions($winner_row, (string) ($winner_row['category_url'] ?? ''), $cer_url);
                                             $winner_people   = $aat_build_person_link_items($winner_row);
                                             if ($render_compact_actions && !empty($winner_actions)) {
@@ -2834,7 +2834,7 @@ get_header();
                                                 <ul class="aat-nominee-trail-list">
                                                     <?php foreach ($nominee_rows as $nominee_row) :
                                                         $nominee_row = $aat_enrich_winner_entry_links($nominee_row);
-                                                        $nominee_row['category_label'] = $label;
+                                                        $nominee_row['category_label'] = $aat->format_category_display($canonical, intval($nominee_row['ceremony'] ?? $cer ?? 0));
                                                         $nominee_primary   = trim((string) ($nominee_row['primary_label'] ?? ''));
                                                         $nominee_secondary = trim((string) ($nominee_row['secondary_label'] ?? ''));
                                                         $nominee_people    = $aat_build_person_link_items($nominee_row);
@@ -2919,7 +2919,7 @@ get_header();
                 <div class="aat-year-ledger-list">
                     <?php foreach ($category_winner_rows as $winner_row) :
                         $winner_row = $aat_enrich_winner_entry_links($winner_row);
-                        $winner_row['category_label'] = $label;
+                        $winner_row['category_label'] = $aat->format_category_display($canonical, intval($winner_row['ceremony'] ?? $cer ?? 0));
                         $row_ceremony = intval($winner_row['ceremony'] ?? 0);
                         $row_year = trim((string) ($winner_row['year'] ?? ''));
                         $row_ceremony_url = $row_ceremony > 0 ? $aat->get_ceremony_url($row_ceremony) : '';
