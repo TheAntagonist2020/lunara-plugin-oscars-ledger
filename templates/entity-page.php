@@ -34,7 +34,7 @@ $ordinal = function($n) {
     return $n . ($s[($v - 20) % 10] ?? $s[$v] ?? $s[0]);
 };
 
-$format_category = function($cat) {
+$format_category = function($cat, $ceremony = 0) use ($aat) {
     $cat = trim((string) $cat);
     if ($cat === '') return '';
     $map = array(
@@ -47,7 +47,8 @@ $format_category = function($cat) {
         'WRITING (ORIGINAL SCREENPLAY)' => 'Original Screenplay',
         'WRITING (ADAPTED SCREENPLAY)' => 'Adapted Screenplay',
     );
-    return $map[$cat] ?? ucwords(strtolower($cat));
+    $display = $aat->format_category_display($cat, $ceremony);
+    return $map[$cat] ?? ($display !== $cat ? $display : ucwords(strtolower($cat)));
 };
 
 $build_entity_url = function($id) use ($aat) {
@@ -267,12 +268,14 @@ $ceremony_year_map = array();
 $distinct_films = array();
 $timeline = array();
 $category_rollups = array();
+$category_latest_ceremonies = array();
 $ceremony_rollups = array();
 $latest_year = '';
 $latest_ceremony = 0;
 
 if (is_array($rows)) {
     foreach ($rows as $r) {
+        $cer = intval($r['ceremony'] ?? 0);
         $winner = (!empty($r['winner']) && (int) $r['winner'] === 1);
         if ($winner) $total_wins++;
 
@@ -282,11 +285,17 @@ if (is_array($rows)) {
             if (!isset($category_rollups[$cat])) {
                 $category_rollups[$cat] = array(
                     'category' => $cat,
-                    'label' => $format_category($cat),
+                    'label' => $format_category($cat, $cer),
                     'url' => $aat->get_category_url($cat),
                     'nominations' => 0,
                     'wins' => 0,
                 );
+                $category_latest_ceremonies[$cat] = $cer;
+            }
+            // A category's summary follows its own latest award, not an unrelated modern credit.
+            if ($cer > $category_latest_ceremonies[$cat]) {
+                $category_latest_ceremonies[$cat] = $cer;
+                $category_rollups[$cat]['label'] = $format_category($cat, $cer);
             }
             $category_rollups[$cat]['nominations']++;
             if ($winner) {
@@ -294,7 +303,6 @@ if (is_array($rows)) {
             }
         }
 
-        $cer = intval($r['ceremony'] ?? 0);
         $year = (string) ($r['year'] ?? '');
         if ($cer > 0) {
             $ceremonies_set[$cer] = true;
@@ -439,7 +447,7 @@ if ($latest_ceremony > 0 && !empty($timeline[$latest_ceremony]['rows'])) {
         $latest_cat = (string) ($latest_row['canonical_category'] ?? $latest_row['category'] ?? '');
         if ($latest_cat !== '') {
             $latest_categories[$latest_cat] = array(
-                'label' => $format_category($latest_cat),
+                'label' => $format_category($latest_cat, $latest_ceremony),
                 'url' => $aat->get_category_url($latest_cat),
             );
         }
@@ -1069,7 +1077,7 @@ get_header();
                             <?php foreach ($group['rows'] as $r) :
                                 $cat = (string) ($r['canonical_category'] ?? $r['category'] ?? '');
                                 $cat_url = $aat->get_category_url($cat);
-                                $cat_label = $format_category($cat);
+                                $cat_label = $format_category($cat, $cer);
                                 $is_winner = (!empty($r['winner']) && (int) $r['winner'] === 1);
                                 $row_title_id = $entity === 'title' ? $id : $get_primary_pipe_value($r['film_id'] ?? '');
                                 $row_visual = ($entity === 'title') ? $visual : $get_title_visual($row_title_id, 'medium');

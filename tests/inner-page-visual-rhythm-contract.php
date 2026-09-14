@@ -40,6 +40,15 @@ $assert(strpos($hub_template, "__('Company History', 'academy-awards-table')") !
 $assert(strpos($hub_template, "'company-history'") !== false, 'Company history actions should expose a scoped action kind.');
 $assert(strpos($hub_template, 'aat-department-credit-label') !== false, 'Department-style credit text should receive a deliberate public presentation hook.');
 
+// These inline rules win over the external stylesheet on premium category routes.
+$action_selector = 'body .aat-container .aat-premium-category-dossier .aat-ledger-card .aat-winner-circle-action';
+preg_match_all('/' . preg_quote($action_selector, '/') . '\{([^}]+)\}/', $hub_template, $inline_actions);
+$assert(count($inline_actions[1]) === 2, 'Desktop and phone category-history action owners must remain covered.');
+foreach ($inline_actions[1] as $declarations) {
+    preg_match('/min-height:\s*(\d+)px\s*!important/', $declarations, $minimum);
+    $assert(isset($minimum[1]) && intval($minimum[1]) >= 44, 'Category-history inline action rules must retain a 44px minimum.');
+}
+
 foreach (array(
     '.aat-generic-category-dossier',
     '.aat-category-person-strip',
