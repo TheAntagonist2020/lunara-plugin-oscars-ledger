@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.85
+Stable tag: 2.7.86
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.86 =
+* Load database assets for shortcode pages and embedded tables; preserve explicit autoload settings through rendering.
+* Keep film/person/company profiles, indexes, ballots and Tracker V2 free of unused DataTables assets when a table query has no table consumer.
+* Keep ballot and Tracker V2 controls working when they share a page with the database.
 
 = 2.7.85 =
 * Film, person and company profiles now date category labels by their awards: modern Production Design and Sound, historical Art Direction and Sound Mixing. Category trails use each category's latest actual award; existing links and cached source rows remain unchanged.

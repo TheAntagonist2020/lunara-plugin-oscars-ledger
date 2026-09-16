@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.85
+ * Version: 2.7.86
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.85');
+define('AAT_VERSION', '2.7.86');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -5835,8 +5835,23 @@ class Academy_Awards_Table {
             return false;
         }
 
-        $pattern = '/\[' . preg_quote($tag, '/') . '\b[^\]]*autoload\s*=\s*(["\']?)(true|1)\1/i';
-        return preg_match($pattern, $content) === 1;
+        if (!preg_match_all('/' . get_shortcode_regex(array($tag)) . '/s', $content, $matches, PREG_SET_ORDER)) {
+            return false;
+        }
+
+        foreach ($matches as $match) {
+            // Escaped shortcode examples are text, not table consumers.
+            if ($match[1] === '[' && $match[6] === ']') {
+                continue;
+            }
+            $atts = shortcode_parse_atts($match[3]);
+            $layout = $atts['layout'] ?? ($tag === 'lunara_awards_tracker' ? 'embedded' : 'full');
+            $autoload = strtolower(trim((string) ($atts['autoload'] ?? 'false')));
+            if ($layout === 'embedded' || in_array($autoload, array('true', '1', 'yes'), true)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -5858,10 +5873,11 @@ class Academy_Awards_Table {
 
                 if (($block['blockName'] ?? '') === $block_name) {
                     $attrs = isset($block['attrs']) && is_array($block['attrs']) ? $block['attrs'] : array();
-                    if (!empty($attrs['autoload'])) {
+                    $autoload = strtolower(trim((string) ($attrs['autoload'] ?? 'false')));
+                    if (in_array($autoload, array('true', '1', 'yes'), true)) {
                         return true;
                     }
-                    if (($attrs['layout'] ?? '') === 'embedded') {
+                    if (($attrs['layout'] ?? ($block_name === 'academy-awards/tracker' ? 'embedded' : 'full')) === 'embedded') {
                         return true;
                     }
                 }
@@ -5894,6 +5910,7 @@ class Academy_Awards_Table {
             $hub_needs_table = $table_view_requested;
         }
 
+        $is_main_oscars_page = false;
         $is_table_page = false;
         $is_ballot_page = false;
         $is_tracker_v2_page = false;
@@ -5911,10 +5928,11 @@ class Academy_Awards_Table {
 
                 $is_table_page = (
                     $is_main_oscars_page ||
+                    has_shortcode($post->post_content, 'academy_awards') ||
+                    has_shortcode($post->post_content, 'lunara_awards_tracker') ||
                     has_block('academy-awards/database', $post) ||
                     has_block('academy-awards/tracker', $post)
                 );
-                $has_tracker_table_shortcode = has_shortcode($post->post_content, 'lunara_awards_tracker') || has_block('academy-awards/tracker', $post);
 
                 $is_tracker_v2_page = (
                     has_shortcode($post->post_content, 'lunara_awards_tracker_v2') ||
@@ -5928,7 +5946,7 @@ class Academy_Awards_Table {
                     has_block('academy-awards/ballot', $post)
                 );
 
-                $table_shortcode_autoload = $has_tracker_table_shortcode || (
+                $table_shortcode_autoload = (
                     $this->shortcode_requests_autoload($post->post_content, 'academy_awards') ||
                     $this->shortcode_requests_autoload($post->post_content, 'lunara_awards_tracker') ||
                     $this->block_requests_autoload($post->post_content, 'academy-awards/database') ||
@@ -5956,7 +5974,7 @@ class Academy_Awards_Table {
 
         // Always load plugin styles for the table, entity pages, and hub pages.
         // Only load DataTables and the plugin JS when we are actually rendering a table.
-        if ($hub_needs_table || $table_view_requested || $table_shortcode_autoload) {
+        if ($hub_needs_table || ($is_table_page && $table_view_requested) || $table_shortcode_autoload) {
             // DataTables CSS
             wp_enqueue_style(
                 'datatables-css',
@@ -6025,45 +6043,45 @@ class Academy_Awards_Table {
                 $aat_stylesheet_version
             );
             $this->enqueue_theme_route_assets(array('aat-styles'));
+        }
 
-            // Tracker V2 page (no DataTables required)
-            if ($is_tracker_v2_page) {
-                wp_enqueue_script(
-                    'aat-tracker-v2',
-                    AAT_PLUGIN_URL . 'assets/js/tracker-v2.js',
-                    array('jquery'),
-                    AAT_VERSION,
-                    true
-                );
+        // Tracker V2 page (no DataTables required)
+        if ($is_tracker_v2_page) {
+            wp_enqueue_script(
+                'aat-tracker-v2',
+                AAT_PLUGIN_URL . 'assets/js/tracker-v2.js',
+                array('jquery'),
+                AAT_VERSION,
+                true
+            );
 
-                wp_localize_script('aat-tracker-v2', 'aatTracker', array(
-                    'entityBase' => $this->get_entity_base_url(),
-                    'databaseUrl' => $this->get_database_url(),
-                ));
-            }
+            wp_localize_script('aat-tracker-v2', 'aatTracker', array(
+                'entityBase' => $this->get_entity_base_url(),
+                'databaseUrl' => $this->get_database_url(),
+            ));
+        }
 
-            if ($is_ballot_page) {
-                wp_enqueue_style(
-                    'aat-ballot-styles',
-                    AAT_PLUGIN_URL . 'assets/css/ballot.css',
-                    array('aat-styles'),
-                    AAT_VERSION
-                );
+        if ($is_ballot_page) {
+            wp_enqueue_style(
+                'aat-ballot-styles',
+                AAT_PLUGIN_URL . 'assets/css/ballot.css',
+                array('aat-styles'),
+                AAT_VERSION
+            );
 
-                wp_enqueue_script(
-                    'aat-ballot',
-                    AAT_PLUGIN_URL . 'assets/js/ballot.js',
-                    array(),
-                    AAT_VERSION,
-                    true
-                );
+            wp_enqueue_script(
+                'aat-ballot',
+                AAT_PLUGIN_URL . 'assets/js/ballot.js',
+                array(),
+                AAT_VERSION,
+                true
+            );
 
-                wp_localize_script('aat-ballot', 'aatBallot', array(
-                    'copySuccess' => __('Ballot picks copied to clipboard.', 'academy-awards-table'),
-                    'copyError' => __('Copy failed. You can still select and save picks on this device.', 'academy-awards-table'),
-                    'resetConfirm' => __('Clear all saved Will Win and Should Win picks for this ballot?', 'academy-awards-table'),
-                ));
-            }
+            wp_localize_script('aat-ballot', 'aatBallot', array(
+                'copySuccess' => __('Ballot picks copied to clipboard.', 'academy-awards-table'),
+                'copyError' => __('Copy failed. You can still select and save picks on this device.', 'academy-awards-table'),
+                'resetConfirm' => __('Clear all saved Will Win and Should Win picks for this ballot?', 'academy-awards-table'),
+            ));
         }
 
         if ($is_hub) {
@@ -7370,6 +7388,7 @@ class Academy_Awards_Table {
             'winners_only' => 'false',
             // Layout variants: full (default) or embedded (used for hub pages)
             'layout' => 'full',
+            'autoload' => 'false',
             'limit' => 0,
         ), $atts, 'academy_awards');
 
@@ -7409,6 +7428,7 @@ class Academy_Awards_Table {
             'ceremony'      => 'latest',
             'year'          => '',
             'layout'        => 'embedded',
+            'autoload'      => 'false',
             'winners_only'  => 'false',
             'category'      => '',
             'class'         => '',
