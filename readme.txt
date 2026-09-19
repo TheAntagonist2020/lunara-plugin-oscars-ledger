@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.86
+Stable tag: 2.7.87
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.87 =
+* Guard the full data import: parse and validate the whole file before touching the live table, refuse any import that would drop rows or winners (overall or per ceremony) without explicit confirmation, back up the live table first, and replace inside one transaction.
+* Show multi-film nominations (e.g. "7th Heaven|Street Angel|Sunrise") under the single matching title instead of the raw pipe-joined string.
 
 = 2.7.86 =
 * Load database assets for shortcode pages and embedded tables; preserve explicit autoload settings through rendering.

@@ -59,10 +59,10 @@ $queue = $method_slice($plugin, 'private function get_person_credit_review_queue
 $admin = $method_slice($plugin, 'public function render_person_portrait_import_admin_page', 'public function render_omdb_audit_admin_page');
 
 foreach (array(
-    'Version: 2.7.86',
-    "define('AAT_VERSION', '2.7.86')",
-    'Stable tag: 2.7.86',
-    'Current baseline: `2.7.86`',
+    'Version: 2.7.87',
+    "define('AAT_VERSION', '2.7.87')",
+    'Stable tag: 2.7.87',
+    'Current baseline: `2.7.87`',
     'full-row person-credit resolver',
 ) as $needle) {
     $assert(stripos($plugin . $docs, $needle) !== false, "Version/docs marker should exist: {$needle}");
