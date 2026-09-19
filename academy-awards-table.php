@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.87
+ * Version: 2.7.88
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.87');
+define('AAT_VERSION', '2.7.88');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -245,7 +245,7 @@ class Academy_Awards_Table {
         $category_stats_table = $this->get_category_stats_table_name();
         $entity_stats_table = $this->get_entity_stats_table_name();
 
-        $sql_ceremonies = "CREATE TABLE IF NOT EXISTS $ceremonies_table (
+        $sql_ceremonies = "CREATE TABLE $ceremonies_table (
             ceremony int(3) NOT NULL,
             year_label varchar(20) NOT NULL DEFAULT '',
             ceremony_label varchar(32) NOT NULL DEFAULT '',
@@ -255,7 +255,7 @@ class Academy_Awards_Table {
             KEY sort_year (sort_year)
         ) $charset_collate;";
 
-        $sql_categories = "CREATE TABLE IF NOT EXISTS $categories_table (
+        $sql_categories = "CREATE TABLE $categories_table (
             category_slug varchar(191) NOT NULL,
             canonical_category varchar(255) NOT NULL DEFAULT '',
             display_category varchar(255) NOT NULL DEFAULT '',
@@ -266,7 +266,7 @@ class Academy_Awards_Table {
             KEY canonical_category (canonical_category(191))
         ) $charset_collate;";
 
-        $sql_entities = "CREATE TABLE IF NOT EXISTS $entities_table (
+        $sql_entities = "CREATE TABLE $entities_table (
             entity_id varchar(64) NOT NULL,
             entity_type varchar(20) NOT NULL DEFAULT '',
             label varchar(500) NOT NULL DEFAULT '',
@@ -277,7 +277,7 @@ class Academy_Awards_Table {
             KEY sort_label (sort_label(191))
         ) $charset_collate;";
 
-        $sql_facts = "CREATE TABLE IF NOT EXISTS $facts_table (
+        $sql_facts = "CREATE TABLE $facts_table (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             source_award_id mediumint(9) unsigned NOT NULL,
             ceremony int(3) NOT NULL,
@@ -305,7 +305,7 @@ class Academy_Awards_Table {
             KEY primary_entity_ceremony (primary_entity_id, ceremony)
         ) $charset_collate;";
 
-        $sql_nominees = "CREATE TABLE IF NOT EXISTS $nominees_table (
+        $sql_nominees = "CREATE TABLE $nominees_table (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             source_award_id mediumint(9) unsigned NOT NULL,
             ceremony int(3) NOT NULL,
@@ -330,7 +330,7 @@ class Academy_Awards_Table {
             KEY entity_type_entity (entity_type, entity_id)
         ) $charset_collate;";
 
-        $sql_ceremony_stats = "CREATE TABLE IF NOT EXISTS $ceremony_stats_table (
+        $sql_ceremony_stats = "CREATE TABLE $ceremony_stats_table (
             ceremony int(3) NOT NULL,
             year_label varchar(20) NOT NULL DEFAULT '',
             nominations int(11) NOT NULL DEFAULT 0,
@@ -347,7 +347,7 @@ class Academy_Awards_Table {
             KEY top_title_entity_id (top_title_entity_id)
         ) $charset_collate;";
 
-        $sql_category_stats = "CREATE TABLE IF NOT EXISTS $category_stats_table (
+        $sql_category_stats = "CREATE TABLE $category_stats_table (
             category_slug varchar(191) NOT NULL,
             canonical_category varchar(255) NOT NULL DEFAULT '',
             nominations int(11) NOT NULL DEFAULT 0,
@@ -360,7 +360,7 @@ class Academy_Awards_Table {
             KEY canonical_category (canonical_category(191))
         ) $charset_collate;";
 
-        $sql_entity_stats = "CREATE TABLE IF NOT EXISTS $entity_stats_table (
+        $sql_entity_stats = "CREATE TABLE $entity_stats_table (
             entity_id varchar(64) NOT NULL,
             entity_type varchar(20) NOT NULL DEFAULT '',
             label varchar(500) NOT NULL DEFAULT '',
@@ -400,7 +400,7 @@ class Academy_Awards_Table {
         }
 
         $reviews_table = $this->get_person_credit_reviews_table_name();
-        $sql_reviews = "CREATE TABLE IF NOT EXISTS $reviews_table (
+        $sql_reviews = "CREATE TABLE $reviews_table (
             review_key varchar(191) NOT NULL,
             source_award_id mediumint(9) unsigned NOT NULL DEFAULT 0,
             label_index smallint(5) unsigned NOT NULL DEFAULT 0,
@@ -435,7 +435,7 @@ class Academy_Awards_Table {
         }
 
         $reviews_table = $this->get_person_credit_row_reviews_table_name();
-        $sql_reviews = "CREATE TABLE IF NOT EXISTS $reviews_table (
+        $sql_reviews = "CREATE TABLE $reviews_table (
             source_award_id mediumint(9) unsigned NOT NULL,
             category_slug varchar(191) NOT NULL DEFAULT '',
             credit_labels text,
@@ -466,7 +466,7 @@ class Academy_Awards_Table {
         }
 
         $reviews_table = $this->get_company_credit_row_reviews_table_name();
-        $sql_reviews = "CREATE TABLE IF NOT EXISTS $reviews_table (
+        $sql_reviews = "CREATE TABLE $reviews_table (
             source_award_id mediumint(9) unsigned NOT NULL,
             category_slug varchar(191) NOT NULL DEFAULT '',
             credit_labels text,
@@ -500,7 +500,7 @@ class Academy_Awards_Table {
         }
 
         $reviews_table = $this->get_person_portrait_existing_reviews_table_name();
-        $sql_reviews = "CREATE TABLE IF NOT EXISTS $reviews_table (
+        $sql_reviews = "CREATE TABLE $reviews_table (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             attachment_id bigint(20) unsigned NOT NULL DEFAULT 0,
             candidate_person_id varchar(32) NOT NULL DEFAULT '',
@@ -534,7 +534,7 @@ class Academy_Awards_Table {
         }
 
         $reviews_table = $this->get_omdb_reviews_table_name();
-        $sql_reviews = "CREATE TABLE IF NOT EXISTS $reviews_table (
+        $sql_reviews = "CREATE TABLE $reviews_table (
             imdb_id varchar(16) NOT NULL,
             review_state varchar(32) NOT NULL DEFAULT 'needs_review',
             issue_type varchar(32) DEFAULT '',
@@ -563,7 +563,7 @@ class Academy_Awards_Table {
         }
 
         $poster_reviews_table = $this->get_omdb_poster_reviews_table_name();
-        $sql_poster_reviews = "CREATE TABLE IF NOT EXISTS $poster_reviews_table (
+        $sql_poster_reviews = "CREATE TABLE $poster_reviews_table (
             imdb_id varchar(16) NOT NULL,
             poster_state varchar(32) NOT NULL DEFAULT 'needs_review',
             poster_note text,
@@ -679,7 +679,7 @@ class Academy_Awards_Table {
             $charset_collate = "DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
         }
 
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        $sql = "CREATE TABLE $table_name (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             ceremony int(3) NOT NULL,
             year varchar(10) NOT NULL,
@@ -718,7 +718,7 @@ class Academy_Awards_Table {
         $tracker_table = $wpdb->prefix . 'aat_tracker';
         $poster_table  = $wpdb->prefix . 'aat_posters';
 
-        $sql_tracker = "CREATE TABLE IF NOT EXISTS $tracker_table (
+        $sql_tracker = "CREATE TABLE $tracker_table (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             ceremony int(3) NOT NULL,
             canonical_category varchar(255) NOT NULL,
@@ -737,7 +737,7 @@ class Academy_Awards_Table {
             UNIQUE KEY uniq_pick (ceremony, canonical_category(191), tier, entity_type, entity_id)
         ) $charset_collate;";
 
-        $sql_posters = "CREATE TABLE IF NOT EXISTS $poster_table (
+        $sql_posters = "CREATE TABLE $poster_table (
             imdb_id varchar(16) NOT NULL,
             attachment_id bigint(20) unsigned NOT NULL DEFAULT 0,
             source varchar(191) DEFAULT '',
@@ -773,14 +773,20 @@ class Academy_Awards_Table {
      */
     public function maybe_upgrade_schema() {
         // Ensure lightweight annotation tables even if a historical db_version is ahead of the plugin version.
-        $this->maybe_create_person_credit_reviews_table();
-        $this->maybe_create_person_credit_row_reviews_table();
-        $this->maybe_create_company_credit_row_reviews_table();
-        $this->maybe_create_person_portrait_existing_reviews_table();
-        $this->maybe_create_omdb_reviews_table();
-        $this->maybe_create_omdb_poster_reviews_table();
-        $this->maybe_create_ceremony_writeups_table();
-        $this->maybe_create_reporting_tables();
+        // This runs on plugins_loaded, so the dbDelta diff (DESCRIBE + SHOW INDEX per table, plus loading
+        // upgrade.php) is gated to once per plugin version instead of every request. Every release bumps
+        // AAT_VERSION, so new columns and indexes still reach existing installs on the first request after deploy.
+        if ((string) get_option('aat_schema_checked_version', '') !== AAT_VERSION) {
+            $this->maybe_create_person_credit_reviews_table();
+            $this->maybe_create_person_credit_row_reviews_table();
+            $this->maybe_create_company_credit_row_reviews_table();
+            $this->maybe_create_person_portrait_existing_reviews_table();
+            $this->maybe_create_omdb_reviews_table();
+            $this->maybe_create_omdb_poster_reviews_table();
+            $this->maybe_create_ceremony_writeups_table();
+            $this->maybe_create_reporting_tables();
+            update_option('aat_schema_checked_version', AAT_VERSION, true);
+        }
 
         $installed = get_option('aat_db_version', '0');
         if (version_compare((string) $installed, AAT_VERSION, '>=')) {
@@ -795,7 +801,7 @@ class Academy_Awards_Table {
             $charset_collate = "DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
         }
 
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        $sql = "CREATE TABLE $table_name (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             ceremony int(3) NOT NULL,
             year varchar(10) NOT NULL,
@@ -834,7 +840,7 @@ class Academy_Awards_Table {
         $tracker_table = $wpdb->prefix . 'aat_tracker';
         $poster_table  = $wpdb->prefix . 'aat_posters';
 
-        $sql_tracker = "CREATE TABLE IF NOT EXISTS $tracker_table (
+        $sql_tracker = "CREATE TABLE $tracker_table (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             ceremony int(3) NOT NULL,
             canonical_category varchar(255) NOT NULL,
@@ -853,7 +859,7 @@ class Academy_Awards_Table {
             UNIQUE KEY uniq_pick (ceremony, canonical_category(191), tier, entity_type, entity_id)
         ) $charset_collate;";
 
-        $sql_posters = "CREATE TABLE IF NOT EXISTS $poster_table (
+        $sql_posters = "CREATE TABLE $poster_table (
             imdb_id varchar(16) NOT NULL,
             attachment_id bigint(20) unsigned NOT NULL DEFAULT 0,
             source varchar(191) DEFAULT '',
