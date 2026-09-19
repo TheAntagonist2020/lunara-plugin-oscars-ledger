@@ -56,6 +56,16 @@ $aat_pipe_display = function($value) {
     return implode(' | ', $parts);
 };
 
+// Multi-film credits (e.g. "7th Heaven|Street Angel|Sunrise") read as prose: "7th Heaven, Street Angel and Sunrise".
+$aat_film_display = function($value) {
+    $parts = array_values(array_filter(array_map('trim', explode('|', (string) $value)), 'strlen'));
+    if (count($parts) < 3) {
+        return implode(' and ', $parts);
+    }
+    $last = array_pop($parts);
+    return implode(', ', $parts) . ' and ' . $last;
+};
+
 $aat_clean_nominee_label = function($value) {
     $value = trim((string) $value);
     if ($value === '') {
@@ -101,9 +111,9 @@ $aat_join_meta = function($parts) {
     return implode('<span class="aat-meta-sep" aria-hidden="true">&middot;</span>', $out);
 };
 
-$aat_winner_primary = function($entry) use ($aat_pipe_display, $aat_clean_nominee_label) {
+$aat_winner_primary = function($entry) use ($aat_pipe_display, $aat_film_display, $aat_clean_nominee_label) {
     $category = strtoupper(trim((string) ($entry['canonical_category'] ?? '')));
-    $film = trim((string) ($entry['film'] ?? ''));
+    $film = $aat_film_display($entry['film'] ?? '');
     $detail = trim((string) ($entry['detail'] ?? ''));
     $name = $aat_clean_nominee_label($entry['name'] ?? '');
     $nominees = $aat_clean_nominee_label($aat_pipe_display($entry['nominees'] ?? ''));
@@ -135,9 +145,9 @@ $aat_winner_primary = function($entry) use ($aat_pipe_display, $aat_clean_nomine
     return $film;
 };
 
-$aat_winner_secondary = function($entry) use ($aat_pipe_display, $aat_winner_primary, $aat_clean_nominee_label) {
+$aat_winner_secondary = function($entry) use ($aat_pipe_display, $aat_film_display, $aat_winner_primary, $aat_clean_nominee_label) {
     $primary = $aat_winner_primary($entry);
-    $film = trim((string) ($entry['film'] ?? ''));
+    $film = $aat_film_display($entry['film'] ?? '');
     $detail = trim((string) ($entry['detail'] ?? ''));
     $nominees = $aat_clean_nominee_label($aat_pipe_display($entry['nominees'] ?? ''));
 
@@ -293,10 +303,10 @@ $aat_resolve_entry_name_link = function($entry) use ($aat_build_entity_url, $aat
     );
 };
 
-$aat_enrich_winner_entry_links = function($entry) use ($aat, $aat_winner_primary, $aat_winner_secondary, $aat_resolve_entry_name_link, $aat_build_entity_url, $aat_entity_section_url) {
+$aat_enrich_winner_entry_links = function($entry) use ($aat, $aat_film_display, $aat_winner_primary, $aat_winner_secondary, $aat_resolve_entry_name_link, $aat_build_entity_url, $aat_entity_section_url) {
     $entry = is_array($entry) ? $entry : array();
     $category = trim((string) ($entry['canonical_category'] ?? ''));
-    $film = trim((string) ($entry['film'] ?? ''));
+    $film = $aat_film_display($entry['film'] ?? '');
     $film_id = strtolower(trim((string) ($entry['film_id'] ?? '')));
     $film_url = '';
 

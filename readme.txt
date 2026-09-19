@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.88
+Stable tag: 2.7.89
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.89 =
+* Ceremony pages show multi-film winner credits as prose ("7th Heaven, Street Angel and Sunrise") instead of the raw pipe-joined string in the major-race briefing and feature cards.
 
 = 2.7.88 =
 * Remove "IF NOT EXISTS" from all 21 schema statements. dbDelta() parsed the table name as "IF" and skipped every schema diff, so indexes added after a table was first created never reached existing installs. First run adds the two missing ceremony/category indexes on the nominees table.
