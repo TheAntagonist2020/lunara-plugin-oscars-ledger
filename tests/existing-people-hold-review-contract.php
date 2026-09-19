@@ -52,8 +52,8 @@ $adopt_method = $method_slice($plugin, 'private function adopt_existing_person_p
 $review_helpers = $method_slice($plugin, 'private function get_person_portrait_existing_review_states', 'private function get_existing_person_portrait_adoption_rows');
 
 foreach (array(
-    'Version: 2.7.86',
-    "define('AAT_VERSION', '2.7.86')",
+    'Version: 2.7.87',
+    "define('AAT_VERSION', '2.7.87')",
     'get_person_portrait_existing_reviews_table_name',
     'maybe_create_person_portrait_existing_reviews_table',
     'aat_person_portrait_existing_reviews',

@@ -125,13 +125,16 @@
             this.uploadFile(file);
         },
 
-        uploadFile: function(file) {
+        uploadFile: function(file, confirmShrink) {
             const self = this;
             const formData = new FormData();
-            
+
             formData.append('action', 'aat_import_data');
             formData.append('nonce', aatAdmin.nonce);
             formData.append('file', file);
+            if (confirmShrink) {
+                formData.append('confirm_shrink', '1');
+            }
 
             $.ajax({
                 url: aatAdmin.ajaxurl,
@@ -157,9 +160,41 @@
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
-                    } else {
-                        self.showMessage('error', response.data || 'Import failed. Please check your file format.');
+                        return;
                     }
+
+                    const data = response.data || {};
+
+                    // Shrink guard: the server changed nothing. Show exactly what
+                    // would be lost and only re-submit on an explicit yes.
+                    if (data.guard === 'shrink') {
+                        const lines = [
+                            'STOP: this file would remove data from the live Oscars table.',
+                            '',
+                            'Live now:   ' + data.current.rows.toLocaleString() + ' rows, ' + data.current.winners.toLocaleString() + ' winners',
+                            'This file:  ' + data.incoming.rows.toLocaleString() + ' rows, ' + data.incoming.winners.toLocaleString() + ' winners',
+                            ''
+                        ];
+                        const shrinks = data.shrinks || [];
+                        shrinks.slice(0, 12).forEach(function(line) { lines.push('- ' + line); });
+                        if (shrinks.length > 12) {
+                            lines.push('- ...and ' + (shrinks.length - 12) + ' more.');
+                        }
+                        lines.push('', 'Nothing has been changed yet. A backup is taken automatically if you continue.', '', 'Replace the live data with this file anyway?');
+
+                        if (window.confirm(lines.join('\n'))) {
+                            self.showProgress();
+                            self.uploadFile(file, true);
+                        } else {
+                            self.showMessage('error', data.message + ' Import cancelled.');
+                        }
+                        return;
+                    }
+
+                    const errorMessage = typeof data === 'string'
+                        ? data
+                        : (data.message || 'Import failed. Please check your file format.');
+                    self.showMessage('error', errorMessage);
                 },
                 error: function() {
                     self.hideProgress();

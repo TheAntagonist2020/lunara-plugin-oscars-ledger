@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.86
+ * Version: 2.7.87
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.86');
+define('AAT_VERSION', '2.7.87');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -895,6 +895,28 @@ class Academy_Awards_Table {
         return array_values(array_filter(array_map('trim', explode('|', $value)), 'strlen'));
     }
 
+    /**
+     * Resolve the single film label for one title ID from a pipe-joined row.
+     *
+     * Multi-film nominations (e.g. early acting awards) store parallel lists:
+     * film "7th Heaven|Street Angel|Sunrise" with film_id "tt0018379|tt0019429|tt0018455".
+     * Returns the label at the same position as $title_id, never the raw joined string.
+     */
+    private function resolve_film_label_for_title_id($film_value, $film_id_value, $title_id) {
+        $labels = $this->split_pipe_tokens($film_value);
+        if (count($labels) <= 1) {
+            return trim((string) $film_value);
+        }
+
+        $ids = array_map('strtolower', $this->split_pipe_tokens($film_id_value));
+        $index = array_search(strtolower(trim((string) $title_id)), $ids, true);
+        if ($index !== false && isset($labels[$index])) {
+            return $labels[$index];
+        }
+
+        return $labels[0];
+    }
+
     private function clean_visible_person_credit_label($value) {
         $value = trim((string) wp_strip_all_tags($value));
         if ($value === '') {
@@ -1216,6 +1238,9 @@ class Academy_Awards_Table {
                     $film_entity_id = $candidate_id;
                     break;
                 }
+            }
+            if ($film_entity_id !== '') {
+                $film_label = $this->resolve_film_label_for_title_id($row['film'] ?? '', $row['film_id'] ?? '', $film_entity_id);
             }
 
             if ($ceremony > 0 && !isset($ceremonies[$ceremony])) {
@@ -2563,7 +2588,9 @@ class Academy_Awards_Table {
             $is_winner = !empty($row['winner']) ? 1 : 0;
             $film_ids = $this->extract_title_ids($row['film_id'] ?? '');
             $film_id = !empty($film_ids) ? (string) $film_ids[0] : '';
-            $film_label = trim((string) ($row['film'] ?? ''));
+            $film_label = $film_id !== ''
+                ? $this->resolve_film_label_for_title_id($row['film'] ?? '', $row['film_id'] ?? '', $film_id)
+                : trim((string) ($row['film'] ?? ''));
             if ($film_label === '' && $film_id !== '') {
                 $film_label = $this->lookup_title_label($film_id);
             }
@@ -16408,7 +16435,18 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
 /**
  * Import Oscars data from an uploaded CSV/TSV or JSON file.
  *
- * This endpoint does a full replace (TRUNCATE + import).
+ * This endpoint does a full replace, guarded:
+ *  1. The whole file is parsed and validated BEFORE the live table is touched.
+ *  2. The incoming rows are compared with the live table (rows, winners, and
+ *     winners per ceremony). If anything would shrink, nothing is changed and
+ *     the before/after counts are returned; the admin must re-submit with
+ *     confirm_shrink=1 to proceed.
+ *  3. The live table is copied to a timestamped backup table first.
+ *  4. The replace runs in one transaction, so a failure leaves the old data intact.
+ *
+ * Added after a partial upload on 2026-09-19 replaced 12,137 rows / 3,515
+ * winners with 11,504 rows / 1,740 winners in a single click.
+ *
  * For the most reliable workflow, prefer the bundled importer for the full dataset,
  * and use the "Quick Ceremony Update" delta importer for new nominations/winners.
  */
@@ -16438,8 +16476,70 @@ public function ajax_import_data() {
     $table_name = $this->get_table_name();
     $this->maybe_upgrade_schema();
 
-    // Full replace import
-    $wpdb->query("TRUNCATE TABLE $table_name");
+    // 1. Parse everything first. The live table is untouched until the guard passes.
+    $parsed = $this->parse_full_import_file($tmp_path, $ext);
+    if (!empty($parsed['error'])) {
+        wp_send_json_error(array('message' => $parsed['error'] . ' Nothing was changed.'));
+    }
+    if (empty($parsed['rows'])) {
+        wp_send_json_error(array('message' => 'The file contained no importable rows. Nothing was changed.'));
+    }
+
+    // 2. Guard: refuse to shrink the dataset without explicit confirmation.
+    $current = $this->census_live_awards_table();
+    $incoming = $this->census_award_rows($parsed['rows']);
+    $shrinks = $this->compare_import_census($current, $incoming);
+    $confirmed = !empty($_POST['confirm_shrink']) && (string) $_POST['confirm_shrink'] === '1';
+
+    if (!empty($shrinks) && !$confirmed) {
+        wp_send_json_error(array(
+            'guard' => 'shrink',
+            'message' => 'This file would remove data from the live Oscars table. Nothing was changed.',
+            'current' => array('rows' => $current['rows'], 'winners' => $current['winners']),
+            'incoming' => array('rows' => $incoming['rows'], 'winners' => $incoming['winners']),
+            'shrinks' => $shrinks,
+            'parse_errors' => intval($parsed['errors']),
+            'skipped_duplicates' => intval($parsed['skipped_duplicates']),
+        ));
+    }
+
+    // 3. Back up the live table.
+    $backup_table = '';
+    if ($current['rows'] > 0) {
+        $backup_table = substr($wpdb->prefix . 'academy_awards_preimport_' . gmdate('Ymd_His'), 0, 64);
+        $created = $wpdb->query("CREATE TABLE `$backup_table` LIKE `$table_name`");
+        $copied = $created !== false ? $wpdb->query("INSERT INTO `$backup_table` SELECT * FROM `$table_name`") : false;
+        if ($copied === false || intval($copied) !== intval($current['rows'])) {
+            wp_send_json_error(array(
+                'message' => 'Could not back up the live table before importing. Nothing was changed.',
+                'database_error' => (string) $wpdb->last_error,
+            ));
+        }
+    }
+
+    // 4. Replace inside one transaction (DELETE, not TRUNCATE: TRUNCATE auto-commits).
+    $imported = 0;
+    $insert_failures = 0;
+    $wpdb->query('START TRANSACTION');
+    $wpdb->query("DELETE FROM `$table_name`");
+    foreach ($parsed['rows'] as $db_row) {
+        if ($wpdb->insert($table_name, $db_row) === false) {
+            $insert_failures++;
+            break;
+        }
+        $imported++;
+    }
+
+    if ($insert_failures > 0) {
+        $database_error = (string) $wpdb->last_error;
+        $wpdb->query('ROLLBACK');
+        wp_send_json_error(array(
+            'message' => 'A row failed to insert, so the import was rolled back. The live data is unchanged.',
+            'database_error' => $database_error,
+            'backup_table' => $backup_table,
+        ));
+    }
+    $wpdb->query('COMMIT');
 
     // Invalidate performance caches
     delete_transient('aat_records_total_v1');
@@ -16447,63 +16547,73 @@ public function ajax_import_data() {
     delete_transient('aat_total_stats_v2');
     delete_transient('aat_awards_meta_v1');
 
+    /**
+     * Fires after a full CSV/JSON data import completes.
+     * Theme and other plugins can hook here to clear derived caches.
+     */
+    do_action( 'aat_after_data_import', 'full', $imported );
+
+    $screenplay_repair = $this->repair_writing_credit_rows();
+    $best_picture_repair = $this->repair_best_picture_credit_rows();
+    $international_feature_repair = $this->repair_international_feature_credit_rows();
+    $documentary_short_repair = $this->repair_documentary_and_short_credit_rows();
+    $reporting_rebuild = $this->rebuild_reporting_tables();
+
+    wp_send_json_success(array(
+        'message' => sprintf(
+            'Imported %s rows (%s winners). Previous data saved to %s.',
+            number_format_i18n($imported),
+            number_format_i18n($incoming['winners']),
+            $backup_table !== '' ? $backup_table : '(table was empty)'
+        ),
+        'imported' => $imported,
+        'errors' => intval($parsed['errors']),
+        'skipped_duplicates' => intval($parsed['skipped_duplicates']),
+        'backup_table' => $backup_table,
+        'shrink_confirmed' => !empty($shrinks),
+        'screenplay_repair' => $screenplay_repair,
+        'best_picture_repair' => $best_picture_repair,
+        'international_feature_repair' => $international_feature_repair,
+        'documentary_short_repair' => $documentary_short_repair,
+        'reporting_rebuild' => $reporting_rebuild,
+    ));
+}
+
+/**
+ * Parse a full-import upload into DB rows without touching the database.
+ *
+ * Returns rows, errors, skipped_duplicates, and 'error' when the file is unusable.
+ */
+private function parse_full_import_file($tmp_path, $ext) {
+    $result = array('rows' => array(), 'errors' => 0, 'skipped_duplicates' => 0);
+    $seen_fingerprints = array();
+
+    $accept = function ($db_row) use (&$result, &$seen_fingerprints) {
+        $fingerprint = $this->get_awards_row_fingerprint($db_row);
+        if (isset($seen_fingerprints[$fingerprint])) {
+            $result['skipped_duplicates']++;
+            return;
+        }
+        $seen_fingerprints[$fingerprint] = true;
+        $result['rows'][] = $db_row;
+    };
+
     // JSON import (array of objects)
     if ($ext === 'json') {
         $raw = @file_get_contents($tmp_path);
-        $rows = json_decode($raw, true);
-
+        $rows = json_decode((string) $raw, true);
         if (!is_array($rows)) {
-            wp_send_json_error(array('message' => 'Invalid JSON file.'));
+            $result['error'] = 'Invalid JSON file.';
+            return $result;
         }
-
-        $imported = 0;
-        $errors = 0;
-        $skipped_duplicates = 0;
-        $seen_fingerprints = array();
-
         foreach ($rows as $row) {
             if (!is_array($row)) {
-                $errors++;
+                $result['errors']++;
                 continue;
             }
-
-            $db_row = $this->build_import_db_row($row);
-            $fingerprint = $this->get_awards_row_fingerprint($db_row);
-            if (isset($seen_fingerprints[$fingerprint])) {
-                $skipped_duplicates++;
-                continue;
-            }
-            $seen_fingerprints[$fingerprint] = true;
-
-            $result = $wpdb->insert(
-                $table_name,
-                $db_row
-            );
-
-            if ($result === false) {
-                $errors++;
-                continue;
-            }
-
-            $imported++;
+            $accept($this->build_import_db_row($row));
         }
-
-        $screenplay_repair = $this->repair_writing_credit_rows();
-        $best_picture_repair = $this->repair_best_picture_credit_rows();
-        $international_feature_repair = $this->repair_international_feature_credit_rows();
-        $documentary_short_repair = $this->repair_documentary_and_short_credit_rows();
-        $reporting_rebuild = $this->rebuild_reporting_tables();
-
-        wp_send_json_success(array(
-            'imported' => $imported,
-            'errors' => $errors,
-            'skipped_duplicates' => $skipped_duplicates,
-            'screenplay_repair' => $screenplay_repair,
-            'best_picture_repair' => $best_picture_repair,
-            'international_feature_repair' => $international_feature_repair,
-            'documentary_short_repair' => $documentary_short_repair,
-            'reporting_rebuild' => $reporting_rebuild,
-        ));
+        return $result;
     }
 
     // CSV/TSV import
@@ -16517,7 +16627,8 @@ public function ajax_import_data() {
 
         $header = $sf->fgetcsv();
         if (!is_array($header) || count($header) < 3) {
-            wp_send_json_error(array('message' => 'Could not read header row. Please check the file format.'));
+            $result['error'] = 'Could not read header row. Please check the file format.';
+            return $result;
         }
 
         $header = array_map('trim', $header);
@@ -16530,15 +16641,9 @@ public function ajax_import_data() {
             }
         }
         if (!empty($missing)) {
-            wp_send_json_error(array(
-                'message' => 'Missing required columns: ' . implode(', ', $missing) . '.'
-            ));
+            $result['error'] = 'Missing required columns: ' . implode(', ', $missing) . '.';
+            return $result;
         }
-
-        $imported = 0;
-        $errors = 0;
-        $skipped_duplicates = 0;
-        $seen_fingerprints = array();
 
         while (!$sf->eof()) {
             $row = $sf->fgetcsv();
@@ -16553,62 +16658,88 @@ public function ajax_import_data() {
             }
 
             if (count($row) !== count($header)) {
-                $errors++;
+                $result['errors']++;
                 continue;
             }
 
             $data = array_combine($header, $row);
             if (!is_array($data)) {
-                $errors++;
+                $result['errors']++;
                 continue;
             }
 
-            $db_row = $this->build_import_db_row($data);
-            $fingerprint = $this->get_awards_row_fingerprint($db_row);
-            if (isset($seen_fingerprints[$fingerprint])) {
-                $skipped_duplicates++;
-                continue;
-            }
-            $seen_fingerprints[$fingerprint] = true;
-
-            $result = $wpdb->insert(
-                $table_name,
-                $db_row
-            );
-
-            if ($result === false) {
-                $errors++;
-                continue;
-            }
-
-            $imported++;
+            $accept($this->build_import_db_row($data));
         }
-
-        /**
-         * Fires after a full CSV/JSON data import completes.
-         * Theme and other plugins can hook here to clear derived caches.
-         */
-        do_action( 'aat_after_data_import', 'full', $imported );
-
-        $screenplay_repair = $this->repair_writing_credit_rows();
-        $best_picture_repair = $this->repair_best_picture_credit_rows();
-        $international_feature_repair = $this->repair_international_feature_credit_rows();
-        $documentary_short_repair = $this->repair_documentary_and_short_credit_rows();
-        $reporting_rebuild = $this->rebuild_reporting_tables();
-
-        wp_send_json_success(array(
-            'imported' => $imported,
-            'errors' => $errors,
-            'skipped_duplicates' => $skipped_duplicates,
-            'screenplay_repair' => $screenplay_repair,
-            'best_picture_repair' => $best_picture_repair,
-            'international_feature_repair' => $international_feature_repair,
-            'documentary_short_repair' => $documentary_short_repair,
-            'reporting_rebuild' => $reporting_rebuild,
-        ));
     } catch (Exception $e) {
-        wp_send_json_error(array('message' => 'Import failed: ' . $e->getMessage()));
+        $result['error'] = 'Import failed: ' . $e->getMessage();
     }
+
+    return $result;
+}
+
+/**
+ * Row/winner census of the live source table, with winners per ceremony.
+ */
+private function census_live_awards_table() {
+    global $wpdb;
+    $table_name = $this->get_table_name();
+    $census = array('rows' => 0, 'winners' => 0, 'ceremony_winners' => array());
+
+    $by_ceremony = $wpdb->get_results("SELECT ceremony, COUNT(*) AS n, SUM(winner) AS w FROM `$table_name` GROUP BY ceremony", ARRAY_A);
+    foreach ((array) $by_ceremony as $row) {
+        $census['rows'] += intval($row['n']);
+        $census['winners'] += intval($row['w']);
+        $census['ceremony_winners'][intval($row['ceremony'])] = intval($row['w']);
+    }
+
+    return $census;
+}
+
+/**
+ * Row/winner census of parsed import rows, same shape as census_live_awards_table().
+ */
+private function census_award_rows($rows) {
+    $census = array('rows' => 0, 'winners' => 0, 'ceremony_winners' => array());
+    foreach ((array) $rows as $row) {
+        $ceremony = intval($row['ceremony'] ?? 0);
+        $winner = !empty($row['winner']) ? 1 : 0;
+        $census['rows']++;
+        $census['winners'] += $winner;
+        if (!isset($census['ceremony_winners'][$ceremony])) {
+            $census['ceremony_winners'][$ceremony] = 0;
+        }
+        $census['ceremony_winners'][$ceremony] += $winner;
+    }
+
+    return $census;
+}
+
+/**
+ * List every way an import would shrink the live dataset. Empty array = safe.
+ */
+private function compare_import_census($current, $incoming) {
+    $shrinks = array();
+
+    if ($incoming['rows'] < $current['rows']) {
+        $shrinks[] = sprintf('Rows would drop from %d to %d.', $current['rows'], $incoming['rows']);
+    }
+    if ($incoming['winners'] < $current['winners']) {
+        $shrinks[] = sprintf('Winners would drop from %d to %d.', $current['winners'], $incoming['winners']);
+    }
+
+    foreach ($current['ceremony_winners'] as $ceremony => $winners) {
+        $new_winners = intval($incoming['ceremony_winners'][$ceremony] ?? 0);
+        if ($new_winners < $winners) {
+            $shrinks[] = sprintf(
+                '%s ceremony winners would drop from %d to %d.',
+                $this->ordinal($ceremony),
+                $winners,
+                $new_winners
+            );
+        }
+    }
+
+    return $shrinks;
 }
 
 /**
