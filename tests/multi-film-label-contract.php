@@ -49,6 +49,32 @@ $assert(
     'Ceremony rollup should resolve a single film label for the chosen title ID.'
 );
 
+// Public hub templates must render multi-film credits as prose, never raw pipes.
+$hub = file_get_contents($root . '/templates/hub-page.php');
+$helper_start = strpos($hub, '$aat_film_display = function($value) {');
+$assert($helper_start !== false, 'hub-page.php should define $aat_film_display.');
+if ($helper_start !== false) {
+    $helper_end = strpos($hub, "\n};\n", $helper_start);
+    $helper_code = substr($hub, $helper_start, $helper_end - $helper_start + 3);
+    $aat_film_display = null;
+    eval($helper_code);
+    $assert($aat_film_display('7th Heaven|Street Angel|Sunrise') === '7th Heaven, Street Angel and Sunrise', 'Three-film credits should read "A, B and C".');
+    $assert($aat_film_display('The Noose|The Patent Leather Kid') === 'The Noose and The Patent Leather Kid', 'Two-film credits should read "A and B".');
+    $assert($aat_film_display(' Sunrise ') === 'Sunrise', 'Single-film credits should pass through trimmed.');
+    $assert($aat_film_display('') === '', 'Empty credits should stay empty.');
+}
+
+// Every winner helper that shows the film credit must use the prose display.
+foreach (array('$aat_winner_primary', '$aat_winner_secondary', '$aat_enrich_winner_entry_links') as $helper) {
+    $start = strpos($hub, $helper . ' = function(');
+    $assert($start !== false, "hub-page.php should define {$helper}.");
+    if ($start !== false) {
+        $head = substr($hub, $start, 600);
+        $assert(strpos($head, '$film = $aat_film_display($entry[\'film\'] ?? \'\');') !== false, "{$helper} should build its film label with \$aat_film_display.");
+        $assert(strpos($head, '$film = trim((string) ($entry[\'film\'] ?? \'\'));') === false, "{$helper} should not use the raw pipe-joined film label.");
+    }
+}
+
 if ($failures) {
     fwrite(STDERR, implode("\n", $failures) . "\n");
     exit(1);
