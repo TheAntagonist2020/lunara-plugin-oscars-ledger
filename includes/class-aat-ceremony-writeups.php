@@ -160,7 +160,7 @@ if (!class_exists('AAT_Ceremony_Writeups')) {
             $table_name = trim((string) $table_name);
             $charset_collate = trim((string) $charset_collate);
 
-            return "CREATE TABLE IF NOT EXISTS $table_name (
+            return "CREATE TABLE $table_name (
                 id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                 ceremony_number int(3) NOT NULL,
                 ceremony_label varchar(64) NOT NULL DEFAULT '',

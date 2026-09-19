@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.87
+Stable tag: 2.7.88
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.88 =
+* Remove "IF NOT EXISTS" from all 21 schema statements. dbDelta() parsed the table name as "IF" and skipped every schema diff, so indexes added after a table was first created never reached existing installs. First run adds the two missing ceremony/category indexes on the nominees table.
+* Gate the per-request schema check to once per plugin version. It previously ran about 30 queries and loaded wp-admin/includes/upgrade.php on every page load.
 
 = 2.7.87 =
 * Guard the full data import: parse and validate the whole file before touching the live table, refuse any import that would drop rows or winners (overall or per ceremony) without explicit confirmation, back up the live table first, and replace inside one transaction.

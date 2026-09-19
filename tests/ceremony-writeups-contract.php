@@ -80,7 +80,7 @@ $assert(strpos($rows_function, '$wpdb->prepare') !== false, 'Filtered/search adm
 $assert(strpos($search_function, 'source_notes') !== false, 'Private source notes should be searchable only inside the admin queue.');
 
 $sql = AAT_Ceremony_Writeups::get_create_table_sql('wp_aat_ceremony_writeups', 'DEFAULT CHARSET=utf8mb4');
-$assert(strpos($sql, 'CREATE TABLE IF NOT EXISTS wp_aat_ceremony_writeups') !== false, 'Schema SQL should target the write-up table.');
+$assert(strpos($sql, 'CREATE TABLE wp_aat_ceremony_writeups') !== false, 'Schema SQL should target the write-up table.');
 $assert(strpos($sql, 'ceremony_number int(3) NOT NULL') !== false, 'Schema SQL should include ceremony_number.');
 $assert(strpos($sql, 'source_notes longtext') !== false, 'Schema SQL should include private source_notes.');
 $assert(strpos($sql, 'UNIQUE KEY ceremony_number') !== false, 'Schema SQL should enforce one row per ceremony.');
