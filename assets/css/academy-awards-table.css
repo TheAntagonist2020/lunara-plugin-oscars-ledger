@@ -6188,6 +6188,31 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
         grid-column: 2;
     }
 
+    /* The theme sets body.aat-shell-page .aat-hub-chip to inline-flex, which beats the
+       plugin's stacked rule. On a phone that puts the title and the win/nomination
+       count side by side in one narrow row, and the squeeze breaks words mid-letter
+       ("DUN/E", "BELFAS/T", "NOMINATION/S"). Stack them and the words wrap normally. */
+    body .aat-hub-page .aat-hub-chip-rich,
+    body.aat-shell-page .aat-hub-chip-rich {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        justify-items: start !important;
+        text-align: left !important;
+        align-content: start;
+        gap: 2px;
+        min-height: 0;
+        padding: 12px 14px;
+    }
+
+    body .aat-hub-page .aat-hub-chip-rich > *,
+    body.aat-shell-page .aat-hub-chip-rich > * {
+        max-width: 100%;
+        min-width: 0;
+        overflow-wrap: break-word;
+        word-break: normal;
+        hyphens: none;
+    }
+
     .aat-hub-page .aat-winner-circle-media.is-plaque {
         padding: 10px;
         gap: 6px;

@@ -68,6 +68,8 @@ Examples:
 * Person-led categories (acting, directing, writing) now show the winner portrait beside the name.
 * One media shape for the whole grid (2:3, the native shape of both posters and portraits, so neither is cropped) and a plaque for honorary/Sci-Tech winners that have no film or portrait.
 * Phone layout for the Winner Circle: thumbnail left, text right, no forced card height. Verified at 390px and 360px — cards drop from 420px+ to ~240px and every media box measures identically.
+* Ceremony tally chips stack on phones instead of squeezing title and counts into one row, which was breaking words mid-letter ("DUN/E", "BELFAS/T", "NOMINATION/S").
+* Win and nomination counts read as English: "1 win | 7 nominations", not "1 wins".
 
 = 2.7.90 =
 * One shared formatter (format_pipe_list) for the pipe-delimited source fields. Ballot rows, category history, category spotlight and entity history now read multi-character and multi-film credits as prose ("Diane, Angela and The Wife") instead of printing the raw pipes. Affects 12 rows across the 1st, 3rd and 8th ceremonies.
