@@ -1539,8 +1539,10 @@ body .aat-container .aat-premium-category-dossier .aat-ledger-card {
     overflow: hidden;
     background: rgba(255,255,255,.04);
     border: 1px solid rgba(255,255,255,.08);
-    aspect-ratio: 16 / 10;
-    min-height: 240px;
+    /* One shape for every card: posters (2:3) and portraits (2:3) are cropped to the
+       same box, so a mixed grid reads as one system instead of ragged rows. */
+    aspect-ratio: 3 / 4;
+    min-height: 0;
 }
 .aat-winner-circle-media img,
 .aat-winner-circle-photo {
@@ -1548,6 +1550,38 @@ body .aat-container .aat-premium-category-dossier .aat-ledger-card {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* Posters centre; portraits sit high so the crop never takes the face. */
+    object-position: center center;
+}
+.aat-winner-circle-media.is-portrait img,
+.aat-winner-circle-media.is-portrait .aat-winner-circle-photo {
+    object-position: center 18%;
+}
+/* Honorary and Sci-Tech winners have no film and no portrait: same box, plaque treatment. */
+.aat-winner-circle-media.is-plaque {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px;
+    text-align: center;
+    background:
+        radial-gradient(circle at 50% 38%, rgba(201,169,97,.14), rgba(201,169,97,0) 62%),
+        linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
+    border-color: rgba(201,169,97,.16);
+}
+.aat-winner-circle-plaque-mark {
+    font-size: 30px;
+    line-height: 1;
+    color: rgba(201,169,97,.62);
+}
+.aat-winner-circle-plaque-label {
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.58);
+    max-width: 18ch;
 }
 .aat-winner-circle-media:hover {
     border-color: rgba(201,169,97,.28);

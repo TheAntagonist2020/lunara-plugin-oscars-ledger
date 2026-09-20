@@ -612,6 +612,36 @@ $aat_get_visual_package = function($film_id, $size = 'medium_large') use ($aat) 
     return $visual_cache[$cache_key];
 };
 
+/**
+ * Portrait package for the first person credited on a winner row.
+ * Person-led categories (acting, directing, writing) have no film poster of their own
+ * to show beside the name, and every card in a grid needs the same media box.
+ */
+$aat_get_person_visual = function($entry, $size = 'medium_large') use ($aat) {
+    static $person_cache = array();
+
+    if (!method_exists($aat, 'get_person_visual_package')) {
+        return array();
+    }
+
+    foreach (explode('|', (string) ($entry['nominee_ids'] ?? '')) as $candidate) {
+        $candidate = strtolower(trim($candidate));
+        if (!preg_match('/^nm\d+$/', $candidate)) {
+            continue;
+        }
+
+        $cache_key = $candidate . '|' . $size;
+        if (!isset($person_cache[$cache_key])) {
+            $person_cache[$cache_key] = (array) $aat->get_person_visual_package($candidate, $size, false);
+        }
+        if (!empty($person_cache[$cache_key]['portrait_url'])) {
+            return $person_cache[$cache_key];
+        }
+    }
+
+    return array();
+};
+
 $aat_extract_title_ids = function($entry) {
     $title_ids = array();
 
@@ -2166,8 +2196,25 @@ get_header();
                         $secondary_label = $winner_entry['secondary_label'] ?? $aat_winner_secondary($winner_entry);
                         $category_url = $winner_entry['category_url'] ?? $aat->get_category_url($winner_entry['canonical_category'] ?? '');
                         $winner_visual = $is_latest_ceremony ? $aat_get_curated_winner_visual($winner_entry, 'medium_large') : array();
-                        if (empty($winner_visual) && !empty($winner_entry['film_id'])) {
+                        if (empty($winner_visual['poster_html']) && empty($winner_visual['poster_url']) && !empty($winner_entry['film_id'])) {
                             $winner_visual = $aat_get_visual_package((string) $winner_entry['film_id'], 'medium_large');
+                        }
+
+                        // Person-led categories show the winner's portrait; film-led cards keep the poster.
+                        // Either way every card gets one media box, so the grid stays uniform.
+                        $winner_is_person = !empty($winner_entry['primary_url']) && strpos((string) $winner_entry['primary_url'], '/oscars/name/') !== false;
+                        $winner_portrait = ($winner_is_person || (empty($winner_visual['poster_html']) && empty($winner_visual['poster_url'])))
+                            ? $aat_get_person_visual($winner_entry, 'medium_large')
+                            : array();
+                        $winner_media_html = '';
+                        $winner_media_is_portrait = false;
+                        if (!empty($winner_portrait['portrait_url'])) {
+                            $winner_media_html = '<img class="aat-winner-circle-photo" src="' . esc_url($winner_portrait['portrait_url']) . '" alt="' . esc_attr($primary_label) . '" loading="lazy" decoding="async" />';
+                            $winner_media_is_portrait = true;
+                        } elseif (!empty($winner_visual['poster_html'])) {
+                            $winner_media_html = (string) $winner_visual['poster_html'];
+                        } elseif (!empty($winner_visual['poster_url'])) {
+                            $winner_media_html = '<img class="aat-winner-circle-photo" src="' . esc_url($winner_visual['poster_url']) . '" alt="' . esc_attr($primary_label) . '" loading="lazy" decoding="async" />';
                         }
                         $winner_media_url = '';
                         if (!empty($winner_entry['primary_url'])) {
@@ -2181,7 +2228,7 @@ get_header();
                         }
                         $winner_actions = $aat_build_winner_actions($winner_entry, (string) $category_url);
                     ?>
-                        <article class="aat-winner-circle-card<?php echo $is_latest_ceremony ? ' is-hero-latest' : ''; ?><?php echo !empty($winner_visual['poster_url']) ? ' has-hero-media' : ''; ?>">
+                        <article class="aat-winner-circle-card<?php echo $is_latest_ceremony ? ' is-hero-latest' : ''; ?><?php echo $winner_media_html !== '' ? ' has-hero-media' : ' has-no-media'; ?>">
                             <div class="aat-winner-circle-top">
                                 <?php if ($category_url) : ?>
                                     <a class="aat-winner-circle-category" href="<?php echo esc_url($category_url); ?>"><?php echo esc_html($winner_entry['category_label']); ?></a>
@@ -2190,24 +2237,31 @@ get_header();
                                 <?php endif; ?>
                                 <span class="aat-winner-badge"><?php echo esc_html__('Winner', 'academy-awards-table'); ?></span>
                             </div>
-                            <?php if (!empty($winner_visual['poster_url'])) : ?>
+                            <?php
+                                // Honorary and Scientific & Technical awards have no film and no portrait.
+                                // They get the same box as a plaque, so the grid never gaps.
+                                $winner_media_class = 'aat-winner-circle-media';
+                                if ($winner_media_html !== '') {
+                                    $winner_media_class .= $winner_media_is_portrait ? ' is-portrait' : ' is-poster';
+                                } else {
+                                    $winner_media_class .= ' is-plaque';
+                                }
+                            ?>
+                            <?php if ($winner_media_html !== '') : ?>
                                 <?php if ($winner_media_url !== '') : ?>
-                                    <a class="aat-winner-circle-media" href="<?php echo esc_url($winner_media_url); ?>">
-                                        <?php if (!empty($winner_visual['poster_html'])) : ?>
-                                            <?php echo $winner_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                                        <?php else : ?>
-                                            <img class="aat-winner-circle-photo" src="<?php echo esc_url($winner_visual['poster_url']); ?>" alt="<?php echo esc_attr($primary_label); ?>" loading="lazy" decoding="async" />
-                                        <?php endif; ?>
+                                    <a class="<?php echo esc_attr($winner_media_class); ?>" href="<?php echo esc_url($winner_media_url); ?>">
+                                        <?php echo $winner_media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                     </a>
                                 <?php else : ?>
-                                    <div class="aat-winner-circle-media">
-                                        <?php if (!empty($winner_visual['poster_html'])) : ?>
-                                            <?php echo $winner_visual['poster_html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                                        <?php else : ?>
-                                            <img class="aat-winner-circle-photo" src="<?php echo esc_url($winner_visual['poster_url']); ?>" alt="<?php echo esc_attr($primary_label); ?>" loading="lazy" decoding="async" />
-                                        <?php endif; ?>
+                                    <div class="<?php echo esc_attr($winner_media_class); ?>">
+                                        <?php echo $winner_media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                     </div>
                                 <?php endif; ?>
+                            <?php else : ?>
+                                <div class="<?php echo esc_attr($winner_media_class); ?>">
+                                    <span class="aat-winner-circle-plaque-mark" aria-hidden="true">&#9733;</span>
+                                    <span class="aat-winner-circle-plaque-label"><?php echo esc_html($winner_entry['category_label']); ?></span>
+                                </div>
                             <?php endif; ?>
                             <h3 class="aat-winner-circle-title">
                                 <?php if (!empty($winner_entry['primary_url'])) : ?>
