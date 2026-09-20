@@ -13,7 +13,7 @@ $assert = function ($condition, $message) use (&$failures) {
 
 // dbDelta() finds the table name with preg_match('|CREATE TABLE ([^ ]*)|'). With
 // "IF NOT EXISTS" that captures "IF", dbDelta skips the diff entirely, and new
-// columns/indexes never reach existing installs. Until 2.7.89 that silently kept
+// columns/indexes never reach existing installs. Until 2.7.90 that silently kept
 // eight defined indexes off production.
 $create_count = 0;
 foreach ($files as $file) {

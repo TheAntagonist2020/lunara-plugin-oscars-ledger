@@ -153,7 +153,7 @@ Verified live and must be clean before "premium" is claimed: title whitespace ar
 - **imdb-guard:** fix the broken `//u` empty regex (`:931`); move synchronous OMDb+TMDB HTTP off the save path to cron/Action Scheduler.
 - **Dispatch:** remove the 4 stale duplicate root class files that *deploy live* and would fatal-redeclare if loaded.
 - **AI-assistant:** fix invalid default OpenAI model `gpt-5.5` (`:49`); decide fate of ~470 lines unreachable Control Desk code.
-- **Oscars version split:** resolve 2.7.58-working vs 2.7.89-origin **before** any deploy (shipping as-is regresses ~31 changelog versions).
+- **Oscars version split:** resolve 2.7.58-working vs 2.7.90-origin **before** any deploy (shipping as-is regresses ~31 changelog versions).
 - **Data hygiene:** delete the 18 orphaned types + `movie` stub; fix title whitespace (29392, 33224) and the 33224 score mismatch; triage the 248 drafts (incl. dedup 33599/33613, 33372/33687 — keep the stronger Supergirl *draft*; collapse 33614's 3 stacked copies).
 - **Fix the inverted `ARCHITECTURE.md`** (says `inc/` is dead — opposite is true; header "~6 KB" is actually 238 KB). Premium teams don't run on documentation that lies.
 

@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.89
+Stable tag: 2.7.90
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.90 =
+* One shared formatter (format_pipe_list) for the pipe-delimited source fields. Ballot rows, category history, category spotlight and entity history now read multi-character and multi-film credits as prose ("Diane, Angela and The Wife") instead of printing the raw pipes. Affects 12 rows across the 1st, 3rd and 8th ceremonies.
 
 = 2.7.89 =
 * Ceremony pages show multi-film winner credits as prose ("7th Heaven, Street Angel and Sunrise") instead of the raw pipe-joined string in the major-race briefing and feature cards.

@@ -1116,7 +1116,7 @@ get_header();
                                             <?php endif; ?>
 
                                             <?php if (!empty($r['detail'])) : ?>
-                                                <div class="aat-history-line"><strong>Detail:</strong> <?php echo esc_html((string) $r['detail']); ?></div>
+                                                <div class="aat-history-line"><strong>Detail:</strong> <?php echo esc_html(method_exists($aat, 'format_pipe_list') ? $aat->format_pipe_list($r['detail']) : (string) $r['detail']); ?></div>
                                             <?php endif; ?>
                                             <?php if (!empty($r['citation'])) : ?>
                                                 <div class="aat-history-line"><strong>Citation:</strong> <?php echo esc_html((string) $r['citation']); ?></div>

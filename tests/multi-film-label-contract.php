@@ -49,20 +49,36 @@ $assert(
     'Ceremony rollup should resolve a single film label for the chosen title ID.'
 );
 
-// Public hub templates must render multi-film credits as prose, never raw pipes.
-$hub = file_get_contents($root . '/templates/hub-page.php');
-$helper_start = strpos($hub, '$aat_film_display = function($value) {');
-$assert($helper_start !== false, 'hub-page.php should define $aat_film_display.');
-if ($helper_start !== false) {
-    $helper_end = strpos($hub, "\n};\n", $helper_start);
-    $helper_code = substr($hub, $helper_start, $helper_end - $helper_start + 3);
-    $aat_film_display = null;
-    eval($helper_code);
-    $assert($aat_film_display('7th Heaven|Street Angel|Sunrise') === '7th Heaven, Street Angel and Sunrise', 'Three-film credits should read "A, B and C".');
-    $assert($aat_film_display('The Noose|The Patent Leather Kid') === 'The Noose and The Patent Leather Kid', 'Two-film credits should read "A and B".');
-    $assert($aat_film_display(' Sunrise ') === 'Sunrise', 'Single-film credits should pass through trimmed.');
-    $assert($aat_film_display('') === '', 'Empty credits should stay empty.');
+// The pipe-delimited source fields have ONE shared prose formatter.
+preg_match('/public function format_pipe_list.*?\n    \}/s', $source, $public_formatter);
+preg_match('/private function humanize_pipe_list.*?\n    \}/s', $source, $private_formatter);
+$assert(!empty($public_formatter[0]), 'format_pipe_list should be a public formatter templates can call.');
+$assert(!empty($private_formatter[0]), 'humanize_pipe_list should exist.');
+if (!empty($public_formatter[0]) && !empty($private_formatter[0])) {
+    eval('class AAT_Pipe_List_Harness { ' . $public_formatter[0] . $private_formatter[0] . ' }');
+    $h = new AAT_Pipe_List_Harness();
+    $assert($h->format_pipe_list('7th Heaven|Street Angel|Sunrise') === '7th Heaven, Street Angel and Sunrise', 'Three values should read "A, B and C".');
+    $assert($h->format_pipe_list('Diane|Angela|The Wife') === 'Diane, Angela and The Wife', 'Multi-character detail should read as prose.');
+    $assert($h->format_pipe_list('The Noose|The Patent Leather Kid') === 'The Noose and The Patent Leather Kid', 'Two values should read "A and B".');
+    $assert($h->format_pipe_list(' Sunrise ') === 'Sunrise', 'Single values should pass through trimmed.');
+    $assert($h->format_pipe_list('') === '', 'Empty values should stay empty.');
 }
+
+// Public hub templates must render pipe-delimited fields as prose, never raw.
+$hub = file_get_contents($root . '/templates/hub-page.php');
+$assert(strpos($hub, '$aat->format_pipe_list($value)') !== false, 'hub-page.php $aat_film_display should delegate to the shared formatter.');
+foreach (array(
+    "esc_html((string) \$ballot_row['detail'])" => 'ballot detail',
+    "esc_html((string) \$winner_row['detail'])" => 'category history detail',
+    "esc_html(' ' . \$latest_winner['detail'])" => 'category spotlight detail',
+    "esc_html((string) \$nominee_row['detail'])" => 'nominee detail',
+    "\$detail = trim((string) (\$entry['detail'] ?? ''))" => 'winner primary/secondary detail',
+) as $needle => $label) {
+    $assert(strpos($hub, $needle) === false, "hub-page.php should not print the raw {$label} field.");
+}
+$entity_page = file_get_contents($root . '/templates/entity-page.php');
+$assert(strpos($entity_page, "esc_html((string) \$r['detail'])") === false, 'entity-page.php should not print the raw detail field.');
+$assert(strpos($entity_page, 'format_pipe_list') !== false, 'entity-page.php should format the detail field.');
 
 // Every winner helper that shows the film credit must use the prose display.
 foreach (array('$aat_winner_primary', '$aat_winner_secondary', '$aat_enrich_winner_entry_links') as $helper) {
