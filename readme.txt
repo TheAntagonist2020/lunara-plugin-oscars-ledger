@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.91
+Stable tag: 2.7.92
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.92 =
+* Ceremony tally chips stack on phones instead of squeezing title and counts into one row, which was breaking words mid-letter ("DUN/E", "BELFAS/T", "NOMINATION/S").
+* Win and nomination counts read as English: "1 win | 7 nominations", not "1 wins".
 
 = 2.7.91 =
 * Winner Circle cards show images again: the card was gated on poster_url, which the visual package leaves empty when it returns ready-made poster markup, so every card rendered text only.

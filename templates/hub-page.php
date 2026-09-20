@@ -1696,7 +1696,16 @@ get_header();
                                 ?>
                                 <div class="aat-hub-chip aat-hub-chip-rich<?php echo $title_entry_backdrop_style !== '' ? ' aat-card-has-backdrop' : ''; ?>"<?php if ($title_entry_backdrop_style !== '') : ?> style="<?php echo esc_attr($title_entry_backdrop_style); ?>"<?php endif; ?>>
                                     <strong><?php echo $aat_render_hub_text_link((string) $title_entry['film'], !empty($title_entry['film_url']) ? (string) $title_entry['film_url'] : $db_url, 'aat-hub-inline-link aat-hub-inline-link-title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></strong>
-                                    <span><?php echo esc_html(number_format_i18n(intval($title_entry['wins']))); ?> <?php echo esc_html__('wins', 'academy-awards-table'); ?> | <?php echo esc_html(number_format_i18n(intval($title_entry['nominations']))); ?> <?php echo esc_html__('nominations', 'academy-awards-table'); ?></span>
+                                    <?php
+                                        $chip_wins = intval($title_entry['wins']);
+                                        $chip_noms = intval($title_entry['nominations']);
+                                    ?>
+                                    <span><?php echo esc_html(sprintf(
+                                        /* translators: 1: win count phrase, 2: nomination count phrase */
+                                        __('%1$s | %2$s', 'academy-awards-table'),
+                                        sprintf(_n('%s win', '%s wins', $chip_wins, 'academy-awards-table'), number_format_i18n($chip_wins)),
+                                        sprintf(_n('%s nomination', '%s nominations', $chip_noms, 'academy-awards-table'), number_format_i18n($chip_noms))
+                                    )); ?></span>
                                 </div>
                             <?php endforeach; ?>
                         </div>
