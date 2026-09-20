@@ -14,7 +14,7 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.90`.
+Current baseline: `2.7.91`.
 
 ## Current Public Surface
 

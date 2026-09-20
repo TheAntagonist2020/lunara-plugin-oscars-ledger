@@ -71,7 +71,7 @@ The theme reads the academy-awards-table plugin via **(1) `Academy_Awards_Table:
 | **lunara-plugin-dispatch** | 3.0.13 | multi-file `includes/` | RSS→AI Journal pipeline with real 2-stage quality gate | **4 stale duplicate root class files** (`class-admin/-image-handler/-post-builder/-prompts`) the loader never includes; would fatal-redeclare if loaded; **they DO deploy** (not in `.deployignore`) [verified-code] |
 | **lunara-plugin-ai-assistant-classic** | 0.4.0 | single file, 1302 lines | Classic-editor AI packaging meta box (OpenAI/Anthropic/Gemini) | **Default OpenAI model `gpt-5.5` is invalid** → fresh-install `/generate` fails (`:49`). **~470 lines of `/suggest`+`/suggestions` Control Desk code is unreachable** (only `/generate` has a JS caller) [verified-code] |
 | **lunara-plugin-imdb-guard** | 0.2.0 | single file, 1314 lines | Validates review IMDb IDs (OMDb) + syncs TMDB art | **Broken `//u` empty regex** (`:931`) makes review-header lookup dead + emits warnings. **Synchronous OMDb+TMDB HTTP on every save** (~44s worst case); bulk audit loops 150 with no cron → timeouts [verified-code] |
-| **lunara-plugin-oscars-ledger** | 2.7.58 (working) / 2.7.90 (origin/new-session) | multi-file | Oscars hub/ceremony/category/entity; `wp_academy_awards`/`wp_aat_*` tables | **Version split** — security-fix branch built on OLDER 2.7.58 base, not deployed 2.7.90; shipping as-is regresses ~31 changelog versions. `readme.txt` "Tested up to: 6.4" stale [verified-code] |
+| **lunara-plugin-oscars-ledger** | 2.7.58 (working) / 2.7.91 (origin/new-session) | multi-file | Oscars hub/ceremony/category/entity; `wp_academy_awards`/`wp_aat_*` tables | **Version split** — security-fix branch built on OLDER 2.7.58 base, not deployed 2.7.91; shipping as-is regresses ~31 changelog versions. `readme.txt` "Tested up to: 6.4" stale [verified-code] |
 
 ### 3d. Data model & ownership contracts (a genuine strength)
 - **Single-owner contract via constant:** both theme and core register `review` + Debrief meta box, but every theme copy is guarded `if (!defined('LUNARA_CORE_VERSION'))` (theme `inc/reviews-cpt.php:13`, `functions.php:2103`, `inc/debrief.php:66`). Core defines the constant, so the theme self-disables cleanly when the plugin is active — **no live double-registration** [verified-code].
@@ -79,7 +79,7 @@ The theme reads the academy-awards-table plugin via **(1) `Academy_Awards_Table:
 - **`lunara_oscar_pick` + `oscar_fact` CPTs registered ONLY in `functions.php`** (the load-bearing monolith) [verified-code].
 
 ### 3e. Key debt summary
-Version drift (theme: style.css 3.0.7 / loader 3.0.0 / functions.php 2.2.0; Oscars 2.7.58-vs-2.7.90) [verified-code] · 680 KB monolith parsed every request · 238 KB header.php · 794 `!important` · cross-plugin DB reads · stale dispatch duplicates that deploy live · no runtime tests / no CI (37 Windows-only PowerShell regex-on-source `.ps1` files; `.deployignore` contract test on Oscars only) [verified-code].
+Version drift (theme: style.css 3.0.7 / loader 3.0.0 / functions.php 2.2.0; Oscars 2.7.58-vs-2.7.91) [verified-code] · 680 KB monolith parsed every request · 238 KB header.php · 794 `!important` · cross-plugin DB reads · stale dispatch duplicates that deploy live · no runtime tests / no CI (37 Windows-only PowerShell regex-on-source `.ps1` files; `.deployignore` contract test on Oscars only) [verified-code].
 
 ---
 
@@ -179,7 +179,7 @@ Aggregating every `handoff_check` across the 6 surveys. ✅ CONFIRMED · ❌ REF
 | Google Fonts (googleapis/gstatic) needed by theme | ✅ | "League Spartan" registered live via Blocksy/Customizer; child default is system serif [verified-live] |
 | theme.json code-vs-live token drift exists | ❌ | No `theme.json` to diff; real divergence is internal (League Spartan vs Georgia) [verified-code] |
 | `.deployignore` is the "WordPress.com deploy filter" | ✅ | commits add only `.deployignore`; not a PHP `add_filter` [verified-code] |
-| 2.7.90 = prepared/deployed Oscars state | ✅ (nuanced) | True for origin/new-session-wrs0x5; working tree + main are 2.7.58 [verified-code] |
+| 2.7.91 = prepared/deployed Oscars state | ✅ (nuanced) | True for origin/new-session-wrs0x5; working tree + main are 2.7.58 [verified-code] |
 | Failing CWV (mobile 39 / LCP 7.3s / CLS 0.349 / 4.9MB / 18 scripts) | ❓ | No perf MCP; egress 403; **needs live Lighthouse** [needs-eyes-on] |
 | Images non-responsive; Cimo optimizer INSTALLED-but-INACTIVE | ❓ | Plugin state not exposed by available MCP [needs-eyes-on] |
 | 61 installed / 38 active plugins; category overlaps | ❓ | Active-plugin list not accessible this session [needs-eyes-on] |

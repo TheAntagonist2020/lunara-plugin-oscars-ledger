@@ -1533,14 +1533,19 @@ body .aat-container .aat-premium-category-dossier .aat-ledger-card {
 }
 .aat-winner-circle-media {
     display: block;
+    /* The plaque variant carries padding; without border-box it grows wider than the
+       poster and portrait boxes beside it and the row stops lining up. */
+    box-sizing: border-box;
     position: relative;
     margin: 0 -8px;
     border-radius: 16px;
     overflow: hidden;
     background: rgba(255,255,255,.04);
     border: 1px solid rgba(255,255,255,.08);
-    aspect-ratio: 16 / 10;
-    min-height: 240px;
+    /* One shape for every card. Posters and portraits are both 2:3, so they fill the
+       box with no crop; the effective sizing lives in the .aat-hub-page block below. */
+    aspect-ratio: 2 / 3;
+    min-height: 0;
 }
 .aat-winner-circle-media img,
 .aat-winner-circle-photo {
@@ -1548,6 +1553,42 @@ body .aat-container .aat-premium-category-dossier .aat-ledger-card {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* Posters centre; portraits sit high so the crop never takes the face. */
+    object-position: center center;
+}
+.aat-winner-circle-media.is-portrait img,
+.aat-winner-circle-media.is-portrait .aat-winner-circle-photo {
+    object-position: center 18%;
+}
+/* Honorary and Sci-Tech winners have no film and no portrait: same box, plaque treatment. */
+.aat-winner-circle-media.is-plaque {
+    display: flex;
+    /* A grid item's automatic minimum size is its content: without this the long
+       award names push the plaque wider than the poster/portrait boxes beside it. */
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px;
+    text-align: center;
+    background:
+        radial-gradient(circle at 50% 38%, rgba(201,169,97,.14), rgba(201,169,97,0) 62%),
+        linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
+    border-color: rgba(201,169,97,.16);
+}
+.aat-winner-circle-plaque-mark {
+    font-size: 30px;
+    line-height: 1;
+    color: rgba(201,169,97,.62);
+}
+.aat-winner-circle-plaque-label {
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.58);
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 .aat-winner-circle-media:hover {
     border-color: rgba(201,169,97,.28);
@@ -6112,17 +6153,53 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before
         grid-template-columns: 1fr;
     }
 
+    /* Phone layout: thumbnail left, text right, no forced card height. A single
+       column of 40+ tall cards is an endless scroll; this keeps each winner to a
+       compact row while the media box keeps the same 3/4 shape as on desktop. */
     .aat-hub-page .aat-winner-circle-card,
     .aat-hub-page .aat-winner-circle-card.is-hero-latest,
     .aat-hub-page .aat-winner-circle-card.is-marquee-latest {
         padding: 14px;
+        min-height: 0;
+        grid-template-columns: 104px minmax(0, 1fr);
+        column-gap: 14px;
+        row-gap: 8px;
+        align-content: start;
+    }
+
+    .aat-hub-page .aat-winner-circle-top {
+        grid-column: 1 / -1;
     }
 
     .aat-hub-page .aat-winner-circle-media,
     .aat-hub-page .aat-winner-circle-card.is-hero-latest .aat-winner-circle-media,
     .aat-hub-page .aat-winner-circle-card.is-marquee-latest .aat-winner-circle-media {
-        max-width: 132px;
-        width: 132px;
+        grid-column: 1;
+        grid-row: 2 / span 3;
+        align-self: start;
+        width: 104px;
+        max-width: 104px;
+        margin: 0;
+    }
+
+    .aat-hub-page .aat-winner-circle-title,
+    .aat-hub-page .aat-winner-circle-meta,
+    .aat-hub-page .aat-winner-circle-actions {
+        grid-column: 2;
+    }
+
+    .aat-hub-page .aat-winner-circle-media.is-plaque {
+        padding: 10px;
+        gap: 6px;
+    }
+
+    .aat-hub-page .aat-winner-circle-plaque-mark {
+        font-size: 20px;
+    }
+
+    .aat-hub-page .aat-winner-circle-plaque-label {
+        font-size: 10px;
+        letter-spacing: .08em;
     }
 
     .aat-hub-page .aat-best-picture-grid,

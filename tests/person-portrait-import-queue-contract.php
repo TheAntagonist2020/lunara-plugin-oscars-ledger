@@ -49,8 +49,8 @@ $import_method = $method_slice($plugin, 'private function import_tmdb_person_pro
 $existing_method = $method_slice($plugin, 'private function find_existing_person_portrait_attachment', 'public function get_poster_attachment_id_for_title');
 
 foreach (array(
-    "Version: 2.7.90",
-    "define('AAT_VERSION', '2.7.90')",
+    "Version: 2.7.91",
+    "define('AAT_VERSION', '2.7.91')",
     "'academy-awards-person-portraits'",
     'render_person_portrait_import_admin_page',
     'person-portrait-import-admin.php',
