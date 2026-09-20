@@ -56,14 +56,11 @@ $aat_pipe_display = function($value) {
     return implode(' | ', $parts);
 };
 
-// Multi-film credits (e.g. "7th Heaven|Street Angel|Sunrise") read as prose: "7th Heaven, Street Angel and Sunrise".
-$aat_film_display = function($value) {
-    $parts = array_values(array_filter(array_map('trim', explode('|', (string) $value)), 'strlen'));
-    if (count($parts) < 3) {
-        return implode(' and ', $parts);
-    }
-    $last = array_pop($parts);
-    return implode(', ', $parts) . ' and ' . $last;
+// Pipe-delimited source fields (film, detail) read as prose: "7th Heaven, Street Angel and Sunrise".
+$aat_film_display = function($value) use ($aat) {
+    return method_exists($aat, 'format_pipe_list')
+        ? $aat->format_pipe_list($value)
+        : trim((string) $value);
 };
 
 $aat_clean_nominee_label = function($value) {
@@ -114,7 +111,7 @@ $aat_join_meta = function($parts) {
 $aat_winner_primary = function($entry) use ($aat_pipe_display, $aat_film_display, $aat_clean_nominee_label) {
     $category = strtoupper(trim((string) ($entry['canonical_category'] ?? '')));
     $film = $aat_film_display($entry['film'] ?? '');
-    $detail = trim((string) ($entry['detail'] ?? ''));
+    $detail = $aat_film_display($entry['detail'] ?? '');
     $name = $aat_clean_nominee_label($entry['name'] ?? '');
     $nominees = $aat_clean_nominee_label($aat_pipe_display($entry['nominees'] ?? ''));
 
@@ -148,7 +145,7 @@ $aat_winner_primary = function($entry) use ($aat_pipe_display, $aat_film_display
 $aat_winner_secondary = function($entry) use ($aat_pipe_display, $aat_film_display, $aat_winner_primary, $aat_clean_nominee_label) {
     $primary = $aat_winner_primary($entry);
     $film = $aat_film_display($entry['film'] ?? '');
-    $detail = trim((string) ($entry['detail'] ?? ''));
+    $detail = $aat_film_display($entry['detail'] ?? '');
     $nominees = $aat_clean_nominee_label($aat_pipe_display($entry['nominees'] ?? ''));
 
     if ($film !== '' && $film !== $primary) {
@@ -2020,7 +2017,7 @@ get_header();
                                                 <p class="aat-ballot-credit"><strong><?php echo esc_html__('Credit', 'academy-awards-table'); ?>:</strong> <?php echo wp_kses_post($row_credit_html); ?></p>
                                             <?php endif; ?>
                                             <?php if (!empty($ballot_row['detail'])) : ?>
-                                                <p class="aat-ballot-detail"><?php echo esc_html((string) $ballot_row['detail']); ?></p>
+                                                <p class="aat-ballot-detail"><?php echo esc_html($aat_film_display($ballot_row['detail'])); ?></p>
                                             <?php endif; ?>
                                             <?php if (!empty($ballot_row['note'])) : ?>
                                                 <p class="aat-ballot-note"><?php echo esc_html((string) $ballot_row['note']); ?></p>
@@ -2560,7 +2557,7 @@ get_header();
                 if (!empty($latest_winner['name']) && !empty($latest_winner['film']) && $latest_winner['name'] !== $latest_winner['film']) {
                     $category_spotlight_meta[] = (string) $latest_winner['name'];
                 } elseif (!empty($latest_winner['detail'])) {
-                    $category_spotlight_meta[] = (string) $latest_winner['detail'];
+                    $category_spotlight_meta[] = $aat_film_display($latest_winner['detail']);
                 }
                 if (!empty($latest_winner['film_id'])) {
                     $category_spotlight = $aat_build_title_spotlight((string) $latest_winner['film_id'], (string) ($latest_winner['film'] ?? ''), $category_spotlight_meta, __('Latest winner', 'academy-awards-table'));
@@ -2577,7 +2574,7 @@ get_header();
                             <?php echo ' '; ?>
                             <?php echo $aat_render_hub_text_link((string) $latest_winner['secondary_label'], !empty($latest_winner['secondary_url']) ? (string) $latest_winner['secondary_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         <?php elseif (!empty($latest_winner['detail'])) : ?>
-                            <?php echo esc_html(' ' . $latest_winner['detail']); ?>
+                            <?php echo esc_html(' ' . $aat_film_display($latest_winner['detail'])); ?>
                         <?php elseif (!empty($latest_winner['name']) && !empty($latest_winner['film']) && $latest_winner['name'] !== $latest_winner['film']) : ?>
                             <?php echo ' '; ?>
                             <?php echo $aat_render_hub_text_link((string) $latest_winner['name'], !empty($latest_winner['person_url']) ? (string) $latest_winner['person_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -2812,7 +2809,7 @@ get_header();
                                                     <p class="aat-category-history-detail"><?php echo esc_html($winner_credit_line); ?></p>
                                                 <?php endif; ?>
                                                 <?php if (!empty($winner_row['detail']) && $winner_row['detail'] !== $primary_label && $winner_row['detail'] !== $secondary_label) : ?>
-                                                    <p class="aat-category-history-detail"><?php echo esc_html((string) $winner_row['detail']); ?></p>
+                                                    <p class="aat-category-history-detail"><?php echo esc_html($aat_film_display($winner_row['detail'])); ?></p>
                                                 <?php endif; ?>
                                                 <?php if (!empty($winner_people) && (count($winner_people) > 1 || empty($winner_row['primary_url']))) : ?>
                                                     <div class="aat-category-person-strip" aria-label="<?php echo esc_attr__('Linked craft credits', 'academy-awards-table'); ?>">
@@ -2875,7 +2872,7 @@ get_header();
                                                                 <span class="aat-nominee-secondary"><?php echo $aat_render_hub_text_link($nominee_secondary, !empty($nominee_row['secondary_url']) ? (string) $nominee_row['secondary_url'] : '', 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
                                                             <?php endif; ?>
                                                             <?php if (!empty($nominee_row['detail'])) : ?>
-                                                                <span class="aat-nominee-detail"><?php echo esc_html((string) $nominee_row['detail']); ?></span>
+                                                                <span class="aat-nominee-detail"><?php echo esc_html($aat_film_display($nominee_row['detail'])); ?></span>
                                                             <?php endif; ?>
                                                             <?php if (!empty($nominee_people) && (count($nominee_people) > 1 || empty($nominee_row['primary_url']))) : ?>
                                                                 <span class="aat-category-person-strip is-compact" aria-label="<?php echo esc_attr__('Linked nominee credits', 'academy-awards-table'); ?>">
@@ -2961,7 +2958,7 @@ get_header();
                                     </p>
                                 <?php endif; ?>
                                 <?php if (!empty($winner_row['detail'])) : ?>
-                                    <p class="aat-year-ledger-detail"><?php echo esc_html((string) $winner_row['detail']); ?></p>
+                                    <p class="aat-year-ledger-detail"><?php echo esc_html($aat_film_display($winner_row['detail'])); ?></p>
                                 <?php endif; ?>
                                 <?php if (!empty($winner_actions)) : ?>
                                     <div class="aat-year-ledger-actions">
