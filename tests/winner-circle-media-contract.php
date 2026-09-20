@@ -63,6 +63,20 @@ $assert(preg_match('/\.aat-hub-page \.aat-winner-circle-card,[^{]*\{[^}]*min-hei
 $assert(strpos($phone_block, 'grid-row: 2 / span 3;') !== false, 'The phone media box should span the text rows beside it.');
 $assert(preg_match('/\.aat-hub-page \.aat-winner-circle-title,[^{]*\{\s*grid-column: 2;/s', $phone_block) === 1, 'Phone text should sit in the second column.');
 
+// The theme sets body.aat-shell-page .aat-hub-chip to inline-flex, which beats the
+// plugin's stacked chip. On a phone that squeezed title and counts into one row and
+// broke words mid-letter ("DUN/E", "BELFAS/T", "NOMINATION/S").
+$assert(strpos($phone_block, 'body.aat-shell-page .aat-hub-chip-rich') !== false, 'The phone rules should out-specify the theme chip rule.');
+$assert(preg_match('/body\.aat-shell-page \.aat-hub-chip-rich \{[^}]*display: grid !important;/s', $phone_block) === 1, 'Rich chips should stack on phones.');
+$assert(preg_match('/body\.aat-shell-page \.aat-hub-chip-rich > \* \{[^}]*word-break: normal;/s', $phone_block) === 1, 'Chip contents should never break inside a word.');
+$assert(preg_match('/body\.aat-shell-page \.aat-hub-chip-rich > \* \{[^}]*hyphens: none;/s', $phone_block) === 1, 'Chip contents should not hyphenate.');
+
+// Counts read as English: "1 win", not "1 wins".
+$hub_tpl = file_get_contents($root . '/templates/hub-page.php');
+$assert(strpos($hub_tpl, "_n('%s win', '%s wins'") !== false, 'Win counts should use singular/plural forms.');
+$assert(strpos($hub_tpl, "_n('%s nomination', '%s nominations'") !== false, 'Nomination counts should use singular/plural forms.');
+$assert(strpos($hub_tpl, "esc_html__('wins', 'academy-awards-table')") === false, 'The hard-coded plural "wins" label should be gone.');
+
 if ($failures) {
     fwrite(STDERR, implode("\n", $failures) . "\n");
     exit(1);
