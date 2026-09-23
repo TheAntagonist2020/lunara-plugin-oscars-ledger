@@ -1,0 +1,6 @@
+interface:
+  display_name: "Lunara Plugin Oscars Ledger"
+  short_description: "Repo-specific patterns and workflows for lunara-plugin-oscars-ledger"
+  default_prompt: "Use the lunara-plugin-oscars-ledger repo skill to follow existing architecture, testing, and workflow conventions."
+policy:
+  allow_implicit_invocation: true
