@@ -1,0 +1,86 @@
+[
+ {
+  "rows": [
+   816
+  ],
+  "imdb_id": "nm0807356",
+  "label": "Art Smith",
+  "question": "Is IMDb's Art Smith (nm0807356, an MGM production manager) the Paramount effects man honoured for Spawn of the North? A separate record, nm1071079 'Art Smith, Visual Effects, The General Died at Dawn (1936)', is the likelier match.",
+  "tried": "Reviewers split: one says the craft/studio mismatch makes a namesake likely; the other found no source separating the two men."
+ },
+ {
+  "rows": [
+   1321
+  ],
+  "imdb_id": "co0097233",
+  "label": "the RCA Manufacturing Company",
+  "question": "Which IMDb company is 'the RCA Manufacturing Company' honoured for Fantasound? The row carries co0097233 (RCA Records, a record label).",
+  "tried": "Both reviewers doubt co0097233 but found no proven replacement: co0179360 'RCA', co0248653 'RCA Sound System' and co0275715 'Radio Corporation of America - RCA' all exist."
+ },
+ {
+  "rows": [
+   1387,
+   1583,
+   1765
+  ],
+  "imdb_id": "co0077018",
+  "label": "United States Navy",
+  "question": "The rows carry co0077018 'Navy Department'; the Academy credits 'United States Navy' (co0047766).",
+  "tried": "Both reviewers judged it a parent-department variant of the same organisation, not a different entity. Recommend keeping as is."
+ },
+ {
+  "rows": [
+   1479,
+   1675,
+   1850,
+   2021
+  ],
+  "imdb_id": "co0097233",
+  "label": "RCA Sound",
+  "question": "Which IMDb company is 'RCA Sound' (RCA's film sound-recording service)? The rows carry co0097233 (RCA Records).",
+  "tried": "Same as the Fantasound row: several competing RCA records, none proven."
+ },
+ {
+  "rows": [
+   1575,
+   1576,
+   1589
+  ],
+  "imdb_id": "co0141760",
+  "label": "United States Army Pictorial Service",
+  "question": "Should the Army Pictorial Service credits carry co0003606 'U.S. Army Pictorial Services' instead of the parent United States Army (co0141760)?",
+  "tried": "Reviewers split: IMDb credits co0003606 on none of the three films."
+ },
+ {
+  "rows": [
+   2112,
+   2228,
+   2343,
+   2345
+  ],
+  "imdb_id": "co0040435",
+  "label": "J. Arthur Rank",
+  "question": "Which IMDb company is the British J. Arthur Rank Organisation in the 'J. Arthur Rank-Two Cities Films' credits? The rows carry co0040435, Rank's German distribution arm.",
+  "tried": "Both reviewers doubt co0040435; candidates co0021421 'The Rank Organisation' (Wikidata's main item) and co0546727 are unproven."
+ },
+ {
+  "rows": [
+   4746,
+   4860,
+   4861
+  ],
+  "imdb_id": "co0638213",
+  "label": "Seven Arts",
+  "question": "Should the 'Seven Arts' slot of 'Warner Bros.-Seven Arts Studio Sound Department' carry co0076018 (Warner Bros./Seven Arts)?",
+  "tried": "Reviewers split: the credit names one merged company, but the upstream data splits it into two slots."
+ },
+ {
+  "rows": [
+   5671
+  ],
+  "imdb_id": "nm0239470",
+  "label": "RICHARD DUBOIS",
+  "question": "Is IMDb's Richard Dubois (nm0239470, an actor and producer, 1983-2006) the Akwaklame chemist honoured in 1975?",
+  "tried": "Reviewers split: no source links the actor to Akwaklame, but none proves they are different men. His co-honoree's ID on the same row was confirmed wrong."
+ }
+]

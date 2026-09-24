@@ -1,0 +1,1482 @@
+[
+ {
+  "nomination_id": 34,
+  "field": "Note",
+  "before": "NOTE: \\\"The Academy Board of Judges on merit awards for individual achievements in motion picture arts during the year ending August 1, 1928, unanimously decided that your name should be removed from the competitive classes, and that a special first award be conferred upon you for writing, acting, directing and producing The Circus. The collective accomplishments thus displayed place you in a class by yourself.\\\" (Letter from the Academy to Mr. Chaplin, dated February 19, 1929.)",
+  "after": "NOTE: \"The Academy Board of Judges on merit awards for individual achievements in motion picture arts during the year ending August 1, 1928, unanimously decided that your name should be removed from the competitive classes, and that a special first award be conferred upon you for writing, acting, directing and producing The Circus. The collective accomplishments thus displayed place you in a class by yourself.\" (Letter from the Academy to Mr. Chaplin, dated February 19, 1929.)",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 133,
+  "field": "Name",
+  "before": "Barney \\\"Chick\\\" McGill",
+  "after": "Barney \"Chick\" McGill",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 133,
+  "field": "Nominees",
+  "before": "Barney \\\"Chick\\\" McGill",
+  "after": "Barney \"Chick\" McGill",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 209,
+  "field": "Citation",
+  "before": "To Walt Disney for the creation of \\\"Mickey Mouse.\\\"",
+  "after": "To Walt Disney for the creation of \"Mickey Mouse.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 433,
+  "field": "Citation",
+  "before": "To MOLE-RICHARDSON COMPANY for their development of the \\\"Solar-spot\\\" spot lamps.",
+  "after": "To MOLE-RICHARDSON COMPANY for their development of the \"Solar-spot\" spot lamps.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 549,
+  "field": "Citation",
+  "before": "To ELECTRICAL RESEARCH PRODUCTS, INC. for the ERPI \\\"Type Q\\\" portable recording channel.",
+  "after": "To ELECTRICAL RESEARCH PRODUCTS, INC. for the ERPI \"Type Q\" portable recording channel.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 670,
+  "field": "Citation",
+  "before": "To Mack Sennett, \\\"for his lasting contribution to the comedy technique of the screen, the basic principles of which are as important today as when they were first put into practice, the Academy presents a Special Award to that master of fun, discoverer of stars, sympathetic, kindly, understanding comedy genius - Mack Sennett.\\\"",
+  "after": "To Mack Sennett, \"for his lasting contribution to the comedy technique of the screen, the basic principles of which are as important today as when they were first put into practice, the Academy presents a Special Award to that master of fun, discoverer of stars, sympathetic, kindly, understanding comedy genius - Mack Sennett.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 671,
+  "field": "Citation",
+  "before": "To Edgar Bergen for his outstanding comedy creation, \\\"Charlie McCarthy.\\\"",
+  "after": "To Edgar Bergen for his outstanding comedy creation, \"Charlie McCarthy.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 1387,
+  "field": "Note",
+  "before": "NOTE: \\\"A special award to Battle of Midway for the historical value of its achievement in offering a camera record of one of the decisive battles of the world - a record unique both for the courage of those who made it under fire, and for its magnificent portrayal of the gallantry of our armed forces in battle.\\\"",
+  "after": "NOTE: \"A special award to Battle of Midway for the historical value of its achievement in offering a camera record of one of the decisive battles of the world - a record unique both for the courage of those who made it under fire, and for its magnificent portrayal of the gallantry of our armed forces in battle.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 1396,
+  "field": "Note",
+  "before": "NOTE: \\\"A special award to Kokoda Front Line! for its effectiveness in portraying, simply yet forcefully, the scene of war in New Guinea and for its moving presentation of the bravery and fortitude of our Australian comrades in arms.\\\"",
+  "after": "NOTE: \"A special award to Kokoda Front Line! for its effectiveness in portraying, simply yet forcefully, the scene of war in New Guinea and for its moving presentation of the bravery and fortitude of our Australian comrades in arms.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 1402,
+  "field": "Note",
+  "before": "NOTE: \\\"A special award to Moscow Strikes Back for its vivid presentation of the heroism of the Russian Army and of the Russian people in the defense of Moscow, and for its achievement in so doing under conditions of extreme difficulty and danger.\\\"",
+  "after": "NOTE: \"A special award to Moscow Strikes Back for its vivid presentation of the heroism of the Russian Army and of the Russian people in the defense of Moscow, and for its achievement in so doing under conditions of extreme difficulty and danger.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 1404,
+  "field": "Note",
+  "before": "NOTE: \\\"A special award to Prelude to War for its trenchant conception and authentic and stirring dramatization of the events which forced our nation into the war and of the ideals for which we fight.\\\"",
+  "after": "NOTE: \"A special award to Prelude to War for its trenchant conception and authentic and stirring dramatization of the events which forced our nation into the war and of the ideals for which we fight.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 1514,
+  "field": "Citation",
+  "before": "To Metro-Goldwyn-Mayer for its achievement in representing the American Way of Life in the production of the \\\"Andy Hardy\\\" series of films.",
+  "after": "To Metro-Goldwyn-Mayer for its achievement in representing the American Way of Life in the production of the \"Andy Hardy\" series of films.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 1637,
+  "field": "Note",
+  "before": "NOTE: This song was nominated under the title \\\"Black Magic,\\\" as it was submitted by Paramount's Music Department. Academy records have been changed to show the more common form of the title.",
+  "after": "NOTE: This song was nominated under the title \"Black Magic,\" as it was submitted by Paramount's Music Department. Academy records have been changed to show the more common form of the title.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 2046,
+  "field": "Citation",
+  "before": "To The House I Live In, tolerance short subject; produced by Frank Ross and Mervyn LeRoy; directed by Mervyn LeRoy; screenplay by Albert Maltz; song \\\"The House I Live In,\\\" music by Earl Robinson, lyrics by Lewis Allan; starring Frank Sinatra; released by RKO Radio.",
+  "after": "To The House I Live In, tolerance short subject; produced by Frank Ross and Mervyn LeRoy; directed by Mervyn LeRoy; screenplay by Albert Maltz; song \"The House I Live In,\" music by Earl Robinson, lyrics by Lewis Allan; starring Frank Sinatra; released by RKO Radio.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 2379,
+  "field": "Citation",
+  "before": "To Ivan Jandl, for the outstanding juvenile performance of 1948, as \\\"Karel Malik\\\" in The Search.",
+  "after": "To Ivan Jandl, for the outstanding juvenile performance of 1948, as \"Karel Malik\" in The Search.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 2383,
+  "field": "Note",
+  "before": "NOTE: Presented on \\\"Jean Hersholt Night,\\\" June 26, 1949, at the Academy building.",
+  "after": "NOTE: Presented on \"Jean Hersholt Night,\" June 26, 1949, at the Academy building.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 2385,
+  "field": "Citation",
+  "before": "To VICTOR CACCIALANZA, MAURICE AYERS and the PARAMOUNT STUDIO SET CONSTRUCTION DEPARTMENT for the development and application of \\\"Paralite,\\\" a new lightweight plaster process for set construction.",
+  "after": "To VICTOR CACCIALANZA, MAURICE AYERS and the PARAMOUNT STUDIO SET CONSTRUCTION DEPARTMENT for the development and application of \"Paralite,\" a new lightweight plaster process for set construction.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 2998,
+  "field": "Note",
+  "before": "NOTE: THIS IS NOT AN OFFICIAL NOMINATION. Originally announced on February 15, 1954 as a nominee in this category. On February 17, 1954, letters from the producer and the nominee questioned its inclusion in the (original) motion picture story category, as it was based on the short story, \\\"The Gift of Cochise,\\\" by the nominee, published in Collier's magazine on July 5, 1952. By waiver, the title of the short story was not included in the film's credits. The nomination was withdrawn, and only four titles were included on the final ballot.",
+  "after": "NOTE: THIS IS NOT AN OFFICIAL NOMINATION. Originally announced on February 15, 1954 as a nominee in this category. On February 17, 1954, letters from the producer and the nominee questioned its inclusion in the (original) motion picture story category, as it was based on the short story, \"The Gift of Cochise,\" by the nominee, published in Collier's magazine on July 5, 1952. By waiver, the title of the short story was not included in the film's credits. The nomination was withdrawn, and only four titles were included on the final ballot.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 3000,
+  "field": "Note",
+  "before": "NOTE: The screen credit and award were originally credited to Ian McLellan Hunter, who was a \\\"front\\\" for Dalton Trumbo. On December 15, 1992, the Academy's Board of Governors voted to change the records and award Mr. Trumbo with the achievement. Ian McLellan Hunter's name was removed from the Motion Picture Story category. The Oscar was posthumously presented to Trumbo's widow on May 10, 1993.",
+  "after": "NOTE: The screen credit and award were originally credited to Ian McLellan Hunter, who was a \"front\" for Dalton Trumbo. On December 15, 1992, the Academy's Board of Governors voted to change the records and award Mr. Trumbo with the achievement. Ian McLellan Hunter's name was removed from the Motion Picture Story category. The Oscar was posthumously presented to Trumbo's widow on May 10, 1993.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 3011,
+  "field": "Citation",
+  "before": "To Pete Smith for his witty and pungent observations on the American scene in his series of \\\"Pete Smith Specialties.\\\"",
+  "after": "To Pete Smith for his witty and pungent observations on the American scene in his series of \"Pete Smith Specialties.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 3405,
+  "field": "Note",
+  "before": "NOTE: Early in 1956, the name of blacklisted screenwriter Michael Wilson had been deleted from the screen credits of Friendly Persuasion by Allied Artists, the film's distributor, based on a 1952 agreement between the Screen Writers Guild and various production companies. That agreement gave studios the right to omit from the screen the name of any individual who had failed to clear himself before a duly constituted legislative committee of Congress if accused of Communist affiliations, as was the case with Wilson at the time. The Academy, in the awkward position of possibly conferring its highest honor on someone whose name had been omitted from screen credit, revised its bylaws at a special February 6, 1957, meeting. That revision, in essence, allowed that in such cases, the achievement itself could be eligible for nomination, but the specific writer would be ineligible. The following instructions were sent to Price Waterhouse & Co., Certified Public Accountants, who tabulated Academy ballots: \\\"...we ask that if, in tabulating the nominations ballots for Best Screenplay (adapted), Friendly Persuasion is one of the five nominations, you list the other four alphabetically by title and below: Friendly Persuasion - Achievement nominated, but writer ineligible for Award under Academy By-Laws.\\\" On February 17, 1957, the Academy's Board of Governors voted to instruct Price Waterhouse & Co. \\\"...to list five nominations, and in the event that one of these is declared ineligible under the By-Law provision, four nominations would appear on the final ballot.\\\" THIS NOMINATION WAS NOT INCLUDED ON THE FINAL BALLOT. (The bylaw was repealed by the Academy as \\\"unworkable\\\" on January 12, 1959.) On December 10, 2002, the Academy's Board of Governors voted to reinstate Mr. Wilson's nomination.",
+  "after": "NOTE: Early in 1956, the name of blacklisted screenwriter Michael Wilson had been deleted from the screen credits of Friendly Persuasion by Allied Artists, the film's distributor, based on a 1952 agreement between the Screen Writers Guild and various production companies. That agreement gave studios the right to omit from the screen the name of any individual who had failed to clear himself before a duly constituted legislative committee of Congress if accused of Communist affiliations, as was the case with Wilson at the time. The Academy, in the awkward position of possibly conferring its highest honor on someone whose name had been omitted from screen credit, revised its bylaws at a special February 6, 1957, meeting. That revision, in essence, allowed that in such cases, the achievement itself could be eligible for nomination, but the specific writer would be ineligible. The following instructions were sent to Price Waterhouse & Co., Certified Public Accountants, who tabulated Academy ballots: \"...we ask that if, in tabulating the nominations ballots for Best Screenplay (adapted), Friendly Persuasion is one of the five nominations, you list the other four alphabetically by title and below: Friendly Persuasion - Achievement nominated, but writer ineligible for Award under Academy By-Laws.\" On February 17, 1957, the Academy's Board of Governors voted to instruct Price Waterhouse & Co. \"...to list five nominations, and in the event that one of these is declared ineligible under the By-Law provision, four nominations would appear on the final ballot.\" THIS NOMINATION WAS NOT INCLUDED ON THE FINAL BALLOT. (The bylaw was repealed by the Academy as \"unworkable\" on January 12, 1959.) On December 10, 2002, the Academy's Board of Governors voted to reinstate Mr. Wilson's nomination.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 3520,
+  "field": "Nominees",
+  "before": "Gilbert M. (\\\"Broncho Billy\\\") Anderson",
+  "after": "Gilbert M. (\"Broncho Billy\") Anderson",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 3520,
+  "field": "Citation",
+  "before": "To Gilbert M. (\\\"Broncho Billy\\\") Anderson, motion picture pioneer, for his contributions to the development of motion pictures as entertainment.",
+  "after": "To Gilbert M. (\"Broncho Billy\") Anderson, motion picture pioneer, for his contributions to the development of motion pictures as entertainment.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 4054,
+  "field": "Note",
+  "before": "NOTE: Originally, the three names of Jean Bourgoin, Henri Persin and Walter Wottitz (as listed on the Official Screen Credits form) were announced as nominees for this film in this category. The credits from the film listed four Directors of Photography (in the following order), Mr. Persin, Mr. Wottitz, Pierre Levent and Mr. Bourgoin. The program for the Awards ceremony and even the official letter from Price Waterhouse with the results of the final voting for the awards listed the three names as winners in this category. At some point, the name of Henri Persin was dropped from the nomination, as his name has been \\\"whited-out\\\" from the official wording for the nomination certificates, and the nominations and winners lists the Academy publishes do not include his name. The Academy's records and files give no reason for this exclusion.",
+  "after": "NOTE: Originally, the three names of Jean Bourgoin, Henri Persin and Walter Wottitz (as listed on the Official Screen Credits form) were announced as nominees for this film in this category. The credits from the film listed four Directors of Photography (in the following order), Mr. Persin, Mr. Wottitz, Pierre Levent and Mr. Bourgoin. The program for the Awards ceremony and even the official letter from Price Waterhouse with the results of the final voting for the awards listed the three names as winners in this category. At some point, the name of Henri Persin was dropped from the nomination, as his name has been \"whited-out\" from the official wording for the nomination certificates, and the nominations and winners lists the Academy publishes do not include his name. The Academy's records and files give no reason for this exclusion.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 6505,
+  "field": "Citation",
+  "before": "To RICHARD W. DEATS for the design and manufacture of the \\\"Little Big Crane\\\" for motion picture production.",
+  "after": "To RICHARD W. DEATS for the design and manufacture of the \"Little Big Crane\" for motion picture production.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 6506,
+  "field": "Citation",
+  "before": "To CONSTANT TRESFON and ADRIAAN DE ROOY of Egripment, and to ED PHILLIPS and CARLOS DE MATTOS of Matthews Studio Equipment, Incorporated, for the design and manufacture of the \\\"Tulip Crane\\\" for motion picture production.",
+  "after": "To CONSTANT TRESFON and ADRIAAN DE ROOY of Egripment, and to ED PHILLIPS and CARLOS DE MATTOS of Matthews Studio Equipment, Incorporated, for the design and manufacture of the \"Tulip Crane\" for motion picture production.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 6734,
+  "field": "Citation",
+  "before": "To DONALD A. ANDERSON and DIANA REINERS of 3M Company for the development of \\\"Cinetrak\\\" Magnetic Film #350/351 for motion picture sound recording.",
+  "after": "To DONALD A. ANDERSON and DIANA REINERS of 3M Company for the development of \"Cinetrak\" Magnetic Film #350/351 for motion picture sound recording.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 6741,
+  "field": "Citation",
+  "before": "To DONALD TRUMBULL, JONATHAN ERLAND, STEPHEN FOG and PAUL BURK of Apogee, Incorporated, for the design and development of the \\\"Blue Max\\\" high-power, blue-flux projector for traveling matte composite photography.",
+  "after": "To DONALD TRUMBULL, JONATHAN ERLAND, STEPHEN FOG and PAUL BURK of Apogee, Incorporated, for the design and development of the \"Blue Max\" high-power, blue-flux projector for traveling matte composite photography.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 7580,
+  "field": "Citation",
+  "before": "To RANDY CARTWRIGHT, DAVID B. COONS, LEM DAVIS, THOMAS HAHN, JAMES HOUSTON, MARK KIMBALL, DYLAN W. KOHLER, PETER NYE, MICHAEL SHANTZIS, DAVID F. WOLF and the WALT DISNEY FEATURE ANIMATION DEPARTMENT for the design and development of the \\\"CAPS\\\" production system for feature film animation.",
+  "after": "To RANDY CARTWRIGHT, DAVID B. COONS, LEM DAVIS, THOMAS HAHN, JAMES HOUSTON, MARK KIMBALL, DYLAN W. KOHLER, PETER NYE, MICHAEL SHANTZIS, DAVID F. WOLF and the WALT DISNEY FEATURE ANIMATION DEPARTMENT for the design and development of the \"CAPS\" production system for feature film animation.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 7704,
+  "field": "Citation",
+  "before": "To LOREN CARPENTER, ROB COOK, ED CATMULL, TOM PORTER, PAT HANRAHAN, TONY APODACA and DARWYN PEACHEY for the development of \\\"RenderMan\\\" software which produces images used in motion pictures from 3D computer descriptions of shape and appearance.",
+  "after": "To LOREN CARPENTER, ROB COOK, ED CATMULL, TOM PORTER, PAT HANRAHAN, TONY APODACA and DARWYN PEACHEY for the development of \"RenderMan\" software which produces images used in motion pictures from 3D computer descriptions of shape and appearance.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 7713,
+  "field": "Citation",
+  "before": "To TOM BRIGHAM for the original concept and pioneering work; and DOUGLAS SMYTHE and the COMPUTER GRAPHICS DEPARTMENT OF INDUSTRIAL LIGHT & MAGIC for the development and the first implementation in feature motion pictures of the \\\"MORF\\\" system for digital metamorphosis of high resolution images.",
+  "after": "To TOM BRIGHAM for the original concept and pioneering work; and DOUGLAS SMYTHE and the COMPUTER GRAPHICS DEPARTMENT OF INDUSTRIAL LIGHT & MAGIC for the development and the first implementation in feature motion pictures of the \"MORF\" system for digital metamorphosis of high resolution images.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 7963,
+  "field": "Citation",
+  "before": "To AUDIO TRACKS, INC. for the design and development of the ADE (Advanced Data Encoding) System which creates an encoded timecode track and database during the initial transfer of the production sound \\\"dailies.\\\"",
+  "after": "To AUDIO TRACKS, INC. for the design and development of the ADE (Advanced Data Encoding) System which creates an encoded timecode track and database during the initial transfer of the production sound \"dailies.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 7964,
+  "field": "Citation",
+  "before": "To COLIN BROAD of CB Electronics for the design and development of the EDL (Edit Decision List) Lister which creates an encoded timecode track and database during the initial transfer of the production sound \\\"dailies.\\\"",
+  "after": "To COLIN BROAD of CB Electronics for the design and development of the EDL (Edit Decision List) Lister which creates an encoded timecode track and database during the initial transfer of the production sound \"dailies.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 7969,
+  "field": "Citation",
+  "before": "To STEPHEN GREENFIELD and CHRIS HUNTLEY of Screenplay Systems for development of the \\\"Scriptor\\\" software.",
+  "after": "To STEPHEN GREENFIELD and CHRIS HUNTLEY of Screenplay Systems for development of the \"Scriptor\" software.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8106,
+  "field": "Citation",
+  "before": "To DAVID PRINGLE and YAN ZHONG FANG for the design and development of \\\"Lightning Strikes,\\\" a flexible, high-performance electronic lightning effect system.",
+  "after": "To DAVID PRINGLE and YAN ZHONG FANG for the design and development of \"Lightning Strikes,\" a flexible, high-performance electronic lightning effect system.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8243,
+  "field": "Nominees",
+  "before": "Burton \\\"Bud\\\" Stone",
+  "after": "Burton \"Bud\" Stone",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8243,
+  "field": "Citation",
+  "before": "To Burton \\\"Bud\\\" Stone in appreciation for outstanding service and dedication in upholding the high standards of the Academy of Motion Picture Arts and Sciences.",
+  "after": "To Burton \"Bud\" Stone in appreciation for outstanding service and dedication in upholding the high standards of the Academy of Motion Picture Arts and Sciences.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8363,
+  "field": "Citation",
+  "before": "To DOMINIQUE BOISVERT, RÉJEAN GAGNÉ, DANIEL LANGLOIS and RICHARD LAPERRIERE for the development of the \\\"Actor\\\" animation component of the Softimage computer animation system.",
+  "after": "To DOMINIQUE BOISVERT, RÉJEAN GAGNÉ, DANIEL LANGLOIS and RICHARD LAPERRIERE for the development of the \"Actor\" animation component of the Softimage computer animation system.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8522,
+  "field": "Note",
+  "before": "By integrating existing tools into a powerful interactive system, and adding an expressive multi-target shape interpolation-based freeform animation system, the \\\"Caricature\\\" system provides a degree of subtlety and refinement not possible with other systems.",
+  "after": "By integrating existing tools into a powerful interactive system, and adding an expressive multi-target shape interpolation-based freeform animation system, the \"Caricature\" system provides a degree of subtlety and refinement not possible with other systems.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8522,
+  "field": "Citation",
+  "before": "To CARY PHILLIPS for the design and development of the \\\"Caricature\\\" Animation System at Industrial Light & Magic.",
+  "after": "To CARY PHILLIPS for the design and development of the \"Caricature\" Animation System at Industrial Light & Magic.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8653,
+  "field": "Note",
+  "before": "The elimination of the \\\"red fringe\\\" artifact in traveling matte composite photography obviates expensive additional computerized image processing thus reducing the time involved in producing a seamless and convincing composite shot.",
+  "after": "The elimination of the \"red fringe\" artifact in traveling matte composite photography obviates expensive additional computerized image processing thus reducing the time involved in producing a seamless and convincing composite shot.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8653,
+  "field": "Citation",
+  "before": "To HOYT H. YEATMAN, JR. of Dream Quest Images and JOHN C. BREWER of the Eastman Kodak Company for the identification and diagnosis leading to the elimination of the \\\"red fringe\\\" artifact in traveling matte composite photography.",
+  "after": "To HOYT H. YEATMAN, JR. of Dream Quest Images and JOHN C. BREWER of the Eastman Kodak Company for the identification and diagnosis leading to the elimination of the \"red fringe\" artifact in traveling matte composite photography.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8767,
+  "field": "Citation",
+  "before": "To ROB COOK, LOREN CARPENTER and ED CATMULL for their significant advancements to the field of motion picture rendering as exemplified in Pixar's \\\"Renderman.\\\"",
+  "after": "To ROB COOK, LOREN CARPENTER and ED CATMULL for their significant advancements to the field of motion picture rendering as exemplified in Pixar's \"Renderman.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8775,
+  "field": "Note",
+  "before": "With the ability to dim these very high powered lights at essentially constant Kelvin temperature and without flicker, these units produce a bright and even light source for general set lighting. The availability of very high wattage units allows production to extend the hours of work past the time when the crew would otherwise have \\\"lost the light.\\\"",
+  "after": "With the ability to dim these very high powered lights at essentially constant Kelvin temperature and without flicker, these units produce a bright and even light source for general set lighting. The availability of very high wattage units allows production to extend the hours of work past the time when the crew would otherwise have \"lost the light.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8899,
+  "field": "Note",
+  "before": "The work of John M. Eargle, D.B. \\\"Don\\\" Keele and Mark E. Engebretson has resulted in the over 20-year dominance of constant-directivity, direct radiator bass style cinema loudspeaker systems.",
+  "after": "The work of John M. Eargle, D.B. \"Don\" Keele and Mark E. Engebretson has resulted in the over 20-year dominance of constant-directivity, direct radiator bass style cinema loudspeaker systems.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8899,
+  "field": "Citation",
+  "before": "To JOHN M. EARGLE, D.B. \\\"DON\\\" KEELE and MARK E. ENGEBRETSON for the concept, design and engineering of the modern constant-directivity, direct radiator style motion picture loudspeaker systems.",
+  "after": "To JOHN M. EARGLE, D.B. \"DON\" KEELE and MARK E. ENGEBRETSON for the concept, design and engineering of the modern constant-directivity, direct radiator style motion picture loudspeaker systems.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8916,
+  "field": "Note",
+  "before": "The ongoing influence of Lance Williams is exemplified in his three seminal papers \\\"Casting Shadows on Curved Surfaces,\\\" \\\"Pyramidal Parametrics\\\" and \\\"View Interpolation for Image Synthesis.\\\"",
+  "after": "The ongoing influence of Lance Williams is exemplified in his three seminal papers \"Casting Shadows on Curved Surfaces,\" \"Pyramidal Parametrics\" and \"View Interpolation for Image Synthesis.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8917,
+  "field": "Note",
+  "before": "This dominant commercial tracking system provides \\\"survey-free\\\" tracking, which significantly reduces the need for painstaking, error-prone measurements on sets.",
+  "after": "This dominant commercial tracking system provides \"survey-free\" tracking, which significantly reduces the need for painstaking, error-prone measurements on sets.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8917,
+  "field": "Citation",
+  "before": "To DR. UWE SASSENBERG and ROLF SCHNEIDER for the development of \\\"3D Equalizer,\\\" an advanced and robust camera and object match-moving system.",
+  "after": "To DR. UWE SASSENBERG and ROLF SCHNEIDER for the development of \"3D Equalizer,\" an advanced and robust camera and object match-moving system.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8919,
+  "field": "Citation",
+  "before": "To MIC RODGERS and MATT SWEENEY for the concept, design and realization of the \\\"Mic Rig.\\\"",
+  "after": "To MIC RODGERS and MATT SWEENEY for the concept, design and realization of the \"Mic Rig.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8921,
+  "field": "Note",
+  "before": "Born from \\\"The Cinematographic Annual,\\\" first published by the ASC in 1930, the \\\"American Cinematographer Manual\\\" has become an essential bible for cinematographers. Currently in its eighth edition, this premier reference manual has had a significant impact on decades of motion picture photography around the world.",
+  "after": "Born from \"The Cinematographic Annual,\" first published by the ASC in 1930, the \"American Cinematographer Manual\" has become an essential bible for cinematographers. Currently in its eighth edition, this premier reference manual has had a significant impact on decades of motion picture photography around the world.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 8921,
+  "field": "Citation",
+  "before": "To the American Society of Cinematographers (ASC) for the continued publication of the \\\"American Cinematographer Manual.\\\"",
+  "after": "To the American Society of Cinematographers (ASC) for the continued publication of the \"American Cinematographer Manual.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9167,
+  "field": "Note",
+  "before": "Massive takes a new approach in simulating behaviors of large numbers of computer-generated extras a.k.a. \\\"agents.\\\" Each \\\"agent\\\" contains a primitive software \\\"brain\\\" used to develop behavioral rules simulating a wide range of behaviors. In \\\"The Lord of the Rings\\\" trilogy, over 200,000 agents were controlled in several scenes.",
+  "after": "Massive takes a new approach in simulating behaviors of large numbers of computer-generated extras a.k.a. \"agents.\" Each \"agent\" contains a primitive software \"brain\" used to develop behavioral rules simulating a wide range of behaviors. In \"The Lord of the Rings\" trilogy, over 200,000 agents were controlled in several scenes.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9167,
+  "field": "Citation",
+  "before": "To STEPHEN REGELOUS for the design and development of Massive, the autonomous agent animation system used for the battle sequences in \\\"The Lord of the Rings\\\" trilogy.",
+  "after": "To STEPHEN REGELOUS for the design and development of Massive, the autonomous agent animation system used for the battle sequences in \"The Lord of the Rings\" trilogy.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9169,
+  "field": "Citation",
+  "before": "To HENRIK WANN JENSEN, STEPHEN R. MARSCHNER and PAT HANRAHAN for their pioneering research in simulating subsurface scattering of light in translucent materials as presented in their paper \\\"A Practical Model for Subsurface Light Transport.\\\"",
+  "after": "To HENRIK WANN JENSEN, STEPHEN R. MARSCHNER and PAT HANRAHAN for their pioneering research in simulating subsurface scattering of light in translucent materials as presented in their paper \"A Practical Model for Subsurface Light Transport.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9299,
+  "field": "Note",
+  "before": "\\\"Storm\\\" employs an efficient method for directly manipulating volumetric data to create effects such as clouds, water and avalanches with familiar operators inspired by image compositing and painting operations.",
+  "after": "\"Storm\" employs an efficient method for directly manipulating volumetric data to create effects such as clouds, water and avalanches with familiar operators inspired by image compositing and painting operations.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9299,
+  "field": "Citation",
+  "before": "To ALAN KAPLER for the design and development of \\\"Storm,\\\" a software toolkit for artistic control of volumetric effects.",
+  "after": "To ALAN KAPLER for the design and development of \"Storm,\" a software toolkit for artistic control of volumetric effects.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9300,
+  "field": "Citation",
+  "before": "To Arthur Widmer for his lifetime of achievement in the science and technology of image compositing for motion pictures as exemplified by his significant contributions to the development of the Ultra Violet and the \\\"bluescreen\\\" compositing processes.",
+  "after": "To Arthur Widmer for his lifetime of achievement in the science and technology of image compositing for motion pictures as exemplified by his significant contributions to the development of the Ultra Violet and the \"bluescreen\" compositing processes.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9371,
+  "field": "Name",
+  "before": "Music by Kathleen \\\"Bird\\\" York and Michael Becker; Lyric by Kathleen \\\"Bird\\\" York",
+  "after": "Music by Kathleen \"Bird\" York and Michael Becker; Lyric by Kathleen \"Bird\" York",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9371,
+  "field": "Nominees",
+  "before": "Kathleen \\\"Bird\\\" York|Michael Becker",
+  "after": "Kathleen \"Bird\" York|Michael Becker",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9416,
+  "field": "Note",
+  "before": "Their 1998 paper titled \\\"Large Steps in Cloth Simulation\\\" was a seminal work, providing the key in demonstrating to the industry that the calculations necessary to simulate realistic, complex cloth could be achieved efficiently and robustly. Their work provided the conceptual foundation for many cloth simulation systems in use today.",
+  "after": "Their 1998 paper titled \"Large Steps in Cloth Simulation\" was a seminal work, providing the key in demonstrating to the industry that the calculations necessary to simulate realistic, complex cloth could be achieved efficiently and robustly. Their work provided the conceptual foundation for many cloth simulation systems in use today.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9425,
+  "field": "Note",
+  "before": "Their 1987 paper \\\"Elastically Deformable Models\\\" was a milestone in computer graphics, introducing the concept of physically-based techniques to simulate moving, deforming objects.",
+  "after": "Their 1987 paper \"Elastically Deformable Models\" was a milestone in computer graphics, introducing the concept of physically-based techniques to simulate moving, deforming objects.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9678,
+  "field": "Citation",
+  "before": "To CHRISTIEN TINSLEY for the creation of the transfer techniques for creating and applying 2D and 3D makeup known as \\\"Tinsley Transfers.\\\"",
+  "after": "To CHRISTIEN TINSLEY for the creation of the transfer techniques for creating and applying 2D and 3D makeup known as \"Tinsley Transfers.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 9679,
+  "field": "Citation",
+  "before": "To JÖRG PÖHLER and RÜDIGER KLEINKE of OTTEC Technology GmbH for the design and development of the battery-operated series of fog machines known as \\\"Tiny Foggers.\\\"",
+  "after": "To JÖRG PÖHLER and RÜDIGER KLEINKE of OTTEC Technology GmbH for the design and development of the battery-operated series of fog machines known as \"Tiny Foggers.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 10077,
+  "field": "Note",
+  "before": "This important step in the evolution of global illumination techniques, first used on the motion picture \\\"Shrek 2,\\\" was shared with the industry in their technical paper \\\"An Approximate Global Illumination System for Computer Generated Films.\\\"",
+  "after": "This important step in the evolution of global illumination techniques, first used on the motion picture \"Shrek 2,\" was shared with the industry in their technical paper \"An Approximate Global Illumination System for Computer Generated Films.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 10207,
+  "field": "Nominees",
+  "before": "E.F. \\\"BOB\\\" Nettmann|Michael Sayovitz|Brad Fritzel|Fred Miller",
+  "after": "E.F. \"BOB\" Nettmann|Michael Sayovitz|Brad Fritzel|Fred Miller",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 10207,
+  "field": "Citation",
+  "before": "To E.F. \\\"BOB\\\" NETTMANN for the concept and system architecture, MICHAEL SAYOVITZ for the electronic packaging and integration, BRAD FRITZEL for the electronic engineering, and FRED MILLER for the mechanical engineering of the Stab-C Classic, Super-G and Stab-C Compact stabilizing heads.",
+  "after": "To E.F. \"BOB\" NETTMANN for the concept and system architecture, MICHAEL SAYOVITZ for the electronic packaging and integration, BRAD FRITZEL for the electronic engineering, and FRED MILLER for the mechanical engineering of the Stab-C Classic, Super-G and Stab-C Compact stabilizing heads.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 10208,
+  "field": "Note",
+  "before": "The \\\"Lowry Process\\\" uses advanced GPU-accelerated, motion estimation-based image processing tools to enhance image quality.",
+  "after": "The \"Lowry Process\" uses advanced GPU-accelerated, motion estimation-based image processing tools to enhance image quality.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 10302,
+  "field": "Film",
+  "before": "Maggie Simpson in \\\"The Longest Daycare\\\"",
+  "after": "Maggie Simpson in \"The Longest Daycare\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 10338,
+  "field": "Note",
+  "before": "Since their first series of motion picture lenses, Cooke Optics has continued to create optical innovations decade after decade. Producing what is commonly referred to as the \\\"Cooke Look,\\\" these lenses have often been the lens of choice for creative cinematographers worldwide.",
+  "after": "Since their first series of motion picture lenses, Cooke Optics has continued to create optical innovations decade after decade. Producing what is commonly referred to as the \"Cooke Look,\" these lenses have often been the lens of choice for creative cinematographers worldwide.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 10486,
+  "field": "Note",
+  "before": "Physically based rendering has transformed computer graphics lighting by more accurately simulating materials and lights, allowing digital artists to focus on cinematography rather than the intricacies of rendering. First published in 2004, \\\"Physically Based Rendering\\\" is both a textbook and a complete source-code implementation that has provided a widely adopted practical roadmap for most physically based shading and lighting systems used in film production.",
+  "after": "Physically based rendering has transformed computer graphics lighting by more accurately simulating materials and lights, allowing digital artists to focus on cinematography rather than the intricacies of rendering. First published in 2004, \"Physically Based Rendering\" is both a textbook and a complete source-code implementation that has provided a widely adopted practical roadmap for most physically based shading and lighting systems used in film production.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 10486,
+  "field": "Citation",
+  "before": "To MATT PHARR, GREG HUMPHREYS and PAT HANRAHAN for their formalization and reference implementation of the concepts behind physically based rendering, as shared in their book \\\"Physically Based Rendering.\\\"",
+  "after": "To MATT PHARR, GREG HUMPHREYS and PAT HANRAHAN for their formalization and reference implementation of the concepts behind physically based rendering, as shared in their book \"Physically Based Rendering.\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 10494,
+  "field": "Nominees",
+  "before": "Charles \\\"Tad\\\" Marburg",
+  "after": "Charles \"Tad\" Marburg",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 10494,
+  "field": "Citation",
+  "before": "To Charles \\\"Tad\\\" Marburg in appreciation for outstanding service and dedication in upholding the high standards of the Academy of Motion Picture Arts and Sciences.",
+  "after": "To Charles \"Tad\" Marburg in appreciation for outstanding service and dedication in upholding the high standards of the Academy of Motion Picture Arts and Sciences.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 11127,
+  "field": "Name",
+  "before": "Music by Kendrick Lamar, Mark \\\"Sounwave\\\" Spears and Anthony \\\"Top Dawg\\\" Tiffith; Lyric by Kendrick Lamar, SZA and Anthony \\\"Top Dawg\\\" Tiffith",
+  "after": "Music by Kendrick Lamar, Mark \"Sounwave\" Spears and Anthony \"Top Dawg\" Tiffith; Lyric by Kendrick Lamar, SZA and Anthony \"Top Dawg\" Tiffith",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 11127,
+  "field": "Nominees",
+  "before": "Kendrick Lamar|Mark \\\"Sounwave\\\" Spears|Anthony \\\"Top Dawg\\\" Tiffith|SZA",
+  "after": "Kendrick Lamar|Mark \"Sounwave\" Spears|Anthony \"Top Dawg\" Tiffith|SZA",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 11192,
+  "field": "Note",
+  "before": "Loop's 1987 master's thesis, \\\"Smooth Subdivision Surfaces Based on Triangles,\\\" together with his subsequent research and publications, extended the theory of subdivision surfaces and inspired further development of methods that transformed the way digital artists represent 3D geometry throughout the motion picture industry.",
+  "after": "Loop's 1987 master's thesis, \"Smooth Subdivision Surfaces Based on Triangles,\" together with his subsequent research and publications, extended the theory of subdivision surfaces and inspired further development of methods that transformed the way digital artists represent 3D geometry throughout the motion picture industry.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 11502,
+  "field": "Name",
+  "before": "Ahmir \\\"Questlove\\\" Thompson, Joseph Patel, Robert Fyvolent and David Dinerstein",
+  "after": "Ahmir \"Questlove\" Thompson, Joseph Patel, Robert Fyvolent and David Dinerstein",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 11502,
+  "field": "Nominees",
+  "before": "Ahmir \\\"Questlove\\\" Thompson|Joseph Patel|Robert Fyvolent|David Dinerstein",
+  "after": "Ahmir \"Questlove\" Thompson|Joseph Patel|Robert Fyvolent|David Dinerstein",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 11970,
+  "field": "Name",
+  "before": "Screenplay by Clint Bentley, Greg Kwedar; Story by Clint Bentley, Greg Kwedar, Clarence Maclin, John \\\"Divine G\\\" Whitfield",
+  "after": "Screenplay by Clint Bentley, Greg Kwedar; Story by Clint Bentley, Greg Kwedar, Clarence Maclin, John \"Divine G\" Whitfield",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 11970,
+  "field": "Nominees",
+  "before": "Clint Bentley|Greg Kwedar|Clarence Maclin|John \\\"Divine G\\\" Whitfield",
+  "after": "Clint Bentley|Greg Kwedar|Clarence Maclin|John \"Divine G\" Whitfield",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 11989,
+  "field": "Note",
+  "before": "Fire for Hire's gel first publicly demonstrated a \\\"naked burn,\\\" where fire appears directly on the skin, enabling a new form of safe fire stunts in motion pictures.",
+  "after": "Fire for Hire's gel first publicly demonstrated a \"naked burn,\" where fire appears directly on the skin, enabling a new form of safe fire stunts in motion pictures.",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 12051,
+  "field": "Film",
+  "before": "Children No More: \\\"Were and Are Gone\\\"",
+  "after": "Children No More: \"Were and Are Gone\"",
+  "reason": "encoding",
+  "evidence": "The source escapes every double quote as \\\" inside cells (194 occurrences in 84 cells; no other backslashes anywhere).",
+  "verification": "rule: exhaustive scan"
+ },
+ {
+  "nomination_id": 4507,
+  "field": "Nominees",
+  "before": "Metro- Goldwyn-Mayer British|A. W. Watkins|Metro-Goldwyn-Mayer|Franklin E. Milton",
+  "after": "Metro-Goldwyn-Mayer British|A. W. Watkins|Metro-Goldwyn-Mayer|Franklin E. Milton",
+  "reason": "credit_text",
+  "evidence": "The nominee slot carried credit wording copied from the credit line (or a stray space); the credit line itself is unchanged.",
+  "verification": "rule: exhaustive scan of all 18,824 nominee slots"
+ },
+ {
+  "nomination_id": 4507,
+  "field": "Name",
+  "before": "Metro- Goldwyn-Mayer British Studio Sound Department, A. W. Watkins, Sound Director; and Metro-Goldwyn-Mayer Studio Sound Department, Franklin E. Milton, Sound Director",
+  "after": "Metro-Goldwyn-Mayer British Studio Sound Department, A. W. Watkins, Sound Director; and Metro-Goldwyn-Mayer Studio Sound Department, Franklin E. Milton, Sound Director",
+  "reason": "credit_text",
+  "evidence": "Stray space after the hyphen in \"Metro-Goldwyn-Mayer\".",
+  "verification": "rule: exact string"
+ },
+ {
+  "nomination_id": 5321,
+  "field": "Nominees",
+  "before": "Luis Buñuel|in collaboration with Jean-Claude Carrière",
+  "after": "Luis Buñuel|Jean-Claude Carrière",
+  "reason": "credit_text",
+  "evidence": "The nominee slot carried credit wording copied from the credit line (or a stray space); the credit line itself is unchanged.",
+  "verification": "rule: exhaustive scan of all 18,824 nominee slots"
+ },
+ {
+  "nomination_id": 11693,
+  "field": "Nominees",
+  "before": "Screenplay - Edward Berger|Lesley Paterson|Ian Stokell",
+  "after": "Edward Berger|Lesley Paterson|Ian Stokell",
+  "reason": "credit_text",
+  "evidence": "The nominee slot carried credit wording copied from the credit line (or a stray space); the credit line itself is unchanged.",
+  "verification": "rule: exhaustive scan of all 18,824 nominee slots"
+ },
+ {
+  "nomination_id": 11831,
+  "field": "Nominees",
+  "before": "Screenplay - Justine Triet|Arthur Harari",
+  "after": "Justine Triet|Arthur Harari",
+  "reason": "credit_text",
+  "evidence": "The nominee slot carried credit wording copied from the credit line (or a stray space); the credit line itself is unchanged.",
+  "verification": "rule: exhaustive scan of all 18,824 nominee slots"
+ },
+ {
+  "nomination_id": 11968,
+  "field": "Nominees",
+  "before": "Jacques Audiard|In collaboration with Thomas Bidegain|Léa Mysius|Nicolas Livecchi",
+  "after": "Jacques Audiard|Thomas Bidegain|Léa Mysius|Nicolas Livecchi",
+  "reason": "credit_text",
+  "evidence": "The nominee slot carried credit wording copied from the credit line (or a stray space); the credit line itself is unchanged.",
+  "verification": "rule: exhaustive scan of all 18,824 nominee slots"
+ },
+ {
+  "nomination_id": 543,
+  "field": "FilmId",
+  "before": "tt3034436",
+  "after": "?",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/title/tt3034436/ search-result title: 'The March of Time: Volume 1, Number 3 (Short 1935) | Documentary, Short, News' (a single 1935 issue featuring Huey Long) | https://en.wikipedia.org/wiki/The_March_of_Time: the Honorary Award honored the series overall, 'for its significance to motion pictures and for having revolutionized one of the most important branches of the industry - the newsreel' | https://www.wikidata.org/wiki/Special:EntityData/Q2412728.json: The March of Time (instance of film series Q24856) has no P345, so no series-level IMDb ID could be established",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 3349,
+  "field": "FilmId",
+  "before": "tt0046593",
+  "after": "tt0049473",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/title/tt0046593/ search-result title: 'The Magical World of Disney (TV Series 1954-1997) - IMDb'; Wikidata Q1247718 (Disney anthology television series) carries P345 tt0046593 | https://www.wikidata.org/wiki/Q6746354: Man in Space, P345 tt0049473, part of the series Q1247718, publication date 1955-03-09 | https://www.imdb.com/title/tt0049473/ search-result title: '\"The Magical World of Disney\" Man in Space (TV Episode 1955)', directed by Ward Kimball",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "tt0049473"
+ },
+ {
+  "nomination_id": 7381,
+  "field": "NomineeIds",
+  "before": "nm0385091|nm0944310",
+  "after": "nm0385091|nm0180644",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/name/nm0944310/ (via r.jina.ai): page title 'Eugene X'; only credit 'American Masters ... producer, 1990, 1 episode'; awards page holds the 1991 Documentary Feature nomination for Waldo Salt, shared with Robert Hillmann | https://www.wikidata.org/wiki/Q22110446: label 'Eugene X', IMDb nm0944310, no sitelinks or dates | https://www.imdb.com/name/nm0180644/bio/ (search snippet): Eugene Corr 'wrote and directed the feature documentary Waldo Salt: A Screenwriter's Journey (with Robert Hillmann), for which he was nominated for an Academy Award (1991)'; nm0180644 awards list Waldo Salt shared with Robert Hillmann",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm0180644"
+ },
+ {
+  "nomination_id": 2502,
+  "field": "NomineeIds",
+  "before": "nm0753122|?|nm3817594|co0023400",
+  "after": "nm0753122|?|?|co0023400",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/name/nm3817594/ (via r.jina.ai): 'Robert Carr', alt. name 'Lord Carr'; every credit is 'Self' (e.g. 'How to Be Home Secretary (1999): Self - Conservative Home Secretary, 1972-1974'; 'Election 70: Self (as Rt. Hon. Robert Carr)') | https://en.wikipedia.org/wiki/Robert_Carr: 'Leonard Robert Carr, Baron Carr of Hadley (1916-2012) was a British Conservative Party politician who served as Home Secretary from 1972 to 1974' | Upstream citation (Academy text in dataset): 'To LOREN L. RYDER, BRUCE H. DENNEY, ROBERT CARR and the PARAMOUNT STUDIO SOUND DEPARTMENT for the development and application of the supersonic playback and public address system'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 3151,
+  "field": "NomineeIds",
+  "before": "nm0515093|nm3280670|co0050868",
+  "after": "nm0515093|?|co0050868",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/name/nm3280670/ (via r.jina.ai): 'Lloyd Russell is known for 6 Foot Rule (2012) and Sunburnt Angels (2011)'; only credits are 'property master' on those two films | https://www.imdb.com/name/nm3280670/awards/ (via r.jina.ai): IMDb attaches '1955 Winner Technical Achievement Award ... improved limiting amplifier ... Shared with John P. Livadary' | Upstream citation: 'To JOHN P. LIVADARY, LLOYD RUSSELL and the COLUMBIA STUDIO SOUND DEPARTMENT for an improved limiting amplifier...' (1954 award year)",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 5671,
+  "field": "NomineeIds",
+  "before": "?|?|nm0230800|nm0239470",
+  "after": "?|?|?|nm0239470",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/name/nm0230800/ (via r.jina.ai): 'John Dolan', alt. name 'John P. Dolan'; credits are Camera and Electrical Department, 1996-2025, e.g. 'Daredevil (2015-2018) key grip (as John P. Dolan)', 'Iron Fist (2017) key grip' | https://www.imdb.com/name/nm0230800/awards/ (via r.jina.ai): IMDb attaches '1976 Winner Technical Achievement Award: For the development of a technique for silver recovery from photographic wash-waters by ion exchange', shared with Richard Dubois | Upstream citation: '...JOHN C. DOLAN and RICHARD DUBOIS of the Akwaklame Company for the development of a technique for silver recovery from photographic wash-waters by ion exchange'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 6429,
+  "field": "FilmId",
+  "before": "tt0169446",
+  "after": "tt0084185",
+  "reason": "wrong_id",
+  "evidence": "WebSearch \"tt0169446\": result title 'The Fifth Estate (TV Series 1975– ) - IMDb' (imdb.com/title/tt0169446/) | https://www.wikidata.org/wiki/Q3788617 - P345 tt0169446 = The Fifth Estate, 'Canadian television newsmagazine' (TV series) | https://www.wikidata.org/wiki/Q1305238 - Just Another Missing Kid, 1981 film by John Zaritsky, P345 tt0084185, award: Academy Award for Best Documentary Feature Film",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "tt0084185"
+ },
+ {
+  "nomination_id": 7876,
+  "field": "FilmId",
+  "before": "tt0094416",
+  "after": "tt0109519",
+  "reason": "wrong_id",
+  "evidence": "WebSearch \"tt0094416\": result title 'American Experience (TV Series 1988– ) - IMDb' (imdb.com/title/tt0094416) | https://www.wikidata.org/wiki/Q2842919 - P345 tt0094416 = American Experience, 'PBS documentary television series' | https://www.wikidata.org/wiki/Q5203250 - D-Day Remembered (1994), director Charles Guggenheim, P345 tt0109519, nominated Academy Award for Best Documentary Feature Film",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "tt0109519"
+ },
+ {
+  "nomination_id": 192,
+  "field": "NomineeIds",
+  "before": "co0075561",
+  "after": "nm0730018",
+  "reason": "wrong_id",
+  "evidence": "https://www.oscars.org/oscars/ceremonies/1933 - Academy credit: 'The Music Box - Hal Roach, Producer' (a person, not the studio) | https://www.imdb.com/company/co0075561 - IMDb API: co0075561 is the company 'Hal Roach Studios' | https://www.imdb.com/name/nm0730018/ - IMDb award record for Hal Roach: 1932 Short Subject Comedy (won), 1936 Short Subject Comedy (nominated), 1937 Short Subject One-reel (won)",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm0730018"
+ },
+ {
+  "nomination_id": 407,
+  "field": "NomineeIds",
+  "before": "co0075561",
+  "after": "nm0730018",
+  "reason": "wrong_id",
+  "evidence": "https://www.oscars.org/oscars/ceremonies/1933 - Academy credit: 'The Music Box - Hal Roach, Producer' (a person, not the studio) | https://www.imdb.com/company/co0075561 - IMDb API: co0075561 is the company 'Hal Roach Studios' | https://www.imdb.com/name/nm0730018/ - IMDb award record for Hal Roach: 1932 Short Subject Comedy (won), 1936 Short Subject Comedy (nominated), 1937 Short Subject One-reel (won)",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm0730018"
+ },
+ {
+  "nomination_id": 518,
+  "field": "NomineeIds",
+  "before": "co0075561",
+  "after": "nm0730018",
+  "reason": "wrong_id",
+  "evidence": "https://www.oscars.org/oscars/ceremonies/1933 - Academy credit: 'The Music Box - Hal Roach, Producer' (a person, not the studio) | https://www.imdb.com/company/co0075561 - IMDb API: co0075561 is the company 'Hal Roach Studios' | https://www.imdb.com/name/nm0730018/ - IMDb award record for Hal Roach: 1932 Short Subject Comedy (won), 1936 Short Subject Comedy (nominated), 1937 Short Subject One-reel (won)",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm0730018"
+ },
+ {
+  "nomination_id": 526,
+  "field": "NomineeIds",
+  "before": "co0026841|nm0481264",
+  "after": "co0026841|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "https://www.oscars.org/oscars/ceremonies/1937 - Dodsworth, Sound Recording: 'United Artists Studio Sound Department, Thomas T. Moulton, Sound Director' | https://en.wikipedia.org/wiki/9th_Academy_Awards - 'Dodsworth - Thomas T. Moulton' | https://www.wikidata.org/wiki/Q1486185 - nm0481264 is Oscar Lagerstrom (1890-1974), sound engineer",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm0609771"
+ },
+ {
+  "nomination_id": 609,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0000055",
+  "after": "co0064215|nm0000055",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 937,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0609771",
+  "after": "co0064215|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 1102,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0609771",
+  "after": "co0064215|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 1284,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0609771",
+  "after": "co0064215|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 1482,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0609771",
+  "after": "co0064215|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 1670,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0609771",
+  "after": "co0064215|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 1842,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0609771",
+  "after": "co0064215|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 2023,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 2130,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 2245,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 2598,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 2720,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 2852,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 3393,
+  "field": "NomineeIds",
+  "before": "co0001880|nm0322678|co0058013|nm0768167",
+  "after": "co0001880|nm0322678|co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 3504,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 3619,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 3745,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167|co0016792|nm0405261",
+  "after": "co0064215|nm0768167|co0016792|nm0405261",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 3869,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167|co0016792|nm0405261",
+  "after": "co0064215|nm0768167|co0016792|nm0405261",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 3870,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 3996,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 4000,
+  "field": "NomineeIds",
+  "before": "?|nm0405261|co0058013|nm0768167",
+  "after": "?|nm0405261|co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 4255,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 4633,
+  "field": "NomineeIds",
+  "before": "co0058013|nm0768167",
+  "after": "co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 4749,
+  "field": "NomineeIds",
+  "before": "co0058013",
+  "after": "co0064215",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb API: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Row text (1937-1967): 'Samuel Goldwyn Studio Sound Department ...' and 'Samuel Goldwyn Studio Music Department ...'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0064215"
+ },
+ {
+  "nomination_id": 8103,
+  "field": "NomineeIds",
+  "before": "?|nm0141720",
+  "after": "?|?",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/name/nm0141720/ - IMDb API: John Carter, Actor; only credits are Aurora of the North (1914) and Six Feet Four (1919) | https://v3.sg.media-imdb.com/suggestion/x/nm0141720.json - IMDb: 'John Carter, Actor, Aurora of the North (1914)' | Row citation: 'To CLAY DAVIS and JOHN CARTER of Todd-AO for ... an Automated Patchbay System' (68th awards, 1995/96)",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 1388,
+  "field": "NomineeIds",
+  "before": "co0141760",
+  "after": "co0041860",
+  "reason": "wrong_id",
+  "evidence": "IMDb GraphQL company(id:\"co0141760\"): 'United States Army' (the parent service, not the Signal Corps) | https://www.wikidata.org/wiki/Q736213: United States Army Signal Corps, P345 = co0041860; IMDb GraphQL company(id:\"co0041860\"): 'U.S. Army Signal Corps', known for The Battle of China, Tunisian Victory | https://www.imdb.com/title/tt0046146/companycredits/ (via GraphQL): Operation Blue Jay (1953), Production Companies: co0041860 U.S. Army Signal Corps",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0041860"
+ },
+ {
+  "nomination_id": 2947,
+  "field": "NomineeIds",
+  "before": "co0141760",
+  "after": "co0041860",
+  "reason": "wrong_id",
+  "evidence": "IMDb GraphQL company(id:\"co0141760\"): 'United States Army' (the parent service, not the Signal Corps) | https://www.wikidata.org/wiki/Q736213: United States Army Signal Corps, P345 = co0041860; IMDb GraphQL company(id:\"co0041860\"): 'U.S. Army Signal Corps', known for The Battle of China, Tunisian Victory | https://www.imdb.com/title/tt0046146/companycredits/ (via GraphQL): Operation Blue Jay (1953), Production Companies: co0041860 U.S. Army Signal Corps",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0041860"
+ },
+ {
+  "nomination_id": 1410,
+  "field": "NomineeIds",
+  "before": "co0141760",
+  "after": "co0046209",
+  "reason": "wrong_id",
+  "evidence": "IMDb GraphQL company(id:\"co0141760\"): 'United States Army' (the parent service) | https://www.wikidata.org/wiki/Q741723: United States Army Air Forces, 'aerial warfare branch of the United States Army from 1941 to 1947', P345 = co0046209 | IMDb company credits via GraphQL: Winning Your Wings (tt0035565) and Operation Vittles (tt0040673) credit co0046209 'U.S. Army Air Forces' as a production company",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0046209"
+ },
+ {
+  "nomination_id": 1766,
+  "field": "NomineeIds",
+  "before": "co0141760",
+  "after": "co0046209",
+  "reason": "wrong_id",
+  "evidence": "IMDb GraphQL company(id:\"co0141760\"): 'United States Army' (the parent service) | https://www.wikidata.org/wiki/Q741723: United States Army Air Forces, 'aerial warfare branch of the United States Army from 1941 to 1947', P345 = co0046209 | IMDb company credits via GraphQL: Winning Your Wings (tt0035565) and Operation Vittles (tt0040673) credit co0046209 'U.S. Army Air Forces' as a production company",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0046209"
+ },
+ {
+  "nomination_id": 1933,
+  "field": "NomineeIds",
+  "before": "co0141760",
+  "after": "co0046209",
+  "reason": "wrong_id",
+  "evidence": "IMDb GraphQL company(id:\"co0141760\"): 'United States Army' (the parent service) | https://www.wikidata.org/wiki/Q741723: United States Army Air Forces, 'aerial warfare branch of the United States Army from 1941 to 1947', P345 = co0046209 | IMDb company credits via GraphQL: Winning Your Wings (tt0035565) and Operation Vittles (tt0040673) credit co0046209 'U.S. Army Air Forces' as a production company",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0046209"
+ },
+ {
+  "nomination_id": 2321,
+  "field": "NomineeIds",
+  "before": "co0141760",
+  "after": "co0046209",
+  "reason": "wrong_id",
+  "evidence": "IMDb GraphQL company(id:\"co0141760\"): 'United States Army' (the parent service) | https://www.wikidata.org/wiki/Q741723: United States Army Air Forces, 'aerial warfare branch of the United States Army from 1941 to 1947', P345 = co0046209 | IMDb company credits via GraphQL: Winning Your Wings (tt0035565) and Operation Vittles (tt0040673) credit co0046209 'U.S. Army Air Forces' as a production company",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0046209"
+ },
+ {
+  "nomination_id": 1573,
+  "field": "NomineeIds",
+  "before": "co0023398",
+  "after": "co0038466",
+  "reason": "wrong_id",
+  "evidence": "IMDb GraphQL company(id:\"co0023398\"): 'U.S. War Department' (the parent department). Its known-for list is identical to co0007361, and title search returns 0 titles, so it looks like a merged duplicate | https://www.imdb.com/title/tt0036629/companycredits/ (via GraphQL): The Battle of Russia, Production Companies: co0038466 U.S. Army Special Service Division; co0007361 U.S. War Department | IMDb GraphQL company(id:\"co0038466\"): 'U.S. Army Special Service Division', known for The Battle of Russia (1943)",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0038466"
+ },
+ {
+  "nomination_id": 2847,
+  "field": "NomineeIds",
+  "before": "co0053636",
+  "after": "co0103018",
+  "reason": "wrong_id",
+  "evidence": "IMDb GraphQL company(id:\"co0053636\"): 'London Film', country Germany; its only title is Nanga Parbat 1953 (German documentary) | https://www.imdb.com/title/tt0044447/companycredits/ (via GraphQL): Bridge of Time, Production Companies: British Information Service; co0103018 London Film Productions | https://www.wikidata.org/wiki/Q1868978: London Films, 'British film and television production company', P345 = co0103018",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0103018"
+ },
+ {
+  "nomination_id": 2851,
+  "field": "NomineeIds",
+  "before": "co0053636",
+  "after": "co0103018",
+  "reason": "wrong_id",
+  "evidence": "IMDb GraphQL company(id:\"co0053636\"): 'London Film', Germany; its only title is Nanga Parbat 1953 | https://www.imdb.com/title/tt0044446/companycredits/ (via GraphQL): The Sound Barrier (1952), Production Companies: co0103018 London Film Productions; British Lion Film Corporation | https://en.wikipedia.org/wiki/London_Films: 'British film and television production company founded in 1932 by Alexander Korda'",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0103018"
+ },
+ {
+  "nomination_id": 12080,
+  "field": "NomineeIds",
+  "before": "nm12363614|nm5196834|nm17958850|nm17958851|nm17958853|nm13927769|nm10259072",
+  "after": "nm12363614|nm5196834|nm17958850|nm17958851|nm17958853|nm15612471|nm10259072",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/name/nm13927769/ (search result title) - 'Jeong Seong-Hoon | Actor', known for Limbus Company (2023) and A Clean Sweep (2022) | https://m.imdb.com/title/tt13857716/characters/nm13889988/ - the same actor Jeong Seong-Hoon (Limbus Company) is a Korean voice actor (Cookie Run: OvenBreak) | https://www.wikidata.org/wiki/Q138018786 - Seo Jeong-hoon (서정훈), 'South Korean music producer and songwriter', alias '24', P345 = nm15612471",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm15612471"
+ },
+ {
+  "nomination_id": 263,
+  "field": "NomineeIds",
+  "before": "co0015504",
+  "after": "co0050385",
+  "reason": "wrong_id",
+  "evidence": "https://www.wikidata.org/wiki/Special:EntityData/Q1250181.json : 'Educational Pictures', P345 = co0050385 | IMDb tt0024231 Krakatoa (1933), same ceremony and category: production company co0050385 Educational Films Corporation of America",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0050385"
+ },
+ {
+  "nomination_id": 977,
+  "field": "NomineeIds",
+  "before": "nm1226743|nm1226921|nm1226718|co0051159|?|?|nm1227736|nm1290592|?|nm0005743|?|?|?",
+  "after": "nm1226743|nm1226921|nm1226718|co0066582|?|?|nm1227736|nm1290592|co0051159|nm0005743|?|?|?",
+  "reason": "wrong_id",
+  "evidence": "IMDb GraphQL company(id:'co0051159'): companyText 'National Carbon Corp.', Lighting Equipment, US; its only credited title is Gone with the Wind (1939) | IMDb GraphQL company(id:'co0066582'): 'Bausch & Lomb', United States; 123 credited titles (1950s CinemaScope films). The dataset already uses co0066582 for 'Bausch & Lomb Optical Company' in the 27th Honorary Award row | https://www.cinemasight.com/awards-history/12th-academy-awards-1939/12th-academy-awards-1939-nominees-and-winners/ (search summary): awards to 'F. R. Abbott, Haller Belt, Alan Cook and the Bausch & Lomb Optical Company' and separately to 'Charles Handley, David Joy and the National Carbon Company' | Bausch & Lomb slot gets co0066582; the National Carbon slot gets co0051159.",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 7951,
+  "field": "NomineeIds",
+  "before": "nm0398894|nm0533371|?|nm0205165",
+  "after": "nm0398894|nm0533371|?|?",
+  "reason": "wrong_id",
+  "evidence": "https://www.cinemasight.com/awards-history/academy-awards-individual-categories/scientific-or-technical-award-class-ii-plaque/ : 67th: '...GLENN KENNEL and MIKE DAVIS of Eastman Kodak for their joint development work on a linear array CCD ... film input scanning system' | https://en.wikipedia.org/wiki/Cineon : Kodak's Cineon CCD scanner work was done in Rochester, NY | https://www.imdb.com/name/nm0205165/ : IMDb 'Mike Davis' has 35 credits, all Transportation Department: driver on Runaway Train (1985), 'driver: Los Angeles' on Basic Instinct (1992), transportation coordinator on Sex and the City and Entourage. IMDb nonetheless attaches the 1995 S&E award to this ID.",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 8363,
+  "field": "NomineeIds",
+  "before": "?|?|nm0486570|?",
+  "after": "?|?|nm9834494|?",
+  "reason": "wrong_id",
+  "evidence": "https://www.cinemasight.com/awards-history/academy-awards-individual-categories/scientific-or-technical-award-class-ii-plaque/ : 70th: 'DOMINIQUE BOISVERT, RÉJEAN GAGNÉ, DANIEL LANGLOIS and RICHARD LAPERRIERE for ... the Softimage computer animation system' | https://www.wikidata.org/wiki/Special:EntityData/Q3014287.json : Daniel Langlois, Canadian businessman and Softimage founder, born 1957-04-06 (Jonquière). No P345 on the item. | https://www.imdb.com/name/nm0486570/ : IMDb bio 'born on 30 November 1961 in Montréal ... a production manager', with 57 unit-manager and driver credits (Warm Bodies, X-Men: Apocalypse, To Catch a Killer 2023). IMDb misattaches the 1998 S&E award here.",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm9834494"
+ },
+ {
+  "nomination_id": 8374,
+  "field": "NomineeIds",
+  "before": "nm2149370|?|?",
+  "after": "nm1192634|?|?",
+  "reason": "wrong_id",
+  "evidence": "https://v3.sg.media-imdb.com/suggestion/x/nm2149370.json - IMDb: 'Jim Frazier', 'Cinematographer, Terror from Within (2002)'; search results list him as cinematographer on Waco: A New Revelation (2000) | https://www.deseret.com/1999/9/19/19466539/new-waco-film-answers-questions-that-some-wish-were-left-unasked/ - Waco: A New Revelation was made by the tiny independent MGA Entertainment of Fort Collins, Colorado (Terror from Within is also an MGA Films doc) | https://www.wikidata.org/wiki/Q6195073 - Jim Frazier, Australian cinematographer (1940-2022), award: Academy Award for Technical Achievement; P345 = nm1192634",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm1192634"
+ },
+ {
+  "nomination_id": 9039,
+  "field": "NomineeIds",
+  "before": "?|?|nm1232700|nm3181275",
+  "after": "?|?|nm1232700|nm3487551",
+  "reason": "wrong_id",
+  "evidence": "https://v3.sg.media-imdb.com/suggestion/x/nm3181275.json - IMDb: 'Kim Davidson', 'Actress, Banana Leaves (2007)' | https://www.imdb.com/title/tt1316031/ - Banana Leaves (2007), a drama/horror feature directed by Lanre Sarumi with Kim Davidson in the cast | https://www.wikidata.org/wiki/Q21228600 - Kim Davidson, male Canadian entrepreneur and computer scientist (SideFX)",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm3487551"
+ },
+ {
+  "nomination_id": 9551,
+  "field": "NomineeIds",
+  "before": "nm0270579|nm3289358",
+  "after": "nm0270579|?",
+  "reason": "wrong_id",
+  "evidence": "Web search 'nm3289358' - IMDb 'Chris Edwards | Actor', born 29 October 1963 in Harrisburg, Pennsylvania; known for Film Noir, Red Letter, Puzzle M.I.5 (acting credits only) | https://www.oscars.org/sci-tech/ceremonies/2007 - 'William Feightner and Chris Edwards (E-Film)' for the E-Film archival separation process | Web search 'nm0249890' - IMDb Christopher Edwards: operations manager at EFILM on Master and Commander, Frida, We Were Soldiers",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 9686,
+  "field": "NomineeIds",
+  "before": "nm0408890",
+  "after": "nm0408889",
+  "reason": "wrong_id",
+  "evidence": "https://v3.sg.media-imdb.com/suggestion/x/nm0408890.json - IMDb: 'David Inglish', 'Director, Mulligan Men (1997)', his only listed credit (tt0260211, a feature with Jeff Colt and Paul Goebel) | https://www.wikidata.org/wiki/Q22115188 - David Inglish, 'American film technologist', P345 = nm0408889 | https://v3.sg.media-imdb.com/suggestion/x/nm0408889.json - IMDb: 'Dave Inglish', 'Additional Crew, Tron (1982)'; search results add Aladdin and The Lion King (Disney)",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm0408889"
+ },
+ {
+  "nomination_id": 180,
+  "field": "NomineeIds",
+  "before": "co0058013",
+  "after": "co0189536",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Adjudication: Both reviewers confirmed co0058013 (Samuel Goldwyn Films, founded 2000) is wrong for these 1931-1947 Best Picture credits, and both independently established co0189536 'Samuel Goldwyn Productions' (Wikidata Q7411497, 1923-1959, P345 = co0189536; IMDb production credit on Wuthering Heights, The Pride of the Yankees, The Best Years of Our Lives and The Bishop's Wife).",
+  "verification": "original ID refuted and replacement independently established by both reviewers",
+  "imdb_id": "co0189536"
+ },
+ {
+  "nomination_id": 503,
+  "field": "NomineeIds",
+  "before": "co0058013",
+  "after": "co0189536",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Adjudication: Both reviewers confirmed co0058013 (Samuel Goldwyn Films, founded 2000) is wrong for these 1931-1947 Best Picture credits, and both independently established co0189536 'Samuel Goldwyn Productions' (Wikidata Q7411497, 1923-1959, P345 = co0189536; IMDb production credit on Wuthering Heights, The Pride of the Yankees, The Best Years of Our Lives and The Bishop's Wife).",
+  "verification": "original ID refuted and replacement independently established by both reviewers",
+  "imdb_id": "co0189536"
+ },
+ {
+  "nomination_id": 630,
+  "field": "NomineeIds",
+  "before": "co0058013",
+  "after": "co0189536",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Adjudication: Both reviewers confirmed co0058013 (Samuel Goldwyn Films, founded 2000) is wrong for these 1931-1947 Best Picture credits, and both independently established co0189536 'Samuel Goldwyn Productions' (Wikidata Q7411497, 1923-1959, P345 = co0189536; IMDb production credit on Wuthering Heights, The Pride of the Yankees, The Best Years of Our Lives and The Bishop's Wife).",
+  "verification": "original ID refuted and replacement independently established by both reviewers",
+  "imdb_id": "co0189536"
+ },
+ {
+  "nomination_id": 924,
+  "field": "NomineeIds",
+  "before": "co0058013",
+  "after": "co0189536",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Adjudication: Both reviewers confirmed co0058013 (Samuel Goldwyn Films, founded 2000) is wrong for these 1931-1947 Best Picture credits, and both independently established co0189536 'Samuel Goldwyn Productions' (Wikidata Q7411497, 1923-1959, P345 = co0189536; IMDb production credit on Wuthering Heights, The Pride of the Yankees, The Best Years of Our Lives and The Bishop's Wife).",
+  "verification": "original ID refuted and replacement independently established by both reviewers",
+  "imdb_id": "co0189536"
+ },
+ {
+  "nomination_id": 1256,
+  "field": "NomineeIds",
+  "before": "co0058013",
+  "after": "co0189536",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Adjudication: Both reviewers confirmed co0058013 (Samuel Goldwyn Films, founded 2000) is wrong for these 1931-1947 Best Picture credits, and both independently established co0189536 'Samuel Goldwyn Productions' (Wikidata Q7411497, 1923-1959, P345 = co0189536; IMDb production credit on Wuthering Heights, The Pride of the Yankees, The Best Years of Our Lives and The Bishop's Wife).",
+  "verification": "original ID refuted and replacement independently established by both reviewers",
+  "imdb_id": "co0189536"
+ },
+ {
+  "nomination_id": 1457,
+  "field": "NomineeIds",
+  "before": "co0058013",
+  "after": "co0189536",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Adjudication: Both reviewers confirmed co0058013 (Samuel Goldwyn Films, founded 2000) is wrong for these 1931-1947 Best Picture credits, and both independently established co0189536 'Samuel Goldwyn Productions' (Wikidata Q7411497, 1923-1959, P345 = co0189536; IMDb production credit on Wuthering Heights, The Pride of the Yankees, The Best Years of Our Lives and The Bishop's Wife).",
+  "verification": "original ID refuted and replacement independently established by both reviewers",
+  "imdb_id": "co0189536"
+ },
+ {
+  "nomination_id": 2111,
+  "field": "NomineeIds",
+  "before": "co0058013",
+  "after": "co0189536",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Adjudication: Both reviewers confirmed co0058013 (Samuel Goldwyn Films, founded 2000) is wrong for these 1931-1947 Best Picture credits, and both independently established co0189536 'Samuel Goldwyn Productions' (Wikidata Q7411497, 1923-1959, P345 = co0189536; IMDb production credit on Wuthering Heights, The Pride of the Yankees, The Best Years of Our Lives and The Bishop's Wife).",
+  "verification": "original ID refuted and replacement independently established by both reviewers",
+  "imdb_id": "co0189536"
+ },
+ {
+  "nomination_id": 2225,
+  "field": "NomineeIds",
+  "before": "co0058013",
+  "after": "co0189536",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb: co0058013 is 'Samuel Goldwyn Films' | https://en.wikipedia.org/wiki/Samuel_Goldwyn_Films - distributor founded 6 April 2000 by Samuel Goldwyn Jr. | Adjudication: Both reviewers confirmed co0058013 (Samuel Goldwyn Films, founded 2000) is wrong for these 1931-1947 Best Picture credits, and both independently established co0189536 'Samuel Goldwyn Productions' (Wikidata Q7411497, 1923-1959, P345 = co0189536; IMDb production credit on Wuthering Heights, The Pride of the Yankees, The Best Years of Our Lives and The Bishop's Wife).",
+  "verification": "original ID refuted and replacement independently established by both reviewers",
+  "imdb_id": "co0189536"
+ },
+ {
+  "nomination_id": 145,
+  "field": "NomineeIds",
+  "before": "co0058013",
+  "after": "?",
+  "reason": "wrong_id",
+  "evidence": "https://www.imdb.com/company/co0058013/ - IMDb: co0058013 is 'Samuel Goldwyn Films', a distributor founded in 2000",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 7961,
+  "field": "NomineeIds",
+  "before": "?|nm2319194",
+  "after": "?|?",
+  "reason": "wrong_id",
+  "evidence": "nm2319194 is 'John Carter, Actor', only credit '15 to Life' (2002); unrelated to Todd-AO ADR",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 6021,
+  "field": "NomineeIds",
+  "before": "nm2591246|nm2344873|nm0732538|nm0441858|nm0095434",
+  "after": "nm2591246|nm2344873|?|nm0441858|nm0095434",
+  "reason": "wrong_id",
+  "evidence": "IMDb nm0732538: 'David P. Robinson', Florida grip (The Punisher 2004, Stick 1985) | AES: the Dolby honoree David Robinson joined Dolby Laboratories in 1966 after BBC engineering work",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 8768,
+  "field": "NomineeIds",
+  "before": "nm2353419|?|?|?",
+  "after": "nm4869190|nm2353419|?|?",
+  "reason": "wrong_id",
+  "evidence": "IMDb nm2353419 is 'Al Mayer Jr.' (b. 1966); nm4869190 is 'Al Mayer Sr.' (1936-2018), Panaflex designer | IMDb tt2631296 Albertov Put credits both separately | Al Mayer Sr. gets nm4869190; Al Mayer Jr. gets nm2353419.",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm4869190"
+ }
+]
