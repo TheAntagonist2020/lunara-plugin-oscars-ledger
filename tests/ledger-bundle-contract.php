@@ -912,7 +912,19 @@ try {
     list($status, $out, $err) = $generate($dir);
     $m4 = $copy_manifest($dir);
     $assert($status === 0 && ($m4['change_bounds']['max_ids_retired'] ?? null) === ($m3['change_bounds']['max_ids_retired'] ?? -9) + 1, "a retire entry should raise change_bounds.max_ids_retired by one:\n" . trim($out . $err));
-    $assert(count(glob($dir . '/docs/database/baselines/*')) === 1, 'the builder should keep only its own summary in docs/database/baselines/ with a legacy baseline');
+    // (14) docs/database/baselines/ holds this bundle's own summary, plus the
+    // recorded baseline's summary when the baseline is a bundle.
+    $want_summaries = array('docs/database/baselines/' . ($m4['bundle_id'] ?? 'x') . '.json.gz');
+    if ($baseline_arg !== 'legacy') {
+        $want_summaries[] = 'docs/database/baselines/' . $baseline_arg . '.json.gz';
+    }
+    $want_summaries = array_values(array_unique($want_summaries));
+    $have_summaries = array_map(function ($p) use ($dir) {
+        return substr($p, strlen($dir) + 1);
+    }, glob($dir . '/docs/database/baselines/*'));
+    sort($want_summaries);
+    sort($have_summaries);
+    $assert($have_summaries === $want_summaries, 'the builder should keep only its own summary and the recorded baseline\'s in docs/database/baselines/ (' . $baseline_arg . ' baseline; have: ' . implode(', ', $have_summaries) . ')');
 
     // (25) The workbook dimensions against the manifest.
     if (is_file($root . '/docs/database/oscars-corrected.xlsx')) {
