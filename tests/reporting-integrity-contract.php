@@ -28,7 +28,7 @@ $method_slice = function ($source, $start_marker, $end_marker) {
 
 $assert(is_string($plugin) && $plugin !== '', 'Plugin source should be readable.');
 $assert(is_readable($csv_path), 'Authoritative bundled Oscars dataset should be readable.');
-$assert(hash_file('sha256', $csv_path) === 'a257c668d3ec1a8e1de4f173e0f57d86bc96b33d9685edb33b58796baf8d2688', 'Bundled Oscars dataset hash should match the vetted source.');
+$assert(hash_file('sha256', $csv_path) === 'ce2e38fa563b3c3aa17c2fc56856b4c9d747542bc01517eb67a0d9c255ee3f5b', 'Bundled Oscars dataset hash should match the vetted source.');
 
 $csv_rows = 0;
 $csv_winners = 0;

@@ -7,13 +7,13 @@ evidence, is in [`AUDIT-REPORT.md`](AUDIT-REPORT.md). Dataset version `2026.09.2
 | File | What it is |
 | --- | --- |
 | `schema.sql` | MySQL 8 / MariaDB 10.6+ schema: ceremonies, classes, categories, titles, people and companies (keyed by IMDb ID), nominations, their title slots, credit slots, credit identities, and the corrections ledger, plus three read views |
-| `data.sql.gz` | The full load: 12,138 nominations, 3,516 winners, 5,263 titles, 8,468 people and companies, 372 logged corrections and 1 added award |
+| `data.sql.gz` | The full load: 12,138 nominations, 3,516 winners, 5,263 titles, 8,467 people and companies, 373 logged corrections and 1 added award |
 | `integrity.sql` | Checks to run after loading. Each "should be empty" query must return nothing |
 | `oscars-corrected.xlsx` | The corrected dataset in the source workbook's layout (`full_data` plus `Ceremony_1` … `Ceremony_98`), with **Corrections** and **Needs review** sheets. Changed cells are highlighted, and each carries a comment with its old value |
 | `oscars-corrected.tsv` | The same data as the tab-separated file the plugin imports (14 columns, same header) |
-| `corrections.json` | Every changed cell (372): row, field, before, after, reason, evidence, and how it was confirmed. Corrections to the same cell apply in file order |
+| `corrections.json` | Every changed cell (373): row, field, before, after, reason, evidence, and how it was confirmed. Corrections to the same cell apply in file order |
 | `additions.json` | Awards the source lacks, appended after its last row (1: the 97th-ceremony Academy Award of Merit for captioning), with evidence |
-| `needs-review.json` | 1 question no source settled; left unchanged in the data |
+| `needs-review.json` | Questions no source settled. None are open: the last one, Richard Dubois, was settled by unlinking the credit |
 | `tools/` | The audit scripts, kept for provenance: the assembler and its verified decisions (`editor_decisions.json`), the build, the Academy-database reader (`ampas.js`) and the row-by-row reconciliation (`reconcile.py`). They were run from a scratch workspace, so their paths are session-specific |
 
 ## Load it
@@ -78,7 +78,7 @@ dates taken from Wikidata.
   use the letter R with the same digits. The kept Python scripts still use the old
   prefix; they are provenance only and are not re-run.
 - **Until the ledger regenerates them:** `data.sql.gz` and the workbook still reflect
-  the audit's release of this dataset (372 corrections, 1 addition), and the dump's
+  the audit's release of this dataset (373 corrections, 1 addition), and the dump's
   `ledger_dataset.source_sha256` hashes the audit's intermediate JSON of the source
   rows, not `data/oscars.csv`. Once the ledger's bundle builder regenerates
   `data.sql.gz` from the ledger, the dump holds the ledger's display names and linked

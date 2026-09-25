@@ -6,14 +6,13 @@ and every winner flag against sources independent of the data, and then reconcil
 every row with the **Academy Awards Database itself**. The corrected dataset is
 `oscars-corrected.xlsx` / `oscars-corrected.tsv`.
 
-- `corrections.json` lists each of the **372 changed cells**, in 339 rows, with its before
+- `corrections.json` lists each of the **373 changed cells**, in 339 rows, with its before
   value, after value, evidence and confirmation.
 - `additions.json` lists the **one award the source was missing**.
-- One question no source could settle is in `needs-review.json` and on the workbook's
-  **Needs review** sheet. It is left unchanged in the data, and the site shows that
-  credit without a link until it is settled.
+- `needs-review.json` and the workbook's **Needs review** sheet are empty: the last open
+  question, Richard Dubois, was settled by unlinking his credit (see **Needs review** below).
 
-**Dataset version:** `2026.09.25-1`.
+**Dataset version:** `2026.09.25-2`.
 
 ## What the source is
 
@@ -53,7 +52,7 @@ Academy credits them:
 
 The schema keeps both the canonical name and the name as credited.
 
-## What was corrected (372 cells in 339 rows, and 1 added row)
+## What was corrected (373 cells in 339 rows, and 1 added row)
 
 Row numbers below are spreadsheet rows, where the header is row 1. The nomination
 numbers in `corrections.json` are one lower.
@@ -65,6 +64,7 @@ numbers in `corrections.json` are one lower.
 | Wrong IMDb ID | 235 | The ID belongs to a different person, company or era |
 | Retired IMDb ID | 38 | Right organisation, but IMDb retired the ID (Columbia) |
 | Missing link | 5 | A proven ID for a credit the source left unlinked |
+| Unproven IMDb ID | 1 | No source proves the linked record is the person credited, so the credit is unlinked |
 | Missing award | 1 row | An award the source does not have |
 
 ### Encoding (84 cells)
@@ -218,16 +218,20 @@ The schema here (`schema.sql`) rules each of these out by construction:
 - Titles are an ordered list.
 - `year_label` is kept verbatim.
 
-## Needs review (unchanged)
+## Needs review
 
-**Richard Dubois (row 5672, 48th Sci-Tech, Akwaklame Company).** The row carries
-nm0239470, an actor and producer record: bit parts in 1983–84, a 1990 film role and a
-2006 producer credit. The honoree was most likely Richard H. DuBois, a Long Beach chemist
-who registered AkwaKlame in 1972. Nothing links the two men except IMDb's own award
-attachment, which also mislinked the co-honoree. Nothing proves they are different men
-either. The ID is left in the data, flagged, and shown on the site without a link.
+Nothing is open.
 
-**Resolved this round:**
+**Richard Dubois (row 5672, 48th Sci-Tech, Akwaklame Company), settled 2026-09-25.** The row
+carried nm0239470, an actor and producer record: bit parts in New York in 1983 and 1984, a 1990
+film role and a 2006 producer credit. The honoree was most likely Richard H. DuBois, a Long
+Beach chemist who registered AkwaKlame in 1972. Nothing links the two men except IMDb's own
+award attachment, which on the same award also mislinked the co-honoree John C. Dolan. With no
+source proving the link, the slot is now unlinked (`unproven_id`). The credit text and the award
+are unchanged. A proof of identity, such as an obituary or an Akwaklame company record, would
+restore the link.
+
+**Also resolved:**
 - RCA (both items)
 - J. Arthur Rank
 - Art Smith

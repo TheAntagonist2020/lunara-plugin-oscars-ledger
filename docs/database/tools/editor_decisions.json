@@ -1486,5 +1486,21 @@
   ],
   "evidence": "co0001880 'Westrex Recording System' is IMDb's record for the Westrex recording-system trademark (credited as 'acknowledgement', 'sound recording system', 'logo'), the counterpart of the RCA Sound System record already rejected. The Academy credited Westrex Sound Services, Inc., a separately incorporated Hollywood facilities company that has no proven IMDb record.",
   "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked"
+ },
+ {
+  "items": [
+   "T009"
+  ],
+  "reason": "unproven_id",
+  "slots": [
+   {
+    "nomination_id": 5671,
+    "nominee": "RICHARD DUBOIS",
+    "before": "nm0239470",
+    "after": "?"
+   }
+  ],
+  "evidence": "nm0239470 is IMDb's record for an actor and producer named Richard Dubois: bit parts in New York productions of 1983 and 1984, including The Muppets Take Manhattan, a role in the Canadian film The Shaman's Source (1990) and a producer credit on Cryptid (2006), with no birth or death data. The Academy honored Richard DuBois of the Akwaklame Company for a chemical technique, silver recovery from photographic wash-waters by ion exchange, and the records point to a Long Beach chemist, Richard H. DuBois, who registered AkwaKlame in 1972. The only link between the two men is IMDb's own award attachment, which on this same award also attached the co-honoree John C. Dolan to the wrong person (corrected above). The Academy Awards Database, IMDb, trademark and business records, obituaries and the web hold no record that the actor is the chemist.",
+  "verification": "no source proves the IMDb record is the honoree, and the only source that links them, IMDb's award attachment, is wrong for the co-honoree on the same award; the slot is unlinked and the credit text is unchanged"
  }
 ]
