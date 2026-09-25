@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.92
+Stable tag: 2.7.93
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,13 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.7.93 =
+* Ships the audited Oscars dataset in data/oscars.csv: 12,138 nominations and 3,516 winners, matching the Academy's own count. It carries 373 corrected cells and one added award (the 97th ceremony's captioning Academy Award of Merit); every change is logged with its evidence in docs/database/corrections.json.
+* Nominee names pair with their IMDb IDs slot by slot. An unlinked "?" slot no longer shifts every later name onto the wrong person: Jean Hersholt's page was titled "The Motion Picture Relief Fund", and 239 rows had such a slot. A pseudonym shared by two people ("Roderick Jaynes") no longer becomes Ethan Coen's name.
+* Imports keep each nominee's "?" placeholder and jointly credited IDs, so stored rows stay aligned with their credits for the pages, the hub and the theme.
+* Richard Dubois (48th ceremony Sci-Tech, Akwaklame Company) is shown unlinked: no source proves IMDb's nm0239470 is the honoree.
+* The dataset docs no longer publish Wikidata IDs, birth years or life spans; a privacy test keeps them out.
 
 = 2.7.92 =
 * Ceremony tally chips stack on phones instead of squeezing title and counts into one row, which was breaking words mid-letter ("DUN/E", "BELFAS/T", "NOMINATION/S").
