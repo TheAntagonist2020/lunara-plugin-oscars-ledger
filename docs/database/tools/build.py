@@ -1,7 +1,13 @@
 """Build the Lunara Oscars Ledger SQL load from the source sheet plus the
 verified corrections ledger.
 
-    python build.py <rows.json> <corrections.json> <wikidata.json> <out_dir> [additions.json]
+    python build.py <rows.json> <corrections.json> <out_dir> [additions.json] [entities.tsv]
+
+A person's name is a correction's canonical_name override when one exists, else
+its reference name in entities.tsv (data/ledger/entities.tsv, the committed name
+source) when one is given and non-empty, else the most-credited label. Titles and
+companies use the most-credited label. Only IMDb IDs, names and titles are written
+for titles, people and companies; no other reference data is read or emitted.
 
 Writes:
   data.sql                  INSERTs for every table (schema.sql creates them)
@@ -12,11 +18,24 @@ value it expects to replace, or if any slot count disagrees.
 """
 import json, re, sys, hashlib, collections, datetime, unicodedata, os
 
-ROWS, CORR, WDP, OUT = sys.argv[1:5]
-ADDS = sys.argv[5] if len(sys.argv) > 5 else None
+if len(sys.argv) < 4:
+    raise SystemExit(__doc__)
+ROWS, CORR, OUT = sys.argv[1:4]
+ADDS = sys.argv[4] if len(sys.argv) > 4 and sys.argv[4] != '-' else None
+REFS = sys.argv[5] if len(sys.argv) > 5 else None
 R = json.load(open(ROWS))
 CORRECTIONS = json.load(open(CORR)) if os.path.exists(CORR) else []
-WD = json.load(open(WDP))
+REFERENCE = {}
+if REFS:
+    with open(REFS, encoding='utf-8', newline='') as f:
+        lines = f.read().split('\n')
+    if lines[0] != 'imdb_id\tkind\treference_name':
+        raise SystemExit('BUILD REFUSED: entities.tsv: unexpected header')
+    for line in lines[1:]:
+        if line:
+            i, _kind, name = line.split('\t')
+            if name:
+                REFERENCE[i] = name
 COLS = ['Ceremony', 'Year', 'Class', 'CanonicalCategory', 'Category', 'Film', 'FilmId', 'Name', 'Nominees',
         'NomineeIds', 'Winner', 'Detail', 'Note', 'Citation']
 CLASS_ORDER = ['Acting', 'Directing', 'Writing', 'Title', 'Production', 'Music', 'SciTech', 'Special']
@@ -139,49 +158,19 @@ for r in rows:
                 entity_labels[one][n] += 1
 
 
-def wd_first(i):
-    for w in WD.get(i) or []:
-        return w
-    return None
-
-
-def year_of(w, key):
-    ys = [int(y) for y in (w or {}).get(key, []) if y.isdigit()]
-    return min(ys) if ys else None
-
-
-# Ceremony years each entity was credited in, to reject Wikidata century-precision
-# birth dates (stored as 1901 or 2000) that cannot be a real birth year.
-entity_years = collections.defaultdict(list)
-for r in rows:
-    for i in split(r['NomineeIds']):
-        for one in i.split(','):
-            entity_years[one].append(int(str(r['Year'])[:4]))
-
-
-def plausible_birth(i, w):
-    ys = [int(y) for y in (w or {}).get('born', []) if y.isdigit()]
-    if len(ys) != 1 or not entity_years.get(i):
-        return None
-    b = ys[0]
-    return b if all(5 <= y - b <= 100 for y in entity_years[i]) else None
-
-
 OVERRIDE = {c['imdb_id']: c['canonical_name'] for c in CORRECTIONS if c.get('canonical_name') and c.get('imdb_id')}
 for i, labels in sorted(title_labels.items()):
-    w = wd_first(i)
-    emit(f"INSERT INTO ledger_titles VALUES ({q(i)},{q(labels.most_common(1)[0][0])},{q(year_of(w, 'years'))},{q((w or {}).get('qid'))});")
+    emit(f"INSERT INTO ledger_titles VALUES ({q(i)},{q(labels.most_common(1)[0][0])});")
 for i, labels in sorted(entity_labels.items()):
-    w = wd_first(i)
     kind = 'person' if i.startswith('nm') else 'company'
     credited = labels.most_common(1)[0][0]
     if i in OVERRIDE:
         name = OVERRIDE[i]
-    elif kind == 'person' and w and w.get('label'):
-        name = w['label']
+    elif kind == 'person' and i in REFERENCE:
+        name = REFERENCE[i]
     else:
         name = credited
-    emit(f"INSERT INTO ledger_entities VALUES ({q(i)},{q(kind)},{q(name)},{q(plausible_birth(i, w) if kind == 'person' else None)},{q((w or {}).get('qid'))});")
+    emit(f"INSERT INTO ledger_entities VALUES ({q(i)},{q(kind)},{q(name)});")
 
 # nominations and their slots
 winners = 0

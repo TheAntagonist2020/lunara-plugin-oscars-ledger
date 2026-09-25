@@ -64,8 +64,6 @@ CREATE TABLE ledger_categories (
 CREATE TABLE ledger_titles (
   imdb_id           VARCHAR(10)  NOT NULL,
   title             VARCHAR(255) NOT NULL,          -- canonical title
-  release_year      SMALLINT UNSIGNED NULL,
-  wikidata_qid      VARCHAR(12)  NULL,
   PRIMARY KEY (imdb_id),
   KEY k_title_name (title(100)),
   CONSTRAINT chk_title_imdb_id CHECK (imdb_id REGEXP '^tt[0-9]{7,8}$')
@@ -75,8 +73,6 @@ CREATE TABLE ledger_entities (
   imdb_id           VARCHAR(10)  NOT NULL,
   kind              ENUM('person','company') NOT NULL,
   name              VARCHAR(255) NOT NULL,          -- canonical name
-  birth_year        SMALLINT UNSIGNED NULL,         -- people only, when known to the year
-  wikidata_qid      VARCHAR(12)  NULL,
   PRIMARY KEY (imdb_id),
   KEY k_entity_name (name(100)),
   CONSTRAINT chk_entity_imdb_id CHECK (imdb_id REGEXP '^(nm|co)[0-9]{7,8}$'),

@@ -1,7 +1,7 @@
 [
  {
   "items": [
-   "Q384"
+   "R384"
   ],
   "reason": "wrong_id",
   "slots": [
@@ -35,7 +35,7 @@
  },
  {
   "items": [
-   "Q378"
+   "R378"
   ],
   "reason": "wrong_id",
   "slots": [
@@ -46,7 +46,7 @@
     "after": "?"
    }
   ],
-  "evidence": "The honoree is RCA Manufacturing Co., Inc. (1934-1942, merged into Radio Corporation of America on 31 Dec 1942), honoured for Fantasound through its Photophone Division. co0097233 is IMDb's RCA Records label, whose earliest title is 1954; it is not among Fantasia's 107 IMDb company credits, and IMDb's own record of this honorary award (an0048875) links no company. No IMDb company record is named for the corporation; co0248653 'RCA Sound System' is the sound-system trademark, not the company.",
+  "evidence": "The honoree is RCA Manufacturing Co., Inc. ([years omitted], merged into Radio Corporation of America on 31 Dec 1942), honoured for Fantasound through its Photophone Division. co0097233 is IMDb's RCA Records label, whose earliest title is 1954; it is not among Fantasia's 107 IMDb company credits, and IMDb's own record of this honorary award (an0048875) links no company. No IMDb company record is named for the corporation; co0248653 'RCA Sound System' is the sound-system trademark, not the company.",
   "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked"
  },
  {
@@ -115,7 +115,7 @@
  },
  {
   "items": [
-   "Q388"
+   "R388"
   ],
   "reason": "wrong_id",
   "slots": [
@@ -144,7 +144,7 @@
     "after": "?"
    }
   ],
-  "evidence": "The Academy credits the banners \"J. Arthur Rank-Two Cities Films\" (Henry V, Hamlet), \"J. Arthur Rank-Cineguild\" and \"J. Arthur Rank-Archers\"; the Rank part is the British presenting organisation. co0040435 is IMDb's \"J. Arthur Rank Film\", a German distributor: all 166 of its titles are German or West German distribution credits (1946-1968), it has no production or presenting credit, and it is not credited on Hamlet at all. No Rank company record is credited as producer or presenter on any of the four films (IMDb models 'J. Arthur Rank presents' as the person nm0710217, which a company slot must not carry), so no replacement is proven.",
+  "evidence": "The Academy credits the banners \"J. Arthur Rank-Two Cities Films\" (Henry V, Hamlet), \"J. Arthur Rank-Cineguild\" and \"J. Arthur Rank-Archers\"; the Rank part is the British presenting organisation. co0040435 is IMDb's \"J. Arthur Rank Film\", a German distributor: all 166 of its titles are German or West German distribution credits [years omitted], it has no production or presenting credit, and it is not credited on Hamlet at all. No Rank company record is credited as producer or presenter on any of the four films (IMDb models 'J. Arthur Rank presents' as the person nm0710217, which a company slot must not carry), so no replacement is proven.",
   "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked"
  },
  {
@@ -170,7 +170,7 @@
     "after": "co0103139"
    }
   ],
-  "evidence": "co0103139 \"Two Cities Films\" (UK, Production) is IMDb's only production-company credit on Henry V, Hamlet and In Which We Serve ('A Two Cities Film'); Wikidata's Two Cities Films item (British film production company, 1937-1955) holds P345 co0103139; no other IMDb record could be the 1940s company.",
+  "evidence": "co0103139 \"Two Cities Films\" (UK, Production) is IMDb's only production-company credit on Henry V, Hamlet and In Which We Serve ('A Two Cities Film'); Wikidata's Two Cities Films item (British film production company, [years omitted]) holds P345 co0103139; no other IMDb record could be the 1940s company.",
   "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)"
  },
  {
@@ -184,12 +184,12 @@
     "after": "co0113550"
    }
   ],
-  "evidence": "co0113550 \"Cineguild\" (UK, Production) is IMDb's only production-company credit on Great Expectations ('A Cineguild Production'); Wikidata Q5120665 Cineguild Productions holds P345 co0113550, and its article names Great Expectations (1946).",
+  "evidence": "co0113550 \"Cineguild\" (UK, Production) is IMDb's only production-company credit on Great Expectations ('A Cineguild Production'); Wikidata Cineguild Productions holds P345 co0113550, and its article names Great Expectations (1946).",
   "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)"
  },
  {
   "items": [
-   "Q092"
+   "R092"
   ],
   "reason": "wrong_id",
   "slots": [
@@ -205,7 +205,7 @@
  },
  {
   "items": [
-   "Q379"
+   "R379"
   ],
   "reason": "wrong_id",
   "slots": [
@@ -228,12 +228,12 @@
     "after": "co0047766"
    }
   ],
-  "evidence": "The Academy credits \"United States Navy\" on all three documentaries, under one nominee record with no alternate names. co0047766 is IMDb's \"United States Navy\" record, credited as production company on The Battle of Midway and named as the IMDb ID of Wikidata's United States Navy item (Q11220). co0077018 \"Navy Department\" is the parent executive department (Wikidata keeps the Department of the Navy, Q742787, separate), used by IMDb mainly for co-operation credits.",
+  "evidence": "The Academy credits \"United States Navy\" on all three documentaries, under one nominee record with no alternate names. co0047766 is IMDb's \"United States Navy\" record, credited as production company on The Battle of Midway and named as the IMDb ID of Wikidata's United States Navy item (). co0077018 \"Navy Department\" is the parent executive department (Wikidata keeps the Department of the Navy,, separate), used by IMDb mainly for co-operation credits.",
   "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)"
  },
  {
   "items": [
-   "Q386"
+   "R386"
   ],
   "reason": "wrong_id",
   "slots": [
@@ -261,7 +261,7 @@
  },
  {
   "items": [
-   "Q400"
+   "R400"
   ],
   "reason": "wrong_id",
   "slots": [
@@ -612,7 +612,7 @@
     "after": "co0000756"
    }
   ],
-  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata, [years omitted]): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
   "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)"
  },
  {
@@ -1112,7 +1112,7 @@
     "after": "co0002663"
    }
   ],
-  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of [years omitted] ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
   "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)"
  },
  {
@@ -1138,7 +1138,7 @@
     "after": "?"
    }
   ],
-  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of [years omitted] ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
   "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked"
  },
  {
@@ -1436,7 +1436,7 @@
     "after": "co0098836"
    }
   ],
-  "evidence": "co0008970 'Walt Disney Pictures' is the subsidiary incorporated on 1 April 1983 and is credited on none of these films. IMDb credits co0098836 'Walt Disney Productions', the 1923 studio's record for its 1924-1982 output, as production company on all nine.",
+  "evidence": "co0008970 'Walt Disney Pictures' is the subsidiary incorporated on 1 April 1983 and is credited on none of these films. IMDb credits co0098836 'Walt Disney Productions', the 1923 studio's record for its [years omitted] output, as production company on all nine.",
   "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)"
  },
  {
@@ -1456,7 +1456,7 @@
     "after": "co0047444"
    }
   ],
-  "evidence": "co0154885 is a one-title 1955 'Production' record tagged Soviet Union, credited on neither film. co0047444 'Artkino Pictures' is the New York distributor of Soviet films founded in March 1940 (Wikidata Q49140735): it is IMDb's only Artkino record on both nominated films (Moscow Strikes Back; Life at the Zoo, its only company credit).",
+  "evidence": "co0154885 is a one-title 1955 'Production' record tagged Soviet Union, credited on neither film. co0047444 'Artkino Pictures' is the New York distributor of Soviet films founded in March 1940 (Wikidata): it is IMDb's only Artkino record on both nominated films (Moscow Strikes Back; Life at the Zoo, its only company credit).",
   "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)"
  },
  {
@@ -1470,7 +1470,7 @@
     "after": "?"
    }
   ],
-  "evidence": "co0057677 is the Jesse L. Lasky Feature Play Company (1913-1916), dissolved by amalgamation into Famous Players-Lasky on 28 June 1916. The 1934 credit is Lasky's own unit producing for Fox (AFI: Jesse L. Lasky Productions); IMDb has no proven record for it and does not credit co0057677 on The White Parade.",
+  "evidence": "co0057677 is the Jesse L. Lasky Feature Play Company [years omitted], dissolved by amalgamation into Famous Players-Lasky on 28 June 1916. The 1934 credit is Lasky's own unit producing for Fox (AFI: Jesse L. Lasky Productions); IMDb has no proven record for it and does not credit co0057677 on The White Parade.",
   "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked"
  },
  {
