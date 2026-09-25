@@ -3569,7 +3569,7 @@ class Academy_Awards_Table {
         }
 
         if (!empty($row['nominee_ids'])) {
-            $row['nominee_ids'] = $this->normalize_imdb_entity_ids($row['nominee_ids'], array('nm', 'co', 'tt'));
+            $row['nominee_ids'] = $this->normalize_nominee_id_slots($row['nominee_ids']);
         }
 
         if (!empty($row['film_id'])) {
@@ -3661,6 +3661,31 @@ class Academy_Awards_Table {
     /**
      * Normalize a pipe-delimited entity id list and drop placeholders or invalid tokens.
      */
+    /**
+     * Normalize NomineeIds without losing slot positions.
+     *
+     * Each "|" slot lines up with one Nominees credit, so an unlinked slot keeps
+     * its "?" placeholder and a jointly credited slot keeps its IDs together
+     * ("nm0001053,nm0001054"). Dropping either shifts every later ID onto the
+     * wrong name. A value with no valid ID at all still normalizes to ''.
+     */
+    private function normalize_nominee_id_slots($raw_ids) {
+        $raw_ids = trim((string) $raw_ids);
+        if ($raw_ids === '') {
+            return '';
+        }
+
+        $slots = array();
+        $has_id = false;
+        foreach (explode('|', $raw_ids) as $slot) {
+            $slot_ids = str_replace('|', ',', $this->normalize_imdb_entity_ids($slot, array('nm', 'co', 'tt')));
+            $slots[] = $slot_ids !== '' ? $slot_ids : '?';
+            $has_id = $has_id || $slot_ids !== '';
+        }
+
+        return $has_id ? implode('|', $slots) : '';
+    }
+
     private function normalize_imdb_entity_ids($raw_ids, $allowed_prefixes = array('tt')) {
         $raw_ids = (string) $raw_ids;
         if ($raw_ids === '') {
