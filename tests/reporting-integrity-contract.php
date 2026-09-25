@@ -28,7 +28,7 @@ $method_slice = function ($source, $start_marker, $end_marker) {
 
 $assert(is_string($plugin) && $plugin !== '', 'Plugin source should be readable.');
 $assert(is_readable($csv_path), 'Authoritative bundled Oscars dataset should be readable.');
-$assert(hash_file('sha256', $csv_path) === 'fad75163dfe626ce48139f72aca121a492982f6a7956b5350d7e51e38d7d4a95', 'Bundled Oscars dataset hash should match the vetted source.');
+$assert(hash_file('sha256', $csv_path) === 'a257c668d3ec1a8e1de4f173e0f57d86bc96b33d9685edb33b58796baf8d2688', 'Bundled Oscars dataset hash should match the vetted source.');
 
 $csv_rows = 0;
 $csv_winners = 0;
@@ -77,8 +77,8 @@ if ($csv) {
     }
     fclose($csv);
 }
-$assert($csv_rows === 12138, 'Bundled Oscars dataset should contain one header plus 12,137 data rows.');
-$assert($csv_winners === 3515, 'Bundled Oscars dataset should contain exactly 3,515 winner rows.');
+$assert($csv_rows === 12139, 'Bundled Oscars dataset should contain one header plus 12,138 data rows.');
+$assert($csv_winners === 3516, 'Bundled Oscars dataset should contain exactly 3,516 winner rows.');
 $assert($max_entity_id_length <= 64, 'Every bundled title, person, company, or local entity ID should fit the 64-character reporting schema.');
 $assert($ceremony_98_rows === 144, 'Ceremony 98 should contain all 144 vetted records.');
 $assert($ceremony_98_winners === 44, 'Ceremony 98 should contain all 44 vetted winner records.');
@@ -323,8 +323,8 @@ $census_method = $reflection->getMethod('get_bundled_award_group_census');
 $census_method->setAccessible(true);
 $runtime_census = $census_method->invoke($plugin_instance);
 $assert(!empty($runtime_census['available']), 'Bundled award-group census should execute without WordPress database access.');
-$assert(intval($runtime_census['rows'] ?? 0) === 12137, 'Bundled award-group census should report 12,137 rows.');
-$assert(intval($runtime_census['winners'] ?? 0) === 3515, 'Bundled award-group census should report 3,515 winners.');
+$assert(intval($runtime_census['rows'] ?? 0) === 12138, 'Bundled award-group census should report 12,138 rows.');
+$assert(intval($runtime_census['winners'] ?? 0) === 3516, 'Bundled award-group census should report 3,516 winners.');
 $assert(preg_match('/^[a-f0-9]{64}$/', (string) ($runtime_census['signature'] ?? '')) === 1, 'Bundled award-group census should produce a SHA-256 signature.');
 $mixed_identity_groups = array_filter((array) ($runtime_census['groups'] ?? array()), static function ($counts) {
     $rows = intval($counts['rows'] ?? 0);
@@ -338,4 +338,4 @@ if ($failures) {
     exit(1);
 }
 
-echo "Reporting integrity contract OK: authoritative 12,137-row/3,515-winner dataset, ceremony sentinels, 64-character IDs, guarded inserts.\n";
+echo "Reporting integrity contract OK: authoritative 12,138-row/3,516-winner dataset, ceremony sentinels, 64-character IDs, guarded inserts.\n";

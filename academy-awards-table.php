@@ -1039,6 +1039,77 @@ class Academy_Awards_Table {
         return array_values(array_unique($entity_ids));
     }
 
+    /**
+     * Split a NomineeIds value into its slots, one per Nominees credit.
+     *
+     * Slots stay positional: "?|nm0380965" is two slots, the first unlinked, and
+     * "nm0001053,nm0001054" is one slot credited jointly to two people (the
+     * Roderick Jaynes pseudonym). Flattening the IDs before pairing them with the
+     * credit labels shifts every label after an unlinked slot onto the wrong person.
+     */
+    private function split_nominee_id_slots($raw_ids) {
+        $raw_ids = trim((string) $raw_ids);
+        if ($raw_ids === '') {
+            return array();
+        }
+
+        $slots = array();
+        foreach (explode('|', $raw_ids) as $slot) {
+            $ids = array();
+            foreach (explode(',', $slot) as $token) {
+                $token = strtolower(trim((string) $token));
+                if ($this->is_title_entity_id($token) || $this->is_name_entity_id($token) || $this->is_company_entity_id($token)) {
+                    $ids[] = $token;
+                }
+            }
+            $slots[] = $ids;
+        }
+
+        return $slots;
+    }
+
+    /**
+     * Pair each linked ID of a row with the credit label in its own slot.
+     *
+     * Returns the IDs in extract_entity_reference_ids() order, each as
+     * array('id', 'label', 'shared'). A label is paired only when the credit and
+     * ID slot counts agree; otherwise it stays empty rather than guessing.
+     * 'shared' marks a slot credited to several people: its label is a joint
+     * credit, not any one person's name.
+     */
+    private function pair_nominee_ids_with_labels($nominees, $raw_ids, $fallback_name = '') {
+        $id_slots = $this->split_nominee_id_slots($raw_ids);
+        if (empty($id_slots)) {
+            return array();
+        }
+
+        $nominees = trim((string) $nominees);
+        $label_slots = $nominees === '' ? array() : array_map('trim', explode('|', $nominees));
+        $fallback_name = trim((string) $fallback_name);
+        if (empty($label_slots) && $fallback_name !== '') {
+            $label_slots = count($id_slots) === 1 ? array($fallback_name) : $this->split_visible_person_credit_labels($fallback_name);
+        }
+        $aligned = count($label_slots) === count($id_slots);
+
+        $pairs = array();
+        $seen = array();
+        foreach ($id_slots as $slot_index => $slot_ids) {
+            foreach ($slot_ids as $entity_id) {
+                if (isset($seen[$entity_id])) {
+                    continue;
+                }
+                $seen[$entity_id] = true;
+                $pairs[] = array(
+                    'id' => $entity_id,
+                    'label' => $aligned ? (string) $label_slots[$slot_index] : '',
+                    'shared' => count($slot_ids) > 1,
+                );
+            }
+        }
+
+        return $pairs;
+    }
+
     private function extract_sort_year_from_label($year_label) {
         $year_label = trim((string) $year_label);
         if ($year_label === '') {
@@ -1228,6 +1299,8 @@ class Academy_Awards_Table {
             );
         };
 
+        $joint_credit_labels = array();
+
         foreach ($rows as $row) {
             $row = $this->normalize_awards_row($row);
             $source_award_id = intval($row['id'] ?? 0);
@@ -1338,6 +1411,7 @@ class Academy_Awards_Table {
             }
 
             $nominee_ids = $this->extract_entity_reference_ids($row['nominee_ids'] ?? '');
+            $nominee_pairs = $this->pair_nominee_ids_with_labels($row['nominees'] ?? '', $row['nominee_ids'] ?? '', $row['name'] ?? '');
             $nominee_labels = $this->split_pipe_tokens($row['nominees'] ?? '');
             $fallback_name = trim((string) ($row['name'] ?? ''));
             if (empty($nominee_labels) && $fallback_name !== '') {
@@ -1352,11 +1426,20 @@ class Academy_Awards_Table {
                 if (!empty($recovered_nominees['ids'])) {
                     $nominee_ids = $recovered_nominees['ids'];
                     $nominee_labels = $recovered_nominees['labels'];
+                    $nominee_pairs = array();
+                    foreach ($nominee_ids as $recovered_index => $recovered_id) {
+                        $nominee_pairs[] = array(
+                            'id' => $recovered_id,
+                            'label' => (string) ($nominee_labels[$recovered_index] ?? ''),
+                            'shared' => false,
+                        );
+                    }
                 }
             }
 
-            foreach ($nominee_ids as $index => $entity_id) {
-                $label = isset($nominee_labels[$index]) ? trim((string) $nominee_labels[$index]) : '';
+            foreach ($nominee_pairs as $index => $nominee_pair) {
+                $entity_id = $nominee_pair['id'];
+                $label = trim((string) $nominee_pair['label']);
                 if ($label === '' && count($nominee_ids) === 1 && $fallback_name !== '') {
                     $label = $fallback_name;
                 }
@@ -1364,9 +1447,16 @@ class Academy_Awards_Table {
                     $label = $film_label;
                 }
 
+                // A joint credit ("Roderick Jaynes" for both Coens) is not either
+                // person's name; it names the entity only if nothing else does.
+                $entity_name = empty($nominee_pair['shared']) ? $label : '';
+                if ($entity_name === '' && $label !== '' && !isset($joint_credit_labels[$entity_id])) {
+                    $joint_credit_labels[$entity_id] = $label;
+                }
+
                 $entity_type = $this->infer_entity_type_from_id($entity_id);
-                $register_entity($entity_id, $entity_type, $label);
-                $touch_entity_stats($entity_id, $entity_type, $label, $ceremony, !empty($row['winner']));
+                $register_entity($entity_id, $entity_type, $entity_name);
+                $touch_entity_stats($entity_id, $entity_type, $entity_name, $ceremony, !empty($row['winner']));
 
                 if ($source_award_id > 0) {
                     $nominees[] = array(
@@ -1398,6 +1488,17 @@ class Academy_Awards_Table {
                     'has_note' => !empty($row['note']) ? 1 : 0,
                     'has_citation' => !empty($row['citation']) ? 1 : 0,
                 );
+            }
+        }
+
+        // An entity credited only jointly keeps the joint credit as its label.
+        foreach ($joint_credit_labels as $entity_id => $joint_label) {
+            if (isset($entities[$entity_id]) && $entities[$entity_id]['label'] === '') {
+                $entities[$entity_id]['label'] = $joint_label;
+                $entities[$entity_id]['sort_label'] = $this->normalize_entity_name_key($joint_label);
+            }
+            if (isset($entity_stats[$entity_id]) && $entity_stats[$entity_id]['label'] === '') {
+                $entity_stats[$entity_id]['label'] = $joint_label;
             }
         }
 
@@ -7901,14 +8002,20 @@ class Academy_Awards_Table {
                 $candidate_labels = $split_visible_credit_labels($candidate_row['name']);
             }
 
-            $candidate_ids = $this->extract_entity_reference_ids($candidate_row['nominee_ids'] ?? '');
+            // Pair by slot, never by flattened position: an unlinked "?" slot or a
+            // joint credit would otherwise hand this name another person's ID.
+            $candidate_id_slots = $this->split_nominee_id_slots($candidate_row['nominee_ids'] ?? '');
+            if (count($candidate_id_slots) !== count($candidate_labels)) {
+                continue;
+            }
             foreach ($candidate_labels as $index => $candidate_label) {
                 $candidate_label = trim((string) $candidate_label);
                 if ($candidate_label === '' || $this->normalize_entity_name_key($candidate_label) !== $normalized_label) {
                     continue;
                 }
 
-                $candidate_id = isset($candidate_ids[$index]) ? strtolower(trim((string) $candidate_ids[$index])) : '';
+                $slot_ids = $candidate_id_slots[$index] ?? array();
+                $candidate_id = count($slot_ids) === 1 ? $slot_ids[0] : '';
                 if ($candidate_id === '' || !$this->is_name_entity_id($candidate_id)) {
                     continue;
                 }

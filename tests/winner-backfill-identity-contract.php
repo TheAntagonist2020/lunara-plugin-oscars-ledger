@@ -57,7 +57,7 @@ if ($handle) {
     fclose($handle);
 }
 
-$assert(count($rows) === 12137, 'Canonical dataset should contain 12,137 rows.');
+$assert(count($rows) === 12138, 'Canonical dataset should contain 12,138 rows.');
 
 $winner_keys_old = array();
 $winner_keys_safe = array();
