@@ -1,0 +1,13 @@
+<?php
+$p = '/home/user/lunara-plugin-oscars-ledger/docs/database/oscars-corrected.tsv';
+$lines = explode("\n", rtrim(file_get_contents($p), "\n"));
+$truth = array_map(fn($l) => explode("\t", $l), $lines);
+foreach (array(array('"', '\\'), array('"', '')) as $cfg) {
+  $h = fopen($p, 'rb'); $i = 0; $diffcells = 0; $ex = array();
+  while (($r = fgetcsv($h, 0, "\t", $cfg[0], $cfg[1])) !== false) {
+    if ($r === array(null)) continue;
+    foreach ($r as $k => $v) if (($truth[$i][$k] ?? null) !== $v) { $diffcells++; if (count($ex) < 3) $ex[] = "line ".($i+1)." col $k: ".substr($v,0,70)." || truth: ".substr($truth[$i][$k] ?? '',0,70); }
+    $i++;
+  }
+  echo "escape=" . json_encode($cfg[1]) . " rows $i diffcells $diffcells\n" . implode("\n", $ex) . "\n";
+}

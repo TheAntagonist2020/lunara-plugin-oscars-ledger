@@ -10,10 +10,12 @@ evidence, is in [`AUDIT-REPORT.md`](AUDIT-REPORT.md). Dataset version `2026.09.2
 | `data.sql.gz` | The full load: 12,138 nominations, 3,516 winners, 5,263 titles, 8,468 people and companies, 372 logged corrections and 1 added award |
 | `integrity.sql` | Checks to run after loading. Each "should be empty" query must return nothing |
 | `oscars-corrected.xlsx` | The corrected dataset in the source workbook's layout (`full_data` plus `Ceremony_1` … `Ceremony_98`), with **Corrections** and **Needs review** sheets. Changed cells are highlighted, and each carries a comment with its old value |
-| `oscars-corrected.tsv` | The same data as the tab-separated file the plugin imports (14 columns, same header) |
+| `oscars-corrected.tsv` | The same data as the tab-separated file the plugin imports (14 columns, same header). The bundle builder regenerates it, so it always hashes to the manifest's `corrected_sha256` |
 | `corrections.json` | Every changed cell (372): row, field, before, after, reason, evidence, and how it was confirmed. Corrections to the same cell apply in file order |
 | `additions.json` | Awards the source lacks, appended after its last row (1: the 97th-ceremony Academy Award of Merit for captioning), with evidence |
 | `needs-review.json` | 1 question no source settled; left unchanged in the data |
+| `accepted-drift.json` | Evidenced differences between production and this dataset that a dry run may accept (items, ID pins, restored rows, retired production-only rows). Empty at launch |
+| `baselines/` | The derivation summary of the current bundle (`<bundle_id>.json.gz`), so a later bundle can be compared with it without git history |
 | `tools/` | The audit scripts, kept for provenance: the assembler and its verified decisions (`editor_decisions.json`), the build, the Academy-database reader (`ampas.js`) and the row-by-row reconciliation (`reconcile.py`). They were run from a scratch workspace, so their paths are session-specific |
 
 ## Load it
@@ -87,3 +89,43 @@ dates taken from Wikidata.
   and the commit of pull request #39, `7429a5a` (merged by `826d537`). Removing it from
   history needs a history rewrite and a force-push, which is the repository owner's
   decision.
+
+## The ledger bundle
+
+The plugin does not read this directory. It reads `data/ledger/`, which the bundle
+builder generates from it:
+
+```bash
+php tests/tools/build-ledger-bundle.php --baseline=legacy   # or the live bundle_id, see below
+php tests/tools/build-ledger-bundle.php --check             # CI runs this through tests/ledger-bundle-contract.php
+```
+
+- **Inputs.** `data/oscars.csv` (never edited), this directory's `corrections.json`,
+  `additions.json`, `needs-review.json` and `accepted-drift.json`, and the reference
+  names in `data/ledger/entities.tsv`, `titles.tsv` and `name-overrides.tsv`.
+- **Step 0, redaction.** The builder first passes the evidence-bearing values of the
+  JSON files here (and of `tools/adjudications.json` and `tools/editor_decisions.json`)
+  through the one redactor and rewrites a file only if a value changes, in the same
+  one-space JSON layout. `--check` rewrites nothing and fails with
+  `evidence_not_redacted` instead. Before and after values, added rows and labels are
+  never touched.
+- **Codec.** `includes/class-aat-ledger-source.php` reads the CSV (tab-separated, `"`
+  quoting, no escape character), applies the corrections in file order with one
+  before-check per entry (a cell corrected twice is checked twice), decodes the
+  source's `\"` sequences, appends the additions (their `source_row` is implied by
+  position: the first one is the upstream row count plus one), and refuses any rule
+  violation with a named code. The same class checks the deployed bundle on the site.
+- **Outputs.** `data/ledger/` gets byte copies of the four JSON files, the maintained
+  reference files (every referenced IMDb ID exactly once, sorted; a new ID arrives with
+  an empty reference name) and `manifest.json`, which records every hash and count the
+  plugin and the tests check. `data/LICENSE-oscar_data.txt` is DLu/oscar_data's BSD
+  2-Clause notice. This directory gets `oscars-corrected.tsv` and `baselines/`, and
+  `tests/fixtures/ledger/decades.json` is regenerated. The workbook is rebuilt with
+  `tools/make_workbook.py` when the overlay changes and openpyxl is available; `--check`
+  compares its Corrections and full_data sheet sizes with the manifest.
+- **The baseline.** `--baseline` names what production holds now: `legacy` until a
+  ledger bundle is live (read `/wp-json/lunara-ledger/v1/status`, `ingest.live.bundle_id`),
+  then that bundle's ID, whose summary must be in `baselines/`.
+- **The independent check.** `python3 tests/tools/corrected_tsv_reference.py` rebuilds
+  the corrected sheet with the Python standard library alone and prints its sha256,
+  which must equal the manifest's `corrected_sha256`.

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/categories-response",
+  "title": "GET /categories",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data",
+    "meta",
+    "links"
+  ],
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "$ref": "category"
+      }
+    },
+    "meta": {
+      "$ref": "common#/$defs/meta"
+    },
+    "links": {
+      "$ref": "common#/$defs/links"
+    },
+    "included": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classes"
+      ],
+      "properties": {
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "sort_order",
+              "categories"
+            ],
+            "properties": {
+              "code": {
+                "$ref": "common#/$defs/classCode"
+              },
+              "sort_order": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "categories": {
+                "type": "array",
+                "items": {
+                  "$ref": "common#/$defs/categorySlug"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

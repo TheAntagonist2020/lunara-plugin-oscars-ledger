@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/nomination",
+  "title": "Nomination",
+  "description": "One row of the Academy's record: one nomination (or one honorary/technical award) at one ceremony in one category. Fields other than 'id' may be omitted when the request narrows them with fields=.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "common#/$defs/nominationId"
+    },
+    "source_line": {
+      "type": "integer",
+      "minimum": 2,
+      "description": "Line number of this row in data/oscars.csv and in the audit report (always id + 1)."
+    },
+    "ceremony": {
+      "$ref": "common#/$defs/ceremonyNumber"
+    },
+    "year_label": {
+      "$ref": "common#/$defs/yearLabel"
+    },
+    "category": {
+      "$ref": "common#/$defs/categoryRef"
+    },
+    "winner": {
+      "type": "boolean",
+      "description": "This row won. A ceremony x category group can have several winners (ties, multi-award classes); see group.winners."
+    },
+    "official": {
+      "type": "boolean",
+      "description": "False when the Academy notes this was not an official nomination. Independent of winner: 8 unofficial rows are winners."
+    },
+    "credit_line": {
+      "$ref": "common#/$defs/nullableString",
+      "description": "The Academy's credit prose, verbatim (source column Name)."
+    },
+    "detail": {
+      "$ref": "common#/$defs/nullableString",
+      "description": "Role, song title or technical field, verbatim (source column Detail). May contain '|' separators aligned to titles."
+    },
+    "note": {
+      "$ref": "common#/$defs/nullableString",
+      "description": "The Academy's note, verbatim."
+    },
+    "citation": {
+      "$ref": "common#/$defs/nullableString",
+      "description": "Award citation, verbatim."
+    },
+    "corrected": {
+      "type": "boolean",
+      "description": "True when the 2026-09-24 audit changed at least one source cell of this row. embed=corrections lists the changes."
+    },
+    "group": {
+      "type": "object",
+      "description": "Counts for this nomination's ceremony x canonical-category group. No tie flag is derived: several winners can be a tie or a multi-award class.",
+      "additionalProperties": false,
+      "required": [
+        "nominations",
+        "winners"
+      ],
+      "properties": {
+        "nominations": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "winners": {
+          "$ref": "common#/$defs/count"
+        }
+      }
+    },
+    "imdb_ids": {
+      "type": "object",
+      "description": "Every IMDb ID this row references, de-duplicated, in credit order.",
+      "additionalProperties": false,
+      "required": [
+        "titles",
+        "people",
+        "companies"
+      ],
+      "properties": {
+        "titles": {
+          "type": "array",
+          "items": {
+            "$ref": "common#/$defs/imdbTitleId"
+          },
+          "uniqueItems": true
+        },
+        "people": {
+          "type": "array",
+          "items": {
+            "$ref": "common#/$defs/imdbPersonId"
+          },
+          "uniqueItems": true
+        },
+        "companies": {
+          "type": "array",
+          "items": {
+            "$ref": "common#/$defs/imdbCompanyId"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "titles": {
+      "type": "array",
+      "description": "embed=titles. The films this row is for, in credit order. A slot with no known IMDb ID keeps its text and position.",
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/titleSlot"
+      }
+    },
+    "credits": {
+      "type": "array",
+      "description": "embed=credits. The named nominees, in credit order, as the Academy credits them.",
+      "maxItems": 50,
+      "items": {
+        "$ref": "#/$defs/creditSlot"
+      }
+    },
+    "corrections": {
+      "type": "array",
+      "description": "embed=corrections. Audit changes to this row's source cells.",
+      "items": {
+        "$ref": "correction"
+      }
+    }
+  },
+  "$defs": {
+    "titleSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ordinal",
+        "imdb_id",
+        "as_credited",
+        "title",
+        "detail"
+      ],
+      "properties": {
+        "ordinal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "imdb_id": {
+          "oneOf": [
+            {
+              "$ref": "common#/$defs/imdbTitleId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "as_credited": {
+          "type": "string",
+          "description": "The title as the Academy credits it (e.g. a US release title)."
+        },
+        "title": {
+          "$ref": "common#/$defs/nullableString",
+          "description": "Canonical title of imdb_id; null when the slot has no ID."
+        },
+        "detail": {
+          "$ref": "common#/$defs/nullableString",
+          "description": "The role or song for this title, when the source aligns one detail per title."
+        },
+        "url": {
+          "$ref": "common#/$defs/uri",
+          "description": "embed=links: the site's title page."
+        },
+        "review": {
+          "$ref": "common#/$defs/reviewRef"
+        },
+        "poster": {
+          "$ref": "common#/$defs/imageRef"
+        }
+      }
+    },
+    "creditSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ordinal",
+        "as_credited",
+        "identities"
+      ],
+      "properties": {
+        "ordinal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "as_credited": {
+          "type": "string",
+          "description": "The name as credited (pseudonyms and birth names kept)."
+        },
+        "identities": {
+          "type": "array",
+          "description": "Who the credit denotes: usually one entity, sometimes several (a shared pseudonym), empty when no IMDb ID is known. Never inferred by position from a neighbouring slot.",
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/identity"
+          }
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "imdb_id",
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "imdb_id": {
+          "$ref": "common#/$defs/imdbCreditId"
+        },
+        "kind": {
+          "enum": [
+            "person",
+            "company"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Canonical name."
+        },
+        "url": {
+          "$ref": "common#/$defs/uri"
+        }
+      }
+    }
+  }
+}

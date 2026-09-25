@@ -1,0 +1,55 @@
+<?php
+$root = '/home/user/lunara-plugin-oscars-ledger';
+$csv = $root . '/data/oscars.csv';
+$corr = json_decode(file_get_contents($root . '/docs/database/corrections.json'), true);
+$h = fopen($csv, 'rb');
+$headers = fgetcsv($h, 0, "\t", '"', '');
+$rows = array();
+while (($r = fgetcsv($h, 0, "\t", '"', '')) !== false) {
+    if ($r === array(null)) continue;
+    if (count($r) !== count($headers)) { echo "WIDTH MISMATCH at ", count($rows)+1, "\n"; }
+    $rows[] = array_combine($headers, $r);
+}
+fclose($h);
+echo "rows ", count($rows), "\n";
+// count backslashes
+$bs = 0; $bsq = 0; $q=0;
+foreach ($rows as $r) foreach ($r as $v) { $bs += substr_count($v, '\\'); $bsq += substr_count($v, '\\"'); $q += substr_count($v, '"'); }
+echo "backslashes $bs, backslash-quote $bsq, quotes $q\n";
+$enc_ok = 0; $enc_bad = 0; $applied = 0; $mismatch = 0;
+foreach ($corr as $c) {
+    $i = $c['nomination_id'] - 1; $f = $c['field'];
+    $before = (string) $rows[$i][$f];
+    if ($before !== (string) ($c['before'] ?? '')) { $mismatch++; echo "MISMATCH {$c['nomination_id']} $f\n"; continue; }
+    if ($c['reason'] === 'encoding') {
+        if (str_replace('\\"', '"', $before) === $c['after']) $enc_ok++; else $enc_bad++;
+    }
+    $rows[$i][$f] = (string) ($c['after'] ?? '');
+    $applied++;
+}
+echo "applied $applied mismatch $mismatch enc_rule_ok $enc_ok enc_rule_bad $enc_bad\n";
+$out = implode("\t", $headers) . "\n";
+foreach ($rows as $r) {
+    $vals = array();
+    foreach ($headers as $col) {
+        $v = (string) $r[$col];
+        if ($col === 'Winner') $v = (in_array(strtolower($v), array('1','true','yes'), true)) ? 'True' : '';
+        $vals[] = $v;
+    }
+    $out .= implode("\t", $vals) . "\n";
+}
+echo "overlay sha ", hash('sha256', $out), "\n";
+echo "audit   sha ", hash_file('sha256', $root . '/docs/database/oscars-corrected.tsv'), "\n";
+// explode parse of corrected TSV
+$lines = explode("\n", rtrim(file_get_contents($root . '/docs/database/oscars-corrected.tsv'), "\n"));
+echo "tsv lines ", count($lines), "\n";
+$bad = 0; foreach ($lines as $l) if (count(explode("\t", $l)) !== 14) $bad++;
+echo "tsv bad width $bad\n";
+// fgetcsv of corrected tsv with default enclosure
+$h = fopen($root . '/docs/database/oscars-corrected.tsv', 'rb'); fgetcsv($h, 0, "\t", '"', '\\'); $n=0; $w=0;
+while (($r = fgetcsv($h, 0, "\t", '"', '\\')) !== false) { if ($r === array(null)) continue; $n++; if (count($r)!==14) $w++; }
+echo "fgetcsv(default) corrected rows $n wrongwidth $w\n";
+// compare raw legacy parse vs RFC parse differences
+$h = fopen($csv, 'rb'); fgetcsv($h, 0, "\t", '"', '\\'); $legacy=array();
+while (($r = @fgetcsv($h, 0, "\t", '"', '\\')) !== false) { if ($r === array(null)) continue; $legacy[] = $r; }
+echo "legacy rows ", count($legacy), "\n";

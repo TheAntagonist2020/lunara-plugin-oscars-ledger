@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/index",
+  "title": "GET /schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data",
+    "meta",
+    "links"
+  ],
+  "properties": {
+    "meta": {
+      "$ref": "common#/$defs/meta"
+    },
+    "links": {
+      "$ref": "common#/$defs/links"
+    },
+    "data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "id"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z-]+$"
+          },
+          "id": {
+            "$ref": "common#/$defs/uri"
+          }
+        }
+      }
+    }
+  }
+}

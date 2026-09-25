@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/corrections-response",
+  "title": "GET /corrections",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data",
+    "meta",
+    "links"
+  ],
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "$ref": "correction"
+      }
+    },
+    "meta": {
+      "$ref": "common#/$defs/meta"
+    },
+    "links": {
+      "$ref": "common#/$defs/links"
+    }
+  }
+}

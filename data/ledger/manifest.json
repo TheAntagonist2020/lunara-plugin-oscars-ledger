@@ -1,0 +1,260 @@
+{
+ "schema": "lunara-oscars-ledger-bundle/3",
+ "bundle_id": "c471f81f124dcef285e4dcb194af76a8931e71aec5ff2d35349398d5d19ee83e",
+ "dataset_version": "2026.09.25-1",
+ "mode": "dry_run",
+ "source": {
+  "file": "data/oscars.csv",
+  "sha256": "fad75163dfe626ce48139f72aca121a492982f6a7956b5350d7e51e38d7d4a95",
+  "codec": "tsv-rfc4180-noescape+backslash-quote/1",
+  "rows": 12137,
+  "header": [
+   "Ceremony",
+   "Year",
+   "Class",
+   "CanonicalCategory",
+   "Category",
+   "Film",
+   "FilmId",
+   "Name",
+   "Nominees",
+   "NomineeIds",
+   "Winner",
+   "Detail",
+   "Note",
+   "Citation"
+  ]
+ },
+ "overlay": {
+  "corrections": {
+   "file": "data/ledger/corrections.json",
+   "sha256": "166f53943ff64a94d1ec221823142669afa91b25e18557d24f19bf2b413df602",
+   "count": 372,
+   "cells": 363,
+   "multi_corrected_cells": 9,
+   "by_reason": {
+    "credit_text": 10,
+    "encoding": 84,
+    "missing_id": 5,
+    "retired_id": 38,
+    "wrong_id": 235
+   }
+  },
+  "additions": {
+   "file": "data/ledger/additions.json",
+   "sha256": "6023e5809d8bc01b3ad1af40f6f852996173a5bf9d3021836318180b0d441f17",
+   "count": 1,
+   "first_source_row": 12138,
+   "last_source_row": 12138,
+   "citation_only": 1
+  }
+ },
+ "corrected_sha256": "3ecfa6fe5b352f2704e532c0d6730c3cd8ad2ec8505d6d58ffea973240769d7f",
+ "reference": {
+  "entities": {
+   "file": "data/ledger/entities.tsv",
+   "sha256": "7f6a41e111337b959ab1fea3c0b20e7ef5de4cc659b58e10b777e11724b529ce",
+   "rows": 8468,
+   "without_reference": 0
+  },
+  "titles": {
+   "file": "data/ledger/titles.tsv",
+   "sha256": "2b7511a5dfd8e28d09e55fbee517188d40f2525b48618e1be1cee2315067050c",
+   "rows": 5263,
+   "without_reference": 0
+  },
+  "name_overrides": {
+   "file": "data/ledger/name-overrides.tsv",
+   "sha256": "ebd60095c26dd017c9eb4fffa53e9ce4eb6604500068382769f255e2750604d8",
+   "rows": 0
+  },
+  "needs_review": {
+   "file": "data/ledger/needs-review.json",
+   "sha256": "f51234d2d9a13eea4e816f647bf4f12bfe96c5dee001e36ae127c2de410b5b22",
+   "items": 1,
+   "unresolved_items": 1,
+   "flagged_pairs": 1
+  },
+  "accepted_drift": {
+   "file": "data/ledger/accepted-drift.json",
+   "sha256": "5e75747d4af07b5ee8c0670e31185248339c5970a8a0a4b537d9b3990b11c475",
+   "items": 0,
+   "id_pins": 0,
+   "restored": 0,
+   "retire": 0
+  }
+ },
+ "licence": {
+  "file": "data/LICENSE-oscar_data.txt",
+  "sha256": "e7e426671e23893c8931d5a02ffdd29564272d7bed5b830efd6a67fd2a99540d",
+  "spdx": "BSD-2-Clause",
+  "copyright": "Copyright (c) 2022, David V. Lu!!",
+  "upstream": "https://github.com/DLu/oscar_data"
+ },
+ "display_name_policy": "credit_mode/1",
+ "expected": {
+  "nominations": 12138,
+  "winners": 3516,
+  "unofficial": 90,
+  "ceremonies": 98,
+  "categories": 66,
+  "classes": 8,
+  "citation_only": 2,
+  "corrections": 373
+ },
+ "simulation": {
+  "baseline": {
+   "kind": "legacy"
+  }
+ },
+ "change_bounds": {
+  "max_ids_new": 1,
+  "max_ids_retired": 0,
+  "allow_shrink": false
+ },
+ "assertions": [
+  {
+   "id": "name:nm0380965",
+   "imdb_id": "nm0380965",
+   "name": "Jean Hersholt"
+  },
+  {
+   "id": "name:nm0604960",
+   "imdb_id": "nm0604960",
+   "name": "Ralph Morgan"
+  },
+  {
+   "id": "name:nm0916990",
+   "imdb_id": "nm0916990",
+   "name": "Paul Francis Webster"
+  },
+  {
+   "id": "name:nm0001053",
+   "imdb_id": "nm0001053",
+   "name": "Ethan Coen"
+  },
+  {
+   "id": "name:nm0569222",
+   "imdb_id": "nm0569222",
+   "name": "Barney \"Chick\" McGill"
+  },
+  {
+   "id": "title:tt2175842",
+   "imdb_id": "tt2175842",
+   "title": "Maggie Simpson in \"The Longest Daycare\""
+  },
+  {
+   "id": "slots:8165",
+   "source_row": 8165,
+   "slots": [
+    [
+     "Roderick Jaynes",
+     [
+      "nm0001053",
+      "nm0001054"
+     ]
+    ]
+   ]
+  },
+  {
+   "id": "slots:965",
+   "source_row": 965,
+   "slots": [
+    [
+     "The Motion Picture Relief Fund",
+     []
+    ],
+    [
+     "Jean Hersholt",
+     [
+      "nm0380965"
+     ]
+    ],
+    [
+     "Ralph Morgan",
+     [
+      "nm0604960"
+     ]
+    ],
+    [
+     "Ralph Block",
+     [
+      "nm0088759"
+     ]
+    ],
+    [
+     "Conrad Nagel",
+     [
+      "nm0619261"
+     ]
+    ]
+   ]
+  },
+  {
+   "id": "slots:526",
+   "source_row": 526,
+   "slots": [
+    [
+     "United Artists",
+     [
+      "co0026841"
+     ]
+    ],
+    [
+     "Thomas T. Moulton",
+     [
+      "nm0609771"
+     ]
+    ]
+   ]
+  },
+  {
+   "id": "slots:1814:2",
+   "source_row": 1814,
+   "slot": 2,
+   "imdb_id": "nm0916990"
+  },
+  {
+   "id": "slots:2564:1",
+   "source_row": 2564,
+   "slot": 1,
+   "imdb_id": "nm0772834"
+  },
+  {
+   "id": "title_entity:tt0019553",
+   "imdb_id": "tt0019553"
+  },
+  {
+   "id": "label:ceremony:1",
+   "ceremony": 1,
+   "year_label": "1927/28"
+  },
+  {
+   "id": "label:ceremony:6",
+   "ceremony": 6,
+   "year_label": "1932/33"
+  },
+  {
+   "id": "note:12067",
+   "source_row": 12067,
+   "note_prefix": "NOTE: NOTE:"
+  },
+  {
+   "id": "citation_only:10475",
+   "source_row": 10475,
+   "citation": "To all those who built and operated film laboratories, for over a century of service to the motion picture industry."
+  },
+  {
+   "id": "additions:is_added",
+   "is_added": 1
+  }
+ ],
+ "accepted_exceptions": [
+  {
+   "rule": "duplicate_entity",
+   "source_row": 4507,
+   "imdb_id": "co0007143",
+   "reason": "MGM British and MGM share MGM's company ID"
+  }
+ ]
+}

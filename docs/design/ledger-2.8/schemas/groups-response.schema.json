@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/groups-response",
+  "title": "GET /nominations/by/{dimension}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data",
+    "meta",
+    "links"
+  ],
+  "properties": {
+    "data": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "nominations",
+          "wins",
+          "official_nominations",
+          "first_ceremony",
+          "last_ceremony",
+          "nomination_ids",
+          "nomination_ids_truncated"
+        ],
+        "properties": {
+          "key": {
+            "oneOf": [
+              {
+                "$ref": "common#/$defs/entitySummary"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "category"
+                ],
+                "properties": {
+                  "category": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "slug",
+                      "canonical",
+                      "class",
+                      "label_modern"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "slug": {
+                        "$ref": "common#/$defs/categorySlug"
+                      },
+                      "canonical": {
+                        "type": "string"
+                      },
+                      "class": {
+                        "$ref": "common#/$defs/classCode"
+                      },
+                      "label_modern": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ceremony",
+                  "year_label"
+                ],
+                "properties": {
+                  "ceremony": {
+                    "$ref": "common#/$defs/ceremonyNumber"
+                  },
+                  "year_label": {
+                    "$ref": "common#/$defs/yearLabel"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "class"
+                ],
+                "properties": {
+                  "class": {
+                    "$ref": "common#/$defs/classCode"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "decade",
+                  "film_year_start"
+                ],
+                "properties": {
+                  "decade": {
+                    "type": "string",
+                    "pattern": "^[0-9]{3}0s$"
+                  },
+                  "film_year_start": {
+                    "type": "integer"
+                  }
+                }
+              }
+            ]
+          },
+          "nominations": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "wins": {
+            "$ref": "common#/$defs/count"
+          },
+          "official_nominations": {
+            "$ref": "common#/$defs/count"
+          },
+          "first_ceremony": {
+            "$ref": "common#/$defs/ceremonyNumber"
+          },
+          "last_ceremony": {
+            "$ref": "common#/$defs/ceremonyNumber"
+          },
+          "nomination_ids": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "common#/$defs/nominationId"
+            }
+          },
+          "nomination_ids_truncated": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "meta": {
+      "$ref": "common#/$defs/meta"
+    },
+    "links": {
+      "$ref": "common#/$defs/links"
+    }
+  },
+  "description": "Filtered nominations grouped by one dimension. For title/person/company the key is the IMDb entity; a nomination with several matching IDs counts once in each of their groups."
+}

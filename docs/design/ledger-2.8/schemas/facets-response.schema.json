@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/facets-response",
+  "title": "GET /facets",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data",
+    "meta",
+    "links"
+  ],
+  "properties": {
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "class",
+        "category",
+        "ceremony",
+        "decade",
+        "winner",
+        "official"
+      ],
+      "properties": {
+        "total": {
+          "$ref": "common#/$defs/count"
+        },
+        "class": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "nominations",
+              "winners"
+            ],
+            "properties": {
+              "value": {
+                "$ref": "common#/$defs/classCode"
+              },
+              "nominations": {
+                "$ref": "common#/$defs/count"
+              },
+              "winners": {
+                "$ref": "common#/$defs/count"
+              }
+            }
+          }
+        },
+        "category": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "nominations",
+              "winners"
+            ],
+            "properties": {
+              "value": {
+                "$ref": "common#/$defs/categorySlug"
+              },
+              "nominations": {
+                "$ref": "common#/$defs/count"
+              },
+              "winners": {
+                "$ref": "common#/$defs/count"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "label_modern": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "ceremony": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "nominations",
+              "winners"
+            ],
+            "properties": {
+              "value": {
+                "$ref": "common#/$defs/ceremonyNumber"
+              },
+              "nominations": {
+                "$ref": "common#/$defs/count"
+              },
+              "winners": {
+                "$ref": "common#/$defs/count"
+              },
+              "year_label": {
+                "$ref": "common#/$defs/yearLabel"
+              }
+            }
+          }
+        },
+        "decade": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "nominations",
+              "winners"
+            ],
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^[0-9]{3}0s$"
+              },
+              "nominations": {
+                "$ref": "common#/$defs/count"
+              },
+              "winners": {
+                "$ref": "common#/$defs/count"
+              }
+            }
+          }
+        },
+        "winner": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "true",
+            "false"
+          ],
+          "properties": {
+            "true": {
+              "$ref": "common#/$defs/count"
+            },
+            "false": {
+              "$ref": "common#/$defs/count"
+            }
+          }
+        },
+        "official": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "true",
+            "false"
+          ],
+          "properties": {
+            "true": {
+              "$ref": "common#/$defs/count"
+            },
+            "false": {
+              "$ref": "common#/$defs/count"
+            }
+          }
+        }
+      }
+    },
+    "meta": {
+      "$ref": "common#/$defs/meta"
+    },
+    "links": {
+      "$ref": "common#/$defs/links"
+    }
+  },
+  "description": "Disjunctive counts: each dimension is counted with every active filter except its own, so a UI can show how many rows each alternative value would return."
+}

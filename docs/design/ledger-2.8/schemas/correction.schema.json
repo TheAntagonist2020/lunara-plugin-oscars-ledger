@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/correction",
+  "title": "Correction",
+  "description": "One source cell changed by the dataset audit, with its evidence. Nothing is corrected silently.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "nomination_id", "source_field", "field", "before", "after", "reason", "evidence", "verification"],
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "nomination_id": { "oneOf": [{ "$ref": "common#/$defs/nominationId" }, { "type": "null" }] },
+    "source_field": { "enum": ["Ceremony", "Year", "Class", "CanonicalCategory", "Category", "Film", "FilmId", "Name", "Nominees", "NomineeIds", "Winner", "Detail", "Note", "Citation"] },
+    "field": {
+      "enum": ["ceremony", "year_label", "category.class", "category.canonical", "category.as_given", "titles.as_credited", "titles.imdb_id", "credit_line", "credits.as_credited", "credits.identities", "winner", "detail", "note", "citation"],
+      "description": "The API field the source cell feeds."
+    },
+    "before": { "$ref": "common#/$defs/nullableString" },
+    "after": { "$ref": "common#/$defs/nullableString" },
+    "reason": { "enum": ["encoding", "wrong_id", "credit_text"] },
+    "evidence": { "type": "string", "maxLength": 2000 },
+    "verification": { "type": "string", "maxLength": 200 }
+  }
+}

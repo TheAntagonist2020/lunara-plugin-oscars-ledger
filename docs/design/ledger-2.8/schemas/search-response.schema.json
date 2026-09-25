@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/search-response",
+  "title": "GET /search",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data",
+    "meta",
+    "links"
+  ],
+  "properties": {
+    "data": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "imdb_id",
+          "kind",
+          "name",
+          "matched",
+          "matched_alias",
+          "stats"
+        ],
+        "properties": {
+          "imdb_id": {
+            "$ref": "common#/$defs/imdbAnyId"
+          },
+          "kind": {
+            "$ref": "common#/$defs/entityKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "matched": {
+            "type": "string",
+            "description": "The label that matched: the canonical name or a credited alias."
+          },
+          "matched_alias": {
+            "type": "boolean"
+          },
+          "stats": {
+            "$ref": "common#/$defs/stats"
+          },
+          "url": {
+            "$ref": "common#/$defs/uri"
+          }
+        }
+      }
+    },
+    "meta": {
+      "$ref": "common#/$defs/meta"
+    },
+    "links": {
+      "$ref": "common#/$defs/links"
+    }
+  }
+}

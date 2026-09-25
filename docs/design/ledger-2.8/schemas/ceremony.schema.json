@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/ceremony",
+  "title": "Ceremony",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["number", "ordinal", "year_label", "film_year_start", "film_year_end", "stats"],
+  "properties": {
+    "number": { "$ref": "common#/$defs/ceremonyNumber" },
+    "ordinal": { "type": "string", "pattern": "^[0-9]+(st|nd|rd|th)$" },
+    "year_label": { "$ref": "common#/$defs/yearLabel" },
+    "film_year_start": { "type": "integer", "minimum": 1927 },
+    "film_year_end": { "type": "integer", "minimum": 1927, "description": "Equals film_year_start except for the split labels of ceremonies 1-6." },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nominations", "winners", "official_nominations", "categories", "multi_winner_categories"],
+      "properties": {
+        "nominations": { "$ref": "common#/$defs/count" },
+        "winners": { "$ref": "common#/$defs/count" },
+        "official_nominations": { "$ref": "common#/$defs/count" },
+        "categories": { "$ref": "common#/$defs/count" },
+        "multi_winner_categories": { "$ref": "common#/$defs/count", "description": "Categories at this ceremony with more than one winning row (ties or multi-award classes)." }
+      }
+    },
+    "url": { "$ref": "common#/$defs/uri" },
+    "previous": { "oneOf": [{ "$ref": "common#/$defs/ceremonyNumber" }, { "type": "null" }] },
+    "next": { "oneOf": [{ "$ref": "common#/$defs/ceremonyNumber" }, { "type": "null" }] },
+    "categories": {
+      "type": "array",
+      "description": "Detail view only: every category awarded at this ceremony, in class then canonical order.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "nominations", "winners"],
+        "properties": {
+          "category": { "$ref": "common#/$defs/categoryRef" },
+          "nominations": { "type": "integer", "minimum": 1 },
+          "winners": { "$ref": "common#/$defs/count" }
+        }
+      }
+    },
+    "nominations": { "type": "array", "description": "embed=nominations: every row of this ceremony.", "items": { "$ref": "nomination" } }
+  }
+}

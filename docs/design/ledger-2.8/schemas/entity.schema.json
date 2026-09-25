@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/entity",
+  "title": "Title, person or company",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "imdb_id",
+    "kind",
+    "name",
+    "aliases",
+    "stats",
+    "external"
+  ],
+  "properties": {
+    "imdb_id": {
+      "$ref": "common#/$defs/imdbAnyId"
+    },
+    "kind": {
+      "$ref": "common#/$defs/entityKind"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Canonical name, or canonical title for kind=title."
+    },
+    "aliases": {
+      "type": "array",
+      "description": "Other names this ID is credited under (pseudonyms, birth names, release titles, spelling variants). Never includes a neighbouring slot's name.",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "stats": {
+      "$ref": "common#/$defs/stats"
+    },
+    "external": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "imdb_url"
+      ],
+      "properties": {
+        "imdb_url": {
+          "$ref": "common#/$defs/uri"
+        }
+      }
+    },
+    "url": {
+      "$ref": "common#/$defs/uri"
+    },
+    "nominations": {
+      "type": "array",
+      "items": {
+        "$ref": "nomination"
+      }
+    },
+    "review": {
+      "$ref": "common#/$defs/reviewRef"
+    },
+    "poster": {
+      "$ref": "common#/$defs/imageRef"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "title"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "imdb_id": {
+            "$ref": "common#/$defs/imdbTitleId"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "person"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "imdb_id": {
+            "$ref": "common#/$defs/imdbPersonId"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "company"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "imdb_id": {
+            "$ref": "common#/$defs/imdbCompanyId"
+          }
+        }
+      }
+    }
+  ]
+}

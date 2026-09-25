@@ -1,0 +1,10 @@
+<?php
+$root='/home/user/lunara-plugin-oscars-ledger'; $t=microtime(true);
+$h=fopen($root.'/data/oscars.csv','rb'); $hd=fgetcsv($h,0,"\t",'"',''); $rows=array();
+while(($r=fgetcsv($h,0,"\t",'"',''))!==false){ if($r===array(null))continue; $rows[]=$r; } fclose($h);
+$corr=json_decode(file_get_contents($root.'/docs/database/corrections.json'),true); $col=array_flip($hd);
+foreach($corr as $c){ $rows[$c['nomination_id']-1][$col[$c['field']]]=(string)$c['after']; }
+$buf=implode("\t",$hd)."\n"; foreach($rows as &$r){ foreach($r as &$v){ $v=str_replace('\\"','"',$v);} unset($v); $w=$r; $w[10]=in_array(strtolower($w[10]),array('1','true','yes'),true)?'True':''; $buf.=implode("\t",$w)."\n"; } unset($r);
+$sha=hash('sha256',$buf); unset($buf);
+$slots=0; foreach($rows as $i=>$r){ foreach(array(5,8) as $c){ if($r[$c]!=='') $slots+=substr_count($r[$c],'|')+1; } }
+printf("sha %s… time %.3fs peak %.1f MB rows %d slots %d\n", substr($sha,0,12), microtime(true)-$t, memory_get_peak_usage(true)/1048576, count($rows), $slots);

@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/status-response",
+  "title": "GET /status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data",
+    "meta",
+    "links"
+  ],
+  "properties": {
+    "meta": {
+      "$ref": "common#/$defs/meta"
+    },
+    "links": {
+      "$ref": "common#/$defs/links"
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ready",
+        "api",
+        "software",
+        "dataset",
+        "counts",
+        "checks",
+        "last_import"
+      ],
+      "properties": {
+        "ready": {
+          "type": "boolean"
+        },
+        "api": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "namespace",
+            "revision",
+            "schema"
+          ],
+          "properties": {
+            "namespace": {
+              "const": "lunara-ledger/v1"
+            },
+            "revision": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            },
+            "schema": {
+              "$ref": "common#/$defs/uri"
+            }
+          }
+        },
+        "software": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "plugin_version"
+          ],
+          "properties": {
+            "plugin_version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            }
+          },
+          "description": "The Oscars Ledger plugin build only. No PHP, database, web-server or WordPress versions, paths, hosts or table names."
+        },
+        "dataset": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "token",
+            "loaded_at",
+            "source",
+            "corrected",
+            "corrections",
+            "needs_review"
+          ],
+          "properties": {
+            "version": {
+              "type": "string"
+            },
+            "token": {
+              "$ref": "common#/$defs/token"
+            },
+            "loaded_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "source": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "file",
+                "sha256",
+                "rows"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "file": {
+                  "const": "data/oscars.csv"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "rows": {
+                  "$ref": "common#/$defs/count"
+                }
+              }
+            },
+            "corrected": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "sha256",
+                "rows"
+              ],
+              "properties": {
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "rows": {
+                  "$ref": "common#/$defs/count"
+                }
+              }
+            },
+            "corrections": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "total",
+                "by_reason"
+              ],
+              "properties": {
+                "total": {
+                  "$ref": "common#/$defs/count"
+                },
+                "by_reason": {
+                  "type": "object",
+                  "propertyNames": {
+                    "enum": [
+                      "encoding",
+                      "wrong_id",
+                      "credit_text"
+                    ]
+                  },
+                  "additionalProperties": {
+                    "$ref": "common#/$defs/count"
+                  }
+                }
+              }
+            },
+            "needs_review": {
+              "$ref": "common#/$defs/count"
+            }
+          }
+        },
+        "counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "nominations",
+            "winners",
+            "official_nominations",
+            "ceremonies",
+            "categories",
+            "classes",
+            "titles",
+            "people",
+            "companies",
+            "title_slots",
+            "credit_slots",
+            "credit_identities",
+            "multi_winner_groups",
+            "nominations_without_imdb_id"
+          ],
+          "properties": {
+            "nominations": {
+              "$ref": "common#/$defs/count"
+            },
+            "winners": {
+              "$ref": "common#/$defs/count"
+            },
+            "official_nominations": {
+              "$ref": "common#/$defs/count"
+            },
+            "ceremonies": {
+              "$ref": "common#/$defs/count"
+            },
+            "categories": {
+              "$ref": "common#/$defs/count"
+            },
+            "classes": {
+              "$ref": "common#/$defs/count"
+            },
+            "titles": {
+              "$ref": "common#/$defs/count"
+            },
+            "people": {
+              "$ref": "common#/$defs/count"
+            },
+            "companies": {
+              "$ref": "common#/$defs/count"
+            },
+            "title_slots": {
+              "$ref": "common#/$defs/count"
+            },
+            "credit_slots": {
+              "$ref": "common#/$defs/count"
+            },
+            "credit_identities": {
+              "$ref": "common#/$defs/count"
+            },
+            "multi_winner_groups": {
+              "$ref": "common#/$defs/count"
+            },
+            "nominations_without_imdb_id": {
+              "$ref": "common#/$defs/count"
+            }
+          }
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "ok"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z0-9_]+$"
+              },
+              "ok": {
+                "type": "boolean"
+              },
+              "expected": {
+                "type": "integer"
+              },
+              "actual": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "last_import": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "result"
+          ],
+          "properties": {
+            "result": {
+              "enum": [
+                "ok",
+                "failed",
+                "none"
+              ]
+            },
+            "finished_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "failed_check": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9_]+$",
+              "description": "Name of the validation that stopped the import. Never a message, path or SQL."
+            }
+          }
+        }
+      }
+    }
+  }
+}

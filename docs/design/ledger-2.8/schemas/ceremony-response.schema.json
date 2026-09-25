@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/ceremony-response",
+  "title": "GET /ceremonies/{number}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data",
+    "meta",
+    "links"
+  ],
+  "properties": {
+    "data": {
+      "$ref": "ceremony"
+    },
+    "meta": {
+      "$ref": "common#/$defs/meta"
+    },
+    "links": {
+      "$ref": "common#/$defs/links"
+    },
+    "included": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "type": "object",
+          "description": "embed=entities: every IMDb ID referenced in data, keyed by ID.",
+          "propertyNames": {
+            "$ref": "common#/$defs/imdbAnyId"
+          },
+          "additionalProperties": {
+            "$ref": "common#/$defs/entitySummary"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,136 @@
+<?php
+// Simulate legacy projection derivation (plugin methods via reflection, legacy parse) vs ledger derivation
+$root = '/home/user/lunara-plugin-oscars-ledger';
+$t0 = microtime(true);
+define('ABSPATH', $root . '/'); define('HOUR_IN_SECONDS', 3600);
+function plugin_dir_path($f){return dirname($f).'/';} function plugin_dir_url(){return 'x';}
+function add_action(){return true;} function add_filter(){return true;} function apply_filters($h,$v){return $v;}
+function add_shortcode(){return true;} function register_activation_hook(){return true;}
+function wp_next_scheduled(){return false;} function wp_schedule_event(){return true;}
+function wp_strip_all_tags($v){return strip_tags((string)$v);}
+function sanitize_text_field($v){$v=wp_strip_all_tags((string)$v);$v=preg_replace('/[\r\n\t ]+/',' ',$v);return trim((string)$v);}
+function sanitize_textarea_field($v){$v=wp_strip_all_tags((string)$v);$v=str_replace(array("\r\n","\r"),"\n",$v);return trim($v);}
+function remove_accents($s){return $s;}
+function sanitize_title($s){return trim(preg_replace('/[^a-z0-9]+/','-',strtolower($s)),'-');}
+require_once $root . '/academy-awards-table.php';
+$p = Academy_Awards_Table::get_instance();
+$R = new ReflectionClass($p);
+$m = function($n) use ($R) { $x = $R->getMethod($n); $x->setAccessible(true); return $x; };
+$build = $m('build_import_db_row'); $extract = $m('extract_entity_reference_ids'); $split = $m('split_pipe_tokens');
+$resolve = $m('resolve_film_label_for_title_id'); $infer = $m('infer_entity_type_from_id'); $vis = $m('split_visible_person_credit_labels');
+$istitle = $m('is_title_entity_id');
+$load = function($escape) use ($root) {
+  $h = fopen($root.'/data/oscars.csv','rb'); $hd = fgetcsv($h,0,"\t",'"',$escape); $rows=array();
+  while(($r=@fgetcsv($h,0,"\t",'"',$escape))!==false){ if($r===array(null)) continue; $rows[]=array_combine($hd,$r);} fclose($h); return $rows; };
+$legacy_raw = $load('\\');
+$t1 = microtime(true);
+// ---- legacy derivation (no media recovery)
+$L_ent = array(); $L_nom = array(); $L_stats = array();
+$reg = function(&$ents,$id,$type,$label){ $id=strtolower(trim($id)); if($id==='')return; if(!isset($ents[$id])){$ents[$id]=array('type'=>$type,'label'=>trim($label));return;} if($ents[$id]['label']===''&&trim($label)!=='')$ents[$id]['label']=trim($label); };
+foreach ($legacy_raw as $i => $raw) {
+  $row = $build->invoke($p, $raw); $sid = $i+1; $cer=$row['ceremony']; $win=!empty($row['winner']);
+  $film_ids = $extract->invoke($p, $row['film_id']); $fe='';
+  foreach($film_ids as $c){ if($istitle->invoke($p,$c)){$fe=$c;break;} }
+  $fl = trim($row['film']); if($fe!=='') $fl = $resolve->invoke($p,$row['film'],$row['film_id'],$fe);
+  if($fe!==''){ $reg($L_ent,$fe,'title',$fl); $L_stats[$fe][]=array($sid,$cer,$win); }
+  $ids = $extract->invoke($p,$row['nominee_ids']); $labels = $split->invoke($p,$row['nominees']); $fb=trim($row['name']);
+  if(empty($labels)&&$fb!=='') $labels[]=$fb;
+  foreach($ids as $k=>$id){ $lab = isset($labels[$k])?trim($labels[$k]):''; if($lab===''&&count($ids)===1&&$fb!=='')$lab=$fb; if($lab===''&&$id===$fe&&$fl!=='')$lab=$fl;
+    $reg($L_ent,$id,$infer->invoke($p,$id),$lab); $L_stats[$id][]=array($sid,$cer,$win); $L_nom[$sid][$id]=array('ord'=>$k+1,'label'=>$lab); }
+}
+$t2 = microtime(true);
+// ---- ledger: RFC parse + overlay + names
+$rfc = $load('');
+$corr = json_decode(file_get_contents($root.'/docs/database/corrections.json'), true);
+foreach($corr as $c){ $rfc[$c['nomination_id']-1][$c['field']] = (string)$c['after']; }
+foreach($rfc as $i=>$r) foreach($r as $k=>$v) $rfc[$i][$k]=str_replace('\\"','"',$v);
+// names from data.sql.gz
+$names=array(); $titles=array();
+foreach(gzfile($root.'/docs/database/data.sql.gz') as $line){
+  if(preg_match("/^INSERT INTO ledger_entities VALUES \('([a-z0-9]+)','(person|company)','((?:[^']|'')*)',/",$line,$mm)) $names[$mm[1]]=str_replace("''","'",$mm[3]);
+  if(preg_match("/^INSERT INTO ledger_titles VALUES \('([a-z0-9]+)','((?:[^']|'')*)',([0-9]+|NULL),/",$line,$mm)) $titles[$mm[1]]=array(str_replace("''","'",$mm[2]), $mm[3]);
+}
+$t3 = microtime(true);
+$N_ent=array(); $N_nom=array(); $N_stats=array(); $slots_t=0;$slots_c=0;$ident=0; $maxlen=array();
+$missing_names=array();
+foreach($rfc as $i=>$raw){
+  $sid=$i+1; $row=$build->invoke($p,$raw); $cer=$row['ceremony']; $win=!empty($row['winner']);
+  // title slots
+  $films = $raw['Film']===''?array():explode('|',$raw['Film']); $fids = $raw['FilmId']===''?array():explode('|',$raw['FilmId']);
+  foreach($films as $k=>$t){ $slots_t++; $tid = $fids[$k] ?? '?'; if($tid!=='?' && $tid!==''){ if(!isset($titles[$tid])) $missing_names[$tid]=1; $N_ent[$tid]=array('type'=>'title','label'=>$titles[$tid][0]??''); } }
+  // credit slots
+  $noms = $raw['Nominees']===''?array():explode('|',$raw['Nominees']); $nids = $raw['NomineeIds']===''?array():explode('|',$raw['NomineeIds']);
+  $slot_of=array();
+  foreach($noms as $k=>$n){ $slots_c++; $maxlen['credit']=max($maxlen['credit']??0,mb_strlen($n)); $cell=$nids[$k]??'?'; foreach(explode(',',$cell) as $one){ if($one==='?'||$one==='')continue; $ident++; if(!isset($names[$one]))$missing_names[$one]=1; if(!isset($slot_of[$one])) $slot_of[$one]=array($k+1,$n); $N_ent[$one]=array('type'=>$infer->invoke($p,$one),'label'=>$names[$one]??''); } }
+  // projection: film entity = first tt in normalized film_id (same rule), nominees = normalized set with ledger pairing
+  $film_ids = $extract->invoke($p,$row['film_id']); $fe=''; foreach($film_ids as $c){ if($istitle->invoke($p,$c)){$fe=$c;break;} }
+  if($fe!==''){ $N_stats[$fe][$sid]=array($cer,$win); }
+  // all title positions become entities (already registered above)
+  $ids=$extract->invoke($p,$row['nominee_ids']);
+  foreach($ids as $id){ if(isset($slot_of[$id])){ $N_nom[$sid][$id]=array('ord'=>$slot_of[$id][0],'label'=>$slot_of[$id][1]); } else { $N_nom[$sid][$id]=array('ord'=>count($noms)+1,'label'=>($N_ent[$id]['label']??'(fill)')); if(!isset($N_ent[$id])) $N_ent[$id]=array('type'=>$infer->invoke($p,$id),'label'=>$titles[$id][0]??($names[$id]??'')); }
+    $N_stats[$id][$sid]=array($cer,$win); }
+}
+$t4 = microtime(true);
+printf("timing: legacy parse %.2fs, legacy derive %.2fs, rfc+overlay+names %.2fs, ledger derive %.2fs\n", $t1-$t0,$t2-$t1,$t3-$t2,$t4-$t3);
+printf("ledger slots: titles %d credits %d identities %d; names %d titles %d; missing names %d\n",$slots_t,$slots_c,$ident,count($names),count($titles),count($missing_names));
+printf("entities legacy %d ledger %d\n", count($L_ent), count($N_ent));
+$added = array_diff_key($N_ent,$L_ent); $removed=array_diff_key($L_ent,$N_ent);
+printf("entities added %d (%s) removed %d (%s)\n", count($added), implode(',',array_slice(array_keys($added),0,20)), count($removed), implode(',',array_slice(array_keys($removed),0,10)));
+$changed=0; $ex=array(); $bytype=array();
+foreach($N_ent as $id=>$e){ if(isset($L_ent[$id]) && $L_ent[$id]['label']!==$e['label']){ $changed++; $bytype[$e['type']]=($bytype[$e['type']]??0)+1; if(count($ex)<400) $ex[]="$id: '".$L_ent[$id]['label']."' -> '".$e['label']."'"; } }
+printf("label changes %d %s\n",$changed,json_encode($bytype));
+file_put_contents(__DIR__.'/label-changes.txt', implode("\n",$ex));
+// nominee link differences
+$link_changed=0;$link_added=0;$link_removed=0;$label_pair_changed=0;
+foreach($N_nom as $sid=>$set){ foreach($set as $id=>$v){ if(!isset($L_nom[$sid][$id])) $link_added++; else { if($L_nom[$sid][$id]['label']!==$v['label']) $label_pair_changed++; if($L_nom[$sid][$id]['ord']!==$v['ord']) $link_changed++; } } }
+foreach($L_nom as $sid=>$set){ foreach($set as $id=>$v){ if(!isset($N_nom[$sid][$id])) $link_removed++; } }
+printf("nominee links: added %d removed %d ordinal-changed %d credited-label-changed %d\n",$link_added,$link_removed,$link_changed,$label_pair_changed);
+// stats differences: legacy UNION ALL count vs distinct
+$dbl=0; $ex2=array();
+foreach($L_stats as $id=>$list){ $sids=array_map(fn($x)=>$x[0],$list); if(count($sids)!==count(array_unique($sids))){ $dbl++; if(count($ex2)<5)$ex2[]=$id.' '.count($sids).'/'.count(array_unique($sids)); } }
+printf("entities with double-counted nominations (legacy UNION ALL): %d e.g. %s\n",$dbl,implode('; ',$ex2));
+printf("max credit token len %d\n",$maxlen['credit']);
+printf("peak mem %.1f MB\n", memory_get_peak_usage(true)/1048576);
+// ---- credit-derived canonical rule
+$votes=array(); $last=array(); $title_votes=array();
+foreach($rfc as $i=>$raw){ $cer=intval($raw['Ceremony']);
+  $noms = $raw['Nominees']===''?array():explode('|',$raw['Nominees']); $nids = $raw['NomineeIds']===''?array():explode('|',$raw['NomineeIds']);
+  foreach($noms as $k=>$n){ $cell=$nids[$k]??'?'; $ids=array_values(array_filter(explode(',',$cell),fn($x)=>$x!=='?'&&$x!=='')); if(count($ids)!==1) continue; $id=$ids[0];
+    $votes[$id][$n]=($votes[$id][$n]??0)+1; if(!isset($last[$id][$n])||$cer>$last[$id][$n]) $last[$id][$n]=$cer; }
+  $films = $raw['Film']===''?array():explode('|',$raw['Film']); $fids = $raw['FilmId']===''?array():explode('|',$raw['FilmId']);
+  foreach($films as $k=>$t){ $tid=$fids[$k]??'?'; if($tid==='?'||$tid==='')continue; $title_votes[$tid][$t]=($title_votes[$tid][$t]??0)+1; }
+}
+$isupper = fn($s)=>preg_match('/\p{Ll}/u',$s)===0 && preg_match('/\p{Lu}/u',$s)===1;
+$canon=array(); $allcaps_only=0; $no_votes=0;
+foreach($names as $id=>$wd){
+  $v=$votes[$id]??array();
+  if(!$v){ $canon[$id]=$wd; $no_votes++; continue; }
+  $mixed=array_filter($v,fn($c,$l)=>!$isupper($l),ARRAY_FILTER_USE_BOTH);
+  if(!$mixed){ $allcaps_only++; $lab=array_key_first($v); $canon[$id]= (mb_strtolower($wd)===mb_strtolower($lab))?$wd:$lab; continue; }
+  uksort($mixed,function($a,$b) use($mixed,$last,$id){ if($mixed[$a]!==$mixed[$b]) return $mixed[$b]<=>$mixed[$a]; return ($last[$id][$b]??0)<=>($last[$id][$a]??0); });
+  $canon[$id]=array_key_first($mixed);
+}
+$c_vs_legacy=0;$c_vs_wd=0;$ex=array();
+foreach($canon as $id=>$c){ if(isset($L_ent[$id]) && $L_ent[$id]['label']!==$c){ $c_vs_legacy++; if(count($ex)<300)$ex[]="$id: '".$L_ent[$id]['label']."' -> '$c'   [wd: ".$names[$id]."]"; } if($names[$id]!==$c)$c_vs_wd++; }
+file_put_contents(__DIR__.'/credit-rule-changes.txt', implode("\n",$ex));
+foreach(array('nm0001053','nm0001054','nm0380965','nm0604960','nm0095104','nm0001801','nm0953123','nm0286609','nm0914112','nm0102646','nm0569222','nm6855916','nm0413164','nm0914249') as $id) printf("  %s legacy='%s' credit='%s' wd='%s'\n",$id,$L_ent[$id]['label']??'',$canon[$id]??'',$names[$id]??'');
+// titles: audit title = mode of credited; compare with legacy
+$tchg=0; foreach($titles as $tid=>$t){ if(isset($L_ent[$tid]) && $L_ent[$tid]['label']!==$t[0]) { $tchg++; echo "  title $tid legacy='".$L_ent[$tid]['label']."' ledger='".$t[0]."'\n"; } }
+// titles: mode, tie -> latest ceremony
+$tl=array(); foreach($rfc as $raw){ $cer=intval($raw['Ceremony']); $films=$raw['Film']===''?array():explode('|',$raw['Film']); $fids=$raw['FilmId']===''?array():explode('|',$raw['FilmId']); foreach($films as $k=>$t){ $tid=$fids[$k]??'?'; if($tid==='?'||$tid==='')continue; $tl[$tid][$t]=max($tl[$tid][$t]??0,$cer);} }
+$td=0; foreach($title_votes as $tid=>$v){ uksort($v,function($a,$b) use($v,$tl,$tid){ if($v[$a]!==$v[$b]) return $v[$b]<=>$v[$a]; return $tl[$tid][$b]<=>$tl[$tid][$a];}); $pick=array_key_first($v); if($pick!==$titles[$tid][0]){ $td++; echo "  title-rule $tid audit='".$titles[$tid][0]."' rule='$pick' ".json_encode($v)."\n"; } }
+echo "title rule differs from audit: $td\n";
+$alias=0; foreach($votes as $id=>$v) if(count($v)>1) $alias++; echo "ids with >1 credited label (single-identity slots): $alias\n";
+foreach(array('nm0095104','nm0351459','nm0857253','nm0875308','nm2890617','nm0232466','nm0439506') as $id) echo "  $id ".json_encode($votes[$id]??null)." wd=".($names[$id]??'')."\n";
+$key = $m('get_award_group_integrity_key'); $fin = $m('finalize_award_group_census'); $fp = $m('get_awards_row_fingerprint');
+$groups=array(); $rows=0;$wins=0; $fps=array(); $masterdiff=0;
+foreach($rfc as $i=>$raw){ $row=$build->invoke($p,$raw); $k=$key->invoke($p,$row); $groups[$k]['rows']=($groups[$k]['rows']??0)+1; $groups[$k]['winners']=($groups[$k]['winners']??0)+(!empty($row['winner'])?1:0); $rows++; $wins+=!empty($row['winner'])?1:0; $fps[$fp->invoke($p,$row)]=1;
+  $lrow=$build->invoke($p,$legacy_raw[$i]); if($fp->invoke($p,$lrow)!==$fp->invoke($p,$row)) $masterdiff++; }
+$c=$fin->invoke($p,$groups,$rows,$wins);
+$mixed=0; foreach($c['groups'] as $g) if($g['winners']>0 && $g['winners']<$g['rows']) $mixed++;
+printf("corrected census rows %d winners %d groups %d mixed %d sig %s; distinct fingerprints %d; master rows differing legacy vs corrected: %d\n",$c['rows'],$c['winners'],count($c['groups']),$mixed,substr($c['signature'],0,16),count($fps),$masterdiff);
+$legacy_c = $m('get_bundled_award_group_census')->invoke($p);
+printf("legacy census sig %s groups %d\n", substr($legacy_c['signature'],0,16), count($legacy_c['groups']));
+// sha1 of upstream-decoded row (pre-overlay) uniqueness
+$rfc0 = $load(''); $keys=array(); foreach($rfc0 as $r){ $vals=array(); foreach($r as $v) $vals[]=str_replace('\\"','"',$v); $keys[sha1(implode("\x1f",$vals))]=1; }
+printf("nomination_key uniqueness (sha1 of decoded upstream row): %d distinct of %d\n", count($keys), count($rfc0));

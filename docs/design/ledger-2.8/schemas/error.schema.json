@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/error",
+  "title": "Error (WordPress REST error shape)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "code",
+    "message",
+    "data"
+  ],
+  "properties": {
+    "code": {
+      "enum": [
+        "rest_invalid_param",
+        "ledger_unknown_param",
+        "ledger_not_found",
+        "ledger_cursor_expired",
+        "ledger_rate_limited",
+        "ledger_unavailable",
+        "rest_no_route"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "maxLength": 300
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            400,
+            404,
+            409,
+            429,
+            503
+          ]
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "token": {
+          "$ref": "common#/$defs/token"
+        },
+        "retry_after": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

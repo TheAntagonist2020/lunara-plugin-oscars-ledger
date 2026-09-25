@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lunarafilm.com/wp-json/lunara-ledger/v1/schema/category",
+  "title": "Category",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "slug", "canonical", "class", "label_modern", "names_as_given", "stats"],
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "slug": { "$ref": "common#/$defs/categorySlug" },
+    "canonical": { "type": "string" },
+    "class": { "$ref": "common#/$defs/classCode" },
+    "label_modern": { "type": "string" },
+    "aliases": { "type": "array", "items": { "$ref": "common#/$defs/categorySlug" }, "description": "Extra slugs that resolve to this category (production-design, sound)." },
+    "names_as_given": {
+      "type": "array",
+      "description": "Every name the Academy used for this category, with the ceremonies it was used at.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "first_ceremony", "last_ceremony", "nominations"],
+        "properties": {
+          "name": { "type": "string" },
+          "first_ceremony": { "$ref": "common#/$defs/ceremonyNumber" },
+          "last_ceremony": { "$ref": "common#/$defs/ceremonyNumber" },
+          "nominations": { "$ref": "common#/$defs/count" }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nominations", "winners", "ceremonies", "first_ceremony", "last_ceremony"],
+      "properties": {
+        "nominations": { "$ref": "common#/$defs/count" },
+        "winners": { "$ref": "common#/$defs/count" },
+        "ceremonies": { "$ref": "common#/$defs/count" },
+        "first_ceremony": { "$ref": "common#/$defs/ceremonyNumber" },
+        "last_ceremony": { "$ref": "common#/$defs/ceremonyNumber" }
+      }
+    },
+    "url": { "$ref": "common#/$defs/uri" },
+    "ceremonies": {
+      "type": "array",
+      "description": "Detail view only: one entry per ceremony the category was awarded at, newest first.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ceremony", "year_label", "label", "as_given", "nominations", "winners"],
+        "properties": {
+          "ceremony": { "$ref": "common#/$defs/ceremonyNumber" },
+          "year_label": { "$ref": "common#/$defs/yearLabel" },
+          "label": { "type": "string" },
+          "as_given": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+          "nominations": { "type": "integer", "minimum": 1 },
+          "winners": { "$ref": "common#/$defs/count" }
+        }
+      }
+    },
+    "latest": { "type": "array", "description": "embed=latest: every row of the most recent ceremony in this category, winners first. Never truncated to one winner.", "items": { "$ref": "nomination" } }
+  }
+}
