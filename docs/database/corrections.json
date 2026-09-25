@@ -1478,5 +1478,2151 @@
   "evidence": "IMDb nm2353419 is 'Al Mayer Jr.' (b. 1966); nm4869190 is 'Al Mayer Sr.' (1936-2018), Panaflex designer | IMDb tt2631296 Albertov Put credits both separately | Al Mayer Sr. gets nm4869190; Al Mayer Jr. gets nm2353419.",
   "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
   "imdb_id": "nm4869190"
+ },
+ {
+  "nomination_id": 1479,
+  "field": "NomineeIds",
+  "before": "co0097233|nm0276264",
+  "after": "?|nm0276264",
+  "reason": "wrong_id",
+  "evidence": "The Academy Awards Database files these four credits and the 1955 Not as a Stranger credit (row 3258, already unlinked) under one nominee, \"RCA Sound Department ... [aka: Radio Corporation of America Sound Department]\": RCA's Hollywood film-recording department. co0097233 is IMDb's RCA Records label: 349 titles, none with a film-sound credit, nothing before 1954, and on none of the five films. IMDb's own award records for all five nominations note '(RCA Sound)' as text and link no company, and no IMDb company record represents the department (co0248653 'RCA Sound System' is the equipment trademark). Period directories (Film Daily Year Book 1941, 1951) list the record department and the film-recording studio as separate units.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 1675,
+  "field": "NomineeIds",
+  "before": "co0097233|nm0276264",
+  "after": "?|nm0276264",
+  "reason": "wrong_id",
+  "evidence": "The Academy Awards Database files these four credits and the 1955 Not as a Stranger credit (row 3258, already unlinked) under one nominee, \"RCA Sound Department ... [aka: Radio Corporation of America Sound Department]\": RCA's Hollywood film-recording department. co0097233 is IMDb's RCA Records label: 349 titles, none with a film-sound credit, nothing before 1954, and on none of the five films. IMDb's own award records for all five nominations note '(RCA Sound)' as text and link no company, and no IMDb company record represents the department (co0248653 'RCA Sound System' is the equipment trademark). Period directories (Film Daily Year Book 1941, 1951) list the record department and the film-recording studio as separate units.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 1850,
+  "field": "NomineeIds",
+  "before": "co0097233|nm0197907",
+  "after": "?|nm0197907",
+  "reason": "wrong_id",
+  "evidence": "The Academy Awards Database files these four credits and the 1955 Not as a Stranger credit (row 3258, already unlinked) under one nominee, \"RCA Sound Department ... [aka: Radio Corporation of America Sound Department]\": RCA's Hollywood film-recording department. co0097233 is IMDb's RCA Records label: 349 titles, none with a film-sound credit, nothing before 1954, and on none of the five films. IMDb's own award records for all five nominations note '(RCA Sound)' as text and link no company, and no IMDb company record represents the department (co0248653 'RCA Sound System' is the equipment trademark). Period directories (Film Daily Year Book 1941, 1951) list the record department and the film-recording studio as separate units.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 2021,
+  "field": "NomineeIds",
+  "before": "co0097233|nm0938165",
+  "after": "?|nm0938165",
+  "reason": "wrong_id",
+  "evidence": "The Academy Awards Database files these four credits and the 1955 Not as a Stranger credit (row 3258, already unlinked) under one nominee, \"RCA Sound Department ... [aka: Radio Corporation of America Sound Department]\": RCA's Hollywood film-recording department. co0097233 is IMDb's RCA Records label: 349 titles, none with a film-sound credit, nothing before 1954, and on none of the five films. IMDb's own award records for all five nominations note '(RCA Sound)' as text and link no company, and no IMDb company record represents the department (co0248653 'RCA Sound System' is the equipment trademark). Period directories (Film Daily Year Book 1941, 1951) list the record department and the film-recording studio as separate units.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 1321,
+  "field": "NomineeIds",
+  "before": "nm0000370|nm0307477|nm0370143|co0097233",
+  "after": "nm0000370|nm0307477|nm0370143|?",
+  "reason": "wrong_id",
+  "evidence": "The honoree is RCA Manufacturing Co., Inc. (1934-1942, merged into Radio Corporation of America on 31 Dec 1942), honoured for Fantasound through its Photophone Division. co0097233 is IMDb's RCA Records label, whose earliest title is 1954; it is not among Fantasia's 107 IMDb company credits, and IMDb's own record of this honorary award (an0048875) links no company. No IMDb company record is named for the corporation; co0248653 'RCA Sound System' is the sound-system trademark, not the company.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 4000,
+  "field": "Name",
+  "before": "Todd- AO Sound Department, Fred Hynes, Sound Director; and Samuel Goldwyn Studio Sound Department, Gordon E. Sawyer, Sound Director",
+  "after": "Todd-AO Sound Department, Fred Hynes, Sound Director; and Samuel Goldwyn Studio Sound Department, Gordon E. Sawyer, Sound Director",
+  "reason": "credit_text",
+  "evidence": "Stray space after the hyphen. The Academy Awards Database (nominationId 3767) and the Academy's 1962 ceremony page give \"Todd-AO Sound Department, Fred Hynes, Sound Director; and Samuel Goldwyn Studio Sound Department, Gordon E. Sawyer, Sound Director\"; the dataset's six other Todd-AO Sound credits are already spelled \"Todd-AO\".",
+  "verification": "found by the full reconciliation with the Academy Awards Database; confirmed by two independent reviewers (source lens and context lens)"
+ },
+ {
+  "nomination_id": 4000,
+  "field": "Nominees",
+  "before": "Todd- AO|Fred Hynes|Samuel Goldwyn|Gordon E. Sawyer",
+  "after": "Todd-AO|Fred Hynes|Samuel Goldwyn|Gordon E. Sawyer",
+  "reason": "credit_text",
+  "evidence": "Stray space after the hyphen. The Academy Awards Database (nominationId 3767) and the Academy's 1962 ceremony page give \"Todd-AO Sound Department, Fred Hynes, Sound Director; and Samuel Goldwyn Studio Sound Department, Gordon E. Sawyer, Sound Director\"; the dataset's six other Todd-AO Sound credits are already spelled \"Todd-AO\".",
+  "verification": "found by the full reconciliation with the Academy Awards Database; confirmed by two independent reviewers (source lens and context lens)"
+ },
+ {
+  "nomination_id": 11992,
+  "field": "Citation",
+  "before": "To SU TIE for the development of the sensor analysis and stabilization software, to BEI SHIMEN for the electrical engineering, and to ZHAO YANCHONG for the mechanical design and engineering of the Ronin 2 gimbal system.",
+  "after": "To SU TIE for the development of the sensor analysis and stabilization software, to BEI SHIMENG for the electrical engineering, and to ZHAO YANCHONG for the mechanical design and engineering of the Ronin 2 gimbal system.",
+  "reason": "credit_text",
+  "evidence": "The honoree is Bei Shimeng (Shimeng Bei). The Academy Awards Database (nominationId 12034), the Academy's press release of 27 Jan 2025 and its 2025 Sci-Tech ceremony page, DJI's announcement, the Television Academy's 2024 Engineering Emmy report and a DJI design patent (\"Shi-Meng Bei\") all spell it Shimeng. The Academy's first release was reprinted with \"Shimen\" and later corrected, so reprints carry the old spelling.",
+  "verification": "found by the full reconciliation with the Academy Awards Database; confirmed by two independent reviewers (source lens and context lens)"
+ },
+ {
+  "nomination_id": 11992,
+  "field": "Nominees",
+  "before": "Su Tie|Bei Shimen|Zhao Yanchong",
+  "after": "Su Tie|Bei Shimeng|Zhao Yanchong",
+  "reason": "credit_text",
+  "evidence": "The honoree is Bei Shimeng (Shimeng Bei). The Academy Awards Database (nominationId 12034), the Academy's press release of 27 Jan 2025 and its 2025 Sci-Tech ceremony page, DJI's announcement, the Television Academy's 2024 Engineering Emmy report and a DJI design patent (\"Shi-Meng Bei\") all spell it Shimeng. The Academy's first release was reprinted with \"Shimen\" and later corrected, so reprints carry the old spelling.",
+  "verification": "found by the full reconciliation with the Academy Awards Database; confirmed by two independent reviewers (source lens and context lens)"
+ },
+ {
+  "nomination_id": 2112,
+  "field": "NomineeIds",
+  "before": "co0040435|?",
+  "after": "?|?",
+  "reason": "wrong_id",
+  "evidence": "The Academy credits the banners \"J. Arthur Rank-Two Cities Films\" (Henry V, Hamlet), \"J. Arthur Rank-Cineguild\" and \"J. Arthur Rank-Archers\"; the Rank part is the British presenting organisation. co0040435 is IMDb's \"J. Arthur Rank Film\", a German distributor: all 166 of its titles are German or West German distribution credits (1946-1968), it has no production or presenting credit, and it is not credited on Hamlet at all. No Rank company record is credited as producer or presenter on any of the four films (IMDb models 'J. Arthur Rank presents' as the person nm0710217, which a company slot must not carry), so no replacement is proven.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 2228,
+  "field": "NomineeIds",
+  "before": "co0040435|?",
+  "after": "?|?",
+  "reason": "wrong_id",
+  "evidence": "The Academy credits the banners \"J. Arthur Rank-Two Cities Films\" (Henry V, Hamlet), \"J. Arthur Rank-Cineguild\" and \"J. Arthur Rank-Archers\"; the Rank part is the British presenting organisation. co0040435 is IMDb's \"J. Arthur Rank Film\", a German distributor: all 166 of its titles are German or West German distribution credits (1946-1968), it has no production or presenting credit, and it is not credited on Hamlet at all. No Rank company record is credited as producer or presenter on any of the four films (IMDb models 'J. Arthur Rank presents' as the person nm0710217, which a company slot must not carry), so no replacement is proven.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 2343,
+  "field": "NomineeIds",
+  "before": "co0040435|?",
+  "after": "?|?",
+  "reason": "wrong_id",
+  "evidence": "The Academy credits the banners \"J. Arthur Rank-Two Cities Films\" (Henry V, Hamlet), \"J. Arthur Rank-Cineguild\" and \"J. Arthur Rank-Archers\"; the Rank part is the British presenting organisation. co0040435 is IMDb's \"J. Arthur Rank Film\", a German distributor: all 166 of its titles are German or West German distribution credits (1946-1968), it has no production or presenting credit, and it is not credited on Hamlet at all. No Rank company record is credited as producer or presenter on any of the four films (IMDb models 'J. Arthur Rank presents' as the person nm0710217, which a company slot must not carry), so no replacement is proven.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 2345,
+  "field": "NomineeIds",
+  "before": "co0040435|co0103153",
+  "after": "?|co0103153",
+  "reason": "wrong_id",
+  "evidence": "The Academy credits the banners \"J. Arthur Rank-Two Cities Films\" (Henry V, Hamlet), \"J. Arthur Rank-Cineguild\" and \"J. Arthur Rank-Archers\"; the Rank part is the British presenting organisation. co0040435 is IMDb's \"J. Arthur Rank Film\", a German distributor: all 166 of its titles are German or West German distribution credits (1946-1968), it has no production or presenting credit, and it is not credited on Hamlet at all. No Rank company record is credited as producer or presenter on any of the four films (IMDb models 'J. Arthur Rank presents' as the person nm0710217, which a company slot must not carry), so no replacement is proven.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 2112,
+  "field": "NomineeIds",
+  "before": "?|?",
+  "after": "?|co0103139",
+  "reason": "missing_id",
+  "evidence": "co0103139 \"Two Cities Films\" (UK, Production) is IMDb's only production-company credit on Henry V, Hamlet and In Which We Serve ('A Two Cities Film'); Wikidata's Two Cities Films item (British film production company, 1937-1955) holds P345 co0103139; no other IMDb record could be the 1940s company.",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0103139"
+ },
+ {
+  "nomination_id": 2343,
+  "field": "NomineeIds",
+  "before": "?|?",
+  "after": "?|co0103139",
+  "reason": "missing_id",
+  "evidence": "co0103139 \"Two Cities Films\" (UK, Production) is IMDb's only production-company credit on Henry V, Hamlet and In Which We Serve ('A Two Cities Film'); Wikidata's Two Cities Films item (British film production company, 1937-1955) holds P345 co0103139; no other IMDb record could be the 1940s company.",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0103139"
+ },
+ {
+  "nomination_id": 1646,
+  "field": "NomineeIds",
+  "before": "?",
+  "after": "co0103139",
+  "reason": "missing_id",
+  "evidence": "co0103139 \"Two Cities Films\" (UK, Production) is IMDb's only production-company credit on Henry V, Hamlet and In Which We Serve ('A Two Cities Film'); Wikidata's Two Cities Films item (British film production company, 1937-1955) holds P345 co0103139; no other IMDb record could be the 1940s company.",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0103139"
+ },
+ {
+  "nomination_id": 2228,
+  "field": "NomineeIds",
+  "before": "?|?",
+  "after": "?|co0113550",
+  "reason": "missing_id",
+  "evidence": "co0113550 \"Cineguild\" (UK, Production) is IMDb's only production-company credit on Great Expectations ('A Cineguild Production'); Wikidata Q5120665 Cineguild Productions holds P345 co0113550, and its article names Great Expectations (1946).",
+  "verification": "confirmed by two independent reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0113550"
+ },
+ {
+  "nomination_id": 816,
+  "field": "NomineeIds",
+  "before": "nm0421157|nm0231357|nm0222354|nm0731173|nm0807356|nm0249643|nm0005729|nm0753122|nm0590021|nm0581820|nm0643363",
+  "after": "nm0421157|nm0231357|nm0222354|nm0731173|nm1071079|nm0249643|nm0005729|nm0753122|nm0590021|nm0581820|nm0643363",
+  "reason": "wrong_id",
+  "evidence": "The Academy Awards Database records the honoree as \"Art Smith {d. May 29, 1972}\", one of Gordon Jennings's Paramount special-effects assistants; its death dates for the other ten men in this citation all match IMDb. nm0807356 is an MGM assistant director and unit manager who died 25 Feb 1956 (IMDb; Variety obituary, March 1956), with no effects credits. nm1071079 is IMDb's Paramount effects Art Smith, credited 'miniatures' on Spawn of the North in the same Visual Effects department as the other Jennings assistants; the AFI Catalog and American Cinematographer (March 1939) place Art Smith in that unit. The old link came from IMDb's own award attachment.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "nm1071079"
+ },
+ {
+  "nomination_id": 1387,
+  "field": "NomineeIds",
+  "before": "co0077018",
+  "after": "co0047766",
+  "reason": "wrong_id",
+  "evidence": "The Academy credits \"United States Navy\" on all three documentaries, under one nominee record with no alternate names. co0047766 is IMDb's \"United States Navy\" record, credited as production company on The Battle of Midway and named as the IMDb ID of Wikidata's United States Navy item (Q11220). co0077018 \"Navy Department\" is the parent executive department (Wikidata keeps the Department of the Navy, Q742787, separate), used by IMDb mainly for co-operation credits.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0047766"
+ },
+ {
+  "nomination_id": 1583,
+  "field": "NomineeIds",
+  "before": "co0077018",
+  "after": "co0047766",
+  "reason": "wrong_id",
+  "evidence": "The Academy credits \"United States Navy\" on all three documentaries, under one nominee record with no alternate names. co0047766 is IMDb's \"United States Navy\" record, credited as production company on The Battle of Midway and named as the IMDb ID of Wikidata's United States Navy item (Q11220). co0077018 \"Navy Department\" is the parent executive department (Wikidata keeps the Department of the Navy, Q742787, separate), used by IMDb mainly for co-operation credits.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0047766"
+ },
+ {
+  "nomination_id": 1765,
+  "field": "NomineeIds",
+  "before": "co0077018",
+  "after": "co0047766",
+  "reason": "wrong_id",
+  "evidence": "The Academy credits \"United States Navy\" on all three documentaries, under one nominee record with no alternate names. co0047766 is IMDb's \"United States Navy\" record, credited as production company on The Battle of Midway and named as the IMDb ID of Wikidata's United States Navy item (Q11220). co0077018 \"Navy Department\" is the parent executive department (Wikidata keeps the Department of the Navy, Q742787, separate), used by IMDb mainly for co-operation credits.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0047766"
+ },
+ {
+  "nomination_id": 1575,
+  "field": "NomineeIds",
+  "before": "co0141760",
+  "after": "co0003606",
+  "reason": "wrong_id",
+  "evidence": "The Academy files all three under one nominee, \"United States Army Pictorial Service\", separate from its \"United States Army\" record. co0141760 is IMDb's record for the whole United States Army. co0003606 is the Pictorial Service's own IMDb record: its credit notes read 'Army Pictorial Service' and 'Army Pictorial Service Signal Corps', matching the Library of Congress authority n81147478 and Wikidata's Army Pictorial Service item.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0003606"
+ },
+ {
+  "nomination_id": 1576,
+  "field": "NomineeIds",
+  "before": "co0141760",
+  "after": "co0003606",
+  "reason": "wrong_id",
+  "evidence": "The Academy files all three under one nominee, \"United States Army Pictorial Service\", separate from its \"United States Army\" record. co0141760 is IMDb's record for the whole United States Army. co0003606 is the Pictorial Service's own IMDb record: its credit notes read 'Army Pictorial Service' and 'Army Pictorial Service Signal Corps', matching the Library of Congress authority n81147478 and Wikidata's Army Pictorial Service item.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0003606"
+ },
+ {
+  "nomination_id": 1589,
+  "field": "NomineeIds",
+  "before": "co0141760",
+  "after": "co0003606",
+  "reason": "wrong_id",
+  "evidence": "The Academy files all three under one nominee, \"United States Army Pictorial Service\", separate from its \"United States Army\" record. co0141760 is IMDb's record for the whole United States Army. co0003606 is the Pictorial Service's own IMDb record: its credit notes read 'Army Pictorial Service' and 'Army Pictorial Service Signal Corps', matching the Library of Congress authority n81147478 and Wikidata's Army Pictorial Service item.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0003606"
+ },
+ {
+  "nomination_id": 4746,
+  "field": "NomineeIds",
+  "before": "co0080422|co0638213",
+  "after": "co0080422|co0076018",
+  "reason": "wrong_id",
+  "evidence": "The Academy's honoree for all three is one merged company's department, \"Warner Bros.-Seven Arts Studio Sound Department\" (the merger ran from 15 July 1967 to 16 Dec 1969, and all three films fall inside it). co0638213 is an unrelated Canadian 'Seven Arts' record with three credits (1964, 1981, 1981), on none of these films. co0076018 'Warner Bros./Seven Arts' is IMDb's record for the merged company, credited as production company on Camelot, Bullitt and Finian's Rainbow as 'Warner Bros.-Seven Arts'.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0076018"
+ },
+ {
+  "nomination_id": 4860,
+  "field": "NomineeIds",
+  "before": "co0080422|co0638213",
+  "after": "co0080422|co0076018",
+  "reason": "wrong_id",
+  "evidence": "The Academy's honoree for all three is one merged company's department, \"Warner Bros.-Seven Arts Studio Sound Department\" (the merger ran from 15 July 1967 to 16 Dec 1969, and all three films fall inside it). co0638213 is an unrelated Canadian 'Seven Arts' record with three credits (1964, 1981, 1981), on none of these films. co0076018 'Warner Bros./Seven Arts' is IMDb's record for the merged company, credited as production company on Camelot, Bullitt and Finian's Rainbow as 'Warner Bros.-Seven Arts'.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0076018"
+ },
+ {
+  "nomination_id": 4861,
+  "field": "NomineeIds",
+  "before": "co0080422|co0638213",
+  "after": "co0080422|co0076018",
+  "reason": "wrong_id",
+  "evidence": "The Academy's honoree for all three is one merged company's department, \"Warner Bros.-Seven Arts Studio Sound Department\" (the merger ran from 15 July 1967 to 16 Dec 1969, and all three films fall inside it). co0638213 is an unrelated Canadian 'Seven Arts' record with three credits (1964, 1981, 1981), on none of these films. co0076018 'Warner Bros./Seven Arts' is IMDb's record for the merged company, credited as production company on Camelot, Bullitt and Finian's Rainbow as 'Warner Bros.-Seven Arts'.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0076018"
+ },
+ {
+  "nomination_id": 4000,
+  "field": "NomineeIds",
+  "before": "?|nm0405261|co0064215|nm0768167",
+  "after": "co0016792|nm0405261|co0064215|nm0768167",
+  "reason": "missing_id",
+  "evidence": "The Academy credits \"Todd-AO Sound Department, Fred Hynes, Sound Director\" in the same words on all seven of its Todd-AO Sound nominations; the dataset's other six carry co0016792. IMDb credits co0016792 (Todd-AO Studios, the 1953 company under its later name) on West Side Story itself for 're-recording'. The upstream data left this slot unlinked because of the 'Todd- AO' typo.",
+  "verification": "confirmed by two independent reviewers (source lens and context lens)",
+  "imdb_id": "co0016792"
+ },
+ {
+  "nomination_id": 419,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0360770",
+  "after": "co0000756|nm0360770",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 524,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0360770",
+  "after": "co0000756|nm0360770",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 610,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0799007",
+  "after": "co0000756|nm0799007",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 632,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 653,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0360770",
+  "after": "co0000756|nm0360770",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 771,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 787,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 796,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0360770",
+  "after": "co0000756|nm0360770",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 945,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0360770",
+  "after": "co0000756|nm0360770",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1078,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1098,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0360770",
+  "after": "co0000756|nm0360770",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1255,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1277,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1288,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0360770",
+  "after": "co0000756|nm0360770",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1456,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1462,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1468,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1484,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0360770",
+  "after": "co0000756|nm0360770",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1644,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1649,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1650,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1676,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0360770",
+  "after": "co0000756|nm0360770",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1705,
+  "field": "NomineeIds",
+  "before": "nm0164690|co0028775",
+  "after": "nm0164690|co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1825,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1851,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0360770",
+  "after": "co0000756|nm0360770",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 1879,
+  "field": "NomineeIds",
+  "before": "nm2099010|co0028775",
+  "after": "nm2099010|co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2015,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0609771",
+  "after": "co0000756|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2114,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2227,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2229,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2346,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2365,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0609771",
+  "after": "co0000756|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2386,
+  "field": "NomineeIds",
+  "before": "?|nm0936951|co0028775",
+  "after": "?|nm0936951|co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2459,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2460,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2478,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0609771",
+  "after": "co0000756|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2581,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2595,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0609771",
+  "after": "co0000756|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2621,
+  "field": "NomineeIds",
+  "before": "nm0330286|co0028775",
+  "after": "nm0330286|co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 2855,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0609771",
+  "after": "co0000756|nm0609771",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 3255,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0269055",
+  "after": "co0000756|nm0269055",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 3394,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0269055",
+  "after": "co0000756|nm0269055",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 3623,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0269055",
+  "after": "co0000756|nm0269055",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 3742,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0269055",
+  "after": "co0000756|nm0269055",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 4020,
+  "field": "NomineeIds",
+  "before": "co0028775|?|?|?|?|?|?|?|nm0330286",
+  "after": "co0000756|?|?|?|?|?|?|?|nm0330286",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 4253,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0179331|co0016792|nm0405261",
+  "after": "co0000756|nm0179331|co0016792|nm0405261",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 4506,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0179331",
+  "after": "co0000756|nm0179331",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 4510,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0179331|co0016792|nm0405261",
+  "after": "co0000756|nm0179331|co0016792|nm0405261",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 4634,
+  "field": "NomineeIds",
+  "before": "co0028775|nm0179331",
+  "after": "co0000756|nm0179331",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 4748,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 4864,
+  "field": "NomineeIds",
+  "before": "co0028775",
+  "after": "co0000756",
+  "reason": "wrong_id",
+  "evidence": "co0028775 is IMDb's pre-merger Fox Film Corporation (Wikidata Q2644123, 1915-1935): IMDb gives it no titles from 1936 to 1979 and credits it on none of these nominated films. IMDb credits co0000756 '20th Century Fox' (Wikidata Q434841, Twentieth Century-Fox Film Corporation from 31 May 1935) on every one, usually as production company 'Twentieth Century-Fox Film Corporation'. The eight 'Fox' credits of ceremonies 1-7 stay on co0028775.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0000756"
+ },
+ {
+  "nomination_id": 33,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 102,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 201,
+  "field": "NomineeIds",
+  "before": "co0080422|co0041460",
+  "after": "co0002663|co0041460",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 247,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 248,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 265,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 266,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 267,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 309,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 322,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 328,
+  "field": "NomineeIds",
+  "before": "co0080422|co0041460|nm0506080",
+  "after": "co0002663|co0041460|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 383,
+  "field": "NomineeIds",
+  "before": "co0080422|co0041460|nm0006079|nm0006157",
+  "after": "co0002663|co0041460|nm0006079|nm0006157",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 397,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 412,
+  "field": "NomineeIds",
+  "before": "co0080422|co0041460|nm0506080",
+  "after": "co0002663|co0041460|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 491,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0006079|nm0006157",
+  "after": "co0002663|nm0006079|nm0006157",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 492,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0006079|nm0000070",
+  "after": "co0002663|nm0006079|nm0000070",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 502,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 515,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 521,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 525,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 611,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0006079|nm0000070",
+  "after": "co0002663|nm0006079|nm0000070",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 633,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 641,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 654,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 770,
+  "field": "NomineeIds",
+  "before": "co0080422|co0041460",
+  "after": "co0002663|co0041460",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 774,
+  "field": "NomineeIds",
+  "before": "co0080422|co0041460",
+  "after": "co0002663|co0041460",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 776,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 788,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 789,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 793,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 826,
+  "field": "NomineeIds",
+  "before": "nm0005738|co0080422",
+  "after": "nm0005738|co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 915,
+  "field": "NomineeIds",
+  "before": "co0080422|co0041460",
+  "after": "co0002663|co0041460",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 925,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 932,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 935,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 944,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1076,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1081,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1089,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1094,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1095,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1103,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1139,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0343819",
+  "after": "co0002663|nm0343819",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1257,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1258,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1259,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1274,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1275,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1280,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1290,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1453,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1461,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1471,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1472,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1485,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1597,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1642,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1651,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1677,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1832,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1846,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 1993,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 2016,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 2271,
+  "field": "NomineeIds",
+  "before": "nm0506080|co0080422",
+  "after": "nm0506080|co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 2344,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 2347,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 2363,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 2721,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0506080",
+  "after": "co0002663|nm0506080",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 2990,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0611121",
+  "after": "co0002663|nm0611121",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 3123,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 3257,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0611121",
+  "after": "co0002663|nm0611121",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 3503,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0344060",
+  "after": "co0002663|nm0344060",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 3606,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 3744,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0344060",
+  "after": "co0002663|nm0344060",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 3861,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 3862,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 3873,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0344060",
+  "after": "co0002663|nm0344060",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 4115,
+  "field": "NomineeIds",
+  "before": "co0080422",
+  "after": "co0002663",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 4125,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0344060",
+  "after": "co0002663|nm0344060",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 4377,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0344060",
+  "after": "co0002663|nm0344060",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 4508,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0344060",
+  "after": "co0002663|nm0344060",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 4635,
+  "field": "NomineeIds",
+  "before": "co0080422|nm0344060",
+  "after": "co0002663|nm0344060",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0002663"
+ },
+ {
+  "nomination_id": 4746,
+  "field": "NomineeIds",
+  "before": "co0080422|co0076018",
+  "after": "?|co0076018",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 4860,
+  "field": "NomineeIds",
+  "before": "co0080422|co0076018",
+  "after": "?|co0076018",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 4861,
+  "field": "NomineeIds",
+  "before": "co0080422|co0076018",
+  "after": "?|co0076018",
+  "reason": "wrong_id",
+  "evidence": "co0080422 'Warner Bros. Entertainment' is IMDb's modern corporate and library-rights record: it is on only 2 of the 70 nominated films, both as modern credits ('expired' distributor, DVD package design). IMDb credits co0002663 'Warner Bros.' as production company or original US distributor on all 67 films of 1927-1966 ('Warner Bros. Pictures Inc.', 'The Vitaphone Corporation'). On the three 1967-68 Warner Bros.-Seven Arts rows the merged company already carries co0076018 on the Seven Arts slot, so the Warner Bros. slot is unlinked rather than duplicated.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 249,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 301,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0799007|nm0006276|nm0006146",
+  "after": "co0014351|nm0799007|nm0006276|nm0006146",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 312,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 313,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 331,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 416,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 506,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 528,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 612,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0006304|nm0006323",
+  "after": "co0014351|nm0006304|nm0006323",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 628,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 634,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 655,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 779,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 800,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 919,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 942,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 1106,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 1253,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 1263,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 1289,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 1459,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 1486,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 1648,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 1673,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 1843,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 2017,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 2132,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 2582,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 2622,
+  "field": "NomineeIds",
+  "before": "nm0515093|?|?|co0050868",
+  "after": "nm0515093|?|?|co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 2991,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 3118,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 3151,
+  "field": "NomineeIds",
+  "before": "nm0515093|?|co0050868",
+  "after": "nm0515093|?|co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 3392,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 3502,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0515093",
+  "after": "co0014351|nm0515093",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 3872,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0723376",
+  "after": "co0014351|nm0723376",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 3891,
+  "field": "NomineeIds",
+  "before": "?|nm1468620|co0050868",
+  "after": "?|nm1468620|co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 4251,
+  "field": "NomineeIds",
+  "before": "co0050868|nm0723376",
+  "after": "co0014351|nm0723376",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 4862,
+  "field": "NomineeIds",
+  "before": "co0050868",
+  "after": "co0014351",
+  "reason": "retired_id",
+  "evidence": "co0050868 is a retired IMDb alias: company(id:\"co0050868\") now resolves to co0014351 'Columbia Pictures' and it has no titles of its own. IMDb credits co0014351 on all 28 nominated films from Lady for a Day (1933) to Funny Girl (1968). Same organisation, current ID.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0014351"
+ },
+ {
+  "nomination_id": 619,
+  "field": "NomineeIds",
+  "before": "co0008970|nm0363316|nm0161430|nm1345229",
+  "after": "co0098836|nm0363316|nm0161430|nm1345229",
+  "reason": "wrong_id",
+  "evidence": "co0008970 'Walt Disney Pictures' is the subsidiary incorporated on 1 April 1983 and is credited on none of these films. IMDb credits co0098836 'Walt Disney Productions', the 1923 studio's record for its 1924-1982 output, as production company on all nine.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0098836"
+ },
+ {
+  "nomination_id": 1476,
+  "field": "NomineeIds",
+  "before": "co0008970|nm0806351",
+  "after": "co0098836|nm0806351",
+  "reason": "wrong_id",
+  "evidence": "co0008970 'Walt Disney Pictures' is the subsidiary incorporated on 1 April 1983 and is credited on none of these films. IMDb credits co0098836 'Walt Disney Productions', the 1923 studio's record for its 1924-1982 output, as production company on all nine.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0098836"
+ },
+ {
+  "nomination_id": 1674,
+  "field": "NomineeIds",
+  "before": "co0008970|nm0806351",
+  "after": "co0098836|nm0806351",
+  "reason": "wrong_id",
+  "evidence": "co0008970 'Walt Disney Pictures' is the subsidiary incorporated on 1 April 1983 and is credited on none of these films. IMDb credits co0098836 'Walt Disney Productions', the 1923 studio's record for its 1924-1982 output, as production company on all nine.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0098836"
+ },
+ {
+  "nomination_id": 2020,
+  "field": "NomineeIds",
+  "before": "co0008970|nm0806351",
+  "after": "co0098836|nm0806351",
+  "reason": "wrong_id",
+  "evidence": "co0008970 'Walt Disney Pictures' is the subsidiary incorporated on 1 April 1983 and is credited on none of these films. IMDb credits co0098836 'Walt Disney Productions', the 1923 studio's record for its 1924-1982 output, as production company on all nine.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0098836"
+ },
+ {
+  "nomination_id": 2596,
+  "field": "NomineeIds",
+  "before": "co0008970|nm0806351",
+  "after": "co0098836|nm0806351",
+  "reason": "wrong_id",
+  "evidence": "co0008970 'Walt Disney Pictures' is the subsidiary incorporated on 1 April 1983 and is credited on none of these films. IMDb credits co0098836 'Walt Disney Productions', the 1923 studio's record for its 1924-1982 output, as production company on all nine.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0098836"
+ },
+ {
+  "nomination_id": 3124,
+  "field": "NomineeIds",
+  "before": "co0008970",
+  "after": "co0098836",
+  "reason": "wrong_id",
+  "evidence": "co0008970 'Walt Disney Pictures' is the subsidiary incorporated on 1 April 1983 and is credited on none of these films. IMDb credits co0098836 'Walt Disney Productions', the 1923 studio's record for its 1924-1982 output, as production company on all nine.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0098836"
+ },
+ {
+  "nomination_id": 3999,
+  "field": "NomineeIds",
+  "before": "co0008970|nm0177256",
+  "after": "co0098836|nm0177256",
+  "reason": "wrong_id",
+  "evidence": "co0008970 'Walt Disney Pictures' is the subsidiary incorporated on 1 April 1983 and is credited on none of these films. IMDb credits co0098836 'Walt Disney Productions', the 1923 studio's record for its 1924-1982 output, as production company on all nine.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0098836"
+ },
+ {
+  "nomination_id": 4123,
+  "field": "NomineeIds",
+  "before": "co0008970|nm0177256",
+  "after": "co0098836|nm0177256",
+  "reason": "wrong_id",
+  "evidence": "co0008970 'Walt Disney Pictures' is the subsidiary incorporated on 1 April 1983 and is credited on none of these films. IMDb credits co0098836 'Walt Disney Productions', the 1923 studio's record for its 1924-1982 output, as production company on all nine.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0098836"
+ },
+ {
+  "nomination_id": 4376,
+  "field": "NomineeIds",
+  "before": "co0008970|nm0177256",
+  "after": "co0098836|nm0177256",
+  "reason": "wrong_id",
+  "evidence": "co0008970 'Walt Disney Pictures' is the subsidiary incorporated on 1 April 1983 and is credited on none of these films. IMDb credits co0098836 'Walt Disney Productions', the 1923 studio's record for its 1924-1982 output, as production company on all nine.",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0098836"
+ },
+ {
+  "nomination_id": 1402,
+  "field": "NomineeIds",
+  "before": "co0154885",
+  "after": "co0047444",
+  "reason": "wrong_id",
+  "evidence": "co0154885 is a one-title 1955 'Production' record tagged Soviet Union, credited on neither film. co0047444 'Artkino Pictures' is the New York distributor of Soviet films founded in March 1940 (Wikidata Q49140735): it is IMDb's only Artkino record on both nominated films (Moscow Strikes Back; Life at the Zoo, its only company credit).",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0047444"
+ },
+ {
+  "nomination_id": 2086,
+  "field": "NomineeIds",
+  "before": "co0154885",
+  "after": "co0047444",
+  "reason": "wrong_id",
+  "evidence": "co0154885 is a one-title 1955 'Production' record tagged Soviet Union, credited on neither film. co0047444 'Artkino Pictures' is the New York distributor of Soviet films founded in March 1940 (Wikidata Q49140735): it is IMDb's only Artkino record on both nominated films (Moscow Strikes Back; Life at the Zoo, its only company credit).",
+  "verification": "original ID refuted and replacement independently established by both reviewers (source lens and ceremony-context lens)",
+  "imdb_id": "co0047444"
+ },
+ {
+  "nomination_id": 316,
+  "field": "NomineeIds",
+  "before": "co0057677",
+  "after": "?",
+  "reason": "wrong_id",
+  "evidence": "co0057677 is the Jesse L. Lasky Feature Play Company (1913-1916), dissolved by amalgamation into Famous Players-Lasky on 28 June 1916. The 1934 credit is Lasky's own unit producing for Fox (AFI: Jesse L. Lasky Productions); IMDb has no proven record for it and does not credit co0057677 on The White Parade.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
+ },
+ {
+  "nomination_id": 3393,
+  "field": "NomineeIds",
+  "before": "co0001880|nm0322678|co0064215|nm0768167",
+  "after": "?|nm0322678|co0064215|nm0768167",
+  "reason": "wrong_id",
+  "evidence": "co0001880 'Westrex Recording System' is IMDb's record for the Westrex recording-system trademark (credited as 'acknowledgement', 'sound recording system', 'logo'), the counterpart of the RCA Sound System record already rejected. The Academy credited Westrex Sound Services, Inc., a separately incorporated Hollywood facilities company that has no proven IMDb record.",
+  "verification": "original ID refuted by both independent reviewers (source lens and ceremony-context lens); no replacement proven, so the slot is unlinked",
+  "imdb_id": null
  }
 ]

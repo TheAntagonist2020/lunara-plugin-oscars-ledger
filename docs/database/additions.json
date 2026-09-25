@@ -1,0 +1,23 @@
+[
+ {
+  "row": {
+   "Ceremony": 97,
+   "Year": "2024",
+   "Class": "SciTech",
+   "CanonicalCategory": "SCIENTIFIC AND TECHNICAL AWARD (Academy Award of Merit)",
+   "Category": "SCIENTIFIC AND TECHNICAL AWARD (Academy Award of Merit)",
+   "Film": null,
+   "FilmId": null,
+   "Name": null,
+   "Nominees": null,
+   "NomineeIds": null,
+   "Winner": true,
+   "Detail": null,
+   "Note": null,
+   "Citation": "To all those who have developed and supported captioning technology, whether open or closed, for film."
+  },
+  "reason": "missing_row",
+  "evidence": "The Academy Awards Database lists this 97th-ceremony (2024) Academy Award of Merit (nominationId 12160), and the upstream data lacks it. The Academy's press release of 27 Jan 2025 and its 2025 Sci-Tech ceremony page confirm it: an Oscar statuette presented on 29 April 2025 and accepted by Marlee Matlin, honouring no named individual (the same shape as row 10475). With it, ceremony 97 has 139 records, matching the Academy.",
+  "verification": "found by the full reconciliation with the Academy Awards Database; confirmed by two independent reviewers (source lens and context lens)"
+ }
+]
