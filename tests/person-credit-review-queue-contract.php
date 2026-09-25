@@ -57,8 +57,8 @@ $queue = $method_slice($plugin, 'private function get_person_credit_review_queue
 $admin = $method_slice($plugin, 'public function render_person_portrait_import_admin_page', 'public function render_omdb_audit_admin_page');
 
 foreach (array(
-    'Version: 2.8.2',
-    "define('AAT_VERSION', '2.8.2')",
+    'Version: 2.8.3',
+    "define('AAT_VERSION', '2.8.3')",
     'get_person_credit_reviews_table_name',
     'maybe_create_person_credit_reviews_table',
     'wp_aat_person_credit_reviews',

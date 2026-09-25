@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.2
+Stable tag: 2.8.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,12 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.3 =
+* Rounded-corner fit on the Oscar pages:
+  * the Research Mode panel on ceremony and category pages keeps its text inside its rounded frame instead of running flush to the edge;
+  * Winner Circle cards wrap the category and Winner badge, long names and credits inside the card instead of past its rounded edge;
+  * the Ceremonies, Categories and About hubs no longer render a database block or ledger shortcode left in the hub page's own content, which nested the whole ledger landing inside the hub header.
 
 = 2.8.2 =
 * Explorer polish from the live phone and desktop screenshots:

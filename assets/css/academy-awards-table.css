@@ -7486,3 +7486,33 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
  body.aat-shell-page .aat-container.aat-entity-page.aat-profile-file .aat-entity-hero .aat-entity-poster-wrap.is-person,
  body.aat-shell-page .aat-container.aat-entity-page.aat-profile-file .aat-entity-hero .aat-entity-poster-wrap.is-company {width:min(100%,45vw,180px)!important;max-width:min(100%,45vw,180px)!important;flex-basis:auto!important;height:auto!important;justify-self:start!important}
 }
+
+/* Rounded-corner fit. A framed box with overflow:hidden trims anything that
+   touches its corners, so each framed panel keeps its content inside the
+   radius instead of running flush to the edge. */
+.aat-explorer-callout {
+    padding: clamp(18px, 2.4vw, 28px);
+}
+
+/* Winner Circle: the category link and the Winner badge share one row. On a
+   narrow card the badge drops under the category rather than being pushed
+   past the card's rounded edge, and long names or credits wrap inside it. */
+.aat-winner-circle-top {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    min-width: 0;
+}
+.aat-winner-circle-top .aat-winner-circle-category {
+    min-width: 0;
+    overflow-wrap: break-word;
+}
+.aat-winner-circle-top .aat-winner-badge {
+    flex: none;
+}
+.aat-winner-circle-card > * {
+    min-width: 0;
+}
+.aat-winner-circle-title,
+.aat-winner-circle-meta {
+    overflow-wrap: break-word;
+}

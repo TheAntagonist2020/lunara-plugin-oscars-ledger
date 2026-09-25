@@ -878,7 +878,18 @@ $wp_hub_content = '';
 if (in_array($hub, array('ceremonies','categories','about'), true)) {
     $wp_hub_page = $aat->get_hub_page_post($hub);
     if ($wp_hub_page instanceof WP_Post) {
-        $wp_hub_content = trim((string) $wp_hub_page->post_content);
+        // The hub already is the Oscar Ledger. A database block or ledger
+        // shortcode left in the page's own content would render the whole ledger
+        // landing inside this header (nested frames, cards off the right edge on
+        // phones), so the intro keeps only the editor's own copy.
+        $wp_hub_content = trim((string) preg_replace(
+            array(
+                '#<!--\s*wp:academy-awards/database\b.*?(?:/-->|<!--\s*/wp:academy-awards/database\s*-->)#s',
+                '/\[(?:academy_awards|lunara_awards_tracker)\b[^\]]*\](?:.*?\[\/(?:academy_awards|lunara_awards_tracker)\])?/s',
+            ),
+            '',
+            (string) $wp_hub_page->post_content
+        ));
     }
 }
 
@@ -984,7 +995,7 @@ get_header();
 
             <?php if ($wp_hub_page instanceof WP_Post && $wp_hub_content !== '') : ?>
                 <div class="aat-hub-wp-content">
-                    <?php echo apply_filters('the_content', $wp_hub_page->post_content); ?>
+                    <?php echo apply_filters('the_content', $wp_hub_content); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the_content output. ?>
                 </div>
             <?php endif; ?>
 
@@ -1084,7 +1095,7 @@ get_header();
 
             <?php if ($wp_hub_page instanceof WP_Post && $wp_hub_content !== '') : ?>
                 <div class="aat-hub-wp-content">
-                    <?php echo apply_filters('the_content', $wp_hub_page->post_content); ?>
+                    <?php echo apply_filters('the_content', $wp_hub_content); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the_content output. ?>
                 </div>
             <?php endif; ?>
 
@@ -1146,7 +1157,7 @@ get_header();
 
             <?php if ($wp_hub_page instanceof WP_Post && $wp_hub_content !== '') : ?>
                 <div class="aat-hub-wp-content">
-                    <?php echo apply_filters('the_content', $wp_hub_page->post_content); ?>
+                    <?php echo apply_filters('the_content', $wp_hub_content); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the_content output. ?>
                 </div>
             <?php endif; ?>
 
