@@ -150,7 +150,7 @@ CREATE TABLE ledger_corrections (
   after_value       TEXT         NULL,
   reason            VARCHAR(60)  NOT NULL,          -- 'wrong_id', 'encoding', 'typo', …
   evidence          TEXT         NOT NULL,
-  verification      VARCHAR(120) NOT NULL,          -- how it was confirmed
+  verification      VARCHAR(255) NOT NULL,          -- how it was confirmed
   PRIMARY KEY (correction_id),
   KEY k_corr_nomination (nomination_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;

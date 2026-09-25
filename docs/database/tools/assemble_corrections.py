@@ -158,9 +158,46 @@ for key, ch, verification in best.values():
         r[field] = '|'.join(toks)
         add(i, field, before, r[field], 'wrong_id', evidence, verification, imdb_id=None if new_id == '?' else new_id)
 
+# 4. decisions settled against the Academy Awards Database itself: the open
+#    review items, and every discrepancy a full reconciliation of the dataset
+#    with the Academy's records found. Each one was researched and then
+#    confirmed by two independent reviewers, like every change above. A decision
+#    can re-link or unlink a nominee slot, correct a cell, or add a row the
+#    upstream data lacks. Every value must still be what the decision expects,
+#    or the run is refused.
+EDITOR = f'{A}/editor_decisions.json'
+settled = set()
+additions = []
+for d in (json.load(open(EDITOR)) if os.path.exists(EDITOR) else []):
+    settled.update(d.get('items', []))
+    for c in d.get('cells', []):
+        r = rows[c['nomination_id'] - 1]
+        if (r.get(c['field']) or '') != c['before']:
+            raise SystemExit(f"row {c['nomination_id']} {c['field']}: holds {r.get(c['field'])!r}, decision expects {c['before']!r}")
+        r[c['field']] = c['after']
+        add(c['nomination_id'], c['field'], c['before'], c['after'], d['reason'], d['evidence'], d['verification'])
+    for a in d.get('additions', []):
+        additions.append({'row': a, 'reason': d['reason'], 'evidence': d['evidence'], 'verification': d['verification']})
+    for s in d.get('slots', []):
+        r = rows[s['nomination_id'] - 1]
+        noms, toks = split(r['Nominees']), split(r['NomineeIds'])
+        k = noms.index(s['nominee'])
+        if toks[k] != s['before']:
+            raise SystemExit(f"row {s['nomination_id']}: slot {s['nominee']!r} holds {toks[k]!r}, decision expects {s['before']!r}")
+        if toks[k] == s['after']:
+            continue
+        before = r['NomineeIds']
+        toks[k] = s['after']
+        r['NomineeIds'] = '|'.join(toks)
+        add(s['nomination_id'], 'NomineeIds', before, r['NomineeIds'], s.get('reason', d['reason']),
+            d['evidence'], d['verification'], imdb_id=None if s['after'] == '?' else s['after'])
+review = [x for x in review if x['key'].split('|')[0] not in settled]
+
 os.makedirs(OUT, exist_ok=True)
 json.dump(corrections, open(f'{OUT}/corrections.json', 'w'), indent=1, ensure_ascii=False)
 json.dump(review, open(f'{OUT}/needs_review.json', 'w'), indent=1, ensure_ascii=False)
+json.dump(additions, open(f'{OUT}/additions.json', 'w'), indent=1, ensure_ascii=False)
 import collections
 print('corrections', len(corrections), collections.Counter(c['reason'] for c in corrections))
 print('needs review', len(review))
+print('additions', len(additions))

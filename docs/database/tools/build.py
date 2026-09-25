@@ -1,7 +1,7 @@
 """Build the Lunara Oscars Ledger SQL load from the source sheet plus the
 verified corrections ledger.
 
-    python build.py <rows.json> <corrections.json> <wikidata.json> <out_dir>
+    python build.py <rows.json> <corrections.json> <wikidata.json> <out_dir> [additions.json]
 
 Writes:
   data.sql                  INSERTs for every table (schema.sql creates them)
@@ -13,6 +13,7 @@ value it expects to replace, or if any slot count disagrees.
 import json, re, sys, hashlib, collections, datetime, unicodedata, os
 
 ROWS, CORR, WDP, OUT = sys.argv[1:5]
+ADDS = sys.argv[5] if len(sys.argv) > 5 else None
 R = json.load(open(ROWS))
 CORRECTIONS = json.load(open(CORR)) if os.path.exists(CORR) else []
 WD = json.load(open(WDP))
@@ -54,6 +55,17 @@ for c in CORRECTIONS:
         fail(f"row {c['nomination_id']} {c['field']}: expected {c['before']!r}, found {before!r}")
     row[c['field']] = c['after']
     applied.append(c)
+
+# Rows the upstream data lacks are appended after its last row, so every existing
+# nomination_id stays stable. Each addition carries its own evidence.
+ADDITIONS = json.load(open(ADDS)) if ADDS and os.path.exists(ADDS) else []
+for a in ADDITIONS:
+    row = {c: a['row'].get(c) for c in COLS}
+    for c in COLS:
+        if c not in ('Ceremony', 'Winner'):
+            row[c] = text(row[c])
+    row['_id'] = len(rows) + 1
+    rows.append(row)
 
 # ---- validate slot alignment after corrections --------------------------------
 for r in rows:
@@ -210,8 +222,10 @@ with open(tsv, 'w', encoding='utf-8', newline='') as f:
         f.write('\t'.join(vals) + '\n')
 source_sha = hashlib.sha256(open(ROWS, 'rb').read()).hexdigest()
 corrected_sha = hashlib.sha256(open(tsv, 'rb').read()).hexdigest()
-version = datetime.date.today().strftime('%Y.%m.%d') + '-1'
+version = os.environ.get('DATASET_VERSION') or datetime.date.today().strftime('%Y.%m.%d') + '-1'
 emit(f"INSERT INTO ledger_dataset VALUES ({q(version)},'Academy Awards Database via DLu/oscar_data',{q(source_sha)},{q(corrected_sha)},{len(rows)},{winners},NOW());")
+for a, r in zip(ADDITIONS, rows[len(rows) - len(ADDITIONS):]):
+    emit(f"INSERT INTO ledger_corrections (nomination_id, field, before_value, after_value, reason, evidence, verification) VALUES ({r['_id']},'(row)',NULL,{q(json.dumps(a['row'], ensure_ascii=False))},{q(a['reason'])},{q(a['evidence'])},{q(a['verification'])});")
 for c in applied:
     emit(f"INSERT INTO ledger_corrections (nomination_id, field, before_value, after_value, reason, evidence, verification) VALUES ({q(c['nomination_id'])},{q(c['field'])},{q(c['before'])},{q(c['after'])},{q(c['reason'])},{q(c['evidence'])},{q(c['verification'])});")
 
@@ -220,4 +234,4 @@ with open(os.path.join(OUT, 'data.sql'), 'w', encoding='utf-8') as f:
     f.write('\n'.join(out))
     f.write('\nCOMMIT;\n')
 json.dump(applied, open(os.path.join(OUT, 'corrections-applied.json'), 'w'), indent=1, ensure_ascii=False)
-print(f"rows {len(rows)} winners {winners} titles {len(title_labels)} entities {len(entity_labels)} corrections {len(applied)} statements {len(out)}")
+print(f"rows {len(rows)} winners {winners} titles {len(title_labels)} entities {len(entity_labels)} corrections {len(applied)} additions {len(ADDITIONS)} statements {len(out)}")

@@ -1,6 +1,6 @@
 """Write the corrected workbook in the same layout as the source.
 
-    python make_workbook.py <corrected.tsv> <corrections-applied.json> <review.json> <out.xlsx>
+    python make_workbook.py <corrected.tsv> <corrections-applied.json> <review.json> <out.xlsx> [additions.json]
 
 Sheets: full_data, Ceremony_1 … Ceremony_98 (unchanged layout), Corrections
 (every change with evidence), Needs review (items no source could settle),
@@ -12,6 +12,7 @@ from openpyxl.comments import Comment
 from openpyxl.styles import PatternFill, Font, Alignment
 
 TSV, CORR, REVIEW, OUT = sys.argv[1:5]
+ADDS = json.load(open(sys.argv[5])) if len(sys.argv) > 5 else []
 with open(TSV, encoding='utf-8', newline='') as f:
     rows = list(csv.reader(f, delimiter='\t', quoting=csv.QUOTE_NONE))
 header, data = rows[0], rows[1:]
@@ -40,12 +41,19 @@ ws = wb.active
 ws.title = 'full_data'
 
 
+first_added = len(data) - len(ADDS) + 1        # added rows sit after the source's last row
+
+
 def write_sheet(sheet, subset):
     sheet.append(header)
     for c in sheet[1]:
         c.font = BOLD
     for nid, r in subset:
         sheet.append([typed(h, v) for h, v in zip(header, r)])
+        if ADDS and nid >= first_added:
+            for k in range(1, len(header) + 1):
+                sheet.cell(row=sheet.max_row, column=k).fill = FILL
+            sheet.cell(row=sheet.max_row, column=1).comment = Comment('Added: ' + ADDS[nid - first_added]['evidence'][:1400], 'Lunara audit')
         for k, h in enumerate(header, start=1):
             hits = changed.get((nid, h))
             if hits:
@@ -70,6 +78,9 @@ for c in cs[1]:
 for c in sorted(corrections, key=lambda x: (x['nomination_id'], x['field'])):
     r = data[c['nomination_id'] - 1]
     cs.append([c['nomination_id'] + 1, int(r[0]), r[3], c['field'], c['before'], c['after'], c['reason'], c['evidence'], c['verification']])
+for k, a in enumerate(ADDS):
+    r = data[first_added - 1 + k]
+    cs.append([first_added + k + 1, int(r[0]), r[3], '(row added)', None, r[13] or r[7], a['reason'], a['evidence'], a['verification']])
 for col, w in zip('ABCDEFGHI', (7, 9, 30, 12, 40, 40, 18, 70, 30)):
     cs.column_dimensions[col].width = w
 for row in cs.iter_rows(min_row=2):

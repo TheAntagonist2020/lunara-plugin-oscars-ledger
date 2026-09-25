@@ -1,8 +1,11 @@
 -- Integrity checks run against a freshly loaded ledger. Every row returned by
 -- a "should be empty" query is a failure.
 
-SELECT 'nominations' AS check_name, COUNT(*) AS value, 12137 AS expected FROM ledger_nominations
-UNION ALL SELECT 'winners', SUM(is_winner), 3515 FROM ledger_nominations
+-- Expected counts match the Academy Awards Database (checked 2026-09-24): it lists
+-- 12,139 records and 3,517 winning records, and by the Academy's own note the two
+-- Sunrise cinematography records (Rosher, Struss) are one nomination.
+SELECT 'nominations' AS check_name, COUNT(*) AS value, 12138 AS expected FROM ledger_nominations
+UNION ALL SELECT 'winners', SUM(is_winner), 3516 FROM ledger_nominations
 UNION ALL SELECT 'ceremonies', COUNT(*), 98 FROM ledger_ceremonies
 UNION ALL SELECT 'categories', COUNT(*), 66 FROM ledger_categories
 UNION ALL SELECT 'unofficial nominations', SUM(is_official = 0), 90 FROM ledger_nominations;
