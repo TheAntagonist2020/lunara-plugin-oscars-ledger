@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.4
+Stable tag: 2.8.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.5 =
+* Explorer search suggestions on phones:
+  * the open list now sits above the sticky filter bar, which had covered its lower suggestions;
+  * each suggestion stacks its kind, name and counts beside the thumbnail, so a title reads in full instead of "The God...".
 
 = 2.8.4 =
 * The Oscar Ledger Explorer shows artwork everywhere:

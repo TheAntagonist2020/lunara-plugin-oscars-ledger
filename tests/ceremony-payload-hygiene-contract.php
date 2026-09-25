@@ -23,8 +23,8 @@ $assert = static function ($condition, $message) use (&$failures) {
     }
 };
 
-$assert(strpos($plugin, "Version: 2.8.4") !== false, 'Plugin header should report 2.8.4.');
-$assert(strpos($plugin, "define('AAT_VERSION', '2.8.4')") !== false, 'Runtime version should report 2.8.4.');
+$assert(strpos($plugin, "Version: 2.8.5") !== false, 'Plugin header should report 2.8.5.');
+$assert(strpos($plugin, "define('AAT_VERSION', '2.8.5')") !== false, 'Runtime version should report 2.8.5.');
 $assert(strpos($plugin, "'aat-hub-polish'") !== false, 'Hub polish should be enqueued as an external style.');
 $assert(strpos($plugin, "'aat-ceremony-dossier'") !== false, 'Ceremony dossier assets should be enqueued externally.');
 $assert(strpos($plugin, "if (\$hub === 'ceremony')") !== false, 'Ceremony assets must stay route-scoped.');

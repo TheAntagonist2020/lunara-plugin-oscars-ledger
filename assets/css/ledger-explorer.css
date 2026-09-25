@@ -253,6 +253,12 @@
     display: none;
 }
 
+/* Open, the suggestion list sits above the sticky filter bar (z-index 30).
+   The hero isolates its own stacking, so the hero itself has to rise. */
+.lle.is-suggesting .lle-hero {
+    z-index: 45;
+}
+
 .lle-suggest__item {
     display: grid;
     grid-template-columns: 32px auto minmax(0, 1fr) auto;
@@ -960,6 +966,38 @@ a.lle-media:hover {
     color: var(--lle-muted);
     font-size: 0.85rem;
     line-height: 1.55;
+}
+
+/* Phones: each suggestion stacks its kind, name and counts beside the
+   thumbnail, so a title reads in full instead of "The God...". */
+@media (max-width: 600px) {
+    .lle-suggest__item {
+        grid-template-columns: 32px minmax(0, 1fr);
+        grid-template-areas:
+            "thumb kind"
+            "thumb name"
+            "thumb meta";
+        column-gap: 12px;
+        row-gap: 1px;
+    }
+
+    .lle-suggest__thumb {
+        grid-area: thumb;
+    }
+
+    .lle-suggest__kind {
+        grid-area: kind;
+        font-size: 0.72rem;
+    }
+
+    .lle-suggest__name {
+        grid-area: name;
+    }
+
+    .lle-suggest__meta {
+        grid-area: meta;
+        font-size: 0.8rem;
+    }
 }
 
 /* Wider screens */

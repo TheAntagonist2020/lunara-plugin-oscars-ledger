@@ -192,13 +192,17 @@
     var searching = null;
     var shownFor = '';
 
+    // While the list is open the hero rises above the sticky filter bar, which
+    // otherwise covers the lower suggestions; closed, the bar stays on top.
     function openList() {
         list.hidden = false;
+        root.classList.add('is-suggesting');
         input.setAttribute('aria-expanded', 'true');
     }
 
     function closeList() {
         list.hidden = true;
+        root.classList.remove('is-suggesting');
         input.setAttribute('aria-expanded', 'false');
         input.removeAttribute('aria-activedescendant');
         active = -1;
