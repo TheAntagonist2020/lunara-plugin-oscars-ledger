@@ -927,9 +927,11 @@
     }
 }
 
-/* Start the hero right under the site header. */
-body.aat-shell-explorer .site-main {
-    padding-top: 0 !important;
+/* Start the hero right under the site header. The theme pads every Oscars
+   shell page (body.aat-shell-page .site-main, !important), so this needs one
+   more class to win whatever the stylesheet order. */
+body.aat-shell-page.aat-shell-explorer .site-main {
+    padding-block-start: 0 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

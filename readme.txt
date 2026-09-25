@@ -67,7 +67,7 @@ Examples:
 * Explorer polish from the live phone and desktop screenshots:
   * the search pill no longer shows the theme's input box inside it, and its button keeps the label face;
   * the suggestion list is opaque and sits above the hero;
-  * the hero starts right under the site header;
+  * the hero starts right under the site header, outranking the theme's Oscars-shell padding;
   * the hero stats read as three figures, number over label, instead of wrapping mid-list on phones;
   * the desktop filter row fits one line.
 
