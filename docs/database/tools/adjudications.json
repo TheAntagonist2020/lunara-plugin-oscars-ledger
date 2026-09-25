@@ -1,15 +1,15 @@
 {
- "Q128|nm0141720|8104": {
+ "R128|nm0141720|8104": {
   "action": "blank",
-  "note": "Both skeptics independently confirmed nm0141720 is a 1914-1919 silent-era actor, not the 1996 Todd-AO honoree; both rejected only the proposed replacement nm2319194 (itself an actor profile). The slot is unlinked."
+  "note": "Both skeptics independently confirmed nm0141720 is a [years omitted] silent-era actor, not the 1996 Todd-AO honoree; both rejected only the proposed replacement nm2319194 (itself an actor profile). The slot is unlinked."
  },
- "Q368|co0015504|264": {
+ "R368|co0015504|264": {
   "action": "blank",
   "note": "Both skeptics independently confirmed co0015504 is 'Pictorial Films' (one 1952 title), not Educational Pictures; both rejected only the proposed co0059254. Candidate co0050385 (Wikidata P345 for Educational Pictures; IMDb production credit on Krakatoa, same ceremony and category) is sent for its own verification."
  },
  "G002|co0058013|181,504,631,925,1257,1458,2112,2226": {
   "action": "relink",
   "id": "co0189536",
-  "note": "Both reviewers confirmed co0058013 (Samuel Goldwyn Films, founded 2000) is wrong for these 1931-1947 Best Picture credits, and both independently established co0189536 'Samuel Goldwyn Productions' (Wikidata Q7411497, 1923-1959, P345 = co0189536; IMDb production credit on Wuthering Heights, The Pride of the Yankees, The Best Years of Our Lives and The Bishop's Wife)."
+  "note": "Both reviewers confirmed co0058013 (Samuel Goldwyn Films, founded 2000) is wrong for these [years omitted] Best Picture credits, and both independently established co0189536 'Samuel Goldwyn Productions' (Wikidata, [years omitted], P345 = co0189536; IMDb production credit on Wuthering Heights, The Pride of the Yankees, The Best Years of Our Lives and The Bishop's Wife)."
  }
 }

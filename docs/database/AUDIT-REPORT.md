@@ -113,7 +113,7 @@ Each fix is backed by evidence and two confirmations.
 | Row(s) | Credit | Was | Now | Why |
 | --- | --- | --- | --- | --- |
 | 527 | Thomas T. Moulton, *Dodsworth* (9th) | nm0481264 | nm0609771 | The old ID is Oscar Lagerstrom's. Moulton has nm0609771 on his 20 other rows |
-| 817 | Art Smith, *Spawn of the North* (11th) | nm0807356 | nm1071079 | The old ID is an MGM unit manager who died in 1956. The Academy's honoree, Paramount's miniatures man, died in 1972 |
+| 817 | Art Smith, *Spawn of the North* (11th) | nm0807356 | nm1071079 | The old ID is an MGM unit manager who [years omitted]. The Academy's honoree, Paramount's miniatures man, [years omitted] |
 | 193, 408, 519 | Hal Roach, Producer | co0075561 | nm0730018 | The studio's ID sat on the person |
 | 7382 | Eugene Corr, *Waldo Salt* | nm0944310 | nm0180644 | The old ID is a stub named "Eugene X" |
 | 8769 | Al Mayer Sr. / Al Mayer Jr. | son's ID on the father | nm4869190 / nm2353419 | Father and son now each carry their own ID |
@@ -136,13 +136,13 @@ Each fix is backed by evidence and two confirmations.
 
 | Row(s) | Credit | Was | Now | Why |
 | --- | --- | --- | --- | --- |
-| 51 rows, 1935–68 | 20th Century-Fox | co0028775 | co0000756 | The old ID is the pre-merger Fox Film Corporation (1915–1935), which has no titles after 1935. IMDb credits co0000756 on every one of these films. The 8 "Fox" credits before the merger keep co0028775 |
+| 51 rows, 1935–68 | 20th Century-Fox | co0028775 | co0000756 | The old ID is the pre-merger Fox Film Corporation [years omitted], which has no titles after 1935. IMDb credits co0000756 on every one of these films. The 8 "Fox" credits before the merger keep co0028775 |
 | 82 rows, 1927–66 | Warner Bros. | co0080422 | co0002663 | The old ID is "Warner Bros. Entertainment", IMDb's modern rights holder, on only 2 of the 70 films. co0002663 is the studio IMDb credits on all of them |
 | 3 rows, 1967–68 | Warner Bros. (Warner Bros.-Seven Arts) | co0080422 | — | The merged company is already linked on the Seven Arts slot (below) |
 | 38 rows, 1932/33–68 | Columbia | co0050868 | co0014351 | Same studio. IMDb retired the old ID, which now redirects to co0014351 and has no titles |
 | 9 rows, 1937–64 | Walt Disney Studios | co0008970 | co0098836 | The old ID is Walt Disney Pictures, incorporated in 1983. co0098836 is Walt Disney Productions, the studio of those years |
 | 24 rows, 1937–67 | Samuel Goldwyn Studio departments | co0058013 | co0064215 | co0058013 is Samuel Goldwyn Films, founded in 2000 |
-| 8 rows, 1931–47 | Samuel Goldwyn Productions (Best Picture) | co0058013 | co0189536 | Wikidata and IMDb both tie co0189536 to Samuel Goldwyn Productions (1923–1959) |
+| 8 rows, 1931–47 | Samuel Goldwyn Productions (Best Picture) | co0058013 | co0189536 | Wikidata and IMDb both tie co0189536 to Samuel Goldwyn Productions [years omitted] |
 | 146 | Samuel Goldwyn–United Artists sound department (4th) | co0058013 | — | No single proven ID for that studio |
 | 4747, 4861, 4862 | Seven Arts (Warner Bros.-Seven Arts) | co0638213 | co0076018 | The old ID is an unrelated Canadian company. co0076018 is the merged Warner Bros.-Seven Arts (1967–69), IMDb's production company on all three films |
 | 1322, 1480, 1676, 1851, 2022 | "the RCA Manufacturing Company", "RCA Sound" | co0097233 | — | The old ID is the RCA Records label, with no film-sound credits and nothing before 1954. No IMDb record represents RCA's Hollywood recording department. The Academy files the four "RCA Sound" rows and the 1955 *Not as a Stranger* credit (already unlinked) as one nominee, so all five now match |
