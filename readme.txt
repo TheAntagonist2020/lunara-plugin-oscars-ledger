@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.3
+Stable tag: 2.8.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,16 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.4 =
+* The Oscar Ledger Explorer shows artwork everywhere:
+  * every nomination row carries a poster or a portrait: the nominee's portrait for a one-person award, the film's poster for a film award or a team, each falling back to the other;
+  * on a person's or film's own list, rows show the other side, so Meryl Streep's list shows her films;
+  * the Debrief shows the film's poster or the person's portrait, and every "By…" list has a box per row (ceremonies and categories show their headline winner's poster, people their portrait);
+  * search suggestions show a small poster or portrait;
+  * anything with no artwork gets a monogram plate in the same 2:3 box, so no row gaps;
+  * artwork comes only from what the site already holds (the poster table, review images, the media library and cached TMDB art), through the same lookups as the profile pages.
+* The Explorer footer and the API's status now credit Lunara Film alone: "Every nomination compiled and fact-checked by Lunara Film against the Academy's official record."
 
 = 2.8.3 =
 * Rounded-corner fit on the Oscar pages:

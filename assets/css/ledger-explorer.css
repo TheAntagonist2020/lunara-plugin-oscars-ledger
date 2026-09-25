@@ -255,10 +255,10 @@
 
 .lle-suggest__item {
     display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: baseline;
+    grid-template-columns: 32px auto minmax(0, 1fr) auto;
+    align-items: center;
     gap: 10px;
-    padding: 11px 14px;
+    padding: 8px 12px;
     border-radius: 12px;
     cursor: pointer;
 }
@@ -266,6 +266,31 @@
 .lle-suggest__item[aria-selected="true"],
 .lle-suggest__item:hover {
     background: rgba(201, 169, 97, 0.14);
+}
+
+.lle-suggest__thumb {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 48px;
+    overflow: hidden;
+    border: 1px solid rgba(201, 169, 97, 0.22);
+    border-radius: 4px;
+    background: linear-gradient(180deg, #13243a, #07101a);
+}
+
+.lle-suggest__thumb img {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    object-fit: cover;
+}
+
+.lle-suggest__thumb.is-plate {
+    font-family: var(--lle-display);
+    font-size: 0.78rem;
+    color: var(--lle-gold-light);
 }
 
 .lle-suggest__kind {
@@ -524,11 +549,8 @@
         var(--lle-ground-2);
 }
 
-.lle-debrief__poster {
-    display: block;
+.lle-debrief__media {
     width: 96px;
-    height: auto;
-    border-radius: 6px;
 }
 
 .lle-debrief__name {
@@ -668,14 +690,15 @@
 
 .lle-row {
     display: grid;
-    grid-template-columns: 86px minmax(0, 1fr);
-    gap: 12px;
-    padding: 12px 0;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+    padding: 14px 0;
     border-bottom: 1px solid rgba(201, 169, 97, 0.12);
 }
 
 .lle-row__result {
-    margin: 2px 0 0;
+    margin: 0 0 3px;
     font-family: var(--lle-label);
     font-size: 0.9rem;
     letter-spacing: 0.14em;
@@ -773,6 +796,61 @@
     overflow-wrap: anywhere;
 }
 
+/* Artwork: one 2:3 box for posters, portraits and plates alike, so every
+   row, group and Debrief lines up whether or not a title has an image. */
+
+.lle-media {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border: 1px solid rgba(201, 169, 97, 0.2);
+    border-radius: 6px;
+    background:
+        radial-gradient(120% 80% at 50% 0%, rgba(201, 169, 97, 0.16), transparent 62%),
+        linear-gradient(180deg, #13243a 0%, #07101a 100%);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+    text-decoration: none !important;
+}
+
+.lle-media .lle-media__img {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    object-fit: cover;
+    object-position: 50% 50%;
+    border-radius: 0 !important;
+}
+
+.lle-media.is-portrait .lle-media__img {
+    object-position: 50% 22%;
+}
+
+.lle-media__mark {
+    font-family: var(--lle-display);
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    color: var(--lle-gold-light);
+    opacity: 0.88;
+}
+
+.lle-media--debrief .lle-media__mark {
+    font-size: 1.9rem;
+}
+
+.lle-row.is-won .lle-media {
+    border-color: rgba(201, 169, 97, 0.55);
+}
+
+a.lle-media:hover {
+    border-color: var(--lle-gold);
+}
+
 /* Grouped views */
 
 .lle-groups {
@@ -789,11 +867,9 @@
     border-bottom: 1px solid rgba(201, 169, 97, 0.12);
 }
 
-.lle-group__poster {
-    display: block;
-    width: 48px;
-    height: auto;
-    border-radius: 4px;
+.lle-group .lle-media {
+    flex: none;
+    width: 44px;
 }
 
 .lle-group__rank {
@@ -890,7 +966,7 @@
 
 @media (min-width: 700px) {
     .lle-row {
-        grid-template-columns: 110px minmax(0, 1fr);
+        grid-template-columns: 64px minmax(0, 1fr);
         gap: 18px;
     }
 
@@ -907,12 +983,12 @@
         align-items: start;
     }
 
-    .lle-debrief__poster {
+    .lle-debrief__media {
         width: 120px;
     }
 
-    .lle-group__poster {
-        width: 56px;
+    .lle-group .lle-media {
+        width: 52px;
     }
 }
 

@@ -387,7 +387,7 @@ final class AAT_Explorer {
     </div>
 
     <footer class="lle-attrib">
-        <p>Data: <a href="https://github.com/DLu/oscar_data" rel="noopener">DLu/oscar_data</a> (BSD 2-Clause), corrected and reconciled by Lunara against the Academy Awards Database. Every correction is logged with its evidence. Developers: <a href="<?php echo esc_url(rest_url(AAT_Read_API::NS . '/status')); ?>">the Oscar Ledger API</a>.</p>
+        <p>Every nomination compiled and fact-checked by Lunara Film against the Academy&rsquo;s official record. Developers: <a href="<?php echo esc_url(rest_url(AAT_Read_API::NS . '/status')); ?>">the Oscar Ledger API</a>.</p>
     </footer>
 </div>
         <?php
@@ -477,12 +477,8 @@ final class AAT_Explorer {
         if (!empty($entity['missing'])) {
             return '';
         }
-        $plugin = self::plugin();
         $id = (string) $entity['id'];
-        $poster = '';
-        if (($entity['kind'] ?? '') === 'film' && method_exists($plugin, 'get_poster_img_html_for_title')) {
-            $poster = (string) $plugin->get_poster_img_html_for_title($id, 'medium', array('class' => 'lle-debrief__poster', 'width' => 120, 'height' => 180));
-        }
+        $media = self::media_box(AAT_Ledger_Media::for_id($id), (string) $entity['name'], 'debrief', (string) $entity['url']);
         $span = '';
         if (!empty($entity['first_ceremony']) && !empty($entity['last_ceremony'])) {
             $first = $entity['first_ceremony'];
@@ -492,9 +488,7 @@ final class AAT_Explorer {
                 : sprintf('%s (%s) to %s (%s)', $first['label'], $first['year_label'], $last['label'], $last['year_label']);
         }
         $html = '<aside class="lle-debrief" aria-label="' . esc_attr('About ' . $entity['name']) . '">';
-        if ($poster !== '') {
-            $html .= '<div class="lle-debrief__media">' . $poster . '</div>';
-        }
+        $html .= '<div class="lle-debrief__media">' . $media . '</div>';
         $html .= '<div class="lle-debrief__body">';
         $html .= '<p class="lle-kicker">' . esc_html(self::kind_label($entity['kind'] ?? '')) . ' · Debrief</p>';
         $html .= '<h2 class="lle-debrief__name">' . esc_html($entity['name']) . '</h2>';
@@ -555,12 +549,12 @@ final class AAT_Explorer {
                 $current_category = $record['category']['slug'];
                 $html .= '<h3 class="lle-category"><a href="' . esc_url($record['category']['url']) . '">' . esc_html($record['category']['name']) . '</a> <span>' . esc_html($record['category']['class_label']) . '</span></h3>';
             }
-            $html .= self::render_record($record);
+            $html .= self::render_record($record, (array) $state['entity']);
         }
         return $html . '</section>';
     }
 
-    private static function render_record($record) {
+    private static function render_record($record, $focus = array()) {
         $films = self::render_slots($record['films'], true);
         $people = self::render_slots($record['nominees'], false);
         $roles = array_values(array_filter((array) $record['detail'], 'strlen'));
@@ -581,9 +575,13 @@ final class AAT_Explorer {
             $lead = esc_html($record['citation'] !== '' ? $record['citation'] : $record['credit']);
         }
 
+        list($media, $media_id, $plate_label) = self::record_media($record, $film_led, $focus);
+        $media_url = $media_id !== '' ? (string) self::plugin()->build_entity_url_from_id($media_id) : '';
+
         $html = '<article class="lle-row' . ($record['winner'] ? ' is-won' : '') . '">';
-        $html .= '<p class="lle-row__result">' . ($record['winner'] ? '<span aria-hidden="true">★</span> Won' : 'Nominated') . '</p>';
-        $html .= '<div class="lle-row__main"><p class="lle-row__lead">' . $lead . '</p>';
+        $html .= self::media_box($media, $plate_label, 'row', $media_url);
+        $html .= '<div class="lle-row__main"><p class="lle-row__result">' . ($record['winner'] ? '<span aria-hidden="true">★</span> Won' : 'Nominated') . '</p>';
+        $html .= '<p class="lle-row__lead">' . $lead . '</p>';
         if (!empty($sub)) {
             $html .= '<p class="lle-row__sub">' . implode(' <span class="lle-dot" aria-hidden="true">·</span> ', $sub) . '</p>';
         }
@@ -648,7 +646,6 @@ final class AAT_Explorer {
         if (empty($items)) {
             return '<div class="lle-empty"><p>Nothing matches these filters.</p><p><a rel="nofollow" data-lle-nav href="' . esc_url(self::base_url()) . '">Start over</a></p></div>';
         }
-        $plugin = self::plugin();
         $rank = ((int) ($list['page'] ?? 1) - 1) * self::PER_PAGE;
         $html = '<ol class="lle-groups lle-groups--' . esc_attr($state['by']) . '" start="' . ($rank + 1) . '">';
         foreach ($items as $item) {
@@ -659,21 +656,92 @@ final class AAT_Explorer {
             } else {
                 $explore = self::url($state, array('ceremony' => $item['value'], 'by' => ''));
             }
-            $poster = '';
-            if ($state['by'] === 'film' && method_exists($plugin, 'get_poster_img_html_for_title')) {
-                $poster = (string) $plugin->get_poster_img_html_for_title($item['value'], 'thumbnail', array('class' => 'lle-group__poster', 'width' => 64, 'height' => 96));
+            $lead_film = (string) ($item['lead_film'] ?? '');
+            if ($state['by'] === 'film') {
+                $media_ids = array((string) $item['value']);
+            } elseif ($state['by'] === 'person') {
+                $media_ids = array((string) $item['value'], $lead_film);
+            } else {
+                $media_ids = array($lead_film);
             }
             $label = $item['label'] !== '' ? $item['label'] : strtoupper($item['value']);
+            $plate = $state['by'] === 'ceremony' ? (string) $item['value'] : $label;
+            $media = self::media_box(AAT_Ledger_Media::first(array_filter($media_ids)), $plate, 'group', (string) $item['url']);
             if (!empty($item['year_label'])) {
                 $label .= ' · ' . $item['year_label'];
             }
             $rank++;
-            $html .= '<li class="lle-group"><span class="lle-group__rank">' . esc_html((string) $rank) . '</span>' . ($poster !== '' ? '<span class="lle-group__media">' . $poster . '</span>' : '')
+            $html .= '<li class="lle-group"><span class="lle-group__rank">' . esc_html((string) $rank) . '</span>' . $media
                 . '<span class="lle-group__body"><a class="lle-group__name" href="' . esc_url($item['url']) . '">' . esc_html($label) . '</a>'
                 . '<span class="lle-group__counts">' . esc_html(number_format_i18n((int) $item['nominations']) . ' ' . _n('nomination', 'nominations', (int) $item['nominations']) . ' · ' . number_format_i18n((int) $item['wins']) . ' ' . _n('win', 'wins', (int) $item['wins'])) . '</span></span>'
                 . '<a class="lle-group__explore" rel="nofollow" data-lle-nav href="' . esc_url($explore) . '">Explore</a></li>';
         }
         return $html . '</ol>';
+    }
+
+    /**
+     * The artwork for one nomination, with the ID it shows and the label for
+     * a plate. A person award with one person shows their portrait, anything
+     * else the film's poster, each falling back to the other. IDs the page is
+     * already filtered to come last, so a person's own list shows their films.
+     *
+     * @return array array($media, $media_id, $plate_label)
+     */
+    private static function record_media($record, $film_led, $focus) {
+        $film_ids = array();
+        $person_ids = array();
+        $film_name = '';
+        $person_name = '';
+        foreach ((array) $record['films'] as $slot) {
+            $film_name = $film_name !== '' ? $film_name : (string) (($slot['links'][0]['name'] ?? '') ?: $slot['name']);
+            foreach ((array) $slot['ids'] as $id) {
+                if (strpos($id, 'tt') === 0) {
+                    $film_ids[] = $id;
+                }
+            }
+        }
+        foreach ((array) $record['nominees'] as $slot) {
+            $person_name = $person_name !== '' ? $person_name : (string) (($slot['links'][0]['name'] ?? '') ?: $slot['name']);
+            foreach ((array) $slot['ids'] as $id) {
+                if (strpos($id, 'nm') === 0) {
+                    $person_ids[] = $id;
+                }
+            }
+        }
+        $person_ids = array_values(array_unique($person_ids));
+        $order = (!$film_led && count($person_ids) === 1) ? array_merge($person_ids, $film_ids) : array_merge($film_ids, $person_ids);
+        $focus = array_map('strval', (array) $focus);
+        $order = array_merge(array_values(array_diff($order, $focus)), array_values(array_intersect($order, $focus)));
+        $plate_label = $film_led ? ($film_name !== '' ? $film_name : $person_name) : ($person_name !== '' ? $person_name : $film_name);
+        foreach (array_unique($order) as $id) {
+            $media = AAT_Ledger_Media::for_id($id);
+            if (!empty($media)) {
+                return array($media, $id, $plate_label);
+            }
+        }
+        return array(array(), '', $plate_label);
+    }
+
+    /**
+     * The media box every row, group and Debrief carries: the artwork when
+     * there is some, else a monogram plate, so the column never gaps. It is
+     * decorative and out of the tab order; the name beside it is the link.
+     */
+    private static function media_box($media, $label, $variant, $href = '') {
+        $sizes = $variant === 'debrief' ? '(min-width: 700px) 120px, 96px' : '(min-width: 700px) 64px, 52px';
+        $class = 'lle-media lle-media--' . $variant;
+        $inner = AAT_Ledger_Media::img($media, 'lle-media__img', $sizes);
+        if ($inner !== '') {
+            $class .= ($media['kind'] ?? '') === 'portrait' ? ' is-portrait' : ' is-poster';
+        } else {
+            $class .= ' is-plate';
+            $mark = AAT_Ledger_Media::initials($label);
+            $inner = '<span class="lle-media__mark">' . esc_html($mark !== '' ? $mark : '★') . '</span>';
+        }
+        if ($href !== '') {
+            return '<a class="' . esc_attr($class) . '" href="' . esc_url($href) . '" tabindex="-1" aria-hidden="true">' . $inner . '</a>';
+        }
+        return '<span class="' . esc_attr($class) . '" aria-hidden="true">' . $inner . '</span>';
     }
 
     private static function render_pager($state, $list) {

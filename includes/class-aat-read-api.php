@@ -10,7 +10,7 @@
  * on every completed import, so a new dataset never serves an old answer.
  *
  * Routes (all GET):
- *   /status                        live counts, dataset stamp, source and licence
+ *   /status                        live counts, dataset stamp and source
  *   /ceremonies, /categories       the lists, with their stats
  *   /nominations                   filtered, sorted, paged records
  *   /facets                        disjunctive counts for every filter
@@ -104,8 +104,7 @@ final class AAT_Read_API {
                     'categories' => (int) $wpdb->get_var('SELECT COUNT(*) FROM ' . self::table('aat_categories')), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                     'entities' => $entities,
                 ),
-                'source' => 'DLu/oscar_data, corrected and reconciled against the Academy Awards Database',
-                'license' => 'BSD-2-Clause (DLu/oscar_data)',
+                'source' => 'Compiled and fact-checked by Lunara Film against the Academy\'s official record',
             );
         });
         return self::respond($data);
@@ -324,9 +323,13 @@ final class AAT_Read_API {
                 return self::unavailable();
             }
 
+            $leads = self::group_leads($by, array_column($rows, 'k'), $from, $where, $params);
             $items = array();
             foreach ($rows as $row) {
                 $item = array('nominations' => (int) $row['n'], 'wins' => (int) $row['w']);
+                if ($by !== 'film') {
+                    $item['lead_film'] = $leads[(string) $row['k']] ?? '';
+                }
                 if ($by === 'ceremony') {
                     $n = (int) $row['k'];
                     $item = array('value' => $n, 'label' => $plugin->ordinal($n), 'year_label' => (string) $row['year_label'], 'url' => $plugin->get_ceremony_url($n)) + $item;
@@ -351,6 +354,68 @@ final class AAT_Read_API {
             );
         });
         return self::respond($data);
+    }
+
+    /**
+     * One lead film per group, for the Explorer's poster: the group's winner
+     * with a film (Best Picture first, then the most recent ceremony), else
+     * its most recent nominated film. Same filters as the list itself.
+     *
+     * @return array Group key => IMDb title ID.
+     */
+    private static function group_leads($by, $keys, $from, $where, $params) {
+        $keys = array_values(array_unique(array_map('strval', (array) $keys)));
+        if (empty($keys) || $by === 'film') {
+            return array();
+        }
+        $join = '';
+        $join_params = array();
+        if ($by === 'ceremony') {
+            $column = 'f.ceremony';
+        } elseif ($by === 'category') {
+            $column = 'f.category_slug';
+        } else {
+            $column = 'g.entity_id';
+            $join = ' INNER JOIN ' . self::table('aat_award_nominees') . ' g ON g.source_award_id = f.source_award_id AND g.entity_type = %s';
+            $join_params = array($by === 'person' ? 'name' : 'company');
+        }
+
+        $leads = array();
+        foreach (array(' AND f.winner = 1', '') as $winners_only) {
+            $open = array_values(array_diff($keys, array_keys($leads)));
+            if (empty($open)) {
+                break;
+            }
+            $placeholders = implode(',', array_fill(0, count($open), '%s'));
+            $rows = self::get_results(
+                "SELECT $column AS k, f.film_entity_id AS film, f.ceremony AS n, (c.canonical_category = 'BEST PICTURE') AS bp, f.source_award_id AS aid"
+                . " $from$join WHERE $where$winners_only AND f.film_entity_id <> '' AND $column IN ($placeholders)",
+                array_merge($join_params, $params, $open)
+            );
+            $best = array();
+            foreach ((array) $rows as $row) {
+                $key = (string) $row['k'];
+                $rank = array((int) $row['bp'], (int) $row['n'], -(int) $row['aid']);
+                if (!isset($best[$key]) || self::rank_above($rank, $best[$key]['rank'])) {
+                    $best[$key] = array('rank' => $rank, 'film' => strtolower((string) $row['film']));
+                }
+            }
+            foreach ($best as $key => $lead) {
+                if (preg_match('/^tt\d{7,10}$/', $lead['film'])) {
+                    $leads[$key] = $lead['film'];
+                }
+            }
+        }
+        return $leads;
+    }
+
+    private static function rank_above($a, $b) {
+        foreach ($a as $i => $value) {
+            if ($value !== $b[$i]) {
+                return $value > $b[$i];
+            }
+        }
+        return false;
     }
 
     public static function route_search(WP_REST_Request $request) {
@@ -412,6 +477,7 @@ final class AAT_Read_API {
                     'nominations' => (int) $row['nominations'],
                     'wins' => (int) $row['wins'],
                     'url' => $plugin->build_entity_url_from_id((string) $row['entity_id']),
+                    'image' => AAT_Ledger_Media::url(AAT_Ledger_Media::for_id((string) $row['entity_id'])),
                     'explore' => array('entity' => (string) $row['entity_id']),
                 );
             }

@@ -216,6 +216,45 @@
         }
     }
 
+    // A plate for a result with no artwork: up to two initials, leading
+    // articles skipped, the same rule as the server's plates.
+    function initials(result) {
+        if (result.type === 'category' || result.type === 'ceremony') {
+            return '\u2605';
+        }
+        var words = String(result.name || '').split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+        if (words.length > 1 && /^(the|a|an)$/i.test(words[0])) {
+            words.shift();
+        }
+        if (!words.length) {
+            return '\u2605';
+        }
+        var mark = words[0].charAt(0);
+        if (words.length > 1) {
+            mark += words[words.length - 1].charAt(0);
+        }
+        return mark.toUpperCase();
+    }
+
+    function thumb(result) {
+        var box = document.createElement('span');
+        box.className = 'lle-suggest__thumb';
+        box.setAttribute('aria-hidden', 'true');
+        if (typeof result.image === 'string' && /^https:\/\//.test(result.image)) {
+            var img = document.createElement('img');
+            img.alt = '';
+            img.width = 32;
+            img.height = 48;
+            img.decoding = 'async';
+            img.src = result.image;
+            box.appendChild(img);
+        } else {
+            box.className += ' is-plate';
+            box.textContent = initials(result);
+        }
+        return box;
+    }
+
     function meta(result) {
         if (!result.nominations) {
             return '';
@@ -246,6 +285,7 @@
             option.className = 'lle-suggest__item';
             option.setAttribute('role', 'option');
             option.setAttribute('aria-selected', 'false');
+            option.appendChild(thumb(result));
             [['lle-suggest__kind', KIND[result.type] || result.type], ['lle-suggest__name', result.name], ['lle-suggest__meta', meta(result)]].forEach(function (part) {
                 var span = document.createElement('span');
                 span.className = part[0];
