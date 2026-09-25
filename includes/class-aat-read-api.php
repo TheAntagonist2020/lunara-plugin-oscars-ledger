@@ -150,7 +150,7 @@ final class AAT_Read_API {
             foreach (self::category_map() as $slug => $category) {
                 $items[] = array(
                     'slug' => $slug,
-                    'name' => $plugin->format_category_display($category['canonical']),
+                    'name' => self::category_name($category['canonical']),
                     'canonical' => $category['canonical'],
                     'class' => $category['class'],
                     'class_label' => self::class_label($category['class']),
@@ -251,7 +251,7 @@ final class AAT_Read_API {
 
             $categories = array();
             foreach ($category_rows as $row) {
-                $categories[] = array('value' => (string) $row['k'], 'label' => $plugin->format_category_display((string) $row['canonical']), 'nominations' => (int) $row['n'], 'wins' => (int) $row['w']);
+                $categories[] = array('value' => (string) $row['k'], 'label' => self::category_name((string) $row['canonical']), 'nominations' => (int) $row['n'], 'wins' => (int) $row['w']);
             }
             usort($categories, function ($a, $b) {
                 return strcasecmp($a['label'], $b['label']);
@@ -331,7 +331,7 @@ final class AAT_Read_API {
                     $n = (int) $row['k'];
                     $item = array('value' => $n, 'label' => $plugin->ordinal($n), 'year_label' => (string) $row['year_label'], 'url' => $plugin->get_ceremony_url($n)) + $item;
                 } elseif ($by === 'category') {
-                    $item = array('value' => (string) $row['k'], 'label' => $plugin->format_category_display((string) $row['canonical']), 'url' => $plugin->get_category_url((string) $row['canonical'])) + $item;
+                    $item = array('value' => (string) $row['k'], 'label' => self::category_name((string) $row['canonical']), 'url' => $plugin->get_category_url((string) $row['canonical'])) + $item;
                 } else {
                     $id = (string) $row['k'];
                     $item = array('value' => $id, 'label' => (string) $row['label'], 'kind' => $by, 'url' => $plugin->build_entity_url_from_id($id)) + $item;
@@ -434,7 +434,7 @@ final class AAT_Read_API {
                 $needle = strtolower($q);
                 $matched = 0;
                 foreach (self::category_map() as $slug => $category) {
-                    $name = $plugin->format_category_display($category['canonical']);
+                    $name = self::category_name($category['canonical']);
                     if (strpos(strtolower($name . ' ' . $category['canonical']), $needle) === false) {
                         continue;
                     }
@@ -487,7 +487,7 @@ final class AAT_Read_API {
             foreach ((array) $category_rows as $category) {
                 $categories[] = array(
                     'slug' => (string) $category['k'],
-                    'name' => $plugin->format_category_display((string) $category['canonical']),
+                    'name' => self::category_name((string) $category['canonical']),
                     'nominations' => (int) $category['n'],
                     'wins' => (int) $category['w'],
                 );
@@ -706,7 +706,7 @@ final class AAT_Read_API {
                 'ceremony_url' => $plugin->get_ceremony_url($n),
                 'category' => array(
                     'slug' => (string) $row['category_slug'],
-                    'name' => $plugin->format_category_display((string) $row['canonical_category'], $n),
+                    'name' => self::category_name((string) $row['canonical_category'], $n),
                     'as_given' => (string) $row['category_as_given'],
                     'class' => (string) $row['award_class'],
                     'class_label' => self::class_label((string) $row['award_class']),
@@ -888,6 +888,34 @@ final class AAT_Read_API {
 
     private static function class_label($class) {
         return self::CLASS_LABELS[$class] ?? $class;
+    }
+
+    /**
+     * A category's reading name: the plugin's era-aware display name, with any
+     * word the dataset writes in capitals set in title case ("FILM EDITING" to
+     * "Film Editing", "SCIENTIFIC OR TECHNICAL AWARD (Class III)" to
+     * "Scientific or Technical Award (Class III)"). Words already in mixed
+     * case, initials and Roman numerals are kept as written.
+     */
+    public static function category_name($canonical, $ceremony = 0) {
+        $name = (string) self::plugin()->format_category_display((string) $canonical, (int) $ceremony);
+        $small = array('a', 'an', 'and', 'as', 'at', 'by', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with');
+        $words = preg_split('/(\s+)/', $name, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $index = 0;
+        foreach ($words as $i => $word) {
+            if (trim($word) === '') {
+                continue;
+            }
+            $bare = trim($word, '()-,.:;');
+            if ($bare !== '' && preg_match('/^[A-Z][A-Z\'&-]+$/', $bare) && !preg_match('/^[IVXLC]+$/', $bare)) {
+                $lower = strtolower($word);
+                $words[$i] = ($index > 0 && in_array(trim($lower, '()-,.:;'), $small, true)) ? $lower : preg_replace_callback('/[a-z]/', function ($m) {
+                    return strtoupper($m[0]);
+                }, $lower, 1);
+            }
+            $index++;
+        }
+        return implode('', $words);
     }
 
     private static function imdb_url($id) {

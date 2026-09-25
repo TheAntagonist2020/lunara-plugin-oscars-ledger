@@ -14,7 +14,11 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.8.0`.
+Current baseline: `2.8.1`.
+
+## Oscar Ledger Explorer (2.8.1)
+
+`/oscars/explore/` (`includes/class-aat-explorer.php`, `templates/explorer-page.php`, `assets/css/ledger-explorer.css`, `assets/js/ledger-explorer.js`) is a server-rendered browser over the read API, called in-process through `rest_do_request()`. The hero search is an ARIA combobox over `/search`. Filters, chips, the pager and Explore links fetch the same URL with `fragment=1` and swap in the re-rendered regions, so PHP is the only renderer. URL state: `ceremony`, `decade`, `class`, `category`, `winner`, `entity`, `by`, `sort`, `pg` and `q`. Only the bare page is indexable.
 
 ## Read API (2.8.0)
 

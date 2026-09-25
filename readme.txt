@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.0
+Stable tag: 2.8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,14 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.1 =
+* New: the Oscar Ledger Explorer at /oscars/explore/. A full-bleed cinematic hero puts the search first: one typeahead across people, films, companies, categories and ceremony years. Under it, a sticky filter bar covers view, decade, ceremony, class, category, order and winners only.
+* The page is server-rendered and works without JavaScript. With JavaScript, every filter, chip, pager and Explore link updates in place with no page reload, and every view keeps a shareable URL that Back and Forward follow. The regions come from the same PHP renderer either way.
+* Results group by ceremony and category and show Won or Nominated. Credits link to the Oscar person, film and company pages, with "credited as" where the Academy's credit differs from the canonical name. Joint credits list everyone they name, unproven identities stay unlinked, and every row opens a full record card.
+* A single person, film or company gets a Debrief panel: nominations, wins, span, categories, profile and IMDb links. Grouped views rank films, people, companies, categories or ceremonies by wins.
+* Only the bare Explorer page is indexable. Filtered and paged states are noindex,follow, and their links carry rel=nofollow.
+* Read API: category names now read in title case ("Film Editing", "Scientific or Technical Award (Class III)").
 
 = 2.8.0 =
 * New public, read-only JSON API at /wp-json/lunara-ledger/v1/, built directly on the live Oscars tables. Routes: status, ceremonies, categories, nominations (filter by ceremony or decade, class, category, winners, and up to four people, films or companies; sorted and paged), facets (disjunctive counts for every filter), groups (by ceremony, category, film, person or company), search (typeahead over people, films, companies, categories and ceremony years) and entities/{id}.
