@@ -14,7 +14,23 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.7.93`.
+Current baseline: `2.8.0`.
+
+## Read API (2.8.0)
+
+Public, read-only JSON at `/wp-json/lunara-ledger/v1/` over the live Oscars tables: the master awards table plus the reporting tables every import rebuilds. There are no keys and no writes. Every answer is keyed on the dataset stamp, which changes on each completed import.
+
+| Route | What it returns |
+| --- | --- |
+| `/status` | plugin version, dataset stamp, nomination, win, ceremony, category and entity counts, source and licence |
+| `/ceremonies`, `/categories` | the lists, with nominations and wins |
+| `/nominations` | records, 25 per page (up to 50), `sort=newest` or `oldest` |
+| `/facets` | disjunctive counts for class, category, decade and ceremony |
+| `/groups?by=ceremony\|category\|film\|person\|company` | grouped counts, paged |
+| `/search?q=` | typeahead: people, films, companies, categories and ceremony years |
+| `/entities/{tt\|nm\|co id}` | one film, person or company: totals, span, categories |
+
+The shared filters are `ceremony`, `decade` (for example `1970`), `class`, `category` (a slug), `winner=1` and `entity` (up to four IMDb IDs, comma-separated; all of them must appear on a record). An invalid value returns 400, naming the parameter.
 
 ## Current Public Surface
 

@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.7.93
+ * Version: 2.8.0
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.7.93');
+define('AAT_VERSION', '2.8.0');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -56,6 +56,11 @@ require_once AAT_PLUGIN_DIR . 'includes/class-aat-ceremony-writeups.php';
 // registers. Admin-only tooling; inert until the models exist.
 require_once AAT_PLUGIN_DIR . 'includes/class-aat-entity-graph-builder.php';
 AAT_Entity_Graph_Builder::init();
+
+// Oscar Ledger read API (lunara-ledger/v1): public, read-only JSON over the
+// live Oscars tables. Its routes register on rest_api_init only.
+require_once AAT_PLUGIN_DIR . 'includes/class-aat-read-api.php';
+AAT_Read_API::init();
 
 /**
  * Main Plugin Class
@@ -4858,7 +4863,7 @@ class Academy_Awards_Table {
         }
 
         if ($updated > 0) {
-            delete_transient('aat_entity_label_' . md5('title:'));
+            delete_transient($this->get_entity_label_cache_key('title', ''));
             delete_transient('aat_hub_page_stats_v1');
             delete_transient('aat_hub_ceremony_grid_v2');
             delete_transient('aat_hub_category_grid_v2');
@@ -5934,13 +5939,50 @@ class Academy_Awards_Table {
     }
 
     /**
+     * A short stamp for the dataset that is live now (12 hex characters), or ''.
+     *
+     * It changes on every completed bundled import, so caches keyed on it never
+     * serve answers built from a replaced dataset. Keyed on it: the read API,
+     * the entity-label caches and the theme's lunara_oscars_dataset_cache_key().
+     * Until an import sets it, it is derived once from the last completed
+     * import's signature.
+     */
+    public function get_dataset_stamp() {
+        $stamp = get_option('aat_dataset_stamp', '');
+        if (is_string($stamp) && preg_match('/^[a-f0-9]{12}$/', $stamp)) {
+            return $stamp;
+        }
+
+        $state = get_option('aat_bundled_import_state', array());
+        if (!is_array($state) || ($state['status'] ?? '') !== 'completed' || empty($state['final_signature'])) {
+            return '';
+        }
+
+        $stamp = $this->build_dataset_stamp((string) $state['final_signature'], (string) ($state['completed_at'] ?? ''));
+        update_option('aat_dataset_stamp', $stamp, true);
+        return $stamp;
+    }
+
+    private function build_dataset_stamp($signature, $completed_at) {
+        return substr(hash('sha256', (string) $signature . '|' . (string) $completed_at), 0, 12);
+    }
+
+    /**
+     * Transient key for an entity's display name, versioned on the dataset stamp.
+     */
+    private function get_entity_label_cache_key($entity, $id) {
+        $stamp = $this->get_dataset_stamp();
+        return 'aat_entity_label_' . md5(($stamp !== '' ? $stamp . '|' : '') . $entity . ':' . $id);
+    }
+
+    /**
      * Determine a display name for an entity using the dataset.
      */
     public function get_entity_display_name($entity, $id) {
         $entity = sanitize_text_field($entity);
         $id = strtolower(trim((string) sanitize_text_field($id)));
 
-        $cache_key = 'aat_entity_label_' . md5($entity . ':' . $id);
+        $cache_key = $this->get_entity_label_cache_key($entity, $id);
         $cached = get_transient($cache_key);
         if ($cached !== false) {
             return (string) $cached;
@@ -7951,7 +7993,8 @@ class Academy_Awards_Table {
             return $empty;
         }
 
-        $cache_key = 'aat_name_entity_link_by_label_' . md5($label);
+        $stamp = $this->get_dataset_stamp();
+        $cache_key = 'aat_name_entity_link_by_label_' . md5(($stamp !== '' ? $stamp . '|' : '') . $label);
         $cached = get_transient($cache_key);
         if (is_array($cached)) {
             return $cached;
@@ -8771,7 +8814,7 @@ class Academy_Awards_Table {
         foreach ((array) $entity_ids as $entity_id) {
             $entity_id = strtolower(trim((string) $entity_id));
             if ($entity_id !== '') {
-                delete_transient('aat_entity_label_' . md5('title:' . $entity_id));
+                delete_transient($this->get_entity_label_cache_key('title', $entity_id));
                 delete_transient('aat_title_context_v1_' . $entity_id);
             }
         }
@@ -17357,6 +17400,13 @@ public function ajax_import_bundled_data() {
             $import_state['reporting_rebuild'] = $reporting_rebuild;
             $import_state['completed_at'] = current_time('mysql');
             update_option($state_option, $import_state, false);
+
+            // A new dataset is live: a new stamp retires every cache keyed on
+            // the old one (the read API's, the entity labels', the theme's).
+            $dataset_stamp = $this->build_dataset_stamp($stage_signature, $import_state['completed_at']);
+            update_option('aat_dataset_stamp', $dataset_stamp, true);
+            /** Fires after a new dataset goes live; the theme refreshes its Oscars caches. */
+            do_action('aat_ledger_swapped', $dataset_stamp, true, 'forward');
 
             $message = sprintf(
                 __('Bundled import complete: %1$d canonical rows and %2$d winners are now live. The credit-aware source signature matched, no post-import credit mutation was applied, and the previous table remains available as %3$s. (%4$d rows processed; %5$d insert errors.)', 'academy-awards-table'),

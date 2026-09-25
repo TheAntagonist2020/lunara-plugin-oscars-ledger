@@ -51,8 +51,8 @@ $adopt_method = $method_slice($plugin, 'private function adopt_existing_person_p
 $existing_lookup_method = $method_slice($plugin, 'private function find_existing_person_portrait_attachment', 'public function get_poster_attachment_id_for_title');
 
 foreach (array(
-    'Version: 2.7.93',
-    "define('AAT_VERSION', '2.7.93')",
+    'Version: 2.8.0',
+    "define('AAT_VERSION', '2.8.0')",
     'get_existing_person_portrait_adoption_rows',
     'adopt_existing_person_portrait_attachment',
     'existing-media-adoption',

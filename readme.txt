@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.7.93
+Stable tag: 2.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,12 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.0 =
+* New public, read-only JSON API at /wp-json/lunara-ledger/v1/, built directly on the live Oscars tables. Routes: status, ceremonies, categories, nominations (filter by ceremony or decade, class, category, winners, and up to four people, films or companies; sorted and paged), facets (disjunctive counts for every filter), groups (by ceremony, category, film, person or company), search (typeahead over people, films, companies, categories and ceremony years) and entities/{id}.
+* Credits and films pair with their IMDb IDs slot by slot. A row whose name and ID slots disagree links nothing rather than guess, and a joint credit such as "Roderick Jaynes" lists everyone it names.
+* A dataset stamp changes on every completed import. The API's answers, the entity-label caches and the theme's Oscars caches are keyed on it, so a new dataset never serves old names. Each import also fires aat_ledger_swapped so the theme can refresh.
+* Every parameter is allowlisted and every value is prepared. Bounded answers are cached in transients and open-ended ones in the object cache only.
 
 = 2.7.93 =
 * Ships the audited Oscars dataset in data/oscars.csv: 12,138 nominations and 3,516 winners, matching the Academy's own count. It carries 373 corrected cells and one added award (the 97th ceremony's captioning Academy Award of Merit); every change is logged with its evidence in docs/database/corrections.json.

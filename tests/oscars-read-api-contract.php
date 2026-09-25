@@ -42,10 +42,10 @@ $method_slice = function ($haystack, $start, $end) {
 };
 
 foreach (array(
-    'Version: 2.7.93',
-    "define('AAT_VERSION', '2.7.93')",
-    'Stable tag: 2.7.93',
-    'Current baseline: `2.7.93`',
+    'Version: 2.8.0',
+    "define('AAT_VERSION', '2.8.0')",
+    'Stable tag: 2.8.0',
+    'Current baseline: `2.8.0`',
 ) as $needle) {
     $assert(stripos($plugin . $docs, $needle) !== false, "Version marker should exist: {$needle}");
 }
