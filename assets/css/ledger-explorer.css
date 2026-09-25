@@ -140,6 +140,7 @@
 
 .lle-combobox {
     position: relative;
+    z-index: 5;
     display: flex;
     align-items: center;
     min-height: 58px;
@@ -182,6 +183,31 @@
     outline: none;
 }
 
+/* The theme styles every input and button; the search keeps its own. */
+.lle .lle-combobox .lle-search__input,
+.lle .lle-combobox .lle-search__input:focus {
+    height: 56px !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    color: var(--lle-text) !important;
+    font-family: var(--lle-body) !important;
+    font-size: 1.05rem !important;
+}
+
+.lle .lle-search__go,
+.lle .lle-apply {
+    font-family: var(--lle-label) !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    line-height: 1 !important;
+}
+
 .lle-search__input::-webkit-search-cancel-button {
     filter: grayscale(1) brightness(1.6);
 }
@@ -219,7 +245,7 @@
     list-style: none;
     border: 1px solid var(--lle-line);
     border-radius: 18px;
-    background: rgba(8, 17, 27, 0.98);
+    background: #08111b !important;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
 
@@ -270,22 +296,31 @@
 }
 
 .lle-stats {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
     justify-content: center;
-    gap: 6px 22px;
-    margin: 22px 0 0;
-    font-family: var(--lle-label);
-    font-size: 1.05rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--lle-text);
+    gap: 0 clamp(20px, 7vw, 56px);
+    margin: 24px 0 0;
 }
 
-.lle-stats span + span::before {
-    content: "·";
-    margin-right: 22px;
-    color: var(--lle-gold);
+.lle-stats span {
+    display: grid;
+    gap: 2px;
+    font-family: var(--lle-label) !important;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--lle-muted);
+}
+
+.lle-stats strong {
+    font-family: var(--lle-display) !important;
+    font-size: clamp(1.55rem, 1.1rem + 1.8vw, 2.25rem);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--lle-gold-light);
 }
 
 .lle-try {
@@ -888,8 +923,13 @@
     }
 
     .lle-select {
-        max-width: 280px;
+        max-width: 200px;
     }
+}
+
+/* Start the hero right under the site header. */
+body.aat-shell-explorer .site-main {
+    padding-top: 0 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

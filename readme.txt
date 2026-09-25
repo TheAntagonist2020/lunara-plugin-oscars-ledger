@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.1
+Stable tag: 2.8.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,14 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.2 =
+* Explorer polish from the live phone and desktop screenshots:
+  * the search pill no longer shows the theme's input box inside it, and its button keeps the label face;
+  * the suggestion list is opaque and sits above the hero;
+  * the hero starts right under the site header;
+  * the hero stats read as three figures, number over label, instead of wrapping mid-list on phones;
+  * the desktop filter row fits one line.
 
 = 2.8.1 =
 * New: the Oscar Ledger Explorer at /oscars/explore/. A full-bleed cinematic hero puts the search first: one typeahead across people, films, companies, categories and ceremony years. Under it, a sticky filter bar covers view, decade, ceremony, class, category, order and winners only.

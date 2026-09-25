@@ -365,7 +365,7 @@ final class AAT_Explorer {
                 </div>
             </form>
             <?php if (!empty($dataset['nominations'])) : ?>
-            <p class="lle-stats"><span><?php echo esc_html(number_format_i18n((int) $dataset['nominations'])); ?> nominations</span><span><?php echo esc_html(number_format_i18n((int) $dataset['wins'])); ?> wins</span><span><?php echo esc_html(number_format_i18n((int) $dataset['ceremonies'])); ?> ceremonies</span></p>
+            <p class="lle-stats"><span><strong><?php echo esc_html(number_format_i18n((int) $dataset['nominations'])); ?></strong> nominations</span><span><strong><?php echo esc_html(number_format_i18n((int) $dataset['wins'])); ?></strong> wins</span><span><strong><?php echo esc_html(number_format_i18n((int) $dataset['ceremonies'])); ?></strong> ceremonies</span></p>
             <?php endif; ?>
             <p class="lle-try">Try
                 <a rel="nofollow" data-lle-nav href="<?php echo esc_url(self::url(self::blank(), array('category' => 'best-picture', 'winner' => true))); ?>">Every Best Picture</a>

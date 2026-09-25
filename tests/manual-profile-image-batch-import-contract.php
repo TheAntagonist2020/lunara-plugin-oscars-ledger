@@ -52,8 +52,8 @@ $import_method = $method_slice($plugin, 'private function import_manual_person_p
 $existing_method = $method_slice($plugin, 'private function find_existing_person_portrait_attachment', 'public function get_poster_attachment_id_for_title');
 
 foreach (array(
-    'Version: 2.8.1',
-    "define('AAT_VERSION', '2.8.1')",
+    'Version: 2.8.2',
+    "define('AAT_VERSION', '2.8.2')",
     "WP_CLI::add_command('aat profile-images'",
     'handle_profile_image_batch_cli',
     'manual-batch-upload',
