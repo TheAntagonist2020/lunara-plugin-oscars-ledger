@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.8.6
+ * Version: 2.8.7
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.8.6');
+define('AAT_VERSION', '2.8.7');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -71,6 +71,12 @@ AAT_Explorer::init();
  * Main Plugin Class
  */
 class Academy_Awards_Table {
+
+    /**
+     * The rules the rebuild uses to derive display names. A change here means
+     * existing tables get one in-place repair (relabel_shouted_entities()).
+     */
+    const LABEL_RULES = 'l2';
 
     private static $instance = null;
 
@@ -609,6 +615,7 @@ class Academy_Awards_Table {
     private function __construct() {
         add_action('init', array($this, 'init'));
         add_action('plugins_loaded', array($this, 'maybe_upgrade_schema'));
+        add_action('aat_relabel_entities', array($this, 'relabel_shouted_entities'));
         // Entity pages (Film / Person / Company)
         add_filter('query_vars', array($this, 'register_query_vars'));
         add_action('init', array($this, 'register_rewrite_rules'), 9);
@@ -796,6 +803,12 @@ class Academy_Awards_Table {
             $this->maybe_create_ceremony_writeups_table();
             $this->maybe_create_reporting_tables();
             update_option('aat_schema_checked_version', AAT_VERSION, true);
+        }
+
+        // Tables built under older display-name rules get one background,
+        // in-place repair; nothing is truncated (see relabel_shouted_entities()).
+        if ($this->get_label_rules_state() !== self::LABEL_RULES && !wp_next_scheduled('aat_relabel_entities') && !get_transient('aat_relabel_lock')) {
+            wp_schedule_single_event(time() + 5, 'aat_relabel_entities');
         }
 
         $installed = get_option('aat_db_version', '0');
@@ -1111,6 +1124,82 @@ class Academy_Awards_Table {
         }
         $cased = implode('', $parts);
         return $cased !== '' ? $cased : $label;
+    }
+
+    /**
+     * The display-name rules the live tables were built with ('' before 2.8.6).
+     */
+    public function get_label_rules_state() {
+        return (string) get_option('aat_label_rules_version', '');
+    }
+
+    /**
+     * One background, in-place repair of display names printed in capitals,
+     * for tables built before the current rules. Each shouted person or
+     * company is re-derived from its own credits exactly as the rebuild
+     * does: the first properly cased, unshared credit wins, else a person is
+     * title-cased. Only changed rows are updated and no table is emptied, so
+     * no page ever reads a half-built ledger.
+     */
+    public function relabel_shouted_entities() {
+        global $wpdb;
+        if ($this->get_label_rules_state() === self::LABEL_RULES || get_transient('aat_relabel_lock')) {
+            return;
+        }
+        set_transient('aat_relabel_lock', 1, 10 * MINUTE_IN_SECONDS);
+
+        $entities_table = $this->get_entities_table_name();
+        $stats_table = $this->get_entity_stats_table_name();
+        $source_table = $this->get_table_name();
+        $rows = $wpdb->get_results("SELECT entity_id, entity_type, label FROM $entities_table WHERE entity_type IN ('name', 'company')", ARRAY_A);
+        if (!is_array($rows)) {
+            delete_transient('aat_relabel_lock');
+            return;
+        }
+
+        $renamed = array();
+        foreach ($rows as $row) {
+            $current = (string) $row['label'];
+            if (!$this->is_shouted_label($current)) {
+                continue;
+            }
+            $entity_id = (string) $row['entity_id'];
+            $credits = $wpdb->get_results($wpdb->prepare(
+                "SELECT nominees, nominee_ids, name FROM $source_table WHERE nominee_ids LIKE %s ORDER BY id ASC",
+                '%' . $wpdb->esc_like($entity_id) . '%'
+            ), ARRAY_A);
+            $label = $current;
+            foreach ((array) $credits as $credit) {
+                $pairs = $this->pair_nominee_ids_with_labels($credit['nominees'] ?? '', $credit['nominee_ids'] ?? '', $credit['name'] ?? '');
+                foreach ($pairs as $pair) {
+                    if ($pair['id'] !== $entity_id || !empty($pair['shared'])) {
+                        continue;
+                    }
+                    $candidate = trim((string) $pair['label']);
+                    if ($candidate === '' && count($pairs) === 1) {
+                        $candidate = trim((string) ($credit['name'] ?? ''));
+                    }
+                    if ($this->prefer_entity_label($label, $candidate)) {
+                        $label = $candidate;
+                        break 2;
+                    }
+                }
+            }
+            if ($row['entity_type'] === 'name' && $this->is_shouted_label($label)) {
+                $label = $this->title_case_shouted_label($label);
+            }
+            if ($label === $current || $label === '') {
+                continue;
+            }
+            $wpdb->update($entities_table, array('label' => $label, 'sort_label' => $this->normalize_entity_name_key($label)), array('entity_id' => $entity_id));
+            $wpdb->update($stats_table, array('label' => $label), array('entity_id' => $entity_id));
+            $renamed[$entity_id] = array($current, $label);
+        }
+
+        update_option('aat_label_rules_repair', array('renamed' => count($renamed), 'names' => $renamed, 'at' => current_time('mysql')), false);
+        update_option('aat_label_rules_version', self::LABEL_RULES, true);
+        delete_transient('aat_relabel_lock');
+        do_action('aat_reporting_tables_rebuilt');
     }
 
     private function title_case_name_word($word) {
@@ -1750,6 +1839,9 @@ class Academy_Awards_Table {
         } else {
             delete_option('aat_reporting_insert_failures');
         }
+
+        // A full rebuild applies the current display-name rules itself.
+        update_option('aat_label_rules_version', self::LABEL_RULES, true);
 
         // Listeners keep derived layers in step, such as the entity graph's
         // post titles after a display name changes.
@@ -6071,8 +6163,9 @@ class Academy_Awards_Table {
      */
     private function get_entity_label_cache_key($entity, $id) {
         $stamp = $this->get_dataset_stamp();
-        // 'l2': display names prefer a properly cased credit (2.8.6).
-        return 'aat_entity_label_' . md5(($stamp !== '' ? $stamp . '|' : '') . 'l2|' . $entity . ':' . $id);
+        // Keyed on the display-name rules the tables were built with, so a
+        // repair shows at once instead of waiting out the cache.
+        return 'aat_entity_label_' . md5(($stamp !== '' ? $stamp . '|' : '') . $this->get_label_rules_state() . '|' . $entity . ':' . $id);
     }
 
     /**

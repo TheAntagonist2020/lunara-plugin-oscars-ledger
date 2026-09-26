@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.6
+Stable tag: 2.8.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,13 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.7 =
+* The 2.8.6 name fix now reaches the live tables. Version bumps do not rebuild existing installs, because the stored database version is already ahead of the plugin's. So tables built under the old rules get one background, in-place repair:
+  * each name printed in capitals is re-derived from its own credits, using the rebuild's rules;
+  * only the changed rows are updated, and no table is emptied;
+  * the outcome is recorded in the `aat_label_rules_repair` option.
+* The API and display-name cache keys follow the name rules the tables were built with, so answers cached before the repair do not outlive it.
 
 = 2.8.6 =
 * Names printed in capitals are fixed across the site: the Explorer, profile pages, page titles and the /talent/ pages. The Academy prints Scientific and Technical citations in capitals, and the rebuild kept each person's first credit, so 118 people read "FARCIOT EDOUART", "WINTON HOCH", "UB IWERKS" and the like. Now:

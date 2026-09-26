@@ -900,7 +900,11 @@ final class AAT_Read_API {
      * edge cache in front of /wp-json/ does the rest.
      */
     private static function cached($parts, $persistent, $build) {
-        $key = 'aat_api_' . md5(wp_json_encode(array(AAT_VERSION, self::stamp(), $parts)));
+        // The display-name rules the tables were built with are part of the
+        // key, so answers cached before a name repair never outlive it.
+        $plugin = self::plugin();
+        $labels = method_exists($plugin, 'get_label_rules_state') ? $plugin->get_label_rules_state() : '';
+        $key = 'aat_api_' . md5(wp_json_encode(array(AAT_VERSION, self::stamp(), $labels, $parts)));
         $hit = $persistent ? get_transient($key) : wp_cache_get($key, self::CACHE_GROUP);
         if ($hit !== false) {
             return $hit;

@@ -88,9 +88,19 @@ foreach ($cases as $shouted => $expected) {
 
 // The rebuild uses the rules for both the entity and its stats, title-cases
 // people only, and the display-name cache key moved with the rules.
-$check(substr_count($source, 'prefer_entity_label(') === 3, 'The rebuild applies the preference to entities and their stats.');
+$check(strpos($source, "\$label !== '' && \$this->prefer_entity_label(\$entities[\$entity_id]['label'], \$label)") !== false && strpos($source, "\$this->prefer_entity_label(\$entity_stats[\$entity_id]['label'], trim((string) \$label))") !== false, 'The rebuild applies the preference to entities and their stats.');
 $check(strpos($source, "\$entity_row['entity_type'] === 'name' && \$this->is_shouted_label(") !== false, 'Only people are title-cased.');
-$check(strpos($source, "'l2|' . \$entity . ':' . \$id") !== false, 'The display-name cache key is versioned on the label rules.');
+$check(strpos($source, "\$this->get_label_rules_state() . '|' . \$entity . ':' . \$id") !== false, 'The display-name cache key follows the applied label rules.');
+$check(strpos(file_get_contents($root . '/includes/class-aat-read-api.php'), "array(AAT_VERSION, self::stamp(), \$labels, \$parts)") !== false, 'The API cache key follows the applied label rules.');
+
+// Tables built under older rules get one background, in-place repair that
+// never truncates: it updates only shouted names, then records the rules.
+$repair_start = strpos($source, 'public function relabel_shouted_entities()');
+$repair = $repair_start === false ? '' : substr($source, $repair_start, strpos($source, "\n    }\n", $repair_start) - $repair_start);
+$check($repair !== '' && !preg_match('/\\b(TRUNCATE|DELETE\\s+FROM|DROP)\\b/i', $repair), 'The repair never empties a table.');
+$check(strpos($repair, 'if (!$this->is_shouted_label($current)) {') !== false && strpos($repair, "!empty(\$pair['shared'])") !== false, 'The repair touches only shouted names and skips shared joint credits.');
+$check(strpos($repair, "update_option('aat_label_rules_version', self::LABEL_RULES, true);") !== false && strpos($repair, "get_transient('aat_relabel_lock')") !== false, 'The repair runs once, under a lock.');
+$check(strpos($source, "wp_schedule_single_event(time() + 5, 'aat_relabel_entities');") !== false && strpos($source, "add_action('aat_relabel_entities', array(\$this, 'relabel_shouted_entities'));") !== false, 'The repair is scheduled in the background.');
 
 // The entity graph's movie and person posts (the /talent/ pages) follow a
 // renamed entity: a rebuild signals, and a background pass renames only
