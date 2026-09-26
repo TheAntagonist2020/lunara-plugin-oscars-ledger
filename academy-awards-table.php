@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.8.5
+ * Version: 2.8.6
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.8.5');
+define('AAT_VERSION', '2.8.6');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -1050,6 +1050,82 @@ class Academy_Awards_Table {
     }
 
     /**
+     * Whether $candidate should replace $current as an entity's display name:
+     * when there is none yet, or when $current is shouted (all capitals, as
+     * the Academy prints Sci-Tech citations) and $candidate is not. The first
+     * credit otherwise stands.
+     */
+    private function prefer_entity_label($current, $candidate) {
+        $current = trim((string) $current);
+        $candidate = trim((string) $candidate);
+        if ($candidate === '') {
+            return false;
+        }
+        if ($current === '') {
+            return true;
+        }
+        return $this->is_shouted_label($current) && !$this->is_shouted_label($candidate);
+    }
+
+    /**
+     * A multi-word label set in capitals: "FARCIOT EDOUART", "F. R. ABBOTT",
+     * and citation hybrids such as "CARLOS DeMATTOS" (four capitals to every
+     * lowercase letter or more). A single word keeps its styling (SZA, EJAE).
+     */
+    private function is_shouted_label($label) {
+        $label = trim((string) $label);
+        if ($label === '' || !preg_match('/\s/u', $label)) {
+            return false;
+        }
+        $upper = preg_match_all('/\p{Lu}/u', $label);
+        $lower = preg_match_all('/\p{Ll}/u', $label);
+        return $upper >= 2 && $upper >= 4 * $lower;
+    }
+
+    /**
+     * Title-case a shouted name, word by word: "WAN-CHUN MA" gives
+     * "Wan-Chun Ma", "JOHN MCGREGOR III" gives "John McGregor III". Where the
+     * Academy set a prefix in proper case ("DiFRANCESCO", "MacKENZIE",
+     * "LeBLANC") that prefix is the real spelling, so it is kept:
+     * "DiFrancesco", "MacKenzie", "LeBlanc".
+     */
+    private function title_case_shouted_label($label) {
+        $label = trim((string) $label);
+        $parts = preg_split('/(\s+)/u', $label, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        if (!is_array($parts)) {
+            return $label;
+        }
+        $word_index = 0;
+        foreach ($parts as $i => $part) {
+            if (preg_match('/^\s+$/u', $part)) {
+                continue;
+            }
+            if ($word_index > 0 && preg_match('/^(II|III|IV|VI|VII|VIII)[.,]?$/u', $part)) {
+                // A generational numeral stays in capitals.
+            } elseif (preg_match('/^(\p{Lu}\p{Ll}+)(\p{Lu}{2,}.*)$/u', $part, $m)) {
+                $parts[$i] = $m[1] . $this->title_case_name_word($m[2]);
+            } else {
+                $parts[$i] = $this->title_case_name_word($part);
+            }
+            $word_index++;
+        }
+        $cased = implode('', $parts);
+        return $cased !== '' ? $cased : $label;
+    }
+
+    private function title_case_name_word($word) {
+        if (function_exists('mb_convert_case')) {
+            $word = mb_convert_case(mb_strtolower($word, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+        } else {
+            $word = ucwords(strtolower($word), "-");
+        }
+        $cased = preg_replace_callback('/\b(Mc|O\')(\p{Ll})/u', function ($m) {
+            return $m[1] . (function_exists('mb_strtoupper') ? mb_strtoupper($m[2], 'UTF-8') : strtoupper($m[2]));
+        }, $word);
+        return is_string($cased) ? $cased : $word;
+    }
+
+    /**
      * Split a NomineeIds value into its slots, one per Nominees credit.
      *
      * Slots stay positional: "?|nm0380965" is two slots, the first unlinked, and
@@ -1231,7 +1307,7 @@ class Academy_Awards_Table {
                 return;
             }
 
-            if ($entities[$entity_id]['label'] === '' && $label !== '') {
+            if ($label !== '' && $this->prefer_entity_label($entities[$entity_id]['label'], $label)) {
                 $entities[$entity_id]['label'] = $label;
                 $entities[$entity_id]['sort_label'] = $this->normalize_entity_name_key($label);
             }
@@ -1256,7 +1332,7 @@ class Academy_Awards_Table {
                 );
             }
 
-            if ($entity_stats[$entity_id]['label'] === '' && trim((string) $label) !== '') {
+            if (trim((string) $label) !== '' && $this->prefer_entity_label($entity_stats[$entity_id]['label'], trim((string) $label))) {
                 $entity_stats[$entity_id]['label'] = trim((string) $label);
             }
 
@@ -1501,6 +1577,20 @@ class Academy_Awards_Table {
             }
         }
 
+        // A person the Academy only ever credited in capitals (Sci-Tech
+        // citations: "WINTON HOCH") is title-cased; companies keep their
+        // styling, since title-casing breaks acronyms.
+        foreach ($entities as $entity_id => $entity_row) {
+            if ($entity_row['entity_type'] === 'name' && $this->is_shouted_label($entity_row['label'])) {
+                $cased = $this->title_case_shouted_label($entity_row['label']);
+                $entities[$entity_id]['label'] = $cased;
+                $entities[$entity_id]['sort_label'] = $this->normalize_entity_name_key($cased);
+                if (isset($entity_stats[$entity_id])) {
+                    $entity_stats[$entity_id]['label'] = $cased;
+                }
+            }
+        }
+
         // An entity credited only jointly keeps the joint credit as its label.
         foreach ($joint_credit_labels as $entity_id => $joint_label) {
             if (isset($entities[$entity_id]) && $entities[$entity_id]['label'] === '') {
@@ -1660,6 +1750,10 @@ class Academy_Awards_Table {
         } else {
             delete_option('aat_reporting_insert_failures');
         }
+
+        // Listeners keep derived layers in step, such as the entity graph's
+        // post titles after a display name changes.
+        do_action('aat_reporting_tables_rebuilt');
 
         return array(
             'ceremonies' => count($ceremonies),
@@ -5977,7 +6071,8 @@ class Academy_Awards_Table {
      */
     private function get_entity_label_cache_key($entity, $id) {
         $stamp = $this->get_dataset_stamp();
-        return 'aat_entity_label_' . md5(($stamp !== '' ? $stamp . '|' : '') . $entity . ':' . $id);
+        // 'l2': display names prefer a properly cased credit (2.8.6).
+        return 'aat_entity_label_' . md5(($stamp !== '' ? $stamp . '|' : '') . 'l2|' . $entity . ':' . $id);
     }
 
     /**

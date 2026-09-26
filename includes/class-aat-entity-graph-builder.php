@@ -34,6 +34,8 @@ final class AAT_Entity_Graph_Builder {
     const LOCK_KEY     = 'aat_entity_graph_lock';
     const CRON_HOOK    = 'aat_entity_graph_cron';
     const HEARTBEAT_HOOK = 'aat_entity_graph_heartbeat';
+    const TITLE_SYNC_HOOK = 'aat_entity_graph_title_sync';
+    const BATCH_TITLES = 200;
 
     const BATCH_ENTITIES = 200;
     const BATCH_LEDGER   = 150;
@@ -58,6 +60,11 @@ final class AAT_Entity_Graph_Builder {
         // edits (phpMyAdmin) by comparing win counts across layers.
         add_action('aat_after_data_import', array(__CLASS__, 'auto_resync'), 20);
         add_action(self::HEARTBEAT_HOOK, array(__CLASS__, 'heartbeat'));
+        // A rebuild can rename entities (a display-name fix), which the win
+        // count heartbeat cannot see; a short background pass renames just
+        // the posts whose title no longer matches.
+        add_action('aat_reporting_tables_rebuilt', array(__CLASS__, 'schedule_title_sync'));
+        add_action(self::TITLE_SYNC_HOOK, array(__CLASS__, 'sync_titles'));
         if (!wp_next_scheduled(self::HEARTBEAT_HOOK)) {
             wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', self::HEARTBEAT_HOOK);
         }
@@ -74,6 +81,52 @@ final class AAT_Entity_Graph_Builder {
 
     private static function models_ready() {
         return post_type_exists('movie') && post_type_exists('person') && post_type_exists('ledger_entry');
+    }
+
+    public static function schedule_title_sync() {
+        if (!wp_next_scheduled(self::TITLE_SYNC_HOOK)) {
+            wp_schedule_single_event(time() + 60, self::TITLE_SYNC_HOOK);
+        }
+    }
+
+    /**
+     * Rename movie and person posts whose title differs from their entity's
+     * display name. Only differing posts are touched, and the slug is kept,
+     * so every URL stays put. Titles compare byte for byte (the table
+     * collation ignores case) and after entity decoding, so a stored
+     * "&amp;" never counts as a change.
+     */
+    public static function sync_titles() {
+        global $wpdb;
+        if (!self::models_ready()) {
+            return;
+        }
+        $entities = self::table('entities');
+        // Every byte-different row is read (a few thousand at most), so rows
+        // that differ only by entity encoding can never crowd out real renames.
+        $rows = $wpdb->get_results(
+            "SELECT p.ID, p.post_title, e.label FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_lunara_entity_id'
+             INNER JOIN $entities e ON e.entity_id = pm.meta_value
+             WHERE p.post_type IN ('movie','person') AND p.post_status <> 'trash'
+               AND e.label <> '' AND BINARY p.post_title <> BINARY e.label
+             ORDER BY p.ID ASC",
+            ARRAY_A
+        );
+        $renamed = 0;
+        foreach ((array) $rows as $row) {
+            $label = trim(wp_strip_all_tags((string) $row['label']));
+            if ($label === '' || html_entity_decode((string) $row['post_title'], ENT_QUOTES, 'UTF-8') === $label) {
+                continue;
+            }
+            if ($renamed >= self::BATCH_TITLES) {
+                // More to rename: finish in the next run.
+                wp_schedule_single_event(time() + 30, self::TITLE_SYNC_HOOK);
+                break;
+            }
+            wp_update_post(array('ID' => (int) $row['ID'], 'post_title' => $label));
+            $renamed++;
+        }
     }
 
     private static function post_status() {

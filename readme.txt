@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.5
+Stable tag: 2.8.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,15 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.6 =
+* Names printed in capitals are fixed across the site: the Explorer, profile pages, page titles and the /talent/ pages. The Academy prints Scientific and Technical citations in capitals, and the rebuild kept each person's first credit, so 118 people read "FARCIOT EDOUART", "WINTON HOCH", "UB IWERKS" and the like. Now:
+  * a properly cased credit of the same person wins (Farciot Edouart, Winton Hoch, Ub Iwerks);
+  * a person the Academy only ever credited in capitals is title-cased from the Academy's own spelling ("JOHN R. MOORE" gives John R. Moore). It is never swapped for another source's name;
+  * a prefix the Academy set in proper case is kept (DiFrancesco, MacKenzie, DeRose, LeBlanc, McGregor);
+  * single-word styling stays (SZA, EJAE, JR, PES, DIXSON), and companies keep theirs.
+* The upgrade rebuild applies it on the first request after deploy. Display names use a versioned cache key, so they show at once.
+* After any rebuild, a short background pass renames the movie and person posts whose title no longer matches, keeping every slug.
 
 = 2.8.5 =
 * Explorer search suggestions on phones:
