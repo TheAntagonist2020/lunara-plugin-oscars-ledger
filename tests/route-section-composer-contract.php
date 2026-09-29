@@ -103,6 +103,7 @@ $expected_entity_sections = array(
     'hero',
     'latest-result',
     'stats-bar',
+    'ledger-motion',
     'crossroads',
     'review-module',
     'oscar-history',

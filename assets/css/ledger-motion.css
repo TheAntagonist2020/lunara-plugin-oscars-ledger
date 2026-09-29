@@ -1,0 +1,320 @@
+/* ============================================================
+   Ledger Motion (2.8.8): the Nomination Ring and the Career Arc.
+   The default state is the finished picture. .is-armed (set by
+   ledger-motion.js, never under reduced motion) hides it; .is-playing
+   plays it back: spokes draw, nodes land, wins ignite one by one.
+   ============================================================ */
+.aat-ledger-motion {
+	--motion-gold: var(--aat-gold, #c9a961);
+	--motion-gold-light: #e0c481;
+	--motion-ink: var(--aat-light-gray, #e6eef7);
+	--motion-muted: rgba(230, 238, 247, 0.62);
+	position: relative;
+}
+
+.aat-motion-stage {
+	position: relative;
+	margin: clamp(10px, 2vw, 18px) 0 0;
+}
+
+.aat-motion-svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	overflow: visible;
+}
+
+/* The arc scrolls sideways inside its own frame on narrow screens, never the page. */
+.aat-ledger-motion--arc .aat-motion-stage {
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	-webkit-overflow-scrolling: touch;
+}
+
+.aat-ledger-motion--arc .aat-motion-svg {
+	min-width: 680px;
+}
+
+.aat-ledger-motion--arc .aat-motion-stage.has-more {
+	-webkit-mask-image: linear-gradient(to right, #000 82%, transparent);
+	mask-image: linear-gradient(to right, #000 82%, transparent);
+}
+
+/* ---------- Finished state ---------- */
+.aat-motion-aura { opacity: 0.9; }
+
+.aat-motion-orbit {
+	fill: none;
+	stroke: rgba(201, 169, 97, 0.12);
+	stroke-width: 1;
+	stroke-dasharray: 0.004 0.012;
+}
+
+.aat-motion-ring,
+.aat-motion-axis {
+	fill: none;
+	stroke: rgba(201, 169, 97, 0.55);
+	stroke-width: 1.5;
+	stroke-dasharray: 1;
+	stroke-dashoffset: 0;
+}
+
+.aat-motion-line,
+.aat-motion-stem {
+	stroke: rgba(201, 169, 97, 0.34);
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-dasharray: 1;
+	stroke-dashoffset: 0;
+}
+
+.aat-motion-spoke.is-win .aat-motion-line {
+	stroke: rgba(224, 196, 129, 0.85);
+	stroke-width: 2;
+}
+
+.aat-motion-node {
+	fill: #0b1826;
+	stroke: rgba(201, 169, 97, 0.6);
+	stroke-width: 1.5;
+	transform-box: fill-box;
+	transform-origin: center;
+}
+
+.aat-motion-spoke.is-win .aat-motion-node {
+	fill: var(--motion-gold-light);
+	stroke: #fff4d6;
+	filter: drop-shadow(0 0 6px rgba(224, 196, 129, 0.75));
+}
+
+.aat-motion-pulse {
+	fill: none;
+	stroke: var(--motion-gold-light);
+	stroke-width: 1.5;
+	opacity: 0;
+	transform-box: fill-box;
+	transform-origin: center;
+}
+
+.aat-motion-label {
+	fill: var(--motion-muted);
+	font-family: var(--lunara-font-body, Georgia, serif);
+	font-size: 14px;
+}
+
+.aat-motion-spoke.is-win .aat-motion-label {
+	fill: var(--motion-gold-light);
+}
+
+.aat-motion-win-title {
+	fill: var(--motion-gold-light);
+	font-family: var(--lunara-font-body, Georgia, serif);
+	font-size: 13px;
+	font-style: italic;
+}
+
+.aat-motion-core-bg { fill: #0b1826; }
+
+.aat-motion-core-rim {
+	fill: none;
+	stroke: var(--motion-gold);
+	stroke-width: 2;
+	filter: drop-shadow(0 0 10px rgba(224, 196, 129, 0.45));
+}
+
+.aat-motion-core-title {
+	fill: var(--motion-gold-light);
+	font-family: var(--lunara-font-display, Georgia, serif);
+	font-size: 17px;
+}
+
+.aat-motion-tick { stroke: rgba(201, 169, 97, 0.5); stroke-width: 1; }
+
+.aat-motion-year {
+	fill: var(--motion-muted);
+	font-family: var(--lunara-font-label, sans-serif);
+	font-size: 13px;
+	letter-spacing: 0.08em;
+}
+
+.aat-motion-tally {
+	margin: 6px 0 0;
+	color: var(--motion-muted);
+	font-family: var(--lunara-font-label, sans-serif);
+	font-size: 0.78rem;
+	letter-spacing: 0.18em;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+.aat-motion-tally-num {
+	color: var(--motion-ink);
+	font-family: var(--lunara-font-display, Georgia, serif);
+	font-size: 1.5rem;
+	letter-spacing: 0;
+	font-variant-numeric: tabular-nums;
+	vertical-align: -0.12em;
+}
+
+.aat-motion-tally-num.is-gold { color: var(--motion-gold-light); }
+.aat-motion-tally-sep { margin: 0 0.6em; color: rgba(201, 169, 97, 0.6); }
+
+/* The full record for screen readers; the SVG carries the summary. */
+.aat-motion-record {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* Phones: the ring's labels are too small to read, so the ring stands alone
+   and the tally carries the numbers; the arc keeps its own scroll frame. */
+@media (max-width: 640px) {
+	.aat-ledger-motion--ring .aat-motion-label { display: none; }
+	.aat-ledger-motion--ring .aat-motion-svg { width: 150%; margin-left: -25%; }
+	.aat-ledger-motion--ring .aat-motion-stage { overflow: hidden; }
+}
+
+/* ---------- Armed (hidden, waiting to play) ---------- */
+.aat-ledger-motion.is-armed .aat-motion-ring,
+.aat-ledger-motion.is-armed .aat-motion-axis,
+.aat-ledger-motion.is-armed .aat-motion-line,
+.aat-ledger-motion.is-armed .aat-motion-stem {
+	stroke-dashoffset: 1;
+}
+
+.aat-ledger-motion.is-armed .aat-motion-node {
+	opacity: 0;
+	transform: scale(0.4);
+}
+
+.aat-ledger-motion.is-armed .aat-motion-label,
+.aat-ledger-motion.is-armed .aat-motion-year,
+.aat-ledger-motion.is-armed .aat-motion-tick {
+	opacity: 0;
+}
+
+.aat-ledger-motion.is-armed .aat-motion-core {
+	opacity: 0;
+	transform: scale(0.9);
+	transform-box: fill-box;
+	transform-origin: center;
+}
+
+/* Before ignition every node, winners included, is an open envelope. */
+.aat-ledger-motion.is-armed .aat-motion-spoke.is-win .aat-motion-node {
+	fill: #0b1826;
+	stroke: rgba(201, 169, 97, 0.6);
+	filter: none;
+}
+
+.aat-ledger-motion.is-armed .aat-motion-spoke.is-win .aat-motion-line {
+	stroke: rgba(201, 169, 97, 0.34);
+	stroke-width: 1.5;
+}
+
+.aat-ledger-motion.is-armed .aat-motion-spoke.is-win .aat-motion-label {
+	fill: var(--motion-muted);
+}
+
+.aat-ledger-motion.is-armed .aat-motion-win-title {
+	opacity: 0;
+}
+
+.aat-ledger-motion.is-playing .aat-motion-win-title {
+	opacity: 1;
+	transition: opacity 0.5s ease calc(var(--ignite) + var(--w) * var(--wstep, 0.22s) + 0.15s);
+}
+
+/* ---------- Playing ---------- */
+.aat-ledger-motion.is-playing .aat-motion-core {
+	opacity: 1;
+	transform: none;
+	transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.aat-ledger-motion.is-playing .aat-motion-ring,
+.aat-ledger-motion.is-playing .aat-motion-axis {
+	stroke-dashoffset: 0;
+	transition: stroke-dashoffset 1.2s cubic-bezier(0.65, 0, 0.35, 1) 0.1s;
+}
+
+/* Ring: spokes draw clockwise, --i apart. */
+.aat-ledger-motion--ring.is-playing .aat-motion-line {
+	stroke-dashoffset: 0;
+	transition: stroke-dashoffset 0.45s ease-out calc(0.35s + var(--i) * 0.09s);
+}
+
+.aat-ledger-motion--ring.is-playing .aat-motion-node,
+.aat-ledger-motion--ring.is-playing .aat-motion-label {
+	opacity: 1;
+	transform: none;
+	transition: opacity 0.35s ease calc(0.65s + var(--i) * 0.09s), transform 0.45s cubic-bezier(0.3, 1.5, 0.5, 1) calc(0.65s + var(--i) * 0.09s);
+}
+
+/* Arc: stems and nodes rise in time order (--t), stacked nodes --k apart. */
+.aat-ledger-motion--arc.is-playing .aat-motion-stem {
+	stroke-dashoffset: 0;
+	transition: stroke-dashoffset 0.4s ease-out calc(0.25s + var(--t) * 1.2s);
+}
+
+.aat-ledger-motion--arc.is-playing .aat-motion-node {
+	opacity: 1;
+	transform: none;
+	transition: opacity 0.3s ease calc(0.4s + var(--t) * 1.2s + var(--k) * 0.07s), transform 0.4s cubic-bezier(0.3, 1.5, 0.5, 1) calc(0.4s + var(--t) * 1.2s + var(--k) * 0.07s);
+}
+
+.aat-ledger-motion--arc.is-playing .aat-motion-year,
+.aat-ledger-motion--arc.is-playing .aat-motion-tick {
+	opacity: 1;
+	transition: opacity 0.4s ease calc(0.2s + var(--t) * 1.2s);
+}
+
+/* Ignition: the wins light one envelope at a time. */
+.aat-ledger-motion.is-playing .aat-motion-spoke.is-win .aat-motion-node {
+	fill: var(--motion-gold-light);
+	stroke: #fff4d6;
+	filter: drop-shadow(0 0 6px rgba(224, 196, 129, 0.75));
+	transition: opacity 0.35s ease calc(0.65s + var(--i) * 0.09s), transform 0.45s cubic-bezier(0.3, 1.5, 0.5, 1) calc(0.65s + var(--i) * 0.09s), fill 0.3s ease calc(var(--ignite) + var(--w) * var(--wstep, 0.26s)), stroke 0.3s ease calc(var(--ignite) + var(--w) * var(--wstep, 0.26s)), filter 0.4s ease calc(var(--ignite) + var(--w) * var(--wstep, 0.26s));
+}
+
+.aat-ledger-motion--arc.is-playing .aat-motion-spoke.is-win .aat-motion-node {
+	transition: opacity 0.3s ease calc(0.4s + var(--t) * 1.2s + var(--k) * 0.07s), transform 0.4s cubic-bezier(0.3, 1.5, 0.5, 1) calc(0.4s + var(--t) * 1.2s + var(--k) * 0.07s), fill 0.3s ease calc(var(--ignite) + var(--w) * var(--wstep, 0.22s)), stroke 0.3s ease calc(var(--ignite) + var(--w) * var(--wstep, 0.22s)), filter 0.4s ease calc(var(--ignite) + var(--w) * var(--wstep, 0.22s));
+}
+
+.aat-ledger-motion.is-playing .aat-motion-spoke.is-win .aat-motion-line {
+	stroke: rgba(224, 196, 129, 0.85);
+	stroke-width: 2;
+	transition: stroke-dashoffset 0.45s ease-out calc(0.35s + var(--i) * 0.09s), stroke 0.4s ease calc(var(--ignite) + var(--w) * var(--wstep, 0.26s));
+}
+
+.aat-ledger-motion.is-playing .aat-motion-spoke.is-win .aat-motion-label {
+	fill: var(--motion-gold-light);
+	transition: opacity 0.35s ease calc(0.65s + var(--i) * 0.09s), fill 0.3s ease calc(var(--ignite) + var(--w) * var(--wstep, 0.26s));
+}
+
+.aat-ledger-motion.is-playing .aat-motion-pulse {
+	animation: aat-motion-pulse 1.1s ease-out calc(var(--ignite) + var(--w) * var(--wstep, 0.26s)) 1 both;
+}
+
+.aat-ledger-motion--arc.is-playing .aat-motion-pulse {
+	animation-delay: calc(var(--ignite) + var(--w) * var(--wstep, 0.22s));
+}
+
+@keyframes aat-motion-pulse {
+	0% { opacity: 0.9; transform: scale(1); }
+	100% { opacity: 0; transform: scale(3.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.aat-ledger-motion *,
+	.aat-ledger-motion *::before {
+		transition: none !important;
+		animation: none !important;
+	}
+}

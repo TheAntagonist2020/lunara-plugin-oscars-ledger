@@ -871,6 +871,17 @@ get_header();
         <?php endif; ?>
     </div>
 <?php $aat_sections['stats-bar'] = ob_get_clean(); ob_start(); ?>
+<?php
+// 2.8.8 Ledger Motion: the Nomination Ring (films) and the Career Arc (people).
+if (class_exists('AAT_Ledger_Motion') && !empty($rows)) {
+    echo AAT_Ledger_Motion::render($entity, $rows, array( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- renderer escapes every value.
+        'label' => $profile_subject_label,
+        'image_url' => ($entity === 'title' && !empty($visual['poster_url'])) ? (string) $visual['poster_url'] : '',
+        'format_category' => $format_category,
+    ));
+}
+?>
+<?php $aat_sections['ledger-motion'] = ob_get_clean(); ob_start(); ?>
 
     <?php if (!empty($category_rollups) || !empty($ceremony_rollups) || !empty($aat_editorial_refs)) : ?>
         <section id="ledger-crossroads" class="aat-entity-section aat-entity-crossroads" aria-label="<?php echo esc_attr__('Ledger Crossroads', 'academy-awards-table'); ?>">

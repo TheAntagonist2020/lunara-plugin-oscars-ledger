@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.8.7
+ * Version: 2.8.8
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.8.7');
+define('AAT_VERSION', '2.8.8');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -65,6 +65,7 @@ AAT_Read_API::init();
 
 // Oscar Ledger Explorer (/{base}/explore/): server-rendered over the read API.
 require_once AAT_PLUGIN_DIR . 'includes/class-aat-explorer.php';
+require_once AAT_PLUGIN_DIR . 'includes/class-aat-ledger-motion.php'; // 2.8.8: Nomination Ring and Career Arc.
 AAT_Explorer::init();
 
 /**
