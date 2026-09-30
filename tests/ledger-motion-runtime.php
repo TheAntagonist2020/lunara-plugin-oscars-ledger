@@ -9,7 +9,7 @@
 define( 'ABSPATH', __DIR__ . '/' );
 define( 'AAT_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
 define( 'AAT_PLUGIN_URL', 'https://example.test/plugin/' );
-define( 'AAT_VERSION', '2.8.11' );
+define( 'AAT_VERSION', '2.8.12' );
 
 $checks = 0;
 function lm_assert( $condition, $message ) {

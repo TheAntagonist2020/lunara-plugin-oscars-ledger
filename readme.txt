@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.11
+Stable tag: 2.8.12
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,15 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.12 =
+Speed pass one. Measured before the change: an uncached Oscars page costs about 1.2s of WordPress bootstrap, and ceremony pages add about 2s more.
+* Anonymous Oscars routes send `Cache-Control: public, max-age=900`, so Batcache (and the edge cache, once enabled) keeps a stored page for 15 minutes instead of 5. The value is filterable with `aat_virtual_route_max_age`. Logged-in visitors are unaffected, and missing routes still send no-cache headers.
+* A `Server-Timing` probe adds `aat-boot` (ms until this plugin loads) and `aat-route` (ms until the route is recognised). It measures what an include-time page store could save.
+* Portrait lookups read their per-request and transient caches before the uncached three-way portrait query, and no longer rewrite the transient on every call. Around 30 queries per ceremony page on a warm cache.
+* `get_ceremony_year()` and `get_max_ceremony()` run the two `COUNT(*)` projection self-checks only on a cache miss.
+* A title with no dataset row is remembered for an hour instead of rescanning the whole table with `LIKE '%tt…%'` on every request.
+* Three review excerpts that were built but never printed are gone. Each ran the full `the_content` filter chain when a review had no manual excerpt.
 
 = 2.8.11 =
 * Ledger Motion on phones: the ring's labels are hidden there, so a dot on its own said nothing. The first tap on a dot now names it in a caption under the drawing, for example "Best Picture · 1997 · Won", with an "Open the race →" link. A second tap on the same dot opens the race. Wider screens keep their labels and one-click links. The Career Arc works the same way, and its captions name the film.

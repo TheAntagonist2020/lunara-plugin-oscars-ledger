@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.8.11
+ * Version: 2.8.12
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,10 +17,15 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.8.11');
+define('AAT_VERSION', '2.8.12');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
+
+// 2.8.12 speed probe: how far into the request (ms) WordPress is when this plugin
+// loads. Reported on Oscars routes as Server-Timing "aat-boot" so we can measure
+// what an include-time page store could save.
+define('AAT_BOOT_MS', isset($_SERVER['REQUEST_TIME_FLOAT']) ? round((microtime(true) - (float) $_SERVER['REQUEST_TIME_FLOAT']) * 1000, 1) : -1);
 
 // TMDB API key — never committed to source control. Resolved (in order) from a
 // wp-config AAT_TMDB_API_KEY constant, the AAT_TMDB_API_KEY environment
@@ -78,6 +83,8 @@ class Academy_Awards_Table {
      * existing tables get one in-place repair (relabel_shouted_entities()).
      */
     const LABEL_RULES = 'l2';
+    // 2.8.12: seconds Batcache/edge keep an anonymous Oscars route (was the platform's 300).
+    const VIRTUAL_ROUTE_MAX_AGE = 900;
 
     private static $instance = null;
 
@@ -3349,6 +3356,32 @@ class Academy_Awards_Table {
             $wp_query->is_404 = false;
             $wp_query->is_page = true;
             status_header(200);
+            $this->send_virtual_route_speed_headers();
+        }
+    }
+
+    /**
+     * 2.8.12: speed headers for valid Oscars routes.
+     *
+     * - Server-Timing: aat-boot (ms until this plugin loaded) and aat-route (ms
+     *   until the route was recognised), next to the platform's own "dur".
+     * - Cache-Control: a longer max-age for anonymous visitors. Batcache (and
+     *   the edge cache when it is on) keeps a stored page for this long instead
+     *   of 300s. Missing routes still send no-cache headers from the templates,
+     *   which replaces this header.
+     */
+    private function send_virtual_route_speed_headers() {
+        if (headers_sent()) {
+            return;
+        }
+        $route_ms = isset($_SERVER['REQUEST_TIME_FLOAT']) ? round((microtime(true) - (float) $_SERVER['REQUEST_TIME_FLOAT']) * 1000, 1) : -1;
+        header('Server-Timing: aat-boot;dur=' . AAT_BOOT_MS . ', aat-route;dur=' . $route_ms, false);
+        if (is_user_logged_in()) {
+            return;
+        }
+        $max_age = (int) apply_filters('aat_virtual_route_max_age', self::VIRTUAL_ROUTE_MAX_AGE);
+        if ($max_age > 0) {
+            header('Cache-Control: public, max-age=' . $max_age);
         }
     }
 
@@ -5864,7 +5897,6 @@ class Academy_Awards_Table {
         global $wpdb;
         $ceremonies_table = $this->get_ceremonies_table_name();
         $source_table = $this->get_table_name();
-        $this->ensure_projection_data_available();
         $ceremony = intval($ceremony);
         if ($ceremony <= 0) return '';
         static $runtime_cache = array();
@@ -5877,6 +5909,8 @@ class Academy_Awards_Table {
             $runtime_cache[$ceremony] = is_string($cached) ? $cached : '';
             return $runtime_cache[$ceremony];
         }
+        // 2.8.12: the projection self-check (two COUNT(*)s) runs only on a cache miss.
+        $this->ensure_projection_data_available();
         $sql = $wpdb->prepare("SELECT year_label FROM $ceremonies_table WHERE ceremony = %d LIMIT 1", $ceremony);
         $year = $wpdb->get_var($sql);
         if (!is_string($year) || $year === '') {
@@ -5897,11 +5931,11 @@ class Academy_Awards_Table {
         global $wpdb;
         $ceremonies_table = $this->get_ceremonies_table_name();
         $source_table = $this->get_table_name();
-        $this->ensure_projection_data_available();
         $cached = get_transient('aat_max_ceremony_v1');
         if ($cached !== false) {
             return intval($cached);
         }
+        $this->ensure_projection_data_available();
         $max = intval($wpdb->get_var("SELECT MAX(ceremony) FROM $ceremonies_table"));
         if ($max <= 0) {
             $max = intval($wpdb->get_var("SELECT MAX(ceremony) FROM $source_table"));
@@ -9409,7 +9443,10 @@ public function get_title_context_for_imdb_id($imdb_id) {
         $like
     ), ARRAY_A);
     if (!is_array($row)) {
-        return array('title' => '', 'year' => '');
+        // 2.8.12: remember the miss; the LIKE '%tt…%' scan above reads the whole table.
+        $empty = array('title' => '', 'year' => '');
+        set_transient($cache_key, $empty, HOUR_IN_SECONDS);
+        return $empty;
     }
 
     $context = array(
@@ -9962,23 +9999,10 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
             );
         }
 
-        $explicit_attachment_id = $this->find_existing_person_portrait_attachment($nm_id, '');
-        if ($explicit_attachment_id > 0) {
-            $resolved = array(
-                'attachment_id' => $explicit_attachment_id,
-                'match_strategy' => 'aat-person-meta',
-                'attached_file' => (string) get_post_meta($explicit_attachment_id, '_wp_attached_file', true),
-            );
-            set_transient('aat_person_profile_attachment_v2_' . $nm_id, $resolved, 12 * HOUR_IN_SECONDS);
-            return $resolved;
-        }
-
-        $person_name = trim((string) $person_name);
-        if ($person_name === '') {
-            $context = $this->get_person_context_for_imdb_id($nm_id);
-            $person_name = trim((string) ($context['name'] ?? ''));
-        }
-
+        // 2.8.12: the per-request and transient caches are checked first. The
+        // explicit portrait join below used to run (and rewrite the transient) on
+        // every call. Portrait imports delete this transient, so a new portrait
+        // still shows at once.
         static $runtime_cache = array();
         if (array_key_exists($nm_id, $runtime_cache)) {
             $cached_runtime = $runtime_cache[$nm_id];
@@ -9994,6 +10018,24 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
         if (is_array($cached) && isset($cached['attachment_id'])) {
             $runtime_cache[$nm_id] = $cached;
             return $cached;
+        }
+
+        $explicit_attachment_id = $this->find_existing_person_portrait_attachment($nm_id, '');
+        if ($explicit_attachment_id > 0) {
+            $resolved = array(
+                'attachment_id' => $explicit_attachment_id,
+                'match_strategy' => 'aat-person-meta',
+                'attached_file' => (string) get_post_meta($explicit_attachment_id, '_wp_attached_file', true),
+            );
+            $runtime_cache[$nm_id] = $resolved;
+            set_transient($cache_key, $resolved, 12 * HOUR_IN_SECONDS);
+            return $resolved;
+        }
+
+        $person_name = trim((string) $person_name);
+        if ($person_name === '') {
+            $context = $this->get_person_context_for_imdb_id($nm_id);
+            $person_name = trim((string) ($context['name'] ?? ''));
         }
 
         $like_file = '%' . $wpdb->esc_like($nm_id . '-profile.') . '%';
