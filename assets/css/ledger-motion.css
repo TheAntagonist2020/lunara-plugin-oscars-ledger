@@ -159,7 +159,37 @@
 .aat-motion-tally-num.is-gold { color: var(--motion-gold-light); }
 .aat-motion-tally-sep { margin: 0 0.6em; color: rgba(201, 169, 97, 0.6); }
 
-/* The full record for screen readers; the SVG carries the summary. */
+/* 2.8.9: every spoke opens its race. A thin gold halo marks the one under the
+   pointer or keyboard focus; the hit circle gives small screens a real target. */
+.aat-motion-link { cursor: pointer; }
+.aat-motion-link:focus { outline: none; }
+
+.aat-motion-hit {
+	fill: rgba(0, 0, 0, 0);
+	stroke: var(--motion-gold-light);
+	stroke-width: 1.5;
+	stroke-opacity: 0;
+	transition: stroke-opacity 0.2s ease;
+}
+
+.aat-motion-link:hover .aat-motion-hit,
+.aat-motion-link:focus-visible .aat-motion-hit {
+	stroke-opacity: 0.9;
+}
+
+.aat-motion-link:hover .aat-motion-label,
+.aat-motion-link:focus-visible .aat-motion-label {
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+
+.aat-motion-link:hover .aat-motion-line,
+.aat-motion-link:focus-visible .aat-motion-line {
+	stroke-opacity: 1;
+}
+
+/* The full record for screen readers when the spokes are not links. */
 .aat-motion-record {
 	position: absolute !important;
 	width: 1px;
@@ -173,8 +203,10 @@
 }
 
 /* Phones: the ring's labels are too small to read, so the ring stands alone
-   and the tally carries the numbers; the arc keeps its own scroll frame. */
+   and the tally carries the numbers; the arc keeps its own scroll frame.
+   Nodes are tapped rather than hovered, so the hit circle grows. */
 @media (max-width: 640px) {
+	.aat-ledger-motion--ring .aat-motion-hit { r: 30px; }
 	.aat-ledger-motion--ring .aat-motion-label { display: none; }
 	.aat-ledger-motion--ring .aat-motion-svg { width: 150%; margin-left: -25%; }
 	.aat-ledger-motion--ring .aat-motion-stage { overflow: hidden; }

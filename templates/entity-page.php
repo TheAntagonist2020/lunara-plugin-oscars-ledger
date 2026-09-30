@@ -878,6 +878,11 @@ if (class_exists('AAT_Ledger_Motion') && !empty($rows)) {
         'label' => $profile_subject_label,
         'image_url' => ($entity === 'title' && !empty($visual['poster_url'])) ? (string) $visual['poster_url'] : '',
         'format_category' => $format_category,
+        // 2.8.9: each spoke opens its race on the ceremony's full ballot.
+        'race_url' => function($ceremony, $category) use ($build_ceremony_url) {
+            $url = $build_ceremony_url($ceremony);
+            return $url !== '' ? add_query_arg('ledger', 'full', $url) . '#ceremony-category-' . sanitize_title((string) $category) : '';
+        },
     ));
 }
 ?>

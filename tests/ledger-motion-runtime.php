@@ -9,7 +9,7 @@
 define( 'ABSPATH', __DIR__ . '/' );
 define( 'AAT_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
 define( 'AAT_PLUGIN_URL', 'https://example.test/plugin/' );
-define( 'AAT_VERSION', '2.8.8' );
+define( 'AAT_VERSION', '2.8.9' );
 
 $checks = 0;
 function lm_assert( $condition, $message ) {
@@ -110,9 +110,26 @@ for ( $i = 0; $i < 12; $i++ ) {
 $crowded = AAT_Ledger_Motion::render( 'name', $many, array( 'label' => 'Walt', 'format_category' => $fmt ) );
 lm_assert( 0 === substr_count( $crowded, 'aat-motion-win-title' ), 'More than eight wins are not titled, to avoid a crowd of labels.' );
 
+// ---- Links (2.8.9) ----------------------------------------------------------------
+$race = static function ( $ceremony, $category ) {
+	return 'https://example.test/oscars/ceremony/' . $ceremony . '/?ledger=full#ceremony-category-' . strtolower( str_replace( ' ', '-', $category ) );
+};
+$linked = AAT_Ledger_Motion::render( 'title', $film_rows, array( 'label' => 'Titanic', 'image_url' => '', 'format_category' => $fmt, 'race_url' => $race ) );
+lm_assert( 4 === substr_count( $linked, '<a class="aat-motion-link"' ) && 4 === substr_count( $linked, '</a></g>' ), 'Every ring spoke is a link, closed inside its spoke.' );
+lm_assert( false !== strpos( $linked, 'href="https://example.test/oscars/ceremony/70/?ledger=full#ceremony-category-best-picture"' ), 'A spoke opens its race on the ceremony\'s full ballot.' );
+lm_assert( false !== strpos( $linked, 'aria-label="1997: Best Picture — won. Open the full race."' ), 'Each link names its race and result.' );
+lm_assert( 4 === substr_count( $linked, 'class="aat-motion-hit"' ) && false !== strpos( $linked, 'role="group"' ), 'Linked spokes get a hit target and the drawing becomes a group.' );
+lm_assert( false !== strpos( $linked, 'Select any nomination to open its full race.' ) && false === strpos( $ring, 'Select any' ), 'The description invites the click only when there is one.' );
+lm_assert( false === strpos( $linked, 'aat-motion-record' ) && false !== strpos( $ring, 'aat-motion-record' ), 'The hidden list steps aside only when the links carry the record.' );
+$linked_arc = AAT_Ledger_Motion::render( 'name', $person_rows, array( 'label' => 'Meryl Streep', 'format_category' => $fmt, 'race_url' => $race ) );
+lm_assert( 5 === substr_count( $linked_arc, '<a class="aat-motion-link"' ) && false !== strpos( $linked_arc, 'aria-label="1982: Best Actress, Sophie&#039;s Choice — won. Open the full race."' ), 'Every arc node is a link that names its film.' );
+$partial = AAT_Ledger_Motion::render( 'title', $film_rows, array( 'label' => 'T', 'format_category' => $fmt, 'race_url' => static function ( $c, $cat ) { return 'SOUND' === $cat ? '' : 'https://example.test/x'; } ) );
+lm_assert( 3 === substr_count( $partial, '<a class="aat-motion-link"' ) && false !== strpos( $partial, 'role="img"' ) && false !== strpos( $partial, 'aat-motion-record' ), 'A spoke without a race stays plain, and the list stays.' );
+
 // ---- Template and assets -------------------------------------------------------------
 $template = file_get_contents( AAT_PLUGIN_DIR . 'templates/entity-page.php' );
 lm_assert( false !== strpos( $template, "\$aat_sections['ledger-motion'] = ob_get_clean()" ), 'The entity template captures the motion section.' );
+lm_assert( false !== strpos( $template, "'race_url' => function" ) && false !== strpos( $template, "add_query_arg('ledger', 'full', \$url) . '#ceremony-category-' . sanitize_title(" ), 'The template links spokes to the ceremony ballot\'s category anchors.' );
 lm_assert( strpos( $template, "\$aat_sections['stats-bar']" ) < strpos( $template, "\$aat_sections['ledger-motion']" ) && strpos( $template, "\$aat_sections['ledger-motion']" ) < strpos( $template, "\$aat_sections['crossroads']" ), 'It sits between the stats bar and the crossroads.' );
 $css = file_get_contents( AAT_PLUGIN_DIR . 'assets/css/ledger-motion.css' );
 lm_assert( false !== strpos( $css, 'prefers-reduced-motion: reduce' ) && false !== strpos( $css, '.aat-motion-record' ), 'Styles honour reduced motion and hide the record visually.' );

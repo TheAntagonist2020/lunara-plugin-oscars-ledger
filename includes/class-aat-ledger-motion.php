@@ -109,6 +109,10 @@ class AAT_Ledger_Motion {
 	 */
 	public static function render( $entity, $rows, $args ) {
 		$records = self::records( $rows, $args['format_category'] );
+		$race    = $args['race_url'] ?? null;
+		foreach ( $records as $k => $rec ) {
+			$records[ $k ]['url'] = is_callable( $race ) ? (string) call_user_func( $race, $rec['ceremony'], $rec['category'] ) : '';
+		}
 		if ( 'title' === $entity ) {
 			return self::render_ring( $records, $args );
 		}
@@ -166,6 +170,48 @@ class AAT_Ledger_Motion {
 	}
 
 	/**
+	 * Open a spoke's link to its race, or nothing when it has no URL.
+	 *
+	 * @param array<string,mixed> $rec   Nomination.
+	 * @param string              $label Accessible name.
+	 * @return string
+	 */
+	private static function link_open( $rec, $label ) {
+		if ( empty( $rec['url'] ) ) {
+			return '';
+		}
+		return '<a class="aat-motion-link" href="' . esc_url( $rec['url'] ) . '" aria-label="' . esc_attr( $label . '. ' . __( 'Open the full race.', 'academy-awards-table' ) ) . '">';
+	}
+
+	/**
+	 * A spoke's accessible name: year, category, film where asked, result.
+	 *
+	 * @param array<string,mixed> $rec       Nomination.
+	 * @param bool                $with_film Include the film.
+	 * @return string
+	 */
+	private static function spoke_name( $rec, $with_film ) {
+		$line  = $rec['year_label'] . ': ' . $rec['label'];
+		$line .= $with_film && '' !== $rec['film'] ? ', ' . $rec['film'] : '';
+		return $line . ' — ' . ( $rec['won'] ? __( 'won', 'academy-awards-table' ) : __( 'nominated', 'academy-awards-table' ) );
+	}
+
+	/**
+	 * Whether every nomination links to its race.
+	 *
+	 * @param array<int,array<string,mixed>> $records Nominations.
+	 * @return bool
+	 */
+	private static function all_linked( $records ) {
+		foreach ( $records as $rec ) {
+			if ( empty( $rec['url'] ) ) {
+				return false;
+			}
+		}
+		return (bool) $records;
+	}
+
+	/**
 	 * The Nomination Ring for a film.
 	 *
 	 * @param array<int,array<string,mixed>> $records Nominations.
@@ -211,7 +257,7 @@ class AAT_Ledger_Motion {
 		$wins_total = count( array_filter( wp_list_pluck( $records, 'won' ) ) );
 		$wstep      = self::win_step( $wins_total, 0.26 );
 
-		$svg  = '<svg class="aat-motion-svg" viewBox="0 0 ' . $w . ' ' . $h . '" role="img" aria-labelledby="' . esc_attr( $uid ) . '-title" focusable="false">';
+		$svg  = '<svg class="aat-motion-svg" viewBox="0 0 ' . $w . ' ' . $h . '" role="' . ( self::all_linked( $records ) ? 'group' : 'img' ) . '" aria-labelledby="' . esc_attr( $uid ) . '-title" focusable="false">';
 		$svg .= '<title id="' . esc_attr( $uid ) . '-title">' . esc_html(
 			sprintf(
 				/* translators: 1: film title, 2: nominations, 3: wins. */
@@ -235,11 +281,15 @@ class AAT_Ledger_Motion {
 			$state = $rec['won'] ? 'is-win' : 'is-nom';
 			$style = '--i:' . $i . ( $rec['won'] ? ';--w:' . $win_order : '' );
 
-			$svg .= '<g class="aat-motion-spoke ' . $state . '" style="' . esc_attr( $style ) . '">';
+			$link = self::link_open( $rec, self::spoke_name( $rec, false ) );
+			$svg .= '<g class="aat-motion-spoke ' . $state . '" style="' . esc_attr( $style ) . '">' . $link;
 			$svg .= '<title>' . esc_html( $rec['label'] . ( $rec['won'] ? ' — ' . __( 'won', 'academy-awards-table' ) : ' — ' . __( 'nominated', 'academy-awards-table' ) ) ) . '</title>';
 			$svg .= '<line class="aat-motion-line" x1="' . self::n( $cx + $cos * $r1 ) . '" y1="' . self::n( $cy + $sin * $r1 ) . '" x2="' . self::n( $cx + $cos * $r2 ) . '" y2="' . self::n( $cy + $sin * $r2 ) . '" pathLength="1"/>';
 			if ( $rec['won'] ) {
 				$svg .= '<circle class="aat-motion-pulse" cx="' . self::n( $cx + $cos * $rn ) . '" cy="' . self::n( $cy + $sin * $rn ) . '" r="9"/>';
+			}
+			if ( $link ) {
+				$svg .= '<circle class="aat-motion-hit" cx="' . self::n( $cx + $cos * $rn ) . '" cy="' . self::n( $cy + $sin * $rn ) . '" r="18"/>';
 			}
 			$svg .= '<circle class="aat-motion-node" cx="' . self::n( $cx + $cos * $rn ) . '" cy="' . self::n( $cy + $sin * $rn ) . '" r="8"/>';
 
@@ -258,7 +308,7 @@ class AAT_Ledger_Motion {
 			foreach ( $lines as $k => $line ) {
 				$svg .= '<tspan x="' . self::n( $lx ) . '"' . ( $k ? ' dy="' . $lh . '"' : '' ) . '>' . esc_html( $line ) . '</tspan>';
 			}
-			$svg .= '</text></g>';
+			$svg .= '</text>' . ( $link ? '</a>' : '' ) . '</g>';
 
 			if ( $rec['won'] ) {
 				++$win_order;
@@ -360,7 +410,7 @@ class AAT_Ledger_Motion {
 		$label_wins = $wins > 0 && $wins <= 8;
 		$win_labels = array();
 
-		$svg  = '<svg class="aat-motion-svg" viewBox="0 0 ' . $w . ' ' . $h . '" role="img" aria-labelledby="' . esc_attr( $uid ) . '-title" focusable="false">';
+		$svg  = '<svg class="aat-motion-svg" viewBox="0 0 ' . $w . ' ' . $h . '" role="' . ( self::all_linked( $records ) ? 'group' : 'img' ) . '" aria-labelledby="' . esc_attr( $uid ) . '-title" focusable="false">';
 		$svg .= '<title id="' . esc_attr( $uid ) . '-title">' . esc_html(
 			sprintf(
 				/* translators: 1: name, 2: nominations, 3: wins, 4: first year, 5: last year. */
@@ -388,11 +438,15 @@ class AAT_Ledger_Motion {
 				$state = $rec['won'] ? 'is-win' : 'is-nom';
 				$style = '--t:' . self::n( $t ) . ';--k:' . $k . ';--i:' . $i . ( $rec['won'] ? ';--w:' . $win_order : '' );
 				$tip   = trim( $rec['year_label'] . ' · ' . $rec['label'] . ( '' !== $rec['film'] ? ' · ' . $rec['film'] : '' ) . ' — ' . ( $rec['won'] ? __( 'won', 'academy-awards-table' ) : __( 'nominated', 'academy-awards-table' ) ) );
-				$svg  .= '<g class="aat-motion-spoke ' . $state . '" style="' . esc_attr( $style ) . '"><title>' . esc_html( $tip ) . '</title>';
+				$link  = self::link_open( $rec, self::spoke_name( $rec, true ) );
+				$svg  .= '<g class="aat-motion-spoke ' . $state . '" style="' . esc_attr( $style ) . '">' . $link . '<title>' . esc_html( $tip ) . '</title>';
 				if ( $rec['won'] ) {
 					$svg .= '<circle class="aat-motion-pulse" cx="' . self::n( $x ) . '" cy="' . $y . '" r="9"/>';
 				}
-				$svg .= '<circle class="aat-motion-node" cx="' . self::n( $x ) . '" cy="' . $y . '" r="8"/></g>';
+				if ( $link ) {
+					$svg .= '<circle class="aat-motion-hit" cx="' . self::n( $x ) . '" cy="' . $y . '" r="13"/>';
+				}
+				$svg .= '<circle class="aat-motion-node" cx="' . self::n( $x ) . '" cy="' . $y . '" r="8"/>' . ( $link ? '</a>' : '' ) . '</g>';
 				if ( $rec['won'] ) {
 					if ( $label_wins && '' !== $rec['film'] ) {
 						$win_labels[ $ceremony ]['films'][] = $rec['film'];
@@ -468,15 +522,19 @@ class AAT_Ledger_Motion {
 	 */
 	private static function section( $kind, $title, $description, $svg, $count, $wins, $ignite, $wstep, $records, $with_film ) {
 		$heading_id = 'aat-ledger-motion-' . $kind . '-title';
-
-		$list = '<ol class="aat-motion-record">';
-		foreach ( $records as $rec ) {
-			$line  = $rec['year_label'] . ': ' . $rec['label'];
-			$line .= $with_film && '' !== $rec['film'] ? ', ' . $rec['film'] : '';
-			$line .= ' — ' . ( $rec['won'] ? __( 'won', 'academy-awards-table' ) : __( 'nominated', 'academy-awards-table' ) );
-			$list .= '<li>' . esc_html( $line ) . '</li>';
+		if ( self::all_linked( $records ) ) {
+			$description .= ' ' . __( 'Select any nomination to open its full race.', 'academy-awards-table' );
 		}
-		$list .= '</ol>';
+
+		// When every spoke is a link, the links carry the record; otherwise a hidden list does.
+		$list = '';
+		if ( ! self::all_linked( $records ) ) {
+			$list = '<ol class="aat-motion-record">';
+			foreach ( $records as $rec ) {
+				$list .= '<li>' . esc_html( self::spoke_name( $rec, $with_film ) ) . '</li>';
+			}
+			$list .= '</ol>';
+		}
 
 		$html  = '<section id="ledger-motion" class="aat-entity-section aat-ledger-motion aat-ledger-motion--' . esc_attr( $kind ) . '" data-aat-motion style="--ignite:' . esc_attr( (string) $ignite ) . 's;--wstep:' . esc_attr( (string) $wstep ) . 's" aria-labelledby="' . esc_attr( $heading_id ) . '">';
 		$html .= '<div class="aat-section-head"><h2 id="' . esc_attr( $heading_id ) . '" class="aat-section-title">' . esc_html( $title ) . '</h2>';

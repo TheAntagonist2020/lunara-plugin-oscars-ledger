@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.8
+Stable tag: 2.8.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.9 =
+* Ledger Motion links every spoke of the Nomination Ring and every node of the Career Arc to its race: the ceremony's full ballot, opened at that category (`?ledger=full#ceremony-category-…`). Viewers see who the film or person was up against, and who won.
+* Hover and keyboard focus draw a thin gold halo around the spoke. On phones the tap target grows. The section description adds "Select any nomination to open its full race."
+* Each link names its race and result for screen readers. When every spoke links, the hidden record list is left out rather than read twice; a spoke without a race stays plain and keeps the list.
 
 = 2.8.8 =
 * Ledger Motion. Film profiles gain the Nomination Ring: the film at the centre and one spoke per nomination. The spokes draw in clockwise, then the wins light in gold one at a time. Person profiles gain the Career Arc: each nomination rises above its ceremony year on a time axis, and the wins light in gold.
