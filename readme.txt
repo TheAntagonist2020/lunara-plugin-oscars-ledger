@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.7
+Stable tag: 2.8.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,15 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.8 =
+* Ledger Motion. Film profiles gain the Nomination Ring: the film at the centre and one spoke per nomination. The spokes draw in clockwise, then the wins light in gold one at a time. Person profiles gain the Career Arc: each nomination rises above its ceremony year on a time axis, and the wins light in gold.
+* The finished picture is rendered on the server, so it is complete without JavaScript and under reduced motion. An ordered list gives screen readers the full record.
+* The new section sits between the stats bar and Ledger Crossroads (`ledger-motion` in `aat_entity_route_sections`).
+* Its stylesheet and script load on film and person profiles only.
+* Shown when a film has 3–30 nominations, or a person has nominations at two or more ceremonies.
+* On the Career Arc, a person with eight or fewer wins has each winning film named above its column.
+* On a phone, the arc scrolls inside its own frame and pans from the first nomination to the last as it plays. Any touch hands control back to the reader, and the right edge fades while there is more to see.
 
 = 2.8.7 =
 * The 2.8.6 name fix now reaches the live tables. Version bumps do not rebuild existing installs, because the stored database version is already ahead of the plugin's. So tables built under the old rules get one background, in-place repair:
