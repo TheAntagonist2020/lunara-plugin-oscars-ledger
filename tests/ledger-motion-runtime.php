@@ -9,7 +9,7 @@
 define( 'ABSPATH', __DIR__ . '/' );
 define( 'AAT_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
 define( 'AAT_PLUGIN_URL', 'https://example.test/plugin/' );
-define( 'AAT_VERSION', '2.8.9' );
+define( 'AAT_VERSION', '2.8.10' );
 
 $checks = 0;
 function lm_assert( $condition, $message ) {
@@ -132,6 +132,7 @@ lm_assert( false !== strpos( $template, "\$aat_sections['ledger-motion'] = ob_ge
 lm_assert( false !== strpos( $template, "'race_url' => function" ) && false !== strpos( $template, "add_query_arg('ledger', 'full', \$url) . '#ceremony-category-' . sanitize_title(" ), 'The template links spokes to the ceremony ballot\'s category anchors.' );
 lm_assert( strpos( $template, "\$aat_sections['stats-bar']" ) < strpos( $template, "\$aat_sections['ledger-motion']" ) && strpos( $template, "\$aat_sections['ledger-motion']" ) < strpos( $template, "\$aat_sections['crossroads']" ), 'It sits between the stats bar and the crossroads.' );
 $css = file_get_contents( AAT_PLUGIN_DIR . 'assets/css/ledger-motion.css' );
+lm_assert( 1 === preg_match( '/@media \(max-width: 640px\)[^}]*\{[^@]*\.aat-ledger-motion--ring \.aat-motion-svg \{ width: 180%; max-width: none; margin: -11% 0 -13% -40%; \}/s', $css ), 'On phones the ring is enlarged and centred, and escapes the theme\'s svg max-width.' );
 lm_assert( false !== strpos( $css, 'prefers-reduced-motion: reduce' ) && false !== strpos( $css, '.aat-motion-record' ), 'Styles honour reduced motion and hide the record visually.' );
 $js = file_get_contents( AAT_PLUGIN_DIR . 'assets/js/ledger-motion.js' );
 lm_assert( false !== strpos( $js, "prefers-reduced-motion: reduce" ) && false !== strpos( $js, 'IntersectionObserver' ), 'The script stands down under reduced motion and plays on view.' );

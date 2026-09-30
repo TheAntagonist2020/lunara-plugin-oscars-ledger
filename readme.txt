@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.9
+Stable tag: 2.8.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.10 =
+* Nomination Ring on phones: the ring is now centred and about 1.8 times larger. The theme caps every SVG at `max-width: 100%`, which overrode the ring's phone width and left it small and pushed to the left. The phone rule now sets `max-width: none` and draws the ring at 180% of its frame, centred. The empty band where the hidden labels would sit is trimmed, and the tap targets grow with the ring (about 38px at a 390px-wide screen).
 
 = 2.8.9 =
 * Ledger Motion links every spoke of the Nomination Ring and every node of the Career Arc to its race: the ceremony's full ballot, opened at that category (`?ledger=full#ceremony-category-…`). Viewers see who the film or person was up against, and who won.
