@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.8.13
+ * Version: 2.8.14
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.8.13');
+define('AAT_VERSION', '2.8.14');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -26,6 +26,12 @@ define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
 // loads. Reported on Oscars routes as Server-Timing "aat-boot" so we can measure
 // what an include-time page store could save.
 define('AAT_BOOT_MS', isset($_SERVER['REQUEST_TIME_FLOAT']) ? round((microtime(true) - (float) $_SERVER['REQUEST_TIME_FLOAT']) * 1000, 1) : -1);
+
+// 2.8.14 Oscars page store: answer a stored Oscars page right here, before any
+// other plugin, the theme, init or the query run. See includes/class-aat-page-store.php.
+require_once AAT_PLUGIN_DIR . 'includes/class-aat-page-store.php';
+AAT_Page_Store::maybe_serve();
+AAT_Page_Store::init();
 
 // TMDB API key — never committed to source control. Resolved (in order) from a
 // wp-config AAT_TMDB_API_KEY constant, the AAT_TMDB_API_KEY environment
@@ -9030,6 +9036,10 @@ class Academy_Awards_Table {
     }
 
     private function clear_awards_runtime_caches($entity_ids = array()) {
+        // 2.8.14: stored Oscars pages built from the old data stop matching.
+        if (class_exists('AAT_Page_Store')) {
+            AAT_Page_Store::bump('runtime_caches');
+        }
         delete_transient('aat_records_total_v1');
         delete_transient('aat_records_total_v2');
         delete_transient('aat_total_stats_v2');
@@ -16388,6 +16398,10 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
      * invalidation site so the read API can never outlive a dataset repair.
      */
     private function clear_oscars_read_api_caches() {
+        // 2.8.14: stored Oscars pages built from the old data stop matching.
+        if (class_exists('AAT_Page_Store')) {
+            AAT_Page_Store::bump('read_api_caches');
+        }
         global $wpdb;
 
         delete_transient('aat_reviewed_award_post_ids_v1');
