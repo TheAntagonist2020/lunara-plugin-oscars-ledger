@@ -91,7 +91,7 @@ foreach ($cases as $shouted => $expected) {
 $check(strpos($source, "\$label !== '' && \$this->prefer_entity_label(\$entities[\$entity_id]['label'], \$label)") !== false && strpos($source, "\$this->prefer_entity_label(\$entity_stats[\$entity_id]['label'], trim((string) \$label))") !== false, 'The rebuild applies the preference to entities and their stats.');
 $check(strpos($source, "\$entity_row['entity_type'] === 'name' && \$this->is_shouted_label(") !== false, 'Only people are title-cased.');
 $check(strpos($source, "\$this->get_label_rules_state() . '|' . \$entity . ':' . \$id") !== false, 'The display-name cache key follows the applied label rules.');
-$check(strpos(file_get_contents($root . '/includes/class-aat-read-api.php'), "array(AAT_VERSION, self::stamp(), \$labels, \$parts)") !== false, 'The API cache key follows the applied label rules.');
+$check(strpos(file_get_contents($root . '/includes/class-aat-read-api.php'), "array(self::RESPONSE_SCHEMA, self::stamp(), \$labels, \$parts)") !== false, 'The API cache key follows the applied label rules.');
 
 // Tables built under older rules get one background, in-place repair that
 // never truncates: it updates only shouted names, then records the rules.

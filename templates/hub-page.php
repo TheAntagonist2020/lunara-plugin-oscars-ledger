@@ -785,15 +785,6 @@ $aat_build_hub_review_cards = function($title_entries, $limit = 6) use ($aat) {
             $film_label = $aat->lookup_title_label($film_id);
         }
 
-        $visual = method_exists($aat, 'get_title_visual_package') ? $aat->get_title_visual_package($film_id, 'medium_large') : array();
-        $visual_media_html = '';
-        if (!empty($visual['poster_html'])) {
-            $visual_media_html = (string) $visual['poster_html'];
-        } elseif (!empty($visual['poster_url'])) {
-            $visual_media_html = '<img class="aat-related-review-image" src="' . esc_url($visual['poster_url']) . '" alt="' . esc_attr(sprintf(__('%s poster', 'academy-awards-table'), $film_label)) . '" loading="lazy" decoding="async" />';
-        } elseif (!empty($visual['backdrop_url'])) {
-            $visual_media_html = '<img class="aat-related-review-image" src="' . esc_url($visual['backdrop_url']) . '" alt="' . esc_attr($film_label) . '" loading="lazy" decoding="async" />';
-        }
         $sort_date = get_post_time('U', true, $review_id);
         if (!$sort_date) {
             $sort_date = 0;
@@ -803,17 +794,10 @@ $aat_build_hub_review_cards = function($title_entries, $limit = 6) use ($aat) {
             'review_id' => $review_id,
             'review_url' => $review_url,
             'review_title' => get_the_title($review_id),
-            'review_thumb' => get_the_post_thumbnail($review_id, 'medium_large', array(
-                'class' => 'aat-related-review-image',
-                'loading' => 'lazy',
-                'decoding' => 'async',
-                'sizes' => '(max-width: 720px) 100vw, 360px',
-            )),
             'film_id' => $film_id,
             'film_label' => $film_label,
             'film_url' => $aat->get_entity_url($film_id),
             'film_year' => trim((string) ($entry['year'] ?? '')),
-            'fallback_html' => $visual_media_html,
             'sort_date' => intval($sort_date),
         );
 
@@ -831,6 +815,29 @@ $aat_build_hub_review_cards = function($title_entries, $limit = 6) use ($aat) {
 
     if ($limit > 0) {
         $cards = array_slice($cards, 0, $limit);
+    }
+
+    // 2.8.13: images are resolved only for the cards that are shown (it used to be
+    // every reviewed title, up to 18, before the cut to $limit).
+    foreach ($cards as $i => $card) {
+        $film_id = $card['film_id'];
+        $film_label = $card['film_label'];
+        $visual = method_exists($aat, 'get_title_visual_package') ? $aat->get_title_visual_package($film_id, 'medium_large') : array();
+        $visual_media_html = '';
+        if (!empty($visual['poster_html'])) {
+            $visual_media_html = (string) $visual['poster_html'];
+        } elseif (!empty($visual['poster_url'])) {
+            $visual_media_html = '<img class="aat-related-review-image" src="' . esc_url($visual['poster_url']) . '" alt="' . esc_attr(sprintf(__('%s poster', 'academy-awards-table'), $film_label)) . '" loading="lazy" decoding="async" />';
+        } elseif (!empty($visual['backdrop_url'])) {
+            $visual_media_html = '<img class="aat-related-review-image" src="' . esc_url($visual['backdrop_url']) . '" alt="' . esc_attr($film_label) . '" loading="lazy" decoding="async" />';
+        }
+        $cards[$i]['review_thumb'] = get_the_post_thumbnail($card['review_id'], 'medium_large', array(
+            'class' => 'aat-related-review-image',
+            'loading' => 'lazy',
+            'decoding' => 'async',
+            'sizes' => '(max-width: 720px) 100vw, 360px',
+        ));
+        $cards[$i]['fallback_html'] = $visual_media_html;
     }
 
     return $cards;
@@ -1204,7 +1211,10 @@ get_header();
         // CEREMONY PAGE
         elseif ($hub === 'ceremony') :
             $ceremony = intval($hub_id);
-            if ($ceremony <= 0) {
+            $aat_max_ceremony = intval($aat->get_max_ceremony());
+            // 2.8.13: a ceremony beyond the last one on record is a 404, not an empty
+            // (and endlessly re-rendered) 200 page.
+            if ($ceremony <= 0 || ($aat_max_ceremony > 0 && $ceremony > $aat_max_ceremony)) {
                 $mark_404();
             }
             $ceremony_summary = $aat->get_ceremony_summary($ceremony);
@@ -1221,8 +1231,10 @@ get_header();
             $ceremony_ballot_groups = !empty($ceremony_ballot_ledger['categories']) && is_array($ceremony_ballot_ledger['categories']) ? $ceremony_ballot_ledger['categories'] : array();
             $ceremony_review_map = !empty($ceremony_ballot_ledger['review_map']) && is_array($ceremony_ballot_ledger['review_map']) ? $ceremony_ballot_ledger['review_map'] : array();
             $ceremony_ballot_full_requested = isset($_GET['ledger']) && sanitize_key(wp_unslash($_GET['ledger'])) === 'full';
-            $ceremony_ballot_full_url = add_query_arg('ledger', 'full');
-            $ceremony_ballot_fast_url = remove_query_arg('ledger');
+            // 2.8.13: built from the canonical URL so cached pages never echo a
+            // visitor's own query arguments (utm_*, fbclid, cache busters).
+            $ceremony_ballot_full_url = add_query_arg('ledger', 'full', $aat->get_ceremony_url($ceremony));
+            $ceremony_ballot_fast_url = $aat->get_ceremony_url($ceremony);
             $ceremony_spotlight = array();
             $best_picture = !empty($ceremony_rollup['best_picture']) ? $ceremony_rollup['best_picture'] : array();
             $best_picture_nominees = !empty($ceremony_rollup['best_picture_nominees']) ? $ceremony_rollup['best_picture_nominees'] : array();
@@ -2313,8 +2325,8 @@ get_header();
 
 <?php $aat_sections['winner-circle'] = ob_get_clean(); ob_start(); ?>
         <?php
-            $table_view_url = add_query_arg('view', 'table');
-            $poster_view_url = remove_query_arg('view');
+            $table_view_url = add_query_arg('view', 'table', $aat->get_ceremony_url($ceremony));
+            $poster_view_url = $aat->get_ceremony_url($ceremony);
         ?>
         <div class="aat-hub-section aat-explorer-callout">
             <div class="aat-explorer-shell">
@@ -2731,8 +2743,8 @@ get_header();
         $category_history_recent_trail_limit = (int) apply_filters('aat_category_history_recent_trail_limit', 12, $canonical);
         $category_history_recent_trail_limit = max(0, $category_history_recent_trail_limit);
         $category_history_rendered_ceremonies = 0;
-        $category_history_full_url = add_query_arg('history', 'full');
-        $category_history_fast_url = remove_query_arg('history');
+        $category_history_full_url = add_query_arg('history', 'full', $aat->get_category_url($canonical));
+        $category_history_fast_url = $aat->get_category_url($canonical);
         ?>
         <?php if (!empty($category_decade_buckets)) : ?>
             <div class="aat-hub-section aat-category-history<?php echo $is_premium_category_dossier ? ' aat-era-browser' : ''; ?>">
@@ -3145,8 +3157,8 @@ get_header();
 
 <?php $aat_sections['related-reviews'] = ob_get_clean(); ob_start(); ?>
         <?php
-            $table_view_url = add_query_arg('view', 'table');
-            $poster_view_url = remove_query_arg('view');
+            $table_view_url = add_query_arg('view', 'table', $aat->get_category_url($canonical));
+            $poster_view_url = $aat->get_category_url($canonical);
         ?>
         <div class="aat-hub-section aat-explorer-callout">
             <div class="aat-explorer-shell">

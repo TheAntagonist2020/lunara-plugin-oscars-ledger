@@ -33,6 +33,10 @@ final class AAT_Read_API {
     const NS = 'lunara-ledger/v1';
     const CACHE_GROUP = 'aat_read_api';
     const CACHE_TTL = 21600; // 6 hours; the stamp retires old answers sooner.
+    // 2.8.13: bump when an answer's shape or content rules change. Cache keys used
+    // AAT_VERSION, so every deploy (even CSS-only) threw away every cached answer
+    // and the first Explorer visit after it took about 8s.
+    const RESPONSE_SCHEMA = 1;
     const PER_PAGE_DEFAULT = 25;
     const PER_PAGE_MAX = 50;
     const MAX_ENTITIES = 4;
@@ -107,6 +111,9 @@ final class AAT_Read_API {
                 'source' => 'Compiled and fact-checked by Lunara Film against the Academy\'s official record',
             );
         });
+        if (is_array($data)) {
+            $data['plugin_version'] = AAT_VERSION; // Always the running version, never a cached one.
+        }
         return self::respond($data);
     }
 
@@ -894,7 +901,7 @@ final class AAT_Read_API {
     }
 
     /**
-     * Cache one answer under AAT_VERSION and the dataset stamp. Bounded answers
+     * Cache one answer under RESPONSE_SCHEMA and the dataset stamp. Bounded answers
      * (status, lists) use transients; open-ended ones (filters, search, entities)
      * use the object cache only, so crawlers cannot fill the options table. The
      * edge cache in front of /wp-json/ does the rest.
@@ -904,7 +911,7 @@ final class AAT_Read_API {
         // key, so answers cached before a name repair never outlive it.
         $plugin = self::plugin();
         $labels = method_exists($plugin, 'get_label_rules_state') ? $plugin->get_label_rules_state() : '';
-        $key = 'aat_api_' . md5(wp_json_encode(array(AAT_VERSION, self::stamp(), $labels, $parts)));
+        $key = 'aat_api_' . md5(wp_json_encode(array(self::RESPONSE_SCHEMA, self::stamp(), $labels, $parts)));
         $hit = $persistent ? get_transient($key) : wp_cache_get($key, self::CACHE_GROUP);
         if ($hit !== false) {
             return $hit;

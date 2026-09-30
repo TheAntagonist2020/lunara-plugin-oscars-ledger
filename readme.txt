@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.12
+Stable tag: 2.8.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,14 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.13 =
+Speed pass two: cheaper misses, and pages that are safe to cache. Measured after 2.8.12: ceremony 70 dropped from 3.0–3.6s to 1.5s origin, and the boot probe shows this plugin loads about 0.21–0.32s into a request.
+* Ballot, table-view, history and filmography links are built from the canonical route URL. They no longer copy the visitor's own query string (utm_*, fbclid, cache busters) into a page that Batcache or the edge cache may store.
+* `/oscars/ceremony/N/` beyond the last ceremony on record is now a 404. It used to render an empty 200 page, which crawlers could request without limit.
+* The category decade ledger no longer builds a review map that the template never reads. That was about 600 review lookups for Best Picture on every hourly rebuild.
+* Related-review cards on ceremony pages resolve posters and thumbnails only for the cards shown, not for every reviewed title.
+* Read-API answers are keyed on `RESPONSE_SCHEMA` instead of `AAT_VERSION`, so a deploy no longer discards every cached answer. The first Explorer visit after a deploy measured 8.3s. `/status` still reports the running plugin version.
 
 = 2.8.12 =
 Speed pass one. Measured before the change: an uncached Oscars page costs about 1.2s of WordPress bootstrap, and ceremony pages add about 2s more.

@@ -38,7 +38,7 @@ function absint($value) { return abs((int) $value); }
 function get_query_var($key) { return $GLOBALS['query'][$key] ?? ''; }
 function get_theme_mod($key, $default = false) { return $default; }
 function home_url($path = '') { return 'https://example.test' . $path; }
-function add_query_arg($key, $value) { return home_url('/?') . urlencode($key) . '=' . urlencode($value); }
+function add_query_arg($key, $value, $url = null) { return ($url === null ? home_url('/') : $url) . '?' . urlencode($key) . '=' . urlencode($value); }
 function remove_query_arg($key) { return home_url('/'); }
 function get_header() { echo '<main>'; }
 function get_footer() { echo '</main>'; }
@@ -62,6 +62,7 @@ eval('class Academy_Awards_Table {' . $methods . '
     public function get_entity_base_url() { return "https://example.test/oscars/"; }
     public function get_entity_display_name($kind, $id) { return "Example " . $kind; }
     public function build_entity_url_from_id($id) { return $this->get_entity_base_url() . "title/" . $id . "/"; }
+    public function get_entity_url($id) { return $this->build_entity_url_from_id($id); }
     public function build_imdb_url($id) { return "https://www.imdb.com/title/" . $id . "/"; }
     public function get_ceremony_url($ceremony) { return $this->get_entity_base_url() . "ceremony/" . $ceremony . "/"; }
     public function get_review_ids_for_title_id($id, $limit) { return array(); }
