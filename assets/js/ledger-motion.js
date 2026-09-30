@@ -4,15 +4,14 @@
  * The server renders the finished picture. This script hides it (.is-armed)
  * and, when the section is a third into view, plays it back once
  * (.is-playing): the CSS carries the choreography, the script only counts
- * the tally up in step. Nothing runs under prefers-reduced-motion, and a
- * section already on screen at load plays immediately.
+ * the tally up in step. Nothing plays under prefers-reduced-motion (the phone
+ * caption still works), and a section already on screen at load plays immediately.
  */
 ( function () {
 	'use strict';
 
-	if ( window.matchMedia && window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches ) {
-		return;
-	}
+	var still = !! ( window.matchMedia && window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches );
+	var phone = window.matchMedia ? window.matchMedia( '(max-width: 640px)' ) : null;
 
 	function countUp( el, from, to, delay, duration ) {
 		if ( to <= from ) {
@@ -106,10 +105,65 @@
 		} );
 	}
 
+	/**
+	 * 2.8.11: phones hide the labels, so a dot alone says nothing. There the
+	 * first tap on a dot names it in a caption under the drawing, with a link
+	 * into its race; a second tap on the same dot (or the link) opens the race.
+	 * Wider screens keep their labels and one-click links.
+	 */
+	function caption( section ) {
+		if ( ! section.querySelector( '.aat-motion-link' ) ) {
+			return;
+		}
+		var isRing = section.classList.contains( 'aat-ledger-motion--ring' );
+		var box = document.createElement( 'div' );
+		box.className = 'aat-motion-caption';
+		box.setAttribute( 'role', 'status' );
+		box.setAttribute( 'aria-live', 'polite' );
+		var title = document.createElement( 'span' );
+		title.className = 'aat-motion-caption-title';
+		title.textContent = isRing ? 'Tap any dot to see the award.' : 'Tap any dot to see the nomination.';
+		var meta = document.createElement( 'span' );
+		meta.className = 'aat-motion-caption-meta';
+		var go = document.createElement( 'a' );
+		go.className = 'aat-motion-caption-go';
+		go.textContent = 'Open the race \u2192';
+		go.hidden = true;
+		box.appendChild( title );
+		box.appendChild( meta );
+		box.appendChild( go );
+		var stage = section.querySelector( '.aat-motion-stage' );
+		stage.parentNode.insertBefore( box, stage.nextSibling );
+
+		var current = null;
+		section.addEventListener( 'click', function ( event ) {
+			var link = event.target.closest ? event.target.closest( '.aat-motion-link' ) : null;
+			if ( ! link || ! phone || ! phone.matches || link === current ) {
+				return; // Desktop, or the second tap: follow the link.
+			}
+			event.preventDefault();
+			if ( current ) {
+				current.classList.remove( 'is-selected' );
+			}
+			current = link;
+			link.classList.add( 'is-selected' );
+			box.classList.add( 'has-pick' );
+			box.classList.toggle( 'is-win', !! link.closest( '.is-win' ) );
+			title.textContent = link.getAttribute( 'data-aat-cap' ) || '';
+			meta.textContent = link.getAttribute( 'data-aat-cap-meta' ) || '';
+			go.href = link.getAttribute( 'href' ) || link.getAttribute( 'xlink:href' ) || '';
+			go.hidden = ! go.href;
+		} );
+	}
+
 	function boot() {
 		var sections = document.querySelectorAll( '[data-aat-motion]' );
 		if ( ! sections.length ) {
 			return;
+		}
+		Array.prototype.forEach.call( sections, caption );
+		if ( still ) {
+			return; // Reduced motion: the finished picture stays, captions still work.
 		}
 		if ( ! ( 'IntersectionObserver' in window ) ) {
 			return; // The finished picture stays.
