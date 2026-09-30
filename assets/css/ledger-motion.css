@@ -43,6 +43,12 @@
 /* ---------- Finished state ---------- */
 .aat-motion-aura { opacity: 0.9; }
 
+/* Decoration never takes a tap meant for a dot. */
+.aat-motion-aura,
+.aat-motion-orbit,
+.aat-motion-ring,
+.aat-motion-pulse { pointer-events: none; }
+
 .aat-motion-orbit {
 	fill: none;
 	stroke: rgba(201, 169, 97, 0.12);
@@ -189,6 +195,12 @@
 	stroke-opacity: 1;
 }
 
+/* 2.8.11: the phone caption. ledger-motion.js adds it; it names the tapped dot. */
+.aat-motion-caption { display: none; }
+
+.aat-motion-link.is-selected .aat-motion-hit { stroke-opacity: 0.9; }
+.aat-motion-link.is-selected .aat-motion-line { stroke-opacity: 1; stroke-width: 2.5; }
+
 /* The full record for screen readers when the spokes are not links. */
 .aat-motion-record {
 	position: absolute !important;
@@ -214,6 +226,53 @@
 	.aat-ledger-motion--ring .aat-motion-label { display: none; }
 	.aat-ledger-motion--ring .aat-motion-svg { width: 180%; max-width: none; margin: -11% 0 -13% -40%; }
 	.aat-ledger-motion--ring .aat-motion-stage { overflow: hidden; }
+
+	.aat-motion-caption {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		min-height: 4.4em;
+		margin: 6px auto 0;
+		padding: 10px 14px;
+		max-width: 26rem;
+		border: 1px solid rgba(201, 169, 97, 0.28);
+		border-radius: 10px;
+		background: rgba(11, 24, 38, 0.72);
+		text-align: center;
+	}
+
+	.aat-motion-caption-title {
+		color: var(--motion-muted);
+		font-family: var(--lunara-font-body, Georgia, serif);
+		font-size: 1rem;
+		line-height: 1.3;
+	}
+
+	.aat-motion-caption.has-pick .aat-motion-caption-title { color: var(--motion-ink); font-size: 1.08rem; }
+	.aat-motion-caption.has-pick.is-win .aat-motion-caption-title { color: var(--motion-gold-light); }
+
+	.aat-motion-caption-meta {
+		color: var(--motion-muted);
+		font-family: var(--lunara-font-label, sans-serif);
+		font-size: 0.72rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.aat-motion-caption-meta:empty { display: none; }
+
+	.aat-motion-caption-go {
+		margin-top: 4px;
+		color: var(--motion-gold-light);
+		font-family: var(--lunara-font-label, sans-serif);
+		font-size: 0.8rem;
+		letter-spacing: 0.08em;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	.aat-motion-caption-go[hidden] { display: none; }
 }
 
 /* ---------- Armed (hidden, waiting to play) ---------- */

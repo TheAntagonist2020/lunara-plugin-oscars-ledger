@@ -14,7 +14,7 @@ This plugin owns the server-side Oscars database, public Oscars routes, title/pe
 
 ## Version
 
-Current baseline: `2.8.10`.
+Current baseline: `2.8.11`.
 
 ## Oscar Ledger Explorer (2.8.1)
 

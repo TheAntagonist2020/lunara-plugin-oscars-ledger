@@ -176,11 +176,17 @@ class AAT_Ledger_Motion {
 	 * @param string              $label Accessible name.
 	 * @return string
 	 */
-	private static function link_open( $rec, $label ) {
+	private static function link_open( $rec, $label, $with_film = false ) {
 		if ( empty( $rec['url'] ) ) {
 			return '';
 		}
-		return '<a class="aat-motion-link" href="' . esc_url( $rec['url'] ) . '" aria-label="' . esc_attr( $label . '. ' . __( 'Open the full race.', 'academy-awards-table' ) ) . '">';
+		// 2.8.11: what the phone caption shows when a dot is tapped (labels are hidden there).
+		$meta = array( $rec['year_label'] );
+		if ( $with_film && '' !== $rec['film'] ) {
+			$meta[] = $rec['film'];
+		}
+		$meta[] = $rec['won'] ? __( 'Won', 'academy-awards-table' ) : __( 'Nominated', 'academy-awards-table' );
+		return '<a class="aat-motion-link" href="' . esc_url( $rec['url'] ) . '" aria-label="' . esc_attr( $label . '. ' . __( 'Open the full race.', 'academy-awards-table' ) ) . '" data-aat-cap="' . esc_attr( $rec['label'] ) . '" data-aat-cap-meta="' . esc_attr( implode( ' · ', $meta ) ) . '">';
 	}
 
 	/**
@@ -438,7 +444,7 @@ class AAT_Ledger_Motion {
 				$state = $rec['won'] ? 'is-win' : 'is-nom';
 				$style = '--t:' . self::n( $t ) . ';--k:' . $k . ';--i:' . $i . ( $rec['won'] ? ';--w:' . $win_order : '' );
 				$tip   = trim( $rec['year_label'] . ' · ' . $rec['label'] . ( '' !== $rec['film'] ? ' · ' . $rec['film'] : '' ) . ' — ' . ( $rec['won'] ? __( 'won', 'academy-awards-table' ) : __( 'nominated', 'academy-awards-table' ) ) );
-				$link  = self::link_open( $rec, self::spoke_name( $rec, true ) );
+				$link  = self::link_open( $rec, self::spoke_name( $rec, true ), true );
 				$svg  .= '<g class="aat-motion-spoke ' . $state . '" style="' . esc_attr( $style ) . '">' . $link . '<title>' . esc_html( $tip ) . '</title>';
 				if ( $rec['won'] ) {
 					$svg .= '<circle class="aat-motion-pulse" cx="' . self::n( $x ) . '" cy="' . $y . '" r="9"/>';
