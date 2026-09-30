@@ -803,7 +803,6 @@ $aat_build_hub_review_cards = function($title_entries, $limit = 6) use ($aat) {
             'review_id' => $review_id,
             'review_url' => $review_url,
             'review_title' => get_the_title($review_id),
-            'review_excerpt' => get_the_excerpt($review_id),
             'review_thumb' => get_the_post_thumbnail($review_id, 'medium_large', array(
                 'class' => 'aat-related-review-image',
                 'loading' => 'lazy',

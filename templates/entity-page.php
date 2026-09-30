@@ -613,7 +613,6 @@ if ($entity !== 'title' && !empty($distinct_films)) {
         }
 
         $related_review_thumb = get_the_post_thumbnail_url($related_review_id, 'medium_large');
-        $related_review_excerpt = get_the_excerpt($related_review_id);
         $related_film_visual = method_exists($aat, 'get_title_visual_package') ? $aat->get_title_visual_package($related_film_id, 'medium') : array();
         $related_visual_media_html = '';
         if (!empty($related_film_visual['poster_html'])) {
@@ -634,7 +633,6 @@ if ($entity !== 'title' && !empty($distinct_films)) {
             'review_id' => $related_review_id,
             'review_url' => $related_review_url,
             'review_title' => get_the_title($related_review_id),
-            'review_excerpt' => $related_review_excerpt,
             'review_thumb' => $related_review_thumb,
             'film_id' => $related_film_id,
             'film_label' => $related_film_label,
@@ -995,7 +993,6 @@ if (class_exists('AAT_Ledger_Motion') && !empty($rows)) {
         $aat_primary_review_id = (int) $aat_review_ids[0];
         $aat_review_url = get_permalink($aat_primary_review_id);
         $aat_review_title = get_the_title($aat_primary_review_id);
-        $aat_review_excerpt = get_the_excerpt($aat_primary_review_id);
         $aat_review_thumb = get_the_post_thumbnail_url($aat_primary_review_id, 'medium');
         ?>
         <section class="aat-lunara-review-module" aria-label="Lunara Film review">
