@@ -204,11 +204,15 @@
 
 /* Phones: the ring's labels are too small to read, so the ring stands alone
    and the tally carries the numbers; the arc keeps its own scroll frame.
-   Nodes are tapped rather than hovered, so the hit circle grows. */
+   Nodes are tapped rather than hovered, so the hit circle grows.
+   2.8.10: the ring is drawn at 180% of the frame and centred with -40% either
+   side. max-width: none matters: the theme caps every svg at 100%, which kept
+   the ring small and pushed it left. The negative top and bottom margins trim
+   the empty band where the hidden labels would sit. */
 @media (max-width: 640px) {
 	.aat-ledger-motion--ring .aat-motion-hit { r: 30px; }
 	.aat-ledger-motion--ring .aat-motion-label { display: none; }
-	.aat-ledger-motion--ring .aat-motion-svg { width: 150%; margin-left: -25%; }
+	.aat-ledger-motion--ring .aat-motion-svg { width: 180%; max-width: none; margin: -11% 0 -13% -40%; }
 	.aat-ledger-motion--ring .aat-motion-stage { overflow: hidden; }
 }
 
