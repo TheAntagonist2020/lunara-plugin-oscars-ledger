@@ -128,6 +128,31 @@ class AAT_Page_Store_Warmer {
         }
     }
 
+    /**
+     * Called after per-URL deletes. The generation did not move, so the walk is not
+     * restarted; the deleted pages are simply cold. If the walk already finished, start the
+     * next one after the settle time instead of waiting out the idle interval; if one is
+     * running it reaches them on its next pass.
+     */
+    public static function on_rows_deleted() {
+        if (!function_exists('get_option') || get_option(self::OPTION, 'off') !== 'on') {
+            return;
+        }
+        $when = time() + intval(self::setting('settle', self::SETTLE));
+        $state = self::state();
+        if ($state['status'] === 'complete' && $state['next_pass_at'] > $when) {
+            $state['next_pass_at'] = $when;
+            update_option(self::STATE_OPTION, $state, false);
+        }
+        $next = wp_next_scheduled(self::HOOK);
+        if (!$next || $next > $when + 30) {
+            if ($next) {
+                wp_clear_scheduled_hook(self::HOOK);
+            }
+            wp_schedule_single_event($when, self::HOOK);
+        }
+    }
+
     /* ------------------------------------------------------------------
      * State
      * ------------------------------------------------------------------ */
