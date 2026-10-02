@@ -358,7 +358,7 @@ pw_cron_tick();
 pw_assert(AAT_Page_Store_Warmer::state()['status'] === 'complete', 'Setup: first walk complete.');
 $GLOBALS['http'] = array();
 unset($GLOBALS['scheduled'][AAT_Page_Store_Warmer::HOOK]);
-AAT_Page_Store::on_post_status('publish', 'publish', (object) array('post_type' => 'review'));
+AAT_Page_Store::on_post_status('publish', 'publish', (object) array('post_type' => 'post'));
 AAT_Page_Store::flush_editorial_bump();
 $when = $GLOBALS['scheduled'][AAT_Page_Store_Warmer::HOOK] ?? 0;
 pw_assert($when >= time() + AAT_Page_Store_Warmer::SETTLE - 2 && $when <= time() + AAT_Page_Store_Warmer::SETTLE + 2, 'A retire schedules a tick after the settle delay.');
