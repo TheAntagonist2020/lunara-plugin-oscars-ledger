@@ -84,13 +84,20 @@ ps_assert($eg0 !== $og0 && AAT_Page_Store::generation_for('oscars') === $og0, 'E
 AAT_Page_Store::on_post_status('draft', 'draft', (object) array('post_type' => 'movie'));
 AAT_Page_Store::flush_editorial_bump();
 ps_assert($egen() === $eg0, 'Saving a draft retires nothing.');
+// The four editorial types are invalidated per URL (tests/page-store-invalidation-runtime.php): they never move the generation.
 AAT_Page_Store::on_post_status('publish', 'publish', (object) array('post_type' => 'movie'));
 AAT_Page_Store::on_post_status('publish', 'publish', (object) array('post_type' => 'journal'));
 AAT_Page_Store::on_post_status('trash', 'publish', (object) array('post_type' => 'person'));
+AAT_Page_Store::flush_editorial_bump();
+ps_assert($egen() === $eg0 && !isset($GLOBALS['options']['aat_page_store_editorial_generation']), 'Editing a film, person, review or journal post does not retire the other editorial rows.');
+// Posts, pages and the ledger types feed modules on many pages, so they still retire all editorial rows.
+AAT_Page_Store::on_post_status('publish', 'publish', (object) array('post_type' => 'post'));
+AAT_Page_Store::on_post_status('publish', 'publish', (object) array('post_type' => 'page'));
+AAT_Page_Store::on_post_status('trash', 'publish', (object) array('post_type' => 'ledger_entry'));
 ps_assert($egen() === $eg0, 'Retirement waits for shutdown, so a bulk import bumps once.');
 AAT_Page_Store::flush_editorial_bump();
 $eg1 = $egen();
-ps_assert($eg1 !== $eg0 && $GLOBALS['options']['aat_page_store_editorial_generation'] === '1', 'Editing, publishing or trashing a published post retires editorial rows, once per request.');
+ps_assert($eg1 !== $eg0 && $GLOBALS['options']['aat_page_store_editorial_generation'] === '1', 'Editing, publishing or trashing a published post, page or ledger entry retires editorial rows, once per request.');
 ps_assert($gen() === $og0, 'Editorial edits do not retire Oscars pages.');
 AAT_Page_Store::on_post_status('publish', 'publish', (object) array('post_type' => 'wp_navigation'));
 AAT_Page_Store::on_post_status('publish', 'draft', (object) array('post_type' => 'nav_menu_item'));
@@ -99,7 +106,7 @@ ps_assert($egen() === $eg1, 'Post types that feed no editorial page retire nothi
 AAT_Page_Store::on_editorial_change();
 AAT_Page_Store::flush_editorial_bump();
 $eg2 = $egen();
-ps_assert($eg2 !== $eg1, 'A comment, term or menu change retires editorial rows.');
+ps_assert($eg2 !== $eg1, 'A menu or other site-wide change retires editorial rows.');
 AAT_Page_Store::on_option_updated('sidebars_widgets');
 AAT_Page_Store::flush_editorial_bump();
 $eg3 = $egen();
@@ -150,7 +157,7 @@ $GLOBALS['options']['aat_page_store_scope'] = 'oscars';
 $store_src = file_get_contents(dirname(__DIR__) . '/includes/class-aat-page-store.php');
 ps_assert(strpos($store_src, "get_option(self::SCOPE_OPTION, 'oscars')") !== false, 'The editorial scope defaults to Oscars only.');
 ps_assert(strpos($store_src, 'editorial_page_is_storable()') !== false && strpos($store_src, 'post_password_required()') !== false && strpos($store_src, 'is_paged()') !== false, 'Editorial capture re-checks the WordPress query: published, unprotected, first page, right post type.');
-ps_assert(strpos($store_src, "'before_delete_post'") !== false, 'Permanent deletes retire editorial rows before the post is gone.');
+ps_assert(strpos($store_src, "'before_delete_post'") !== false, 'Permanent deletes invalidate the page before the post is gone.');
 ps_assert(strpos($store_src, "\$request['generation'] = self::generation_for(") !== false, 'Capture pins the generation before rendering.');
 
 echo "Page store editorial runtime passed: {$checks} checks.\n";
