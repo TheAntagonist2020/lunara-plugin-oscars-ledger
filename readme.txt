@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.14
+Stable tag: 2.8.15
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,12 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.15 =
+* Page store warmer fix. On live, the 2.8.14 warmer never got past its first batch. It rendered 12 pages per run before saving its place or scheduling the next run, and cold ceremonies take 3–14s. A run killed by the cron time limit therefore stopped warming for good.
+  * Each run now schedules the next one before it starts, saves its place after every page, and stops itself after 25 seconds.
+  * A stalled queue is picked up again by the next request.
+* `/wp-json/lunara-ledger/v1/status` reports the page store's mode and generation, the warm queue and the last warm run, so warming can be checked from outside.
 
 = 2.8.14 =
 The Oscars page store. The boot probe measured this plugin loading 0.21–0.32s into a request, while an uncached page costs about 1.2s before anything is built.
