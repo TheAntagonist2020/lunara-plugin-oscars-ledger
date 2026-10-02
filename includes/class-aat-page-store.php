@@ -1,6 +1,6 @@
 <?php
 /**
- * Oscars page store (2.8.14).
+ * Oscars page store (2.8.14), with an opt-in editorial scope.
  *
  * Every uncached WordPress request on this site pays about 1.2s before a page is
  * built, and most Oscars URLs are visited too rarely for Batcache (2 hits within
@@ -21,6 +21,17 @@
  *   batches after each generation change, so they are stored before a visitor
  *   asks. Warm requests carry a wp_-prefixed cookie so Batcache lets them
  *   through to PHP.
+ *
+ * Editorial scope (OFF by default): set the option aat_page_store_scope
+ * to 'site' to also store film, talent, review and journal pages (single pages
+ * and the four archive roots, clean URL only). Those rows carry their own
+ * generation, retired whenever a public post is published, edited, trashed or
+ * deleted, or a comment, term, menu, widget or site title changes, and they are
+ * stored for at most 6 hours and sent with a 5 minute max-age. By default they
+ * are never warmed, so the first visitor to a page stores it for the second. The
+ * whole-site warmer (includes/class-aat-page-store-warmer.php, option
+ * aat_page_store_warmer = on, off by default) fills them in the background and
+ * after each retire; while it is on, rows are served for up to 24 hours.
  *
  * Kill switch: set the option aat_page_store_mode to 'off' (or define
  * AAT_PAGE_STORE_OFF). Any request with an unrecognised query string always
@@ -44,11 +55,21 @@ class AAT_Page_Store {
     /** Path patterns that may be stored. Exact trailing slash only. */
     const PATH_PATTERN = '#^/oscars/(?:title/tt\d{5,10}|name/(?:nm\d{5,10}|lnm-[a-z0-9-]{1,80})|company/co\d{5,10}|ceremony/\d{1,3}|category/[a-z0-9-]{1,80}|ceremonies|categories|about)/$#';
 
+    /** Editorial routes (scope 'site' only): film, talent, reviews and journal singles and archive roots, clean URL. */
+    const EDITORIAL_PATTERN = '#^/(?:film|talent|reviews|journal)/(?:[A-Za-z0-9%._~-]{1,200}/)?$#';
+    const EDITORIAL_TYPES = array('movie', 'person', 'review', 'journal');
+    const EDITORIAL_MAX_AGE = 21600;     // 6h: bounds staleness for changes that fire no hook (meta-only imports).
+    const EDITORIAL_HTTP_MAX_AGE = 300;  // Matches what Batcache sends for these pages today.
+    const SCOPE_OPTION = 'aat_page_store_scope';
+    const EDITORIAL_GEN_OPTION = 'aat_page_store_editorial_generation';
+
     /** Query strings that name a stored variant. Anything else renders fresh. */
     private static $variants = array('', 'ledger=full', 'history=full', 'filmography=full');
 
     private static $capturing = false;
     private static $generation_cache = null;
+    private static $editorial_generation_cache = null;
+    private static $editorial_bump_pending = false;
 
     /** Test seams: the command-line SAPI keeps no response headers or status. */
     public static $test_headers = null;
@@ -64,7 +85,7 @@ class AAT_Page_Store {
         if (!$request || self::is_warm_request()) {
             return;
         }
-        $row = self::fetch($request['key']);
+        $row = self::fetch($request);
         if (!$row) {
             header('X-AAT-Store: MISS');
             return;
@@ -75,7 +96,7 @@ class AAT_Page_Store {
         }
         status_header(200);
         header('Content-Type: text/html; charset=UTF-8');
-        header('Cache-Control: public, max-age=' . self::HTTP_MAX_AGE);
+        header('Cache-Control: public, max-age=' . ($request['kind'] === 'editorial' ? self::EDITORIAL_HTTP_MAX_AGE : self::HTTP_MAX_AGE));
         header('X-AAT-Store: HIT');
         header('Server-Timing: aat-store;desc=HIT;dur=' . round((microtime(true) - $start) * 1000, 1) . ', aat-boot;dur=' . (defined('AAT_BOOT_MS') ? AAT_BOOT_MS : -1), false);
         if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'HEAD') {
@@ -88,7 +109,7 @@ class AAT_Page_Store {
      * The storable request, or null. Checked on raw request data because this
      * runs before pluggable functions, the theme and the query exist.
      *
-     * @return array{key:string,path:string,variant:string}|null
+     * @return array{key:string,path:string,variant:string,kind:string}|null
      */
     public static function eligible_request() {
         if (self::mode() !== 'on') {
@@ -120,7 +141,13 @@ class AAT_Page_Store {
         $parts = explode('?', $uri, 2);
         $path = $parts[0];
         $query = isset($parts[1]) ? $parts[1] : '';
-        if (!in_array($query, self::$variants, true) || !preg_match(self::PATH_PATTERN, $path)) {
+        $kind = '';
+        if (in_array($query, self::$variants, true) && preg_match(self::PATH_PATTERN, $path)) {
+            $kind = 'oscars';
+        } elseif ($query === '' && self::scope() === 'site' && preg_match(self::EDITORIAL_PATTERN, $path)) {
+            $kind = 'editorial';
+        }
+        if ($kind === '') {
             return null;
         }
         if ((string) get_option('blog_public', '1') !== '1') {
@@ -131,6 +158,7 @@ class AAT_Page_Store {
             'key' => sha1($host . $path . '?' . $query),
             'path' => $path,
             'variant' => $query,
+            'kind' => $kind,
         );
     }
 
@@ -144,6 +172,14 @@ class AAT_Page_Store {
         }
         $mode = get_option('aat_page_store_mode', 'on');
         return $mode === 'off' ? 'off' : 'on';
+    }
+
+    /** 'oscars' (default) or 'site'. Only the exact option value 'site' widens the store. */
+    public static function scope() {
+        if (!function_exists('get_option')) {
+            return 'oscars';
+        }
+        return get_option(self::SCOPE_OPTION, 'oscars') === 'site' ? 'site' : 'oscars';
     }
 
     /* ------------------------------------------------------------------
@@ -174,13 +210,71 @@ class AAT_Page_Store {
     }
 
     /**
+     * Generation for a request kind. Editorial rows add their own counter on top
+     * of the Oscars generation, so editing a review retires editorial rows
+     * without discarding the warmed Oscars pages, while a data import, deploy or
+     * theme change still retires both.
+     */
+    public static function generation_for($kind) {
+        if ($kind !== 'editorial') {
+            return self::generation();
+        }
+        if (self::$editorial_generation_cache === null) {
+            self::$editorial_generation_cache = substr(md5(self::generation() . '|editorial|' . (string) get_option(self::EDITORIAL_GEN_OPTION, '0')), 0, 16);
+        }
+        return self::$editorial_generation_cache;
+    }
+
+    /**
+     * How long an editorial row is served: 6h, because it is only ever stored on a
+     * visit and some changes fire no hook. With the whole-site warmer on (option
+     * aat_page_store_warmer) it is 24h, because the warmer re-renders anything older
+     * than 12h and a full walk of the site takes hours.
+     */
+    public static function editorial_max_age() {
+        if (class_exists('AAT_Page_Store_Warmer') && AAT_Page_Store_Warmer::option_on()) {
+            return AAT_Page_Store_Warmer::WARMED_MAX_AGE;
+        }
+        return self::EDITORIAL_MAX_AGE;
+    }
+
+    /** Retire editorial rows only. Pages are stored on first visit, or by the whole-site warmer when it is on. */
+    public static function bump_editorial($reason = '') {
+        update_option(self::EDITORIAL_GEN_OPTION, (string) (intval(get_option(self::EDITORIAL_GEN_OPTION, '0')) + 1), true);
+        self::$editorial_generation_cache = null;
+        if (class_exists('AAT_Page_Store_Warmer')) {
+            AAT_Page_Store_Warmer::on_retire();
+        }
+    }
+
+    /** Bulk saves and imports fire many hooks in one request; retire once, at shutdown. */
+    public static function bump_editorial_soon($reason = '') {
+        if (self::scope() !== 'site' || self::$editorial_bump_pending) {
+            return;
+        }
+        self::$editorial_bump_pending = true;
+        add_action('shutdown', array(__CLASS__, 'flush_editorial_bump'), 99);
+    }
+
+    public static function flush_editorial_bump() {
+        if (self::$editorial_bump_pending) {
+            self::$editorial_bump_pending = false;
+            self::bump_editorial('deferred');
+        }
+    }
+
+    /**
      * Retire every stored page (data changed, Customizer saved). Old rows stop
      * matching at once; the daily job deletes them later.
      */
     public static function bump($reason = '') {
         update_option(self::GEN_OPTION, (string) (intval(get_option(self::GEN_OPTION, '0')) + 1), true);
         self::$generation_cache = null;
+        self::$editorial_generation_cache = null;
         self::queue_warm();
+        if (class_exists('AAT_Page_Store_Warmer')) {
+            AAT_Page_Store_Warmer::on_retire();
+        }
     }
 
     /* ------------------------------------------------------------------
@@ -195,11 +289,32 @@ class AAT_Page_Store {
         if (!$request) {
             return;
         }
+        if ($request['kind'] === 'editorial' && !self::editorial_page_is_storable()) {
+            return;
+        }
+        // Pin the generation before rendering: an edit that lands mid-render must not
+        // leave a page built from the old content under the new generation.
+        $request['generation'] = self::generation_for($request['kind']);
         self::$capturing = true;
         ob_start(function ($buffer) use ($request) {
             self::store_if_clean($request, (string) $buffer);
             return $buffer;
         });
+    }
+
+    /**
+     * Editorial routes are matched by URL shape, so confirm WordPress agrees:
+     * a first page of a film, talent, review or journal archive, or a published,
+     * unprotected single of one of those types.
+     */
+    private static function editorial_page_is_storable() {
+        if (is_search() || is_paged() || is_preview()) {
+            return false;
+        }
+        if (is_singular(self::EDITORIAL_TYPES)) {
+            return get_post_status() === 'publish' && !post_password_required();
+        }
+        return is_post_type_archive(self::EDITORIAL_TYPES);
     }
 
     private static function store_if_clean($request, $html) {
@@ -227,7 +342,7 @@ class AAT_Page_Store {
         $table = self::table();
         $row = array(
             'cache_key' => $request['key'],
-            'generation' => self::generation(),
+            'generation' => isset($request['generation']) ? $request['generation'] : self::generation_for($request['kind']),
             'path' => substr($request['path'] . ($request['variant'] !== '' ? '?' . $request['variant'] : ''), 0, 255),
             'html' => $packed,
             'bytes' => strlen($html),
@@ -251,14 +366,14 @@ class AAT_Page_Store {
         return $wpdb->prefix . self::TABLE;
     }
 
-    private static function fetch($key) {
+    private static function fetch($request) {
         global $wpdb;
         if (!isset($wpdb) || !is_object($wpdb)) {
             return null;
         }
         $table = self::table();
         $suppress = $wpdb->suppress_errors(true);
-        $row = $wpdb->get_row($wpdb->prepare("SELECT html FROM $table WHERE cache_key = %s AND generation = %s AND stored_at >= %d LIMIT 1", $key, self::generation(), time() - self::MAX_AGE), ARRAY_A); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $row = $wpdb->get_row($wpdb->prepare("SELECT html FROM $table WHERE cache_key = %s AND generation = %s AND stored_at >= %d LIMIT 1", $request['key'], self::generation_for($request['kind']), time() - ($request['kind'] === 'editorial' ? self::editorial_max_age() : self::MAX_AGE)), ARRAY_A); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $wpdb->suppress_errors($suppress);
         return is_array($row) ? $row : null;
     }
@@ -310,19 +425,57 @@ class AAT_Page_Store {
         // A review appearing or disappearing changes the review cards and links.
         add_action('transition_post_status', array(__CLASS__, 'on_post_status'), 99, 3);
 
+        // Editorial scope only (each handler checks): anything that changes what a film, talent, review or journal page shows.
+        add_action('before_delete_post', array(__CLASS__, 'on_post_deleted'), 99, 1);
+        foreach (array('comment_post', 'wp_set_comment_status', 'edit_comment', 'deleted_comment', 'created_term', 'edited_term', 'delete_term', 'wp_update_nav_menu', 'wp_delete_nav_menu') as $hook) {
+            add_action($hook, array(__CLASS__, 'on_editorial_change'), 99);
+        }
+
         add_action('aat_page_store_daily', array(__CLASS__, 'collect_garbage'));
         add_action('aat_page_store_warm', array(__CLASS__, 'warm_batch'));
         add_action('init', array(__CLASS__, 'schedule'), 20);
-    }
 
-    public static function on_option_updated($option) {
-        if (is_string($option) && strpos($option, 'theme_mods_') === 0) {
-            self::bump('theme_mods');
+        // Whole-site warmer (editorial scope, its own option, off by default).
+        if (class_exists('AAT_Page_Store_Warmer')) {
+            AAT_Page_Store_Warmer::init();
         }
     }
 
+    public static function on_option_updated($option) {
+        if (!is_string($option)) {
+            return;
+        }
+        if (strpos($option, 'theme_mods_') === 0) {
+            self::bump('theme_mods');
+        } elseif (in_array($option, array('blogname', 'blogdescription', 'sidebars_widgets', 'nav_menu_options', 'show_on_front', 'page_on_front'), true) || strpos($option, 'widget_') === 0) {
+            self::bump_editorial_soon('option_' . $option);
+        }
+    }
+
+    public static function on_editorial_change() {
+        self::bump_editorial_soon('editorial_change');
+    }
+
+    public static function on_post_deleted($post_id) {
+        if (self::scope() === 'site' && in_array(get_post_type($post_id), self::editorial_related_types(), true)) {
+            self::bump_editorial_soon('post_deleted');
+        }
+    }
+
+    /** Public post types whose changes can alter an editorial page (the four routes, plus posts and pages that feed their modules). */
+    private static function editorial_related_types() {
+        return array_merge(self::EDITORIAL_TYPES, array('post', 'page', 'attachment', 'ledger_entry', 'lunara_oscar_pick', 'oscar_fact'));
+    }
+
     public static function on_post_status($new_status, $old_status, $post) {
-        if (!is_object($post) || ($post->post_type ?? '') !== 'review') {
+        if (!is_object($post)) {
+            return;
+        }
+        // A published post saved, published, unpublished or trashed changes the editorial pages that show it.
+        if (($new_status === 'publish' || $old_status === 'publish') && in_array($post->post_type ?? '', self::editorial_related_types(), true)) {
+            self::bump_editorial_soon('post_' . $new_status);
+        }
+        if (($post->post_type ?? '') !== 'review') {
             return;
         }
         if ($new_status !== $old_status && ($new_status === 'publish' || $old_status === 'publish')) {
@@ -346,7 +499,7 @@ class AAT_Page_Store {
         global $wpdb;
         $table = self::table();
         $suppress = $wpdb->suppress_errors(true);
-        $wpdb->query($wpdb->prepare("DELETE FROM $table WHERE generation <> %s OR stored_at < %d LIMIT 5000", self::generation(), time() - 2 * self::MAX_AGE)); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $wpdb->query($wpdb->prepare("DELETE FROM $table WHERE (generation <> %s AND generation <> %s) OR stored_at < %d LIMIT 5000", self::generation(), self::generation_for('editorial'), time() - 2 * self::MAX_AGE)); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $wpdb->suppress_errors($suppress);
     }
 
@@ -421,3 +574,5 @@ class AAT_Page_Store {
         }
     }
 }
+
+require_once __DIR__ . '/class-aat-page-store-warmer.php';
