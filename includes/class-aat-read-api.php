@@ -113,6 +113,9 @@ final class AAT_Read_API {
         });
         if (is_array($data)) {
             $data['plugin_version'] = AAT_VERSION; // Always the running version, never a cached one.
+            if (class_exists('AAT_Page_Store')) {
+                $data['page_store'] = AAT_Page_Store::report(); // 2.8.15: warm progress, live.
+            }
         }
         return self::respond($data);
     }
