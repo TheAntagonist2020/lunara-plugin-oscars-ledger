@@ -27,8 +27,11 @@
  * and the four archive roots, clean URL only). Those rows carry their own
  * generation, retired whenever a public post is published, edited, trashed or
  * deleted, or a comment, term, menu, widget or site title changes, and they are
- * stored for at most 6 hours and sent with a 5 minute max-age. They are never
- * warmed, so the first visitor to a page stores it for the second.
+ * stored for at most 6 hours and sent with a 5 minute max-age. By default they
+ * are never warmed, so the first visitor to a page stores it for the second. The
+ * whole-site warmer (includes/class-aat-page-store-warmer.php, option
+ * aat_page_store_warmer = on, off by default) fills them in the background and
+ * after each retire; while it is on, rows are served for up to 24 hours.
  *
  * Kill switch: set the option aat_page_store_mode to 'off' (or define
  * AAT_PAGE_STORE_OFF). Any request with an unrecognised query string always
@@ -222,10 +225,26 @@ class AAT_Page_Store {
         return self::$editorial_generation_cache;
     }
 
-    /** Retire editorial rows only. No warming: editorial pages are stored on first visit. */
+    /**
+     * How long an editorial row is served: 6h, because it is only ever stored on a
+     * visit and some changes fire no hook. With the whole-site warmer on (option
+     * aat_page_store_warmer) it is 24h, because the warmer re-renders anything older
+     * than 12h and a full walk of the site takes hours.
+     */
+    public static function editorial_max_age() {
+        if (class_exists('AAT_Page_Store_Warmer') && AAT_Page_Store_Warmer::option_on()) {
+            return AAT_Page_Store_Warmer::WARMED_MAX_AGE;
+        }
+        return self::EDITORIAL_MAX_AGE;
+    }
+
+    /** Retire editorial rows only. Pages are stored on first visit, or by the whole-site warmer when it is on. */
     public static function bump_editorial($reason = '') {
         update_option(self::EDITORIAL_GEN_OPTION, (string) (intval(get_option(self::EDITORIAL_GEN_OPTION, '0')) + 1), true);
         self::$editorial_generation_cache = null;
+        if (class_exists('AAT_Page_Store_Warmer')) {
+            AAT_Page_Store_Warmer::on_retire();
+        }
     }
 
     /** Bulk saves and imports fire many hooks in one request; retire once, at shutdown. */
@@ -253,6 +272,9 @@ class AAT_Page_Store {
         self::$generation_cache = null;
         self::$editorial_generation_cache = null;
         self::queue_warm();
+        if (class_exists('AAT_Page_Store_Warmer')) {
+            AAT_Page_Store_Warmer::on_retire();
+        }
     }
 
     /* ------------------------------------------------------------------
@@ -351,7 +373,7 @@ class AAT_Page_Store {
         }
         $table = self::table();
         $suppress = $wpdb->suppress_errors(true);
-        $row = $wpdb->get_row($wpdb->prepare("SELECT html FROM $table WHERE cache_key = %s AND generation = %s AND stored_at >= %d LIMIT 1", $request['key'], self::generation_for($request['kind']), time() - ($request['kind'] === 'editorial' ? self::EDITORIAL_MAX_AGE : self::MAX_AGE)), ARRAY_A); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $row = $wpdb->get_row($wpdb->prepare("SELECT html FROM $table WHERE cache_key = %s AND generation = %s AND stored_at >= %d LIMIT 1", $request['key'], self::generation_for($request['kind']), time() - ($request['kind'] === 'editorial' ? self::editorial_max_age() : self::MAX_AGE)), ARRAY_A); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $wpdb->suppress_errors($suppress);
         return is_array($row) ? $row : null;
     }
@@ -412,6 +434,11 @@ class AAT_Page_Store {
         add_action('aat_page_store_daily', array(__CLASS__, 'collect_garbage'));
         add_action('aat_page_store_warm', array(__CLASS__, 'warm_batch'));
         add_action('init', array(__CLASS__, 'schedule'), 20);
+
+        // Whole-site warmer (editorial scope, its own option, off by default).
+        if (class_exists('AAT_Page_Store_Warmer')) {
+            AAT_Page_Store_Warmer::init();
+        }
     }
 
     public static function on_option_updated($option) {
@@ -547,3 +574,5 @@ class AAT_Page_Store {
         }
     }
 }
+
+require_once __DIR__ . '/class-aat-page-store-warmer.php';
