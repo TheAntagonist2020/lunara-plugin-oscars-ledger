@@ -1,0 +1,141 @@
+<?php
+/**
+ * Oscars page store (2.8.14): eligibility, generation, capture and serve,
+ * against the real class with WordPress and $wpdb stubbed.
+ *
+ * Run: php tests/page-store-runtime.php
+ */
+if (getenv('AAT_STORE_CHILD') === '1') {
+    // Child process: serve one request from a pre-filled store and exit.
+    require __DIR__ . '/page-store-stubs.inc';
+    $GLOBALS['wpdb']->rows = unserialize(base64_decode(getenv('AAT_STORE_ROWS')));
+    $_SERVER['REQUEST_URI'] = getenv('AAT_STORE_URI');
+    AAT_Page_Store::maybe_serve();
+    echo 'FELL-THROUGH';
+    exit;
+}
+
+require __DIR__ . '/page-store-stubs.inc';
+
+$checks = 0;
+function ps_assert($ok, $msg) {
+    global $checks;
+    ++$checks;
+    if (!$ok) {
+        fwrite(STDERR, "FAIL: $msg\n");
+        exit(1);
+    }
+}
+function ps_request($uri, $cookies = array(), $method = 'GET') {
+    $_SERVER['REQUEST_URI'] = $uri;
+    $_SERVER['REQUEST_METHOD'] = $method;
+    $_COOKIE = $cookies;
+    return AAT_Page_Store::eligible_request();
+}
+
+// ---- Eligibility --------------------------------------------------------------
+ps_assert(is_array(ps_request('/oscars/title/tt0120338/')), 'A title page is storable.');
+ps_assert(is_array(ps_request('/oscars/name/nm0000658/')) && is_array(ps_request('/oscars/name/lnm-some-person/')), 'Person pages (IMDb and local ids) are storable.');
+ps_assert(is_array(ps_request('/oscars/ceremony/70/')) && is_array(ps_request('/oscars/ceremony/70/?ledger=full')), 'A ceremony and its full ballot are storable.');
+ps_assert(is_array(ps_request('/oscars/category/best-picture/?history=full')), 'A category history variant is storable.');
+ps_assert(is_array(ps_request('/oscars/ceremonies/')), 'The ceremonies index is storable.');
+ps_assert(ps_request('/oscars/') === null, 'The /oscars/ portal (a theme page) is left to the platform.');
+ps_assert(ps_request('/oscars/explore/') === null, 'The Explorer is not stored.');
+ps_assert(ps_request('/oscars/title/tt0120338') === null, 'Only the canonical trailing-slash URL is stored.');
+ps_assert(ps_request('/oscars/title/tt0120338/?utm_source=x') === null && ps_request('/oscars/ceremony/70/?view=table') === null, 'Any other query string renders fresh.');
+ps_assert(ps_request('/oscars/title/tt0120338/', array('wordpress_logged_in_abc' => 'x')) === null, 'Logged-in visitors never get a stored page.');
+ps_assert(ps_request('/oscars/title/tt0120338/', array('wp-postpass_abc' => 'x')) === null && ps_request('/oscars/title/tt0120338/', array('comment_author_abc' => 'x')) === null, 'Password and commenter cookies bypass the store.');
+ps_assert(is_array(ps_request('/oscars/title/tt0120338/', array('_ga' => 'x', 'wordpress_test_cookie' => 'x'))), 'Analytics and the test cookie do not.');
+ps_assert(ps_request('/oscars/title/tt0120338/', array(), 'POST') === null, 'Only GET and HEAD.');
+$_SERVER['HTTP_X_WP_NONCE'] = 'n';
+ps_assert(ps_request('/oscars/title/tt0120338/') === null, 'A request carrying a nonce bypasses the store.');
+unset($_SERVER['HTTP_X_WP_NONCE']);
+$GLOBALS['options']['blog_public'] = '0';
+ps_assert(ps_request('/oscars/title/tt0120338/') === null, 'A private site never serves stored pages.');
+$GLOBALS['options']['blog_public'] = '1';
+$GLOBALS['options']['aat_page_store_mode'] = 'off';
+ps_assert(ps_request('/oscars/title/tt0120338/') === null, 'The kill switch turns the store off.');
+unset($GLOBALS['options']['aat_page_store_mode']);
+$a = ps_request('/oscars/ceremony/70/');
+$b = ps_request('/oscars/ceremony/70/?ledger=full');
+ps_assert($a['key'] !== $b['key'], 'Each variant has its own key.');
+
+// ---- Generation ---------------------------------------------------------------
+$gen = function () {
+    $r = new ReflectionProperty('AAT_Page_Store', 'generation_cache');
+    $r->setAccessible(true);
+    $r->setValue(null, null);
+    return AAT_Page_Store::generation();
+};
+$g1 = $gen();
+$GLOBALS['options']['aat_dataset_stamp'] = 'new-stamp';
+$g2 = $gen();
+ps_assert($g1 !== $g2, 'A new dataset stamp retires stored pages.');
+AAT_Page_Store::bump('test');
+$g3 = $gen();
+ps_assert($g3 !== $g2 && $GLOBALS['options']['aat_page_store_generation'] === '1', 'A bump retires stored pages.');
+ps_assert(!empty($GLOBALS['scheduled']['aat_page_store_warm']), 'A bump queues warming.');
+
+$before = $GLOBALS['options']['aat_page_store_generation'];
+AAT_Page_Store::on_option_updated('theme_mods_lunara-theme-blocks');
+ps_assert($GLOBALS['options']['aat_page_store_generation'] !== $before, 'Saving theme mods (Site Studio, Customizer) retires stored pages.');
+$before = $GLOBALS['options']['aat_page_store_generation'];
+AAT_Page_Store::on_option_updated('some_other_option');
+AAT_Page_Store::on_post_status('publish', 'publish', (object) array('post_type' => 'review'));
+AAT_Page_Store::on_post_status('publish', 'draft', (object) array('post_type' => 'post'));
+ps_assert($GLOBALS['options']['aat_page_store_generation'] === $before, 'Unrelated options, review re-saves and other post types do not.');
+AAT_Page_Store::on_post_status('publish', 'draft', (object) array('post_type' => 'review'));
+ps_assert($GLOBALS['options']['aat_page_store_generation'] !== $before, 'Publishing a review retires stored pages.');
+$GLOBALS['options']['aat_page_store_generation'] = '1';
+$g3 = $gen();
+
+// ---- Capture ------------------------------------------------------------------
+$req = ps_request('/oscars/title/tt0120338/');
+$html = '<!doctype html><html><body>' . str_repeat('Titanic ', 3000) . '</body></html>';
+$store = new ReflectionMethod('AAT_Page_Store', 'store_if_clean');
+$store->setAccessible(true);
+AAT_Page_Store::$test_headers = array('Content-Type: text/html');
+$store->invoke(null, $req, $html);
+$row = $GLOBALS['wpdb']->rows[$req['key']] ?? null;
+ps_assert(is_array($row) && gzuncompress($row['html']) === $html && $row['generation'] === $g3 && $row['path'] === '/oscars/title/tt0120338/', 'A clean 200 page is stored compressed under the current generation.');
+$GLOBALS['wpdb']->rows = array();
+$store->invoke(null, $req, '<html>tiny</html>');
+ps_assert(empty($GLOBALS['wpdb']->rows), 'A suspiciously small page is not stored.');
+AAT_Page_Store::$test_headers = array('Set-Cookie: x=1');
+$store->invoke(null, $req, $html);
+ps_assert(empty($GLOBALS['wpdb']->rows), 'A page that sets a cookie is not stored.');
+AAT_Page_Store::$test_headers = array('Cache-Control: no-cache, must-revalidate');
+$store->invoke(null, $req, $html);
+ps_assert(empty($GLOBALS['wpdb']->rows), 'A no-cache page is not stored.');
+AAT_Page_Store::$test_headers = array();
+AAT_Page_Store::$test_status = 404;
+$store->invoke(null, $req, $html);
+ps_assert(empty($GLOBALS['wpdb']->rows), 'A non-200 page is not stored.');
+AAT_Page_Store::$test_status = 200;
+
+// ---- Serve (child process, because a hit exits) --------------------------------
+$store->invoke(null, $req, $html);
+$rows = base64_encode(serialize($GLOBALS['wpdb']->rows));
+$run = function ($uri, $rows_b64) {
+    $env = 'AAT_STORE_CHILD=1 AAT_STORE_URI=' . escapeshellarg($uri) . ' AAT_STORE_ROWS=' . escapeshellarg($rows_b64) . ' AAT_TEST_STAMP=new-stamp AAT_TEST_GEN=1';
+    return (string) shell_exec($env . ' ' . escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__FILE__) . ' 2>&1');
+};
+$out = $run('/oscars/title/tt0120338/', $rows);
+if ($out !== $html) { fwrite(STDERR, substr($out, 0, 400)); } ps_assert($out === $html, 'A stored page is served whole, and the request stops there.');
+$out = $run('/oscars/title/tt0111161/', $rows);
+ps_assert($out === 'FELL-THROUGH', 'A page with no row falls through to WordPress.');
+$old = $GLOBALS['wpdb']->rows;
+foreach ($old as $k => $r) { $old[$k]['stored_at'] = time() - AAT_Page_Store::MAX_AGE - 5; }
+$out = $run('/oscars/title/tt0120338/', base64_encode(serialize($old)));
+ps_assert($out === 'FELL-THROUGH', 'A row older than MAX_AGE is not served.');
+$old = $GLOBALS['wpdb']->rows;
+foreach ($old as $k => $r) { $old[$k]['generation'] = 'retired-gen-0000'; }
+$out = $run('/oscars/title/tt0120338/', base64_encode(serialize($old)));
+ps_assert($out === 'FELL-THROUGH', 'A row from a retired generation is not served.');
+
+// ---- Wiring -------------------------------------------------------------------
+$main = file_get_contents(dirname(__DIR__) . '/academy-awards-table.php');
+ps_assert(strpos($main, "AAT_Page_Store::maybe_serve();") !== false && strpos($main, "AAT_Page_Store::maybe_serve();") < strpos($main, 'class Academy_Awards_Table'), 'The store serves at plugin include time, before the main class loads.');
+ps_assert(substr_count($main, "AAT_Page_Store::bump(") >= 2, 'Data-changing cache clears retire stored pages.');
+
+echo "Page store runtime passed: {$checks} checks.\n";

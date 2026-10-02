@@ -1167,8 +1167,8 @@ if (class_exists('AAT_Ledger_Motion') && !empty($rows)) {
             $filmography_total = count($filmography_ids);
             $filmography_render_ids = $filmography_full_requested ? $filmography_ids : array_slice($filmography_ids, 0, $filmography_fast_limit);
             $filmography_hidden_count = max(0, $filmography_total - count($filmography_render_ids));
-            $filmography_full_url = add_query_arg('filmography', 'full');
-            $filmography_fast_url = remove_query_arg('filmography');
+            $filmography_full_url = add_query_arg('filmography', 'full', $aat->get_entity_url($id));
+            $filmography_fast_url = $aat->get_entity_url($id);
         ?>
         <section id="nominated-films" class="aat-entity-section aat-filmography-section">
             <div class="aat-section-head">

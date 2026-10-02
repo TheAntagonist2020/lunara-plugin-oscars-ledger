@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.12
+Stable tag: 2.8.14
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,24 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.14 =
+The Oscars page store. The boot probe measured this plugin loading 0.21–0.32s into a request, while an uncached page costs about 1.2s before anything is built.
+* A clean anonymous render of an Oscars page (titles, people, companies, ceremonies and their full ballots, categories and their full histories, and the ceremony and category indexes) is saved, compressed, in `wp_aat_page_store`.
+* The next anonymous visitor gets that saved copy from the top of this plugin, before any other plugin, the theme, init or the query run. It is served with `X-AAT-Store: HIT`, `Server-Timing: aat-store` and `Cache-Control: public, max-age=900`.
+* Stored pages belong to a generation made of the plugin version, the active theme's style.css time, the dataset stamp, the label rules and a counter. The counter is bumped on data imports and swaps, reporting rebuilds, credit and read-API cache clears, theme-mod saves (Site Studio, Customizer) and review publish/unpublish. Rows from an old generation stop matching at once, nothing is "cleared", and a daily job deletes retired rows.
+* A saved page is served for at most 12 hours. That bounds staleness for anything outside the generation, such as new portraits and posters.
+* The store is never used for logged-in or password, commenter or WooCommerce cookie holders, for POST requests, requests carrying a nonce, private sites, or any query string other than `ledger=full`, `history=full` and `filmography=full`. The /oscars/ portal, the Explorer and 404s are not stored. A page that sets a cookie, sends no-cache or is not a 200 is never saved.
+* After each generation change a WP-Cron warmer renders the indexes, every ceremony (both views) and every category, 12 per run, so they are saved before a visitor asks. Its requests carry a `wp_`-prefixed cookie, so Batcache passes them through to PHP.
+* Kill switch: set the option `aat_page_store_mode` to `off`, or define `AAT_PAGE_STORE_OFF`.
+
+= 2.8.13 =
+Speed pass two: cheaper misses, and pages that are safe to cache. Measured after 2.8.12: ceremony 70 dropped from 3.0–3.6s to 1.5s origin, and the boot probe shows this plugin loads about 0.21–0.32s into a request.
+* Ballot, table-view, history and filmography links are built from the canonical route URL. They no longer copy the visitor's own query string (utm_*, fbclid, cache busters) into a page that Batcache or the edge cache may store.
+* `/oscars/ceremony/N/` beyond the last ceremony on record is now a 404. It used to render an empty 200 page, which crawlers could request without limit.
+* The category decade ledger no longer builds a review map that the template never reads. That was about 600 review lookups for Best Picture on every hourly rebuild.
+* Related-review cards on ceremony pages resolve posters and thumbnails only for the cards shown, not for every reviewed title.
+* Read-API answers are keyed on `RESPONSE_SCHEMA` instead of `AAT_VERSION`, so a deploy no longer discards every cached answer. The first Explorer visit after a deploy measured 8.3s. `/status` still reports the running plugin version.
 
 = 2.8.12 =
 Speed pass one. Measured before the change: an uncached Oscars page costs about 1.2s of WordPress bootstrap, and ceremony pages add about 2s more.
