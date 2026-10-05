@@ -1252,12 +1252,26 @@ get_header();
             );
             $best_picture_label = !empty($best_picture['film']) ? (string) $best_picture['film'] : __('Pending', 'academy-awards-table');
             $most_wins_label = !empty($most_wins['film']) ? $aat_pipe_display((string) $most_wins['film']) : __('Pending', 'academy-awards-table');
-            $winner_record_label = sprintf(
-                /* translators: 1: winners, 2: categories */
-                __('%1$s/%2$s', 'academy-awards-table'),
-                number_format_i18n($wins),
-                number_format_i18n($cats_count)
-            );
+            // 2.8.18: "28 of 28", never "44/28". Winners outnumber categories (ties,
+            // shared awards), so the record counts categories decided, and the
+            // number of winners is said separately in words.
+            $aat_decided = intval($ceremony_summary['winner_categories'] ?? 0);
+            if ($aat_decided <= 0) {
+                $aat_decided = intval($ceremony_rollup['winner_categories'] ?? 0);
+            }
+            if ($cats_count <= 0) {
+                $cats_count = intval($ceremony_rollup['categories_total'] ?? 0);
+            }
+            $aat_decided = min($aat_decided, $cats_count);
+            $winner_record_label = ($cats_count > 0 && $aat_decided >= $cats_count)
+                /* translators: %s: number of categories */
+                ? sprintf(__('All %s', 'academy-awards-table'), number_format_i18n($cats_count))
+                /* translators: 1: categories decided, 2: total categories */
+                : sprintf(__('%1$s of %2$s', 'academy-awards-table'), number_format_i18n($aat_decided), number_format_i18n($cats_count));
+            $winner_record_copy = $wins > 0
+                /* translators: 1: winners named, 2: categories */
+                ? sprintf(_n('%1$s winner named across %2$s category.', '%1$s winners named across %2$s categories.', $cats_count, 'academy-awards-table'), number_format_i18n($wins), number_format_i18n($cats_count))
+                : __('Awaiting winner data.', 'academy-awards-table');
             $ceremony_major_race_order = array(
                 'BEST PICTURE',
                 'DIRECTING',
@@ -1469,7 +1483,7 @@ get_header();
                         <strong><?php echo esc_html($best_picture_label); ?></strong>
                     </div>
                     <div class="aat-ceremony-command-card">
-                        <span><?php echo esc_html__('Winner Record', 'academy-awards-table'); ?></span>
+                        <span><?php echo esc_html__('Categories Decided', 'academy-awards-table'); ?></span>
                         <strong><?php echo esc_html($winner_record_label); ?></strong>
                     </div>
                     <div class="aat-ceremony-command-card">
@@ -1737,9 +1751,9 @@ get_header();
 
             <div class="aat-hub-metric-grid">
                 <article class="aat-hub-metric-card">
-                    <span class="aat-hub-metric-label"><?php echo esc_html__('Winner Record', 'academy-awards-table'); ?></span>
-                    <strong class="aat-hub-metric-value"><?php echo esc_html(number_format_i18n(intval($ceremony_rollup['winner_categories'] ?? 0))); ?>/<?php echo esc_html(number_format_i18n(intval($ceremony_rollup['categories_total'] ?? 0))); ?></strong>
-                    <p class="aat-hub-metric-copy"><?php echo esc_html__('Categories settled and marked as winners in the ledger.', 'academy-awards-table'); ?></p>
+                    <span class="aat-hub-metric-label"><?php echo esc_html__('Categories Decided', 'academy-awards-table'); ?></span>
+                    <strong class="aat-hub-metric-value"><?php echo esc_html($winner_record_label); ?></strong>
+                    <p class="aat-hub-metric-copy"><?php echo esc_html($winner_record_copy); ?></p>
                     <p class="aat-hub-card-action"><?php echo $aat_render_hub_text_link(__('Open Data Explorer', 'academy-awards-table'), add_query_arg('view', 'table', $aat->get_ceremony_url($ceremony)), 'aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
                 </article>
                 <article class="aat-hub-metric-card<?php echo $best_picture_metric_backdrop_style !== '' ? ' aat-card-has-backdrop' : ''; ?>"<?php if ($best_picture_metric_backdrop_style !== '') : ?> style="<?php echo esc_attr($best_picture_metric_backdrop_style); ?>"<?php endif; ?>>
