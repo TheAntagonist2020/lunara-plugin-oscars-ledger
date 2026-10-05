@@ -1893,7 +1893,7 @@ get_header();
                                 <?php echo $aat_render_hub_text_link($major_label, $major_url, 'aat-major-race-category aat-hub-inline-link'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                                 <span class="<?php echo !empty($winner_rows) ? 'aat-winner-badge' : 'aat-nominee-badge'; ?>"><?php echo esc_html(!empty($winner_rows) ? __('Winner', 'academy-awards-table') : __('Pending', 'academy-awards-table')); ?></span>
                             </div>
-                            <div class="aat-major-race-feature">
+                            <div class="aat-major-race-feature<?php echo empty($feature_visual['poster_url']) ? ' is-text-only' : ''; ?>">
                                 <?php if (!empty($feature_visual['poster_url'])) : ?>
                                     <a class="aat-major-race-media" href="<?php echo esc_url(!empty($feature_row['primary_url']) ? (string) $feature_row['primary_url'] : (!empty($feature_row['film_url']) ? (string) $feature_row['film_url'] : $major_url)); ?>">
                                         <?php if (!empty($feature_visual['poster_html'])) : ?>

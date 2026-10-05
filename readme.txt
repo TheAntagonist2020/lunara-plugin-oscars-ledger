@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.15
+Stable tag: 2.8.16
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.16 =
+* Ceremony pages, Four Races: a winner with no poster, as with most acting and directing races and every race on the 98th ceremony, had its name dropped into the 92–180px poster column, so names broke mid-word ("Paul / Thoma / s / Anders / on"). With no poster the card now uses one full-width column. Names break only between words. Measured on /oscars/ceremony/98/ at 1867px: each winner went from 126px wide and up to 6 lines to 436px and 1 line.
+* Test helpers shared with the whole-site warmer tests from #46 no longer redeclare each other's functions.
 
 = 2.8.15 =
 * Page store warmer fix. On live, the 2.8.14 warmer never got past its first batch. It rendered 12 pages per run before saving its place or scheduling the next run, and cold ceremonies take 3–14s. A run killed by the cron time limit therefore stopped warming for good.
