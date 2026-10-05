@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.8.17
+ * Version: 2.8.18
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.8.17');
+define('AAT_VERSION', '2.8.18');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -3026,8 +3026,9 @@ class Academy_Awards_Table {
             'ceremony' => $ceremony,
             'year' => !empty($rows[0]['year']) ? (string) $rows[0]['year'] : '',
             'categories_total' => count($categories),
-            'winner_categories' => count($winner_rows),
-            'has_full_winners' => count($categories) > 0 && count($winner_rows) === count($categories),
+            // 2.8.18: categories with a winner, not winner rows (ties and shared awards add rows).
+            'winner_categories' => count(array_unique(array_column($winner_rows, 'canonical_category'))),
+            'has_full_winners' => count($categories) > 0 && count(array_unique(array_column($winner_rows, 'canonical_category'))) >= count($categories),
             'best_picture' => $best_picture,
             'best_picture_nominees' => $best_picture_nominee_rows,
             'winner_rows' => $winner_rows,
@@ -9869,6 +9870,11 @@ public function get_title_visual_package($tt, $size = 'large', $allow_remote = f
     $poster_html = $this->get_poster_img_html_for_title($tt, $size, $poster_attrs);
     if (!empty($poster_html)) {
         $out['poster_html'] = $poster_html;
+        // 2.8.18: card backdrops read poster_url, so an uploaded poster must fill it too.
+        $poster_src = wp_get_attachment_image_url($this->get_poster_attachment_id_for_title($tt), $size);
+        if (is_string($poster_src) && $poster_src !== '') {
+            $out['poster_url'] = $poster_src;
+        }
     }
 
     $tmdb = $this->get_tmdb_data_for_imdb_id($tt, $allow_remote);
@@ -15105,8 +15111,14 @@ public function get_person_visual_package($nm_id, $size = 'large', $allow_remote
 
 
     public function get_poster_attachment_id_for_title($tt) {
+        static $resolved = array();
         $tt = strtolower(trim((string) $tt));
         if (!preg_match('/^tt\d{7,8}$/', $tt)) return 0;
+        if (isset($resolved[$tt])) return $resolved[$tt];
+        return $resolved[$tt] = $this->find_poster_attachment_id_for_title($tt);
+    }
+
+    private function find_poster_attachment_id_for_title($tt) {
 
         // 1) Review featured image
         $review_ids = $this->get_review_ids_for_title_id($tt, 1);

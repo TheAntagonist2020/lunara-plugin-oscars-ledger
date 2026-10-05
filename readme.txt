@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.17
+Stable tag: 2.8.18
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.18 =
+* Ceremony pages: the "Winner Record" counter (e.g. "44/28") becomes "Categories Decided: All 28", with "44 winners named across 28 categories" in words. The rollup now counts categories with a winner, not winner rows.
+* Films with an uploaded poster (e.g. Sinners) now show it on ceremony metric cards, Four Races features and other card backdrops; the poster URL was never filled in when the poster came from the media library.
 
 = 2.8.17 =
 * Encoding repair. New `AAT_Text::repair()` fixes stray Windows-1252 bytes one byte at a time and undoes double-encoded UTF-8 ("Bakerâ€™s" becomes "Baker’s", "cafÃ©" becomes "café", including emoji and closing quotes). Genuine accented text and emoji are never touched.
