@@ -17,8 +17,8 @@
  *   stamp, the label rules and a counter bumped on data changes and Customizer
  *   saves. When any of them changes, old rows stop matching. Nothing is ever
  *   "cleared"; a daily job deletes rows from retired generations.
- * - Warm: a WP-Cron job renders the ceremony, category and index pages in small
- *   batches after each generation change, so they are stored before a visitor
+ * - Warm: a WP-Cron job renders the ceremony, category and index pages, about
+ *   25 seconds' worth per run, after each generation change, so they are stored before a visitor
  *   asks. Warm requests carry a wp_-prefixed cookie so Batcache lets them
  *   through to PHP.
  *
@@ -48,7 +48,8 @@ class AAT_Page_Store {
     const HTTP_MAX_AGE = 900;       // What Batcache and the edge keep a served page for.
     const MIN_BYTES = 10000;
     const WARM_COOKIE = 'wp_aat_store_warm';
-    const WARM_BATCH = 12;
+    const WARM_BUDGET = 25;         // Seconds of rendering per warm run.
+    const WARM_INTERVAL = 60;       // Seconds between warm runs.
     const GEN_OPTION = 'aat_page_store_generation';
     const WARM_OPTION = 'aat_page_store_warm_queue';
 
@@ -493,6 +494,12 @@ class AAT_Page_Store {
             update_option('aat_page_store_warmed_generation', self::generation(), true);
             self::queue_warm();
         }
+        // A queue with no run scheduled (a run was killed before 2.8.15 could
+        // reschedule) picks up again on the next request.
+        $state = get_option(self::WARM_OPTION);
+        if (is_array($state) && ($state['generation'] ?? '') === self::generation() && !wp_next_scheduled('aat_page_store_warm')) {
+            wp_schedule_single_event(time() + 30, 'aat_page_store_warm');
+        }
     }
 
     public static function collect_garbage() {
@@ -544,6 +551,15 @@ class AAT_Page_Store {
         }
     }
 
+    /**
+     * Warm the next stretch of the queue. A cold ceremony can take 3-14s, and
+     * the cron worker has a time limit, so a run is built to be killed at any
+     * moment without losing its place: the next run is scheduled first, the
+     * offset is saved after every page, and the run stops itself after
+     * WARM_BUDGET seconds. (2.8.15: the 2.8.14 version rendered 12 pages per
+     * run and only then saved and rescheduled, so one killed run stopped
+     * warming for good.)
+     */
     public static function warm_batch() {
         if (self::mode() !== 'on') {
             return;
@@ -552,11 +568,14 @@ class AAT_Page_Store {
         if (!is_array($state) || ($state['generation'] ?? '') !== self::generation()) {
             return;
         }
+        wp_schedule_single_event(time() + self::WARM_INTERVAL, 'aat_page_store_warm');
+
         $paths = self::warm_paths();
         $offset = max(0, intval($state['offset'] ?? 0));
-        $slice = array_slice($paths, $offset, self::WARM_BATCH);
-        foreach ($slice as $path) {
-            wp_remote_get(home_url($path), array(
+        $deadline = microtime(true) + self::WARM_BUDGET;
+        $log = array('started' => time(), 'from' => $offset, 'codes' => array());
+        while ($offset < count($paths) && microtime(true) < $deadline) {
+            $response = wp_remote_get(home_url($paths[$offset]), array(
                 'timeout' => 20,
                 'redirection' => 0,
                 'blocking' => true,
@@ -564,14 +583,33 @@ class AAT_Page_Store {
                 'headers' => array('Cache-Control' => 'no-cache'),
                 'user-agent' => 'Lunara Oscars page store warm',
             ));
+            $log['codes'][] = is_wp_error($response) ? $response->get_error_code() : (string) wp_remote_retrieve_response_code($response);
+            $offset++;
+            update_option(self::WARM_OPTION, array('generation' => self::generation(), 'offset' => $offset, 'total' => count($paths)), false);
         }
-        $offset += count($slice);
-        if ($offset < count($paths)) {
-            update_option(self::WARM_OPTION, array('generation' => self::generation(), 'offset' => $offset), false);
-            wp_schedule_single_event(time() + 120, 'aat_page_store_warm');
-        } else {
+        $log['to'] = $offset;
+        $log['total'] = count($paths);
+        $log['finished'] = time();
+        update_option('aat_page_store_warm_log', $log, false);
+
+        if ($offset >= count($paths)) {
             delete_option(self::WARM_OPTION);
+            wp_clear_scheduled_hook('aat_page_store_warm');
         }
+    }
+
+    /**
+     * Warm state for /status, so it can be checked from outside.
+     */
+    public static function report() {
+        $state = get_option(self::WARM_OPTION);
+        $log = get_option('aat_page_store_warm_log');
+        return array(
+            'mode' => self::mode(),
+            'generation' => self::generation(),
+            'warm_queue' => is_array($state) ? array('offset' => intval($state['offset'] ?? 0), 'total' => intval($state['total'] ?? 0), 'next_run' => wp_next_scheduled('aat_page_store_warm') ?: null) : null,
+            'last_warm_run' => is_array($log) ? $log : null,
+        );
     }
 }
 

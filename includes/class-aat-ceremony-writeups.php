@@ -5,6 +5,8 @@
  * @package AcademyAwardsTable
  */
 
+require_once __DIR__ . '/class-aat-text.php';
+
 if (!class_exists('AAT_Ceremony_Writeups')) {
     class AAT_Ceremony_Writeups {
         const STATUS_DRAFT = 'draft';
@@ -34,50 +36,11 @@ if (!class_exists('AAT_Ceremony_Writeups')) {
                 return '';
             }
 
-            if (preg_match('//u', $text) !== 1) {
-                $converted = false;
-                if (function_exists('mb_convert_encoding')) {
-                    $converted = @mb_convert_encoding($text, 'UTF-8', 'Windows-1252');
-                } elseif (function_exists('iconv')) {
-                    $converted = @iconv('Windows-1252', 'UTF-8//IGNORE', $text);
-                }
-
-                if (is_string($converted) && $converted !== '' && preg_match('//u', $converted) === 1) {
-                    $text = $converted;
-                } else {
-                    $text = strtr($text, array(
-                        "\x80" => '€',
-                        "\x82" => '‚',
-                        "\x83" => 'ƒ',
-                        "\x84" => '„',
-                        "\x85" => '…',
-                        "\x86" => '†',
-                        "\x87" => '‡',
-                        "\x88" => 'ˆ',
-                        "\x89" => '‰',
-                        "\x8A" => 'Š',
-                        "\x8B" => '‹',
-                        "\x8C" => 'Œ',
-                        "\x8E" => 'Ž',
-                        "\x91" => '‘',
-                        "\x92" => '’',
-                        "\x93" => '“',
-                        "\x94" => '”',
-                        "\x95" => '•',
-                        "\x96" => '–',
-                        "\x97" => '—',
-                        "\x98" => '˜',
-                        "\x99" => '™',
-                        "\x9A" => 'š',
-                        "\x9B" => '›',
-                        "\x9C" => 'œ',
-                        "\x9E" => 'ž',
-                        "\x9F" => 'Ÿ',
-                    ));
-                }
-            }
-
-            return self::normalize_text($text);
+            // 2.8.17: AAT_Text::repair() fixes stray Windows-1252 bytes one byte at a
+            // time and undoes double-encoded UTF-8 ("Bakerâ€™s"). The old code
+            // converted the whole string from Windows-1252 whenever one byte was
+            // invalid, which double-encoded every character that was already right.
+            return self::normalize_text(AAT_Text::repair($text));
         }
 
         public static function decode_database_text($value, $hex_value = '') {

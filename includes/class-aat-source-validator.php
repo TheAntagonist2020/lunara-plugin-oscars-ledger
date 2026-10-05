@@ -615,16 +615,13 @@ class AAT_Source_Validator {
     }
 
     private static function repair_mojibake_preview($text) {
-        if (!function_exists('mb_convert_encoding') || !function_exists('mb_check_encoding')) {
-            return $text;
+        // 2.8.17: the shared repair. The old round trip through Windows-1252 lost
+        // closing quotes (byte 0x9D) and turned characters outside Windows-1252
+        // into "?" ("Kie?lowski").
+        if (!class_exists('AAT_Text')) {
+            require_once __DIR__ . '/class-aat-text.php';
         }
-
-        $candidate = @mb_convert_encoding($text, 'Windows-1252', 'UTF-8');
-        if (is_string($candidate) && mb_check_encoding($candidate, 'UTF-8')) {
-            return $candidate;
-        }
-
-        return $text;
+        return AAT_Text::repair($text);
     }
 
     private static function normalized_mapping_path() {

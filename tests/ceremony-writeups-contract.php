@@ -15,15 +15,6 @@ if (!class_exists('AAT_Ceremony_Writeups')) {
     exit(1);
 }
 
-$docx = getenv('AAT_CEREMONY_DOCX');
-if (!$docx) {
-    $docx = 'E:\\Academy Awards Ceremony Guide from the First Ceremony to the 98th Ceremony.docx';
-}
-
-$result = AAT_Ceremony_Writeups::parse_docx($docx);
-$summary = $result['summary'] ?? array();
-$records = $result['records'] ?? array();
-
 $failures = array();
 
 $assert = function ($condition, $message) use (&$failures) {
@@ -31,6 +22,21 @@ $assert = function ($condition, $message) use (&$failures) {
         $failures[] = $message;
     }
 };
+
+// The source guide DOCX lives on Dalton's machine, not in the repo. Its parse
+// checks run when AAT_CEREMONY_DOCX points at it; everything else in this file
+// (text decoding, accessors, admin queue) always runs, in CI too.
+$docx = getenv('AAT_CEREMONY_DOCX');
+$have_docx = is_string($docx) && $docx !== '' && is_readable($docx);
+if ($have_docx) {
+    $result = AAT_Ceremony_Writeups::parse_docx($docx);
+    $summary = $result['summary'] ?? array();
+    $records = $result['records'] ?? array();
+} else {
+    echo "SKIP: DOCX parse checks (set AAT_CEREMONY_DOCX to the ceremony guide to run them).\n";
+}
+
+if ($have_docx) {
 
 $assert(($summary['detected'] ?? 0) === 98, 'Expected 98 detected ceremony records.');
 $assert(($summary['first'] ?? 0) === 1, 'Expected first ceremony number to be 1.');
@@ -41,6 +47,7 @@ $assert(isset($records[98]), 'Expected ceremony 98 record.');
 $assert(strpos($records[98]['body'] ?? '', 'https://') === false, 'Public body should not include source URLs.');
 $assert(!preg_match('/\[\d+\]/', $records[98]['body'] ?? ''), 'Public body should not include bracketed source markers.');
 $assert(array_key_exists('source_notes', $records[98]), 'Private source notes should remain separated from the public body.');
+}
 
 $headline_with_cp1252_dash = "98th Academy Awards \x97 March 15, 2026";
 $body_with_cp1252_apostrophe = "Paul Thomas Anderson\x92s epic dominated the 98th Academy Awards.";
@@ -90,4 +97,4 @@ if ($failures) {
     exit(1);
 }
 
-echo "Ceremony write-up contract OK: {$summary['detected']} records parsed.\n";
+echo "Ceremony write-up contract OK" . ($have_docx ? ": {$summary['detected']} records parsed" : " (encoding and accessor checks)") . ".\n";

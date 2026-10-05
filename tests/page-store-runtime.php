@@ -133,6 +133,26 @@ foreach ($old as $k => $r) { $old[$k]['generation'] = 'retired-gen-0000'; }
 $out = $run('/oscars/title/tt0120338/', base64_encode(serialize($old)));
 ps_assert($out === 'FELL-THROUGH', 'A row from a retired generation is not served.');
 
+// ---- Warming survives a killed run (2.8.15) -----------------------------------
+AAT_Page_Store::schedule(); // First request after a deploy: notices the generation and queues warming.
+$paths = AAT_Page_Store::warm_paths();
+ps_assert(count($paths) === 10 && in_array('/oscars/ceremony/3/?ledger=full', $paths, true) && in_array('/oscars/category/best-picture/', $paths, true), 'The warm list covers the indexes, every ceremony in both views and every category.');
+unset($GLOBALS['scheduled']['aat_page_store_warm']);
+$GLOBALS['warm_kill_after'] = 3;
+try { AAT_Page_Store::warm_batch(); } catch (RuntimeException $e) {}
+$q = $GLOBALS['options']['aat_page_store_warm_queue'];
+ps_assert(intval($q['offset']) === 3, 'A killed run keeps its place: progress is saved after every page.');
+ps_assert(!empty($GLOBALS['scheduled']['aat_page_store_warm']), 'A killed run has already scheduled the next one.');
+unset($GLOBALS['scheduled']['aat_page_store_warm']);
+AAT_Page_Store::schedule();
+ps_assert(!empty($GLOBALS['scheduled']['aat_page_store_warm']), 'A stalled queue with nothing scheduled is picked up again on the next request.');
+$GLOBALS['warm_kill_after'] = 0;
+AAT_Page_Store::warm_batch();
+ps_assert(count($GLOBALS['warm_requests']) === 10 && $GLOBALS['warm_requests'][3] === 'https://lunarafilm.test/oscars/ceremony/3/?ledger=full' && count(array_unique($GLOBALS['warm_requests'])) === 10, 'The next run carries on from where the killed one stopped, without repeating pages.');
+ps_assert(!isset($GLOBALS['options']['aat_page_store_warm_queue']) && empty($GLOBALS['scheduled']['aat_page_store_warm']), 'A finished queue is removed and stops scheduling.');
+$report = AAT_Page_Store::report();
+ps_assert($report['warm_queue'] === null && $report['last_warm_run']['to'] === 10 && $report['last_warm_run']['total'] === 10, '/status can report the warm state.');
+
 // ---- Wiring -------------------------------------------------------------------
 $main = file_get_contents(dirname(__DIR__) . '/academy-awards-table.php');
 ps_assert(strpos($main, "AAT_Page_Store::maybe_serve();") !== false && strpos($main, "AAT_Page_Store::maybe_serve();") < strpos($main, 'class Academy_Awards_Table'), 'The store serves at plugin include time, before the main class loads.');

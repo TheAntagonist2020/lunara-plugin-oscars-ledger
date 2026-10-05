@@ -6927,6 +6927,14 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     grid-template-columns: minmax(132px, 180px) minmax(0, 1fr);
 }
 
+/* 2.8.16: a winner with no poster (most acting and directing races) used to
+   drop its name into the 92-126px poster column, breaking names mid-word
+   ("Thoma / s Anders / on"). With no poster the copy takes the full width. */
+.aat-major-race-feature.is-text-only,
+.aat-major-race-card.is-best-picture .aat-major-race-feature.is-text-only {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .aat-major-race-media {
     display: block;
     width: 100%;
@@ -6955,6 +6963,11 @@ body.aat-shell-page .aat-ceremony-dossier .aat-ceremony-guide-actions .aat-hub-c
     font-size: clamp(1.22rem, 2.15vw, 2.05rem);
     line-height: 1.06;
     text-wrap: balance;
+    /* Names break between words, never inside one; a single word longer than
+       the card may still wrap rather than overflow. */
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: manual;
 }
 
 .aat-major-race-meta,
