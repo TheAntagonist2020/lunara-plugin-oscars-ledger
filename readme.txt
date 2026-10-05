@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.18
+Stable tag: 2.8.19
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.19 =
+* Ceremony pages: the Four Races intro no longer says "the full 44/28 ceremony ledger"; it reads "44 winners across 28 categories".
 
 = 2.8.18 =
 * Ceremony pages: the "Winner Record" counter (e.g. "44/28") becomes "Categories Decided: All 28", with "44 winners named across 28 categories" in words. The rollup now counts categories with a winner, not winner rows.
