@@ -1,6 +1,6 @@
 <?php
 /**
- * 2.8.16: Four Races cards with no poster give the winner's name the full
+ * 2.8.17: Four Races cards with no poster give the winner's name the full
  * card width, and names never break inside a word.
  *
  * Run: php tests/major-race-text-only-contract.php

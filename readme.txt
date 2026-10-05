@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.16
+Stable tag: 2.8.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,12 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.17 =
+* Encoding repair. New `AAT_Text::repair()` fixes stray Windows-1252 bytes one byte at a time and undoes double-encoded UTF-8 ("Bakerâ€™s" becomes "Baker’s", "cafÃ©" becomes "café", including emoji and closing quotes). Genuine accented text and emoji are never touched.
+* Ceremony write-ups now use it. The old code converted the whole string whenever one byte was bad, which double-encoded everything else. This ports the live Plugin File Editor fix into the repo, so a deploy no longer reverts it.
+* The source validator's mojibake preview uses the same repair; it no longer loses closing quotes or turns "Kieślowski" into "Kie?lowski".
+* `tests/ceremony-writeups-contract.php` now runs in CI. Its DOCX parse checks run only when `AAT_CEREMONY_DOCX` points at the guide; the source file never lived in the repo.
 
 = 2.8.16 =
 * Ceremony pages, Four Races: a winner with no poster, as with most acting and directing races and every race on the 98th ceremony, had its name dropped into the 92–180px poster column, so names broke mid-word ("Paul / Thoma / s / Anders / on"). With no poster the card now uses one full-width column. Names break only between words. Measured on /oscars/ceremony/98/ at 1867px: each winner went from 126px wide and up to 6 lines to 436px and 1 line.

@@ -20,7 +20,7 @@ jobs:
           set -e
           for test in tests/*.php; do
             case "$test" in
-              tests/ceremony-writeups-contract.php|tests/source-data-validation-contract.php)
+              tests/source-data-validation-contract.php)
                 echo "Skipping local provenance contract: $test"
                 continue
                 ;;
