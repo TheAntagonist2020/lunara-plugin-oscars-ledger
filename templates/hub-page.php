@@ -1383,7 +1383,7 @@ get_header();
 
             $ceremony_thesis_copy = sprintf(
                 /* translators: 1: completed races, 2: total major races, 3: nominee count, 4: total winner count, 5: category count */
-                __('This dossier opens with the four races readers check first: Picture, Director, Actor, and Actress. %1$s of %2$s major races have winners recorded, with %3$s major-field records feeding into the full %4$s/%5$s ceremony ledger below.', 'academy-awards-table'),
+                __('This dossier opens with the four races readers check first: Picture, Director, Actor, and Actress. %1$s of %2$s major races have winners recorded, with %3$s major-field records feeding into the full ceremony ledger below: %4$s winners across %5$s categories.', 'academy-awards-table'),
                 number_format_i18n($ceremony_major_completed_count),
                 number_format_i18n(count($ceremony_major_race_order)),
                 number_format_i18n($ceremony_major_nominee_total),
