@@ -51,6 +51,9 @@ if (!function_exists('add_query_arg')) { function add_query_arg($k, $v, $u) { re
 if (!function_exists('wp_parse_url')) { function wp_parse_url($u, $c) { return parse_url($u, $c); } }
 $GLOBALS['warm_requests'] = array();
 if (!function_exists('wp_remote_get')) { function wp_remote_get($url, $args) {
+    if (!empty($GLOBALS['warm_kill_before'])) {
+        throw new RuntimeException('worker killed before its first page');
+    }
     if (!empty($GLOBALS['warm_kill_after']) && count($GLOBALS['warm_requests']) >= $GLOBALS['warm_kill_after']) {
         throw new RuntimeException('worker killed');
     }
@@ -59,7 +62,12 @@ if (!function_exists('wp_remote_get')) { function wp_remote_get($url, $args) {
 } }
 if (!class_exists('Academy_Awards_Table')) { class Academy_Awards_Table {
     public static function get_instance() { return new self(); }
-    public function get_ceremonies_index_url() { return home_url('/oscars/ceremonies/'); }
+    public function get_ceremonies_index_url() {
+        if (!empty($GLOBALS['warm_paths_fail'])) {
+            throw new Error('boom: Call to private method'); // what live threw from 2.8.14 to 2.8.19
+        }
+        return home_url('/oscars/ceremonies/');
+    }
     public function get_categories_index_url() { return home_url('/oscars/categories/'); }
     public function get_max_ceremony() { return 3; }
     public function get_ceremony_url($n) { return home_url('/oscars/ceremony/' . $n . '/'); }

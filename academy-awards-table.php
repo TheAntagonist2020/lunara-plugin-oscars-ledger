@@ -3,7 +3,7 @@
  * Plugin Name: Lunara Film - Academy Awards Database
  * Plugin URI: https://lunarafilm.com/oscars/
  * Description: A premium, server-side searchable database of every Academy Award nominee and winner (1st ceremony through 2025), compiled and maintained by Lunara Film.
- * Version: 2.8.19
+ * Version: 2.8.20
  * Author: Lunara Film (Dalton Johnson)
  * Author URI: https://lunarafilm.com/
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('AAT_VERSION', '2.8.19');
+define('AAT_VERSION', '2.8.20');
 define('AAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AAT_BUNDLED_CSV_PATH', AAT_PLUGIN_DIR . 'data/oscars.csv');
@@ -103,8 +103,13 @@ class Academy_Awards_Table {
 
     /**
      * Consistent helper for the main Academy Awards database table.
+     *
+     * Public since 2.8.20: the page store warmer (AAT_Page_Store::warm_paths)
+     * calls it from outside the class. It was private, so every warm run died
+     * with "Call to private method" and WP-Cron re-ran it each minute.
+     * tests/main-class-visibility-contract.php guards this now.
      */
-    private function get_table_name() {
+    public function get_table_name() {
         global $wpdb;
         return $wpdb->prefix . "academy_awards";
     }
