@@ -24,10 +24,13 @@
  *
  * Editorial scope (OFF by default): set the option aat_page_store_scope
  * to 'site' to also store film, talent, review and journal pages (single pages
- * and the four archive roots, clean URL only). Those rows carry their own
- * generation, retired whenever a public post is published, edited, trashed or
- * deleted, or a comment, term, menu, widget or site title changes, and they are
- * stored for at most 6 hours and sent with a 5 minute max-age. By default they
+ * and the four archive roots, clean URL only). Editing a film, person, review or
+ * journal post, or its comments and terms, deletes only that page's row, its
+ * archive root and the term archives it belongs to (per-URL invalidation, flushed
+ * once at shutdown; every other stored page stays warm). Site-wide changes (posts,
+ * pages, ledger types, menus, widgets, site title, front page) still move the
+ * editorial generation, which retires every editorial row. Rows are stored for at
+ * most 6 hours and sent with a 5 minute max-age. By default they
  * are never warmed, so the first visitor to a page stores it for the second. The
  * whole-site warmer (includes/class-aat-page-store-warmer.php, option
  * aat_page_store_warmer = on, off by default) fills them in the background and
@@ -63,6 +66,9 @@ class AAT_Page_Store {
     const EDITORIAL_HTTP_MAX_AGE = 300;  // Matches what Batcache sends for these pages today.
     const SCOPE_OPTION = 'aat_page_store_scope';
     const EDITORIAL_GEN_OPTION = 'aat_page_store_editorial_generation';
+    const INVALIDATION_OPTION = 'aat_page_store_last_invalidation';
+    const INVALIDATION_PATH_CAP = 200;   // More URLs than this in one request (a bulk import): retire editorial rows once instead.
+    const TERM_OBJECT_CAP = 100;         // A term with more posts than this retires editorial rows once instead.
 
     /** Query strings that name a stored variant. Anything else renders fresh. */
     private static $variants = array('', 'ledger=full', 'history=full', 'filmography=full');
@@ -71,6 +77,9 @@ class AAT_Page_Store {
     private static $generation_cache = null;
     private static $editorial_generation_cache = null;
     private static $editorial_bump_pending = false;
+    private static $pending_paths = array();
+    private static $invalidation_overflow = false;
+    private static $invalidation_hooked = false;
 
     /** Test seams: the command-line SAPI keeps no response headers or status. */
     public static $test_headers = null;
@@ -296,6 +305,7 @@ class AAT_Page_Store {
         // Pin the generation before rendering: an edit that lands mid-render must not
         // leave a page built from the old content under the new generation.
         $request['generation'] = self::generation_for($request['kind']);
+        $request['started'] = microtime(true);
         self::$capturing = true;
         ob_start(function ($buffer) use ($request) {
             self::store_if_clean($request, (string) $buffer);
@@ -320,6 +330,11 @@ class AAT_Page_Store {
 
     private static function store_if_clean($request, $html) {
         if (strlen($html) < self::MIN_BYTES || stripos($html, '</html>') === false) {
+            return;
+        }
+        // A per-URL delete does not move the generation, so a render that began before
+        // an edit and ends after it must not be stored: it may hold the old content.
+        if (isset($request['started']) && $request['kind'] === 'editorial' && self::invalidated_since($request['started'])) {
             return;
         }
         $status = self::$test_status !== null ? self::$test_status : http_response_code();
@@ -427,8 +442,17 @@ class AAT_Page_Store {
         add_action('transition_post_status', array(__CLASS__, 'on_post_status'), 99, 3);
 
         // Editorial scope only (each handler checks): anything that changes what a film, talent, review or journal page shows.
+        // Per-URL: a film, person, review or journal edit deletes only that page's row, its archive root and the
+        // term archives it belongs to. Everything site-wide (menus, widgets, site title) still retires all editorial rows.
         add_action('before_delete_post', array(__CLASS__, 'on_post_deleted'), 99, 1);
-        foreach (array('comment_post', 'wp_set_comment_status', 'edit_comment', 'deleted_comment', 'created_term', 'edited_term', 'delete_term', 'wp_update_nav_menu', 'wp_delete_nav_menu') as $hook) {
+        add_action('post_updated', array(__CLASS__, 'on_post_updated'), 99, 3);
+        foreach (array('comment_post', 'wp_set_comment_status', 'edit_comment', 'delete_comment') as $hook) {
+            add_action($hook, array(__CLASS__, 'on_comment_change'), 99, 1);
+        }
+        foreach (array('created_term', 'edited_term', 'delete_term') as $hook) {
+            add_action($hook, array(__CLASS__, 'on_term_change'), 99, 5);
+        }
+        foreach (array('wp_update_nav_menu', 'wp_delete_nav_menu') as $hook) {
             add_action($hook, array(__CLASS__, 'on_editorial_change'), 99);
         }
 
@@ -453,14 +477,9 @@ class AAT_Page_Store {
         }
     }
 
+    /** Site-wide change (menu, widget, site title, front page, unrelated post type): retire every editorial row. */
     public static function on_editorial_change() {
         self::bump_editorial_soon('editorial_change');
-    }
-
-    public static function on_post_deleted($post_id) {
-        if (self::scope() === 'site' && in_array(get_post_type($post_id), self::editorial_related_types(), true)) {
-            self::bump_editorial_soon('post_deleted');
-        }
     }
 
     /** Public post types whose changes can alter an editorial page (the four routes, plus posts and pages that feed their modules). */
@@ -468,20 +487,240 @@ class AAT_Page_Store {
         return array_merge(self::EDITORIAL_TYPES, array('post', 'page', 'attachment', 'ledger_entry', 'lunara_oscar_pick', 'oscar_fact'));
     }
 
+    public static function on_post_deleted($post_id) {
+        if (self::scope() !== 'site') {
+            return;
+        }
+        $post = function_exists('get_post') ? get_post($post_id) : null;
+        $type = is_object($post) ? (string) ($post->post_type ?? '') : (function_exists('get_post_type') ? (string) get_post_type($post_id) : '');
+        if (in_array($type, self::EDITORIAL_TYPES, true)) {
+            // Runs before the row is removed, so the permalink still resolves. Only a published page was ever stored.
+            if (is_object($post) && ($post->post_status ?? '') === 'publish') {
+                self::invalidate_post($post, true);
+            }
+        } elseif (in_array($type, self::editorial_related_types(), true)) {
+            self::bump_editorial_soon('post_deleted');
+        }
+    }
+
     public static function on_post_status($new_status, $old_status, $post) {
         if (!is_object($post)) {
             return;
         }
+        $type = (string) ($post->post_type ?? '');
         // A published post saved, published, unpublished or trashed changes the editorial pages that show it.
-        if (($new_status === 'publish' || $old_status === 'publish') && in_array($post->post_type ?? '', self::editorial_related_types(), true)) {
-            self::bump_editorial_soon('post_' . $new_status);
+        if (($new_status === 'publish' || $old_status === 'publish') && in_array($type, self::editorial_related_types(), true)) {
+            if (in_array($type, self::EDITORIAL_TYPES, true)) {
+                // This page's row and its archive root. The old address (slug change, unpublish, trash) is handled by on_post_updated.
+                self::invalidate_post($post, $new_status === 'publish');
+            } else {
+                self::bump_editorial_soon('post_' . $new_status);
+            }
         }
-        if (($post->post_type ?? '') !== 'review') {
+        if ($type !== 'review') {
             return;
         }
         if ($new_status !== $old_status && ($new_status === 'publish' || $old_status === 'publish')) {
             self::bump('review_' . $new_status);
         }
+    }
+
+    /** The address a published post had before this save (slug change, unpublish, trash). */
+    public static function on_post_updated($post_id, $after = null, $before = null) {
+        if (!is_object($before) || ($before->post_status ?? '') !== 'publish' || !function_exists('get_permalink')) {
+            return;
+        }
+        if (!in_array((string) ($before->post_type ?? ''), self::EDITORIAL_TYPES, true)) {
+            return;
+        }
+        self::invalidate_paths(array(get_permalink($before)), 'post_updated');
+    }
+
+    /** A comment changed: the commented page's row, or every editorial row when the page is not one of ours. */
+    public static function on_comment_change($comment_id) {
+        if (self::scope() !== 'site') {
+            return;
+        }
+        $comment = function_exists('get_comment') ? get_comment($comment_id) : null;
+        $post = (is_object($comment) && !empty($comment->comment_post_ID) && function_exists('get_post')) ? get_post(intval($comment->comment_post_ID)) : null;
+        if (is_object($post) && in_array((string) ($post->post_type ?? ''), self::EDITORIAL_TYPES, true)) {
+            if (($post->post_status ?? '') === 'publish') {
+                self::invalidate_post($post, true);
+            }
+            return;
+        }
+        self::bump_editorial_soon('comment');
+    }
+
+    /**
+     * A term was created, edited or deleted. When its taxonomy belongs to our post types:
+     * the term archive, the archive roots and the pages of the posts carrying it (up to a cap).
+     * Any other taxonomy keeps the old behaviour and retires every editorial row.
+     *
+     * @param int|object $term_id  Term ID (delete_term passes the term object's ID in its first argument too).
+     * @param int        $tt_id
+     * @param string     $taxonomy
+     * @param mixed      $arg4     Unused (term args, or the deleted term).
+     * @param mixed      $object_ids delete_term only: IDs of the posts that carried the term.
+     */
+    public static function on_term_change($term_id, $tt_id = 0, $taxonomy = '', $arg4 = null, $object_ids = null) {
+        if (self::scope() !== 'site') {
+            return;
+        }
+        $taxonomy = (string) $taxonomy;
+        $tax = ($taxonomy !== '' && function_exists('get_taxonomy')) ? get_taxonomy($taxonomy) : null;
+        $types = (is_object($tax) && !empty($tax->object_type)) ? array_values(array_intersect((array) $tax->object_type, self::EDITORIAL_TYPES)) : array();
+        if (!$types || !function_exists('get_post')) {
+            self::bump_editorial_soon('term');
+            return;
+        }
+        $ids = is_array($object_ids) ? $object_ids : (function_exists('get_objects_in_term') ? get_objects_in_term(intval($term_id), $taxonomy) : array());
+        if (!is_array($ids) || count($ids) > self::TERM_OBJECT_CAP) {
+            self::bump_editorial_soon('term_many');
+            return;
+        }
+        $paths = array();
+        foreach ($types as $type) {
+            $paths[] = function_exists('get_post_type_archive_link') ? get_post_type_archive_link($type) : '';
+        }
+        if (function_exists('get_term_link')) {
+            $link = get_term_link(intval($term_id), $taxonomy);
+            $paths[] = is_string($link) ? $link : '';
+        }
+        foreach ($ids as $id) {
+            $post = get_post(intval($id));
+            if (is_object($post) && in_array((string) ($post->post_type ?? ''), self::EDITORIAL_TYPES, true) && ($post->post_status ?? '') === 'publish' && function_exists('get_permalink')) {
+                $paths[] = get_permalink($post);
+            }
+        }
+        self::invalidate_paths($paths, 'term');
+    }
+
+    /* ------------------------------------------------------------------
+     * Per-URL invalidation (editorial scope)
+     * ------------------------------------------------------------------ */
+
+    /** A clean site-relative path the editorial store accepts, from a URL or a path, or ''. */
+    public static function editorial_path($url) {
+        if (!is_string($url) || $url === '') {
+            return '';
+        }
+        $parts = function_exists('wp_parse_url') ? wp_parse_url($url) : parse_url($url);
+        $path = is_array($parts) && isset($parts['path']) ? (string) $parts['path'] : '';
+        if (!empty($parts['query']) || !preg_match(self::EDITORIAL_PATTERN, $path)) {
+            return '';
+        }
+        return $path;
+    }
+
+    /** The cache key eligible_request() computes for a clean path on a host (default: the site's own). */
+    public static function key_for_path($path, $host = null) {
+        if ($host === null) {
+            $parts = function_exists('wp_parse_url') && function_exists('home_url') ? wp_parse_url(home_url('/')) : array();
+            $host = (string) ($parts['host'] ?? '') . (isset($parts['port']) ? ':' . $parts['port'] : '');
+        }
+        return sha1(strtolower((string) $host) . $path . '?');
+    }
+
+    /**
+     * Queue the rows of one edited page: its own URL (when it stays public), its
+     * archive root, and the archives of the terms it carries. Deleted at shutdown.
+     */
+    public static function invalidate_post($post, $include_permalink = true) {
+        if (!is_object($post)) {
+            return;
+        }
+        $type = (string) ($post->post_type ?? '');
+        $paths = array();
+        if ($include_permalink && function_exists('get_permalink')) {
+            $paths[] = get_permalink($post);
+        }
+        if (function_exists('get_post_type_archive_link')) {
+            $paths[] = get_post_type_archive_link($type);
+        }
+        if (!empty($post->ID) && function_exists('get_object_taxonomies') && function_exists('get_the_terms') && function_exists('get_term_link')) {
+            foreach ((array) get_object_taxonomies($type) as $taxonomy) {
+                $terms = get_the_terms($post, $taxonomy);
+                foreach (is_array($terms) ? $terms : array() as $term) {
+                    $link = get_term_link($term);
+                    $paths[] = is_string($link) ? $link : '';
+                }
+            }
+        }
+        // Lets a theme or plugin name pages that show this one (a film page listing its reviews, say).
+        $paths = function_exists('apply_filters') ? apply_filters('aat_page_store_related_paths', $paths, $post) : $paths;
+        self::invalidate_paths((array) $paths, 'post');
+    }
+
+    /** Queue clean paths (or URLs) for deletion at shutdown. Too many in one request retires editorial rows once instead. */
+    public static function invalidate_paths($paths, $reason = '') {
+        if (self::scope() !== 'site' || self::$invalidation_overflow) {
+            return;
+        }
+        foreach ((array) $paths as $path) {
+            $path = self::editorial_path($path);
+            if ($path !== '') {
+                self::$pending_paths[$path] = true;
+            }
+        }
+        if (count(self::$pending_paths) > self::INVALIDATION_PATH_CAP) {
+            self::$invalidation_overflow = true;
+            self::$pending_paths = array();
+            self::bump_editorial_soon('many_urls');
+            return;
+        }
+        if (self::$pending_paths && !self::$invalidation_hooked && function_exists('add_action')) {
+            self::$invalidation_hooked = true;
+            add_action('shutdown', array(__CLASS__, 'flush_invalidations'), 98);
+        }
+    }
+
+    public static function pending_invalidations() {
+        return array_keys(self::$pending_paths);
+    }
+
+    /** Delete the queued rows, once per request. The editorial generation does not move, so every other stored page stays warm. */
+    public static function flush_invalidations() {
+        $paths = array_keys(self::$pending_paths);
+        self::$pending_paths = array();
+        self::$invalidation_overflow = false;
+        self::$invalidation_hooked = false;
+        if (!$paths) {
+            return 0;
+        }
+        global $wpdb;
+        $hosts = array(null);
+        $request_host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+        if ($request_host !== '' && self::key_for_path('/', null) !== self::key_for_path('/', $request_host)) {
+            $hosts[] = $request_host; // The site answering on an alias host stores its own keys.
+        }
+        $keys = array();
+        foreach ($paths as $path) {
+            foreach ($hosts as $host) {
+                $keys[] = self::key_for_path($path, $host);
+            }
+        }
+        // Stamp first: a render that began before this moment is not stored when it ends (see store_if_clean).
+        update_option(self::INVALIDATION_OPTION, sprintf('%.3f', microtime(true)), false);
+        $table = self::table();
+        $suppress = $wpdb->suppress_errors(true);
+        foreach (array_chunk($keys, 100) as $chunk) {
+            $marks = implode(',', array_fill(0, count($chunk), '%s'));
+            $wpdb->query($wpdb->prepare("DELETE FROM $table WHERE cache_key IN ($marks)", $chunk)); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders
+        }
+        $wpdb->suppress_errors($suppress);
+        if (class_exists('AAT_Page_Store_Warmer')) {
+            AAT_Page_Store_Warmer::on_rows_deleted();
+        }
+        return count($paths);
+    }
+
+    /** True when a per-URL delete happened at or after $started (a float from microtime). */
+    private static function invalidated_since($started) {
+        if (function_exists('wp_cache_delete')) {
+            wp_cache_delete(self::INVALIDATION_OPTION, 'options'); // Read the stamp fresh, not from this request's option cache.
+        }
+        return floatval(get_option(self::INVALIDATION_OPTION, '0')) >= floatval($started);
     }
 
     public static function schedule() {
