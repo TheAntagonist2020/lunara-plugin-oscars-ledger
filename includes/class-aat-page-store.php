@@ -50,6 +50,7 @@ class AAT_Page_Store {
     const WARM_COOKIE = 'wp_aat_store_warm';
     const WARM_BUDGET = 25;         // Seconds of rendering per warm run.
     const WARM_INTERVAL = 60;       // Seconds between warm runs.
+    const WARM_MAX_ATTEMPTS = 3;    // Runs allowed to die at the same page before the warmer gives up (2.8.20).
     const GEN_OPTION = 'aat_page_store_generation';
     const WARM_OPTION = 'aat_page_store_warm_queue';
 
@@ -568,10 +569,32 @@ class AAT_Page_Store {
         if (!is_array($state) || ($state['generation'] ?? '') !== self::generation()) {
             return;
         }
+        $offset = max(0, intval($state['offset'] ?? 0));
+
+        // 2.8.20: scheduling the next run first (2.8.15) means a run that
+        // always dies re-runs every minute until someone reads the error
+        // emails; on live, 2.8.14-2.8.19 did exactly that for days. A run that
+        // starts at the page the previous run started at made no progress, so
+        // that run died before saving a page. After WARM_MAX_ATTEMPTS such runs
+        // the warmer stops and records why; the store still fills on first visit.
+        $attempts = (isset($state['run_offset']) && intval($state['run_offset']) === $offset) ? intval($state['attempts'] ?? 1) + 1 : 1;
+        if ($attempts > self::WARM_MAX_ATTEMPTS) {
+            self::abandon_warm($state, sprintf('stopped: %d runs in a row died at offset %d of %d without saving a page', self::WARM_MAX_ATTEMPTS, $offset, intval($state['total'] ?? 0)));
+            return;
+        }
+        $state['run_offset'] = $offset;
+        $state['attempts'] = $attempts;
+        update_option(self::WARM_OPTION, $state, false);
         wp_schedule_single_event(time() + self::WARM_INTERVAL, 'aat_page_store_warm');
 
-        $paths = self::warm_paths();
-        $offset = max(0, intval($state['offset'] ?? 0));
+        try {
+            $paths = self::warm_paths();
+        } catch (\Throwable $e) {
+            // The list cannot be built, so no run can ever succeed: stop now
+            // rather than throw the same fatal every minute.
+            self::abandon_warm($state, 'stopped: could not build the warm list: ' . get_class($e) . ': ' . $e->getMessage());
+            return;
+        }
         $deadline = microtime(true) + self::WARM_BUDGET;
         $log = array('started' => time(), 'from' => $offset, 'codes' => array());
         while ($offset < count($paths) && microtime(true) < $deadline) {
@@ -599,6 +622,23 @@ class AAT_Page_Store {
     }
 
     /**
+     * Give up on the current warm queue: record why in the warm log (shown by
+     * /status), drop the queue and unschedule the hook, so nothing re-queues
+     * it until the next generation change.
+     */
+    private static function abandon_warm($state, $message) {
+        $log = get_option('aat_page_store_warm_log');
+        $log = is_array($log) ? $log : array();
+        $log['error'] = $message;
+        $log['stopped'] = time();
+        $log['from'] = intval($state['offset'] ?? 0);
+        $log['total'] = intval($state['total'] ?? 0);
+        update_option('aat_page_store_warm_log', $log, false);
+        delete_option(self::WARM_OPTION);
+        wp_clear_scheduled_hook('aat_page_store_warm');
+    }
+
+    /**
      * Warm state for /status, so it can be checked from outside.
      */
     public static function report() {
@@ -607,7 +647,7 @@ class AAT_Page_Store {
         return array(
             'mode' => self::mode(),
             'generation' => self::generation(),
-            'warm_queue' => is_array($state) ? array('offset' => intval($state['offset'] ?? 0), 'total' => intval($state['total'] ?? 0), 'next_run' => wp_next_scheduled('aat_page_store_warm') ?: null) : null,
+            'warm_queue' => is_array($state) ? array('offset' => intval($state['offset'] ?? 0), 'total' => intval($state['total'] ?? 0), 'attempts' => intval($state['attempts'] ?? 0), 'next_run' => wp_next_scheduled('aat_page_store_warm') ?: null) : null,
             'last_warm_run' => is_array($log) ? $log : null,
         );
     }

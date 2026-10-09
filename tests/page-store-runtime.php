@@ -153,6 +153,54 @@ ps_assert(!isset($GLOBALS['options']['aat_page_store_warm_queue']) && empty($GLO
 $report = AAT_Page_Store::report();
 ps_assert($report['warm_queue'] === null && $report['last_warm_run']['to'] === 10 && $report['last_warm_run']['total'] === 10, '/status can report the warm state.');
 
+// ---- A run that cannot get going stops instead of looping every minute (2.8.20) --
+// On live, 2.8.14-2.8.19 threw a fatal inside warm_paths() on every run, and
+// because 2.8.15 schedules the next run first, WP-Cron re-ran the crash each
+// minute for days. The warmer must notice and stop.
+AAT_Page_Store::queue_warm();
+$GLOBALS['warm_requests'] = array();
+$GLOBALS['warm_paths_fail'] = true;
+AAT_Page_Store::warm_batch();
+$GLOBALS['warm_paths_fail'] = false;
+ps_assert(empty($GLOBALS['warm_requests']), 'Nothing is requested when the warm list cannot be built.');
+ps_assert(!isset($GLOBALS['options']['aat_page_store_warm_queue']) && empty($GLOBALS['scheduled']['aat_page_store_warm']), 'A run whose warm list throws gives up: queue removed, no next run scheduled.');
+$log = $GLOBALS['options']['aat_page_store_warm_log'];
+ps_assert(!empty($log['error']) && strpos($log['error'], 'boom') !== false, 'The failure is recorded for /status.');
+
+// Runs that die before saving a page (time limit, memory, an uncatchable
+// fatal): three in a row at the same page and the warmer stops.
+AAT_Page_Store::queue_warm();
+$GLOBALS['warm_kill_before'] = true;
+for ($i = 1; $i <= AAT_Page_Store::WARM_MAX_ATTEMPTS; $i++) {
+    unset($GLOBALS['scheduled']['aat_page_store_warm']);
+    $died = false;
+    try { AAT_Page_Store::warm_batch(); } catch (RuntimeException $e) { $died = true; }
+    ps_assert($died && !empty($GLOBALS['scheduled']['aat_page_store_warm']) && isset($GLOBALS['options']['aat_page_store_warm_queue']), "Dead run $i keeps the queue and a retry scheduled.");
+}
+unset($GLOBALS['scheduled']['aat_page_store_warm']);
+AAT_Page_Store::warm_batch(); // one more attempt at the same page: gives up before requesting anything
+$GLOBALS['warm_kill_before'] = false;
+ps_assert(!isset($GLOBALS['options']['aat_page_store_warm_queue']) && empty($GLOBALS['scheduled']['aat_page_store_warm']), 'After ' . AAT_Page_Store::WARM_MAX_ATTEMPTS . ' runs die at the same page the warmer stops instead of retrying every minute.');
+$log = $GLOBALS['options']['aat_page_store_warm_log'];
+ps_assert(!empty($log['error']) && strpos($log['error'], 'offset 0') !== false, 'The stop is recorded with the page it stuck on.');
+
+// Progress is not a strike: a run that saves even one page resets the count.
+AAT_Page_Store::queue_warm();
+$GLOBALS['warm_kill_after'] = 1;
+for ($i = 1; $i <= 5; $i++) {
+    $GLOBALS['warm_requests'] = array();
+    unset($GLOBALS['scheduled']['aat_page_store_warm']);
+    try { AAT_Page_Store::warm_batch(); } catch (RuntimeException $e) {}
+}
+$q = $GLOBALS['options']['aat_page_store_warm_queue'] ?? null;
+ps_assert(is_array($q) && intval($q['offset']) === 5 && !empty($GLOBALS['scheduled']['aat_page_store_warm']), 'Five runs that each die after one page keep going: progress resets the dead-run count.');
+$GLOBALS['warm_kill_after'] = 0;
+$GLOBALS['warm_requests'] = array();
+AAT_Page_Store::warm_batch();
+ps_assert(count($GLOBALS['warm_requests']) === 5 && !isset($GLOBALS['options']['aat_page_store_warm_queue']), 'The next healthy run finishes the remaining pages and clears the queue.');
+$log = $GLOBALS['options']['aat_page_store_warm_log'];
+ps_assert(empty($log['error']) && $log['to'] === 10, 'A finished run replaces the old failure record.');
+
 // ---- Wiring -------------------------------------------------------------------
 $main = file_get_contents(dirname(__DIR__) . '/academy-awards-table.php');
 ps_assert(strpos($main, "AAT_Page_Store::maybe_serve();") !== false && strpos($main, "AAT_Page_Store::maybe_serve();") < strpos($main, 'class Academy_Awards_Table'), 'The store serves at plugin include time, before the main class loads.');

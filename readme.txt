@@ -3,7 +3,7 @@ Contributors: lunarafilm
 Tags: oscars, academy awards, datatable, film, movies
 Requires at least: 6.0
 Tested up to: 6.4
-Stable tag: 2.8.19
+Stable tag: 2.8.20
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Examples:
 * DataTables assets are loaded from the official DataTables CDN.
 
 == Changelog ==
+
+= 2.8.20 =
+* Page store warmer crash fixed. Every warm run since 2.8.14 died at once with `Call to private method Academy_Awards_Table::get_table_name() from scope AAT_Page_Store` (`class-aat-page-store.php:531`), so the Oscars warmer never warmed a page. 2.8.15 then made each run schedule its successor before starting, which turned that one crash into a fatal error every 60 seconds from WP-Cron, with a WordPress "technical issue" email for each. The method is public now. The 2.8.15 note that the 2.8.14 warmer was "killed by the cron time limit" was wrong; this was the cause.
+* The warmer can no longer loop on a failure. A run whose warm list throws stops at once, and a run that starts at the same page as the previous run (that run died before saving a page) counts an attempt; after three such attempts at one page the warmer stops. Either stop drops the queue, unschedules the hook and writes the reason into the warm log, which `/wp-json/lunara-ledger/v1/status` shows as `last_warm_run.error`. The warm queue in `/status` now reports `attempts`.
+* New `tests/main-class-visibility-contract.php`: every `Academy_Awards_Table` method called from the classes under `includes/` must be public. The runtime tests stub the main class with public methods and could not see this; the contract reads the real file.
 
 = 2.8.19 =
 * Ceremony pages: the Four Races intro no longer says "the full 44/28 ceremony ledger"; it reads "44 winners across 28 categories".
